@@ -1,0 +1,38 @@
+# Multi-Exchange Schedule Configuration
+# MASP Phase 3A - Dual Scheduler (Upbit + Bithumb)
+# Updated: 2026-01-15
+
+exchanges:
+  upbit:
+    enabled: true
+    strategy: "KAMA-TSMOM-Gate"
+    symbols:
+      - "BTC/KRW"
+    position_size_krw: 10000
+    schedule:
+      hour: 9        # 09:00 KST (일봉 리셋 시점)
+      minute: 0
+      timezone: "Asia/Seoul"
+      jitter: 30     # ±30초 랜덤 지연
+
+  bithumb:
+    enabled: true
+    strategy: "KAMA-TSMOM-Gate"
+    symbols:
+      - "BTC/KRW"
+    position_size_krw: 10000
+    schedule:
+      hour: 0        # 00:00 KST (자정 리셋 시점)
+      minute: 0
+      timezone: "Asia/Seoul"
+      jitter: 30     # ±30초 랜덤 지연
+
+# ==============================================
+# Legacy fallback (deprecated - 하위 호환용)
+# ==============================================
+schedule:
+  cron:
+    hour: 9
+    minute: 0
+    timezone: "Asia/Seoul"
+  jitter: 60
