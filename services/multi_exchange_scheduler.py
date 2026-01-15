@@ -362,7 +362,7 @@ class MultiExchangeScheduler:
 
         try:
             interval = int(env_value)
-        except ValueError as exc:
+        except (ValueError, TypeError) as exc:
             logger.warning(
                 "[MultiExchangeScheduler] Invalid MASP_HEARTBEAT_SEC='%s': %s. Using default %ds",
                 env_value,
