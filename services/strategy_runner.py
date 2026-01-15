@@ -15,8 +15,8 @@ from typing import Optional, Dict, List
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Force-load .env to override system environment variables.
-load_dotenv(override=True)
+# Load .env without overriding system environment variables.
+load_dotenv(override=False)
 
 from libs.core.config import Config
 from libs.adapters.factory import AdapterFactory
@@ -127,12 +127,17 @@ class StrategyRunner:
     
     def run_once(self) -> Dict:
         """
-        1회 실행
+        Run one cycle for all symbols with dynamic limits.
 
-        Returns:
-            dict: 실행 결과 {symbol: action}
+        Dynamic limits:
+            1. Balance-based: skip BUY if available_krw < position_size_krw
+            2. Time-based: stop after max_execution_time (5 minutes)
+            3. Rate limit: 0.1s between symbols
         """
         results = {}
+        total = len(self.symbols)
+        start_time = time.time()
+        max_execution_time = 300
 
         if os.getenv("STOP_TRADING") == "1" or self.config.is_kill_switch_active():
             logger.critical("Kill-Switch Activated! Trading Halted.")
@@ -145,14 +150,65 @@ class StrategyRunner:
 
         gate_pass = self._compute_gate_pass()
 
-        for symbol in self.symbols:
+        try:
+            raw_balance = self.execution.get_balance("KRW")
+            available_krw = float(raw_balance) if raw_balance is not None else 0.0
+        except Exception as exc:
+            logger.warning(
+                "[StrategyRunner] Balance check failed: %s, proceeding without limit",
+                exc,
+            )
+            available_krw = float("inf")
+
+        balance_label = (
+            "unlimited" if available_krw == float("inf") else f"{available_krw:,.0f} KRW"
+        )
+        max_buy = (
+            "unlimited"
+            if available_krw == float("inf")
+            else int(available_krw // self.position_size_krw)
+        )
+        logger.info(
+            "[StrategyRunner] Processing %d symbols, Balance: %s, Max BUY: %s",
+            total,
+            balance_label,
+            max_buy,
+        )
+
+        for i, symbol in enumerate(self.symbols):
+            elapsed = time.time() - start_time
+            if elapsed > max_execution_time:
+                logger.warning(
+                    "[StrategyRunner] Max execution time reached (%ss), processed %d/%d symbols",
+                    max_execution_time,
+                    i,
+                    total,
+                )
+                break
+
+            if i % 10 == 0 or i == total - 1:
+                progress = (i + 1) / total * 100 if total else 100
+                logger.info("[Progress] %d/%d (%.0f%%) - %s", i + 1, total, progress, symbol)
+
             try:
+                if i > 0:
+                    time.sleep(0.1)
+
                 signal = self._generate_trade_signal(symbol, gate_pass)
                 action, effective_gate = self._parse_signal(signal, gate_pass)
 
                 if action == "BUY" and not effective_gate:
                     logger.warning(f"[{symbol}] Gate CLOSED. BUY blocked.")
                     results[symbol] = {"action": "BLOCKED", "reason": "Gate Veto"}
+                    continue
+
+                if (
+                    action == "BUY"
+                    and available_krw != float("inf")
+                    and available_krw < self.position_size_krw
+                ):
+                    logger.warning("[%s] BUY skipped: insufficient balance", symbol)
+                    results[symbol] = {"action": "SKIP", "reason": "insufficient_balance"}
                     continue
 
                 quote = self.market_data.get_quote(symbol)
@@ -162,9 +218,36 @@ class StrategyRunner:
 
                 result = self._execute_trade_signal(symbol, signal, quote)
                 results[symbol] = result
+
+                if (
+                    action == "BUY"
+                    and result.get("action") == "BUY"
+                    and available_krw != float("inf")
+                ):
+                    available_krw -= self.position_size_krw
+                    remaining_label = f"{available_krw:,.0f} KRW"
+                    logger.info(
+                        "[StrategyRunner] %s BUY executed, remaining: %s",
+                        symbol,
+                        remaining_label,
+                    )
             except Exception as exc:
                 logger.error(f"[{symbol}] Error: {exc}", exc_info=True)
                 results[symbol] = {"action": "ERROR", "reason": str(exc)}
+
+        elapsed = time.time() - start_time
+        actions = {}
+        for result in results.values():
+            action = result.get("action", "UNKNOWN")
+            actions[action] = actions.get(action, 0) + 1
+
+        logger.info(
+            "[Summary] Processed %d/%d symbols in %.1fs | Actions: %s",
+            len(results),
+            total,
+            elapsed,
+            actions,
+        )
 
         return results
 

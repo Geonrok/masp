@@ -1,12 +1,15 @@
-"""
-MultiExchangeScheduler - 다중 거래소 스케줄러
+﻿"""
+MultiExchangeScheduler - ?ㅼ쨷 嫄곕옒???ㅼ?以꾨윭
 MASP Phase 3A - Dual Exchange Support (Upbit 09:00 + Bithumb 00:00)
 """
 from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import signal
+import sys
+import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -29,8 +32,8 @@ class MultiExchangeScheduler:
     Multi-exchange scheduler for simultaneous Upbit/Bithumb execution.
     
     Features:
-        - Upbit: 09:00 KST (일봉 리셋)
-        - Bithumb: 00:00 KST (자정 리셋)
+        - Upbit: 09:00 KST (?쇰큺 由ъ뀑)
+        - Bithumb: 00:00 KST (?먯젙 由ъ뀑)
         - Independent job management per exchange
         - Graceful shutdown handling
     
@@ -167,12 +170,27 @@ class MultiExchangeScheduler:
             if not cfg.get("enabled", False):
                 logger.info(f"[MultiExchangeScheduler] {exchange_name} disabled, skipping")
                 continue
-            
+
+            # Normalize symbols (string -> list, ALL_KRW -> dynamic fetch).
+            symbols_cfg = cfg.get("symbols", ["BTC/KRW"])
+            if symbols_cfg == "ALL_KRW" and exchange_name == "upbit":
+                from libs.adapters.upbit_public import get_all_krw_symbols
+                symbols = get_all_krw_symbols()
+                logger.info(
+                    "[MultiExchangeScheduler] %s: Loaded %d KRW symbols",
+                    exchange_name,
+                    len(symbols),
+                )
+            elif isinstance(symbols_cfg, str):
+                symbols = [symbols_cfg]
+            else:
+                symbols = symbols_cfg
+
             # Create StrategyRunner
             runner = StrategyRunner(
                 strategy_name=cfg.get("strategy", "KAMA-TSMOM-Gate"),
                 exchange=exchange_name,
-                symbols=cfg.get("symbols", ["BTC/KRW"]),
+                symbols=symbols,
                 position_size_krw=cfg.get("position_size_krw", 10000),
             )
             self._runners[exchange_name] = runner
@@ -275,14 +293,14 @@ class MultiExchangeScheduler:
                 logger.error(f"[MultiExchangeScheduler] No runner for {exchange_name}")
                 return
 
-            logger.info(f"[MultiExchangeScheduler] ▶ Running {exchange_name.upper()} strategy")
+            logger.info(f"[MultiExchangeScheduler] ??Running {exchange_name.upper()} strategy")
             
             loop = asyncio.get_running_loop()
             try:
                 result = await loop.run_in_executor(None, runner.run_once)
-                logger.info(f"[MultiExchangeScheduler] ✅ {exchange_name.upper()} result: {result}")
+                logger.info(f"[MultiExchangeScheduler] ??{exchange_name.upper()} result: {result}")
             except Exception as exc:
-                logger.error(f"[MultiExchangeScheduler] ❌ {exchange_name.upper()} failed: {exc}")
+                logger.error(f"[MultiExchangeScheduler] ??{exchange_name.upper()} failed: {exc}")
                 raise
 
     def run_once(self, exchange_name: str = None) -> Dict[str, Any]:
@@ -320,20 +338,109 @@ class MultiExchangeScheduler:
         
         return results
 
+    def _get_heartbeat_interval(self) -> int:
+        """
+        Load heartbeat interval from environment.
+
+        Environment:
+            MASP_HEARTBEAT_SEC: Heartbeat interval in seconds.
+
+        Returns:
+            int: Heartbeat interval (default 30s, clamped to [5, 300]).
+        """
+        default = 30
+        min_interval = 5
+        max_interval = 300
+
+        env_value = os.getenv("MASP_HEARTBEAT_SEC")
+        if env_value is None:
+            logger.info(
+                "[MultiExchangeScheduler] MASP_HEARTBEAT_SEC not set, using default: %ds",
+                default,
+            )
+            return default
+
+        try:
+            interval = int(env_value)
+        except ValueError as exc:
+            logger.warning(
+                "[MultiExchangeScheduler] Invalid MASP_HEARTBEAT_SEC='%s': %s. Using default %ds",
+                env_value,
+                exc,
+                default,
+            )
+            return default
+
+        if interval < min_interval:
+            logger.warning(
+                "[MultiExchangeScheduler] MASP_HEARTBEAT_SEC=%d below minimum, clamping to %ds",
+                interval,
+                min_interval,
+            )
+            return min_interval
+
+        if interval > max_interval:
+            logger.warning(
+                "[MultiExchangeScheduler] MASP_HEARTBEAT_SEC=%d above maximum, clamping to %ds",
+                interval,
+                max_interval,
+            )
+            return max_interval
+
+        logger.info(
+            "[MultiExchangeScheduler] Heartbeat interval configured: %ds",
+            interval,
+        )
+        return interval
+
     async def run_forever(self) -> None:
-        """Start scheduler and run until shutdown signal."""
+        """Start the scheduler and run until stopped."""
         self._register_signal_handlers()
         self._configure_scheduler()
         self._running = True
 
-        logger.info("[MultiExchangeScheduler] 🚀 Starting multi-exchange scheduler")
-        logger.info(f"[MultiExchangeScheduler] Active exchanges: {list(self._runners.keys())}")
+        logger.info(
+            "[MultiExchangeScheduler] STARTUP: PID=%s CWD=%s argv=%s",
+            os.getpid(),
+            os.getcwd(),
+            sys.argv,
+        )
+
+        heartbeat_interval = self._get_heartbeat_interval()
+        logger.info(
+            "[MultiExchangeScheduler] ENV: MASP_ENABLE_LIVE_TRADING=%s MASP_HEARTBEAT_SEC=%ds",
+            os.getenv("MASP_ENABLE_LIVE_TRADING", "NOT_SET"),
+            heartbeat_interval,
+        )
+
+        logger.info("[MultiExchangeScheduler] Starting multi-exchange scheduler")
+        logger.info(
+            "[MultiExchangeScheduler] Active exchanges: %s",
+            list(self._runners.keys()),
+        )
 
         self._scheduler.start()
         try:
+            last_heartbeat = time.time()
+
             while self._running:
                 await asyncio.sleep(0.5)
+
+                if time.time() - last_heartbeat > heartbeat_interval:
+                    logger.info("[MultiExchangeScheduler] heartbeat: running")
+                    last_heartbeat = time.time()
+
+        except asyncio.CancelledError:
+            logger.warning("[MultiExchangeScheduler] run_forever CANCELLED")
+            raise
+        except Exception:
+            logger.exception("[MultiExchangeScheduler] run_forever CRASHED")
+            raise
         finally:
+            logger.info(
+                "[MultiExchangeScheduler] run_forever EXITING: running=%s",
+                self._running,
+            )
             self._shutdown()
 
     def _shutdown(self) -> None:
@@ -423,3 +530,4 @@ if __name__ == "__main__":
         print(f"Result: {result}")
     else:
         asyncio.run(scheduler.run_forever())
+
