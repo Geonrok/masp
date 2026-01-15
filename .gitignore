@@ -36,3 +36,7 @@ Thumbs.db
 
 .env
 .env.*
+
+# Large files
+*.zip
+Multi-Asset Strategy Platform.zip
