@@ -71,15 +71,51 @@ class ConfigStore:
         return data
 
     def _ensure_file(self) -> None:
-        """Ensure config file exists, bootstrap from schedule_config if needed."""
+        """Ensure config file exists with valid exchanges, bootstrap if needed."""
         if self._path.exists() and self._path.stat().st_size > 0:
-            return
+            try:
+                raw = self._path.read_text(encoding="utf-8")
+                data = json.loads(raw)
+                if isinstance(data, dict) and data.get("exchanges"):
+                    return
+                logger.warning(
+                    "[ConfigStore] Config exists but exchanges empty, bootstrapping..."
+                )
+                try:
+                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    backup_path = self._path.with_name(
+                        self._path.name + f".bad.{ts}"
+                    )
+                    shutil.copy2(self._path, backup_path)
+                    logger.error(
+                        "[ConfigStore] Corrupted config backed up to: %s", backup_path
+                    )
+                    self._cleanup_old_backups()
+                except Exception as backup_exc:
+                    logger.error("[ConfigStore] Backup failed: %s", backup_exc)
+            except Exception as exc:
+                logger.warning(
+                    "[ConfigStore] Config read failed (%s), bootstrapping...", exc
+                )
+                try:
+                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    backup_path = self._path.with_name(
+                        self._path.name + f".bad.{ts}"
+                    )
+                    shutil.copy2(self._path, backup_path)
+                    logger.error(
+                        "[ConfigStore] Corrupted config backed up to: %s", backup_path
+                    )
+                    self._cleanup_old_backups()
+                except Exception as backup_exc:
+                    logger.error("[ConfigStore] Backup failed: %s", backup_exc)
 
         schedule_path = Path("config/schedule_config.json")
         if schedule_path.exists():
             try:
                 schedule_data = json.loads(schedule_path.read_text(encoding="utf-8"))
                 if isinstance(schedule_data, dict):
+                    schedule_data.setdefault("schema_version", 1)
                     schedule_data["updated_at"] = datetime.now().isoformat()
                     if self._atomic_write(schedule_data):
                         logger.info(
@@ -190,7 +226,10 @@ class ConfigStore:
                 current = data
                 for k in keys[:-1]:
                     if k not in current:
-                        break
+                        logger.warning(
+                            "[ConfigStore] Strict mode: key '%s' not found in path", k
+                        )
+                        return False
                     if not isinstance(current[k], dict):
                         logger.warning(
                             "[ConfigStore] Strict mode: path '%s' is not a dict", k

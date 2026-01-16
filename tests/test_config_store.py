@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from libs.core.config_store import ConfigStore
@@ -70,3 +71,46 @@ def test_config_store_handles_empty_file(tmp_path: Path):
     store = ConfigStore(path=str(path))
     data = store.get()
     assert data["schema_version"] == 1
+
+
+def test_config_store_bootstrap_when_exchanges_empty(tmp_path: Path):
+    path = tmp_path / "runtime_config.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "exchanges": {},
+                "updated_at": "2026-01-01T00:00:00",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    schedule_dir = tmp_path / "config"
+    schedule_dir.mkdir()
+    schedule_path = schedule_dir / "schedule_config.json"
+    schedule_path.write_text(
+        json.dumps(
+            {
+                "exchanges": {
+                    "test_upbit": {"enabled": True, "symbols": "ALL_KRW"}
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+        store = ConfigStore(path=str(path))
+        assert store.get("exchanges.test_upbit.enabled") is True
+    finally:
+        os.chdir(original_cwd)
+
+
+def test_config_store_strict_mode_rejects_missing_path(tmp_path: Path):
+    path = tmp_path / "runtime_config.json"
+    store = ConfigStore(path=str(path))
+    result = store.set("nonexistent.deep.path.value", 123, strict=True)
+    assert result is False
