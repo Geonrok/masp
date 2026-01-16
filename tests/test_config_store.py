@@ -17,10 +17,10 @@ def test_config_store_creates_default(tmp_path: Path):
 def test_config_store_get_set_dot_notation(tmp_path: Path):
     path = tmp_path / "runtime_config.json"
     store = ConfigStore(path=str(path))
-    assert store.get("exchanges.upbit.enabled") is None
+    assert store.get("exchanges.test_exchange.enabled") is None
 
-    assert store.set("exchanges.upbit.enabled", False) is True
-    assert store.get("exchanges.upbit.enabled") is False
+    assert store.set("exchanges.test_exchange.enabled", False) is True
+    assert store.get("exchanges.test_exchange.enabled") is False
 
 
 def test_config_store_set_nested_value(tmp_path: Path):

@@ -10,7 +10,7 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from filelock import FileLock
 from pydantic import BaseModel, ConfigDict, Field
@@ -32,7 +32,7 @@ class ExchangeConfig(BaseModel):
 
     enabled: bool = True
     strategy: str = "KAMA-TSMOM-Gate"
-    symbols: List[str] = Field(default_factory=lambda: ["BTC/KRW"])
+    symbols: Union[List[str], str] = Field(default_factory=lambda: ["BTC/KRW"])
     position_size_krw: int = 10000
     schedule: ScheduleConfig = Field(default_factory=ScheduleConfig)
 
@@ -71,8 +71,26 @@ class ConfigStore:
         return data
 
     def _ensure_file(self) -> None:
+        """Ensure config file exists, bootstrap from schedule_config if needed."""
         if self._path.exists() and self._path.stat().st_size > 0:
             return
+
+        schedule_path = Path("config/schedule_config.json")
+        if schedule_path.exists():
+            try:
+                schedule_data = json.loads(schedule_path.read_text(encoding="utf-8"))
+                if isinstance(schedule_data, dict):
+                    schedule_data["updated_at"] = datetime.now().isoformat()
+                    if self._atomic_write(schedule_data):
+                        logger.info(
+                            "[ConfigStore] Bootstrapped from schedule_config.json"
+                        )
+                        return
+            except Exception as exc:
+                logger.warning(
+                    "[ConfigStore] Bootstrap from schedule failed: %s", exc
+                )
+
         self._atomic_write(self._default_data())
 
     def _atomic_write(self, data: dict) -> bool:

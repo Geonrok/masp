@@ -9,8 +9,8 @@ from services.api.routes import config as config_routes
 def test_config_store_rejects_invalid_schema(tmp_path):
     path = tmp_path / "runtime_config.json"
     store = ConfigStore(path=str(path))
-    assert store.set("exchanges.upbit.schedule.hour", 99) is False
-    assert store.get("exchanges.upbit") is None
+    assert store.set("exchanges.test_exchange.schedule.hour", 99) is False
+    assert store.get("exchanges.test_exchange") is None
 
 
 def test_config_route_rejects_unknown_exchange():
