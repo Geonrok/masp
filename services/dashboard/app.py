@@ -12,10 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from services.dashboard.components.api_key_status import (
-    ApiKeyStatusPanel,
-    render_api_key_status_panel,
-)
+from services.dashboard.components.api_key_status import render_api_key_status_panel
 from services.dashboard.components.exchange_control import render_exchange_controls
 from services.dashboard.components.exchange_status import ExchangeStatusPanel
 from services.dashboard.components.signal_preview import render_signal_preview
@@ -61,10 +58,7 @@ with tabs[2]:
 
 with tabs[3]:
     st.header("API Key Management")
-    try:
-        render_api_key_status_panel()
-    except Exception:
-        ApiKeyStatusPanel(api).render()
+    render_api_key_status_panel()
 
 with tabs[4]:
     st.header("Strategy Indicators")

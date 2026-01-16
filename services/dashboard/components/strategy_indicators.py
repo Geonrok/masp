@@ -20,7 +20,6 @@ def render_strategy_indicators() -> None:
     api = get_api_client()
     if not api:
         st.warning("MASP_ADMIN_TOKEN is required.")
-        st.stop()
         return
 
     exchanges = ["upbit", "bithumb"]
