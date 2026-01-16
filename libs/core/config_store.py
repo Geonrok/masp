@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -99,6 +100,17 @@ class ConfigStore:
                 return validated.model_dump()
         except Exception as exc:
             logger.warning("[ConfigStore] Load failed: %s", exc)
+            try:
+                cfg_path = getattr(self, "_path", None)
+                if cfg_path and cfg_path.exists():
+                    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    backup_path = cfg_path.with_name(cfg_path.name + f".bad.{ts}")
+                    shutil.copy2(cfg_path, backup_path)
+                    logger.error(
+                        "[ConfigStore] Corrupted config backed up to: %s", backup_path
+                    )
+            except Exception as backup_exc:
+                logger.error("[ConfigStore] Backup failed: %s", backup_exc)
         return self._default_data()
 
     def get(self, key: str | None = None) -> Any:
@@ -109,10 +121,22 @@ class ConfigStore:
                 return data
             return self._get_nested(data, key.split("."))
 
-    def set(self, key: str, value: Any) -> bool:
-        """Set config by dot notation."""
+    def set(self, key: str, value: Any, strict: bool = False) -> bool:
+        """Set config value by dot notation key."""
         with self._lock:
             data = self._load()
+            if strict:
+                keys = key.split(".")
+                current = data
+                for k in keys[:-1]:
+                    if k not in current:
+                        break
+                    if not isinstance(current[k], dict):
+                        logger.warning(
+                            "[ConfigStore] Strict mode: path '%s' is not a dict", k
+                        )
+                        return False
+                    current = current[k]
             self._set_nested(data, key.split("."), value)
             data["updated_at"] = datetime.now().isoformat()
             try:
