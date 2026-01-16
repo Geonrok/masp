@@ -1,5 +1,5 @@
-﻿"""
-MultiExchangeScheduler - ?ㅼ쨷 嫄곕옒???ㅼ?以꾨윭
+"""
+MultiExchangeScheduler - Multi-Asset Strategy Platform Core Scheduler
 MASP Phase 3A - Dual Exchange Support (Upbit 09:00 + Bithumb 00:00)
 """
 from __future__ import annotations
@@ -26,14 +26,23 @@ from services.strategy_runner import StrategyRunner
 
 logger = logging.getLogger(__name__)
 
+try:
+    from services.health_server import HealthServer
+    HEALTH_SERVER_AVAILABLE = True
+except ImportError:
+    HEALTH_SERVER_AVAILABLE = False
+    logger.warning("[MultiExchangeScheduler] health_server not available")
+
+from services import metrics
+
 
 class MultiExchangeScheduler:
     """
     Multi-exchange scheduler for simultaneous Upbit/Bithumb execution.
     
     Features:
-        - Upbit: 09:00 KST (?쇰큺 由ъ뀑)
-        - Bithumb: 00:00 KST (?먯젙 由ъ뀑)
+        - Upbit: 09:00 KST (Daily Rebalancing)
+        - Bithumb: 00:00 KST (Midnight Rebalancing)
         - Independent job management per exchange
         - Graceful shutdown handling
     
@@ -52,6 +61,9 @@ class MultiExchangeScheduler:
         self._running = False
         self._signal_handlers_registered = False
         self._listener_added = False
+        self._health_server = None
+        self._initialized = False
+        self._heartbeat_log_level = self._get_heartbeat_log_level()
         
         # Exchange runners and jobs
         self._runners: Dict[str, StrategyRunner] = {}
@@ -293,14 +305,14 @@ class MultiExchangeScheduler:
                 logger.error(f"[MultiExchangeScheduler] No runner for {exchange_name}")
                 return
 
-            logger.info(f"[MultiExchangeScheduler] ??Running {exchange_name.upper()} strategy")
+            logger.info(f"[MultiExchangeScheduler] Running {exchange_name.upper()} strategy")
             
             loop = asyncio.get_running_loop()
             try:
                 result = await loop.run_in_executor(None, runner.run_once)
-                logger.info(f"[MultiExchangeScheduler] ??{exchange_name.upper()} result: {result}")
+                logger.info(f"[MultiExchangeScheduler] {exchange_name.upper()} result: {result}")
             except Exception as exc:
-                logger.error(f"[MultiExchangeScheduler] ??{exchange_name.upper()} failed: {exc}")
+                logger.error(f"[MultiExchangeScheduler] {exchange_name.upper()} failed: {exc}")
                 raise
 
     def run_once(self, exchange_name: str = None) -> Dict[str, Any]:
@@ -335,8 +347,23 @@ class MultiExchangeScheduler:
                 results[name] = result
             except Exception as exc:
                 results[name] = {"error": str(exc)}
-        
+
         return results
+
+    def _get_heartbeat_log_level(self) -> int:
+        log_level = os.getenv("MASP_HEARTBEAT_LOG_LEVEL", "").upper()
+        if log_level == "DEBUG":
+            return logging.DEBUG
+        return logging.INFO
+
+    def _get_status(self) -> dict:
+        return {
+            "running": self._running,
+            "initialized": getattr(self, "_initialized", False),
+            "active_exchanges": list(self._runners.keys()) if self._runners else [],
+            "exchange_count": len(self._runners) if self._runners else 0,
+            "metrics_enabled": metrics.is_metrics_enabled(),
+        }
 
     def _get_heartbeat_interval(self) -> int:
         """
@@ -406,6 +433,29 @@ class MultiExchangeScheduler:
             sys.argv,
         )
 
+        metrics_initialized = metrics.init_metrics()
+        if metrics_initialized:
+            metrics.set_scheduler_running(True)
+            metrics.set_active_exchanges(len(self._runners))
+
+        if HEALTH_SERVER_AVAILABLE:
+            try:
+                self._health_server = HealthServer(
+                    scheduler_status_fn=self._get_status,
+                    enable_metrics=metrics_initialized,
+                    metrics_fn=metrics.get_metrics_output,
+                )
+                started = await self._health_server.start()
+                if not started:
+                    logger.warning(
+                        "[MultiExchangeScheduler] Health server failed to start"
+                    )
+            except Exception as exc:
+                logger.exception(
+                    "[MultiExchangeScheduler] Health server init failed: %s",
+                    exc,
+                )
+
         heartbeat_interval = self._get_heartbeat_interval()
         logger.info(
             "[MultiExchangeScheduler] ENV: MASP_ENABLE_LIVE_TRADING=%s MASP_HEARTBEAT_SEC=%ds",
@@ -420,15 +470,29 @@ class MultiExchangeScheduler:
         )
 
         self._scheduler.start()
+        self._initialized = True
+
+        start_time = time.time()
         try:
             last_heartbeat = time.time()
 
             while self._running:
                 await asyncio.sleep(0.5)
 
-                if time.time() - last_heartbeat > heartbeat_interval:
-                    logger.info("[MultiExchangeScheduler] heartbeat: running")
-                    last_heartbeat = time.time()
+                if metrics_initialized:
+                    metrics.set_uptime(time.time() - start_time)
+
+                current_time = time.time()
+                if current_time - last_heartbeat >= heartbeat_interval:
+                    if self._heartbeat_log_level == logging.DEBUG:
+                        logger.debug("[MultiExchangeScheduler] heartbeat: running")
+                    else:
+                        logger.info("[MultiExchangeScheduler] heartbeat: running")
+
+                    if metrics_initialized:
+                        metrics.inc_heartbeat()
+
+                    last_heartbeat = current_time
 
         except asyncio.CancelledError:
             logger.warning("[MultiExchangeScheduler] run_forever CANCELLED")
@@ -437,10 +501,10 @@ class MultiExchangeScheduler:
             logger.exception("[MultiExchangeScheduler] run_forever CRASHED")
             raise
         finally:
-            logger.info(
-                "[MultiExchangeScheduler] run_forever EXITING: running=%s",
-                self._running,
-            )
+            if metrics_initialized:
+                metrics.set_scheduler_running(False)
+            if self._health_server:
+                await self._health_server.stop()
             self._shutdown()
 
     def _shutdown(self) -> None:
