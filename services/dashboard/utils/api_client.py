@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 class ConfigApiClient:
     def __init__(self) -> None:
-        self.base_url = os.getenv("MASP_API_BASE_URL", "http://localhost:8000")
+        base_url = os.getenv("MASP_API_BASE_URL", "http://localhost:8000")
+        self.base_url = base_url.rstrip("/")
         self.token = os.getenv("MASP_ADMIN_TOKEN", "")
         self.headers = {"X-MASP-ADMIN-TOKEN": self.token}
 
@@ -96,3 +97,18 @@ class ConfigApiClient:
         except Exception as exc:
             logger.error("[ConfigApiClient] get_all_keys failed: %s", exc)
             return {}
+
+    def health_check(self) -> Dict[str, Any]:
+        """Check API server health."""
+        try:
+            resp = requests.get(
+                f"{self.base_url}/api/v1/health/",
+                headers=self.headers,
+                timeout=3,
+            )
+            if resp.ok:
+                return {"success": True, "data": resp.json()}
+            return {"success": False, "status": resp.status_code}
+        except Exception as exc:
+            logger.error("[ConfigApiClient] health_check failed: %s", exc)
+            return {"success": False, "error": str(exc)}
