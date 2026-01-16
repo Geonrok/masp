@@ -44,3 +44,9 @@ Multi-Asset Strategy Platform.zip
 # Secrets
 storage/master.key
 storage/encrypted_keys.json
+
+# Virtual environments
+.venv311/
+
+# Runtime storage
+storage/runtime_config.json
