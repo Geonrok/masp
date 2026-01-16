@@ -40,3 +40,7 @@ Thumbs.db
 # Large files
 *.zip
 Multi-Asset Strategy Platform.zip
+
+# Secrets
+storage/master.key
+storage/encrypted_keys.json
