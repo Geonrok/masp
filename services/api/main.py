@@ -50,6 +50,7 @@ async def add_request_id(request: Request, call_next):
     content_type = response.headers.get("content-type", "")
     if content_type.startswith("application/json") and hasattr(response, "body_iterator"):
         try:
+            # Collect response body for JSON rewriting.
             body = b""
             async for chunk in response.body_iterator:
                 body += chunk
@@ -58,13 +59,29 @@ async def add_request_id(request: Request, call_next):
             data["request_id"] = request_id
             data["timestamp"] = datetime.now().isoformat()
 
+            headers_to_exclude = {
+                "content-length",
+                "content-type",
+                "content-encoding",
+                "transfer-encoding",
+            }
+            filtered_headers = {
+                k: v
+                for k, v in response.headers.items()
+                if k.lower() not in headers_to_exclude
+            }
+
             return JSONResponse(
                 content=data,
                 status_code=response.status_code,
-                headers=dict(response.headers),
+                headers=filtered_headers,
             )
         except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             logger.warning("[%s] JSON parse failed: %s", request_id, str(exc))
+            return JSONResponse(
+                content={"error": "Response processing failed", "request_id": request_id},
+                status_code=500,
+            )
 
     return response
 
