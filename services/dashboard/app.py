@@ -15,7 +15,8 @@ if str(PROJECT_ROOT) not in sys.path:
 from services.dashboard.components.api_key_status import render_api_key_status_panel
 from services.dashboard.components.exchange_control import render_exchange_controls
 from services.dashboard.components.exchange_status import ExchangeStatusPanel
-from services.dashboard.components.signal_preview import render_signal_preview
+from services.dashboard.components.positions_panel import render_positions_panel
+from services.dashboard.components.signal_preview import render_signal_preview_panel
 from services.dashboard.components.strategy_config import StrategyConfigPanel
 from services.dashboard.components.strategy_indicators import render_strategy_indicators
 from services.dashboard.components.telegram_settings import render_telegram_settings
@@ -41,6 +42,7 @@ tabs = st.tabs(
         "API Keys",
         "Strategy",
         "Signals",
+        "Positions",
         "Config",
     ]
 )
@@ -66,9 +68,13 @@ with tabs[4]:
 
 with tabs[5]:
     st.header("Signal Preview")
-    render_signal_preview()
+    render_signal_preview_panel()
 
 with tabs[6]:
+    st.header("Positions")
+    render_positions_panel()
+
+with tabs[7]:
     StrategyConfigPanel(api).render()
 
 with st.sidebar:

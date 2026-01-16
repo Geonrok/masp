@@ -1,101 +1,126 @@
-"""Strategy signal preview - mock data only."""
+"""Signal preview component for MASP Dashboard."""
 from __future__ import annotations
 
-from typing import Any, Dict, List
+import os
+from datetime import datetime
 
 import streamlit as st
 
-
-def get_mock_signals(exchange: str) -> List[Dict[str, Any]]:
-    """Return mock signal data for UI demonstration."""
-    if exchange == "upbit":
-        return [
-            {"symbol": "BTC/KRW", "signal": "BUY", "strength": 0.85, "price": 145000000},
-            {"symbol": "ETH/KRW", "signal": "BUY", "strength": 0.72, "price": 4850000},
-            {"symbol": "XRP/KRW", "signal": "HOLD", "strength": 0.45, "price": 3200},
-            {"symbol": "SOL/KRW", "signal": "SELL", "strength": 0.65, "price": 285000},
-        ]
-    if exchange == "bithumb":
-        return [
-            {"symbol": "BTC/KRW", "signal": "BUY", "strength": 0.78, "price": 144800000},
-            {"symbol": "ETH/KRW", "signal": "HOLD", "strength": 0.52, "price": 4820000},
-        ]
-    return []
+from services.dashboard.utils.signal_generator import (
+    get_cached_signals,
+    get_cached_symbols,
+    get_signal_generator_status,
+)
 
 
-def get_signal_icon(signal: str) -> str:
-    """Return ASCII indicator for signal."""
-    return {"BUY": "^", "SELL": "v", "HOLD": "-"}.get(signal, "?")
+def _check_live_conditions(exchange: str) -> tuple[bool, str]:
+    """
+    Check if LIVE mode conditions are met.
+
+    Returns:
+        (can_live, reason)
+    """
+    live_switch = os.getenv("MASP_DASHBOARD_LIVE", "").strip() == "1"
+    if not live_switch:
+        return False, "MASP_DASHBOARD_LIVE not set to '1'"
+
+    has_keys = False
+    try:
+        from libs.core.key_manager import KeyManager
+
+        km = KeyManager()
+        raw = km.get_raw_key(exchange)
+        has_keys = bool(raw and raw.get("api_key") and raw.get("secret_key"))
+    except Exception:
+        pass
+
+    if not has_keys:
+        api_key = os.getenv(f"{exchange.upper()}_API_KEY")
+        secret_key = os.getenv(f"{exchange.upper()}_SECRET_KEY")
+        has_keys = bool(api_key and secret_key)
+
+    if not has_keys:
+        return False, f"API keys not configured for {exchange}"
+
+    return True, "All conditions met"
 
 
-def render_signal_table(signals: List[Dict[str, Any]]) -> None:
-    """Render signal table."""
-    if not signals:
-        st.info("No signals available.")
-        return
+def render_signal_preview_panel() -> None:
+    """Render signal preview panel with LIVE/DEMO mode support."""
+    st.subheader("Signal Preview")
 
-    table_data = []
-    for item in signals:
-        table_data.append(
-            {
-                "Signal": f"{get_signal_icon(item['signal'])} {item['signal']}",
-                "Symbol": item["symbol"],
-                "Strength": f"{item['strength']:.0%}",
-                "Price": f"{item['price']:,.0f} KRW",
-            }
-        )
-
-    st.table(table_data)
-
-
-def render_signal_summary(signals: List[Dict[str, Any]]) -> None:
-    """Render signal summary."""
-    buy = sum(1 for s in signals if s["signal"] == "BUY")
-    sell = sum(1 for s in signals if s["signal"] == "SELL")
-    hold = sum(1 for s in signals if s["signal"] == "HOLD")
-
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total", len(signals))
-    col2.metric("BUY", buy)
-    col3.metric("SELL", sell)
-    col4.metric("HOLD", hold)
-
-
-def render_signal_preview() -> None:
-    """Render signal preview UI."""
-    st.subheader("Strategy Signal Preview")
-    st.warning(
-        "DEMO MODE: This preview uses mock data for UI demonstration. "
-        "Actual signals will be available after StrategyRunner integration."
+    exchange = st.selectbox(
+        "Exchange",
+        options=["upbit", "bithumb"],
+        key="signal_exchange_select",
     )
 
-    exchanges = ["upbit", "bithumb"]
-    selected = st.selectbox("Select Exchange", exchanges, key="signal_exchange")
+    can_live, reason = _check_live_conditions(exchange)
+    status = get_signal_generator_status(exchange, allow_live=can_live)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if can_live and not status["is_demo_mode"]:
+            st.success("LIVE Mode")
+        else:
+            st.info("DEMO Mode")
+
+    with col2:
+        st.caption(status["mode_description"])
+        if not can_live:
+            st.caption(f"Reason: {reason}")
 
     st.divider()
 
-    if st.button("Generate Preview", key="gen_preview"):
-        with st.spinner("Generating mock signals..."):
-            signals = get_mock_signals(selected)
+    n_symbols = st.slider(
+        "Number of symbols",
+        min_value=5,
+        max_value=50,
+        value=10,
+        step=5,
+        key="signal_n_symbols",
+    )
 
-        if signals:
-            render_signal_summary(signals)
-            st.divider()
-            st.subheader("Signal Details")
-            render_signal_table(signals)
+    if st.button("Generate Signals", key="signal_generate_btn", type="primary"):
+        with st.spinner("Generating signals..."):
+            try:
+                symbols = get_cached_symbols(exchange, limit=n_symbols, allow_live=can_live)
+                if not symbols:
+                    st.warning("No symbols available")
+                    return
 
-            filter_opts = st.multiselect(
-                "Filter by Signal",
-                options=["BUY", "SELL", "HOLD"],
-                default=["BUY", "SELL", "HOLD"],
-                key="signal_filter",
-            )
+                signals = get_cached_signals(exchange, tuple(symbols), allow_live=can_live)
+                st.session_state["signal_results"] = signals
+                st.session_state["signal_timestamp"] = datetime.now().isoformat()
+            except Exception:
+                st.error("Failed to generate signals. Please check configuration.")
+                st.session_state["signal_results"] = []
 
-            filtered = [s for s in signals if s["signal"] in filter_opts]
-            if len(filtered) != len(signals):
-                st.subheader("Filtered Results")
-                render_signal_table(filtered)
-        else:
-            st.info("No signals for this exchange.")
-    else:
-        st.info("Click 'Generate Preview' to see mock signals.")
+    if "signal_results" in st.session_state and st.session_state["signal_results"]:
+        signals = st.session_state["signal_results"]
+
+        buy_count = sum(1 for s in signals if s.get("signal") == "BUY")
+        sell_count = sum(1 for s in signals if s.get("signal") == "SELL")
+        hold_count = sum(1 for s in signals if s.get("signal") == "HOLD")
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("BUY", buy_count)
+        col2.metric("SELL", sell_count)
+        col3.metric("HOLD", hold_count)
+
+        st.dataframe(
+            [
+                {
+                    "Symbol": s["symbol"],
+                    "Signal": s["signal"],
+                    "Strength": f"{s.get('strength', 0):.2%}",
+                    "Time": s.get("timestamp", "")[:19],
+                }
+                for s in signals
+            ],
+            use_container_width=True,
+            hide_index=True,
+        )
+
+        if any(s.get("is_mock") for s in signals):
+            st.caption("Some signals are generated from mock data (DEMO mode)")
