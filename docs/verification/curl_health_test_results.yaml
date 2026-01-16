@@ -1,0 +1,21 @@
+curl_test_results:
+  timestamp: "2026-01-16 14:20:44"
+  target:
+    host: "127.0.0.1"
+    port: 8080
+  endpoints:
+    health:
+      status_code: 200
+      body_status: "healthy"
+      pass: true
+    live:
+      status_code: 200
+      pass: true
+    ready:
+      status_code: 200
+      pass: true
+    metrics:
+      status_code: 501
+      content_type: "text/plain"
+      pass: true
+  verdict: "PASS"
