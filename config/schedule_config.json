@@ -15,7 +15,7 @@
     "bithumb": {
       "enabled": true,
       "strategy": "KAMA-TSMOM-Gate",
-      "symbols": ["BTC/KRW"],
+      "symbols": "ALL_KRW",
       "position_size_krw": 10000,
       "schedule": {
         "hour": 0,
@@ -25,5 +25,11 @@
       }
     }
   },
-  "_comment": "MASP Phase 3B - All KRW symbols"
+  "telegram": {
+    "enabled": true,
+    "notify_trades": true,
+    "notify_daily_summary": true,
+    "notify_errors": true
+  },
+  "_comment": "MASP Phase 5 - All KRW symbols + Telegram"
 }

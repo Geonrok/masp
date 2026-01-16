@@ -130,6 +130,31 @@ class ConfigStore:
                     "[ConfigStore] Failed to remove %s: %s", old_backup, exc
                 )
 
+    def update_exchange_atomic(self, name: str, updates: dict) -> bool:
+        """
+        Update exchange config atomically (load -> merge -> validate -> write).
+        """
+        with self._lock:
+            data = self._load()
+            current = data.get("exchanges", {}).get(name)
+            if current is None:
+                return False
+
+            merged = {**current, **updates}
+            if "schedule" in updates and "schedule" in current:
+                if isinstance(updates.get("schedule"), dict):
+                    merged["schedule"] = {**current["schedule"], **updates["schedule"]}
+
+            try:
+                validated = ExchangeConfig.model_validate(merged)
+                data["exchanges"][name] = validated.model_dump()
+            except Exception as exc:
+                logger.warning("[ConfigStore] Validation failed: %s", exc)
+                return False
+
+            data["updated_at"] = datetime.now().isoformat()
+            return self._atomic_write(data)
+
     def get(self, key: str | None = None) -> Any:
         """Get config by dot notation."""
         with self._lock:

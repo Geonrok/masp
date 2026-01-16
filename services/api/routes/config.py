@@ -53,3 +53,37 @@ async def toggle_exchange(name: str, enabled: bool):
     store = ConfigStore()
     success = store.set(f"exchanges.{name}.enabled", enabled)
     return {"success": success, "exchange": name, "enabled": enabled}
+
+
+@router.patch("/exchanges/{name}", dependencies=[Depends(verify_admin_token)])
+async def patch_exchange(name: str, updates: dict):
+    """Partial update exchange config (atomic)."""
+    _validate_exchange(name)
+    store = ConfigStore()
+
+    if not isinstance(updates, dict):
+        raise HTTPException(status_code=400, detail="Invalid payload")
+
+    current = store.get(f"exchanges.{name}")
+    if not current:
+        raise HTTPException(status_code=404, detail=f"Exchange {name} not found")
+
+    allowed = {"enabled", "strategy", "symbols", "position_size_krw", "schedule"}
+    invalid = set(updates.keys()) - allowed
+    if invalid:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid fields: {sorted(invalid)}"
+        )
+
+    success = store.update_exchange_atomic(name, updates)
+    if not success:
+        raise HTTPException(status_code=400, detail="Update validation failed")
+
+    return {"success": True, "exchange": name, "updated": list(updates.keys())}
+
+
+@router.get("/runtime", dependencies=[Depends(verify_admin_token)])
+async def get_runtime_config():
+    """Get full runtime configuration."""
+    store = ConfigStore()
+    return store.get()

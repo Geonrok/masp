@@ -22,6 +22,7 @@ from apscheduler.events import EVENT_JOB_MISSED, EVENT_JOB_EXECUTED, EVENT_JOB_E
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from libs.adapters.bithumb_public import BithumbPublic
 from services.strategy_runner import StrategyRunner
 
 logger = logging.getLogger(__name__)
@@ -187,7 +188,15 @@ class MultiExchangeScheduler:
             symbols_cfg = cfg.get("symbols", ["BTC/KRW"])
             if symbols_cfg == "ALL_KRW" and exchange_name == "upbit":
                 from libs.adapters.upbit_public import get_all_krw_symbols
+
                 symbols = get_all_krw_symbols()
+                logger.info(
+                    "[MultiExchangeScheduler] %s: Loaded %d KRW symbols",
+                    exchange_name,
+                    len(symbols),
+                )
+            elif symbols_cfg == "ALL_KRW" and exchange_name == "bithumb":
+                symbols = BithumbPublic().get_all_krw_symbols()
                 logger.info(
                     "[MultiExchangeScheduler] %s: Loaded %d KRW symbols",
                     exchange_name,
