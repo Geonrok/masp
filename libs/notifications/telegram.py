@@ -59,20 +59,21 @@ def format_trade_message(
     exchange: str, symbol: str, side: str, quantity: float, price: float, status: str
 ) -> str:
     """Format trade notification with HTML escape."""
-    emoji = ""
+    side_upper = side.upper()
+    emoji = "🟢" if side_upper == "BUY" else "🔴"
     return (
         f"{emoji} <b>{html.escape(exchange.upper())}</b>\n"
         f"Symbol: {html.escape(symbol)}\n"
-        f"Side: {side}\n"
+        f"Side: {html.escape(side)}\n"
         f"Qty: {quantity:.8f}\n"
         f"Price: {price:,.0f} KRW\n"
-        f"Status: {status}"
+        f"Status: {html.escape(status)}"
     )
 
 
 def format_daily_summary(exchange: str, trades: int, pnl: float) -> str:
     """Format daily summary."""
-    emoji = ""
+    emoji = "📈" if pnl >= 0 else "📉"
     return (
         f"{emoji} <b>Daily - {html.escape(exchange.upper())}</b>\n"
         f"Trades: {trades}\n"
