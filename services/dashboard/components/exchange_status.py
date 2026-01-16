@@ -33,5 +33,10 @@ class ExchangeStatusPanel:
                 if config is not None:
                     btn_label = "Disable" if enabled else "Enable"
                     if st.button(btn_label, key=f"toggle_{exchange}"):
-                        self.api.toggle_exchange(exchange, not enabled)
-                        st.rerun()
+                        success = self.api.toggle_exchange(exchange, not enabled)
+                        if success:
+                            st.rerun()
+                        else:
+                            st.error(
+                                f"Failed to toggle {exchange}. Check API server."
+                            )

@@ -109,9 +109,26 @@ class ConfigStore:
                     logger.error(
                         "[ConfigStore] Corrupted config backed up to: %s", backup_path
                     )
+                    self._cleanup_old_backups()
             except Exception as backup_exc:
                 logger.error("[ConfigStore] Backup failed: %s", backup_exc)
         return self._default_data()
+
+    def _cleanup_old_backups(self, max_count: int = 10) -> None:
+        """Remove old backup files, keeping the most recent ones."""
+        backups = sorted(
+            self._path.parent.glob(f"{self._path.name}.bad.*"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        for old_backup in backups[max_count:]:
+            try:
+                old_backup.unlink()
+                logger.info("[ConfigStore] Removed old backup: %s", old_backup)
+            except Exception as exc:
+                logger.warning(
+                    "[ConfigStore] Failed to remove %s: %s", old_backup, exc
+                )
 
     def get(self, key: str | None = None) -> Any:
         """Get config by dot notation."""
