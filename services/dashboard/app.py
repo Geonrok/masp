@@ -7,6 +7,7 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from components.api_key_status import ApiKeyStatusPanel
+from components.exchange_control import render_exchange_controls
 from components.exchange_status import ExchangeStatusPanel
 from components.strategy_config import StrategyConfigPanel
 from utils.api_client import ConfigApiClient
@@ -23,12 +24,16 @@ st.caption("Multi-Asset Strategy Platform - Phase 5C-D")
 
 api = ConfigApiClient()
 
-tab_status, tab_keys, tab_config = st.tabs(
-    ["Exchange Status", "API Keys", "Strategy Config"]
+tab_status, tab_control, tab_keys, tab_config = st.tabs(
+    ["Exchange Status", "Quick Controls", "API Keys", "Strategy Config"]
 )
 
 with tab_status:
     ExchangeStatusPanel(api).render()
+
+with tab_control:
+    st.header("Quick Controls")
+    render_exchange_controls(["upbit", "bithumb"])
 
 with tab_keys:
     ApiKeyStatusPanel(api).render()
