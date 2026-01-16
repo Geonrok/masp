@@ -39,9 +39,9 @@ def render_exchange_toggle(exchange_name: str, current_enabled: bool) -> None:
             st.success(
                 f"{exchange_name.upper()} set to {'ENABLED' if new_state else 'DISABLED'}."
             )
-            st.rerun()
         else:
             st.error("Update failed. Check the API server logs.")
+        st.rerun()
 
 
 def render_position_size_editor(exchange_name: str, current_size: int) -> None:
@@ -67,21 +67,21 @@ def render_position_size_editor(exchange_name: str, current_size: int) -> None:
         with col2:
             submitted = st.form_submit_button("Save", use_container_width=True)
 
-        if submitted:
-            if new_size == current_size:
-                st.info("No changes to save.")
-                return
+    if submitted:
+        if new_size == current_size:
+            st.info("No changes to save.")
+            return
 
             with st.spinner("Saving..."):
                 success = api.update_exchange_config(
                     exchange_name, {"position_size_krw": int(new_size)}
                 )
 
-            if success:
-                st.success(f"Saved position size: {int(new_size):,} KRW.")
-                st.rerun()
-            else:
-                st.error("Save failed. Check the API server logs.")
+        if success:
+            st.success(f"Saved position size: {int(new_size):,} KRW.")
+        else:
+            st.error("Save failed. Check the API server logs.")
+        st.rerun()
 
 
 def render_exchange_controls(exchanges: list[str]) -> None:
