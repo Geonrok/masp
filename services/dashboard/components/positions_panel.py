@@ -1,39 +1,12 @@
 """Positions panel for MASP Dashboard - displays account balances."""
 from __future__ import annotations
 
-import os
 from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
 import streamlit as st
 
-
-def _check_live_conditions(exchange: str) -> Tuple[bool, str]:
-    """Check LIVE mode conditions."""
-    live_switch = os.getenv("MASP_DASHBOARD_LIVE", "").strip() == "1"
-    if not live_switch:
-        return False, "MASP_DASHBOARD_LIVE not set"
-
-    has_keys = False
-    try:
-        from libs.core.key_manager import KeyManager
-
-        km = KeyManager()
-        raw = km.get_raw_key(exchange)
-        has_keys = bool(raw and raw.get("api_key") and raw.get("secret_key"))
-    except Exception:
-        pass
-
-    if not has_keys:
-        api_key = os.getenv(f"{exchange.upper()}_API_KEY")
-        secret_key = os.getenv(f"{exchange.upper()}_SECRET_KEY")
-        has_keys = bool(api_key and secret_key)
-
-    if not has_keys:
-        return False, "API keys not configured"
-
-    return True, "Ready"
-
+from services.dashboard.utils.live_mode import check_live_conditions
 
 def _get_mock_balances() -> List[Dict[str, Any]]:
     """Generate mock balance data for demo mode."""
@@ -48,7 +21,7 @@ def _map_execution_exchange(exchange: str) -> str:
     """Map dashboard exchange name to execution adapter exchange name."""
     mapping = {
         "upbit": "upbit_spot",
-        "bithumb": "bithumb",
+        "bithumb": "bithumb_spot",
     }
     return mapping.get(exchange, exchange)
 
@@ -87,7 +60,7 @@ def render_positions_panel() -> None:
         key="positions_exchange_select",
     )
 
-    can_live, reason = _check_live_conditions(exchange)
+    can_live, reason = check_live_conditions(exchange)
 
     if can_live:
         st.success(f"LIVE Mode - Connected to {exchange.upper()}")
@@ -97,6 +70,7 @@ def render_positions_panel() -> None:
     st.divider()
 
     if st.button("Refresh Balances", key="positions_refresh_btn", type="primary"):
+        _fetch_balances.clear()
         with st.spinner("Fetching balances..."):
             balances, is_mock = _fetch_balances(exchange, use_real=can_live)
             st.session_state["positions_balances"] = balances

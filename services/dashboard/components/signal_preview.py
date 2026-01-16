@@ -1,48 +1,16 @@
 """Signal preview component for MASP Dashboard."""
 from __future__ import annotations
 
-import os
 from datetime import datetime
 
 import streamlit as st
 
+from services.dashboard.utils.live_mode import check_live_conditions
 from services.dashboard.utils.signal_generator import (
     get_cached_signals,
     get_cached_symbols,
     get_signal_generator_status,
 )
-
-
-def _check_live_conditions(exchange: str) -> tuple[bool, str]:
-    """
-    Check if LIVE mode conditions are met.
-
-    Returns:
-        (can_live, reason)
-    """
-    live_switch = os.getenv("MASP_DASHBOARD_LIVE", "").strip() == "1"
-    if not live_switch:
-        return False, "MASP_DASHBOARD_LIVE not set to '1'"
-
-    has_keys = False
-    try:
-        from libs.core.key_manager import KeyManager
-
-        km = KeyManager()
-        raw = km.get_raw_key(exchange)
-        has_keys = bool(raw and raw.get("api_key") and raw.get("secret_key"))
-    except Exception:
-        pass
-
-    if not has_keys:
-        api_key = os.getenv(f"{exchange.upper()}_API_KEY")
-        secret_key = os.getenv(f"{exchange.upper()}_SECRET_KEY")
-        has_keys = bool(api_key and secret_key)
-
-    if not has_keys:
-        return False, f"API keys not configured for {exchange}"
-
-    return True, "All conditions met"
 
 
 def render_signal_preview_panel() -> None:
@@ -55,7 +23,7 @@ def render_signal_preview_panel() -> None:
         key="signal_exchange_select",
     )
 
-    can_live, reason = _check_live_conditions(exchange)
+    can_live, reason = check_live_conditions(exchange)
     status = get_signal_generator_status(exchange, allow_live=can_live)
 
     col1, col2 = st.columns(2)
@@ -72,14 +40,17 @@ def render_signal_preview_panel() -> None:
 
     st.divider()
 
+    max_symbols = 20 if can_live else 50
     n_symbols = st.slider(
         "Number of symbols",
         min_value=5,
-        max_value=50,
+        max_value=max_symbols,
         value=10,
         step=5,
         key="signal_n_symbols",
     )
+    if can_live and max_symbols < 50:
+        st.caption("LIVE mode limits to 20 symbols to prevent rate-limiting.")
 
     if st.button("Generate Signals", key="signal_generate_btn", type="primary"):
         with st.spinner("Generating signals..."):

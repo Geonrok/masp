@@ -10,7 +10,10 @@ KeyManager encrypts API keys and stores them securely.
 $env:MASP_MASTER_KEY = "your-secure-master-key-base64-encoded"
 ```
 
-### Register keys via API
+### Register keys via API (If endpoint is enabled)
+
+Note: Endpoint availability depends on your MASP deployment configuration.
+If unavailable, use environment variables for development or consult your KeyManager setup.
 ```bash
 curl -X POST http://localhost:8000/api/v1/keys/upbit \
   -H "X-MASP-ADMIN-TOKEN: your-admin-token" \
