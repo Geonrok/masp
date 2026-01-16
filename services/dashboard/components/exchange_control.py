@@ -34,7 +34,7 @@ def render_exchange_toggle(exchange_name: str, current_state: bool) -> None:
 
     if new_state != current_state:
         with st.spinner("Updating..."):
-            success = api.update_exchange_config(exchange_name, {"enabled": new_state})
+            success = api.toggle_exchange(exchange_name, new_state)
         if success:
             st.success(f"{exchange_name.upper()} {'enabled' if new_state else 'disabled'}.")
             st.rerun()
@@ -98,7 +98,7 @@ def render_exchange_controls(exchanges: list[str]) -> None:
             st.warning(f"Could not load config for {exchange}.")
             continue
 
-        with st.expander(f"{exchange.upper()} Controls", expanded=True):
+        with st.expander(f"{exchange.upper()} Controls", expanded=False):
             render_exchange_toggle(exchange, config.get("enabled", False))
             st.divider()
             render_position_size_editor(
