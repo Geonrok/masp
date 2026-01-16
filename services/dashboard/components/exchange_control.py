@@ -6,7 +6,7 @@ from typing import Optional
 
 import streamlit as st
 
-from utils.api_client import ConfigApiClient
+from services.dashboard.utils.api_client import ConfigApiClient
 
 
 def get_api_client() -> Optional[ConfigApiClient]:
