@@ -5,7 +5,7 @@
 KeyManager encrypts API keys and stores them securely.
 
 ### Prerequisites
-```bash
+```powershell
 # MASP_MASTER_KEY must be a 32-byte base64 string
 $env:MASP_MASTER_KEY = "your-secure-master-key-base64-encoded"
 ```

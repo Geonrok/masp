@@ -51,6 +51,13 @@ def _load_market_adapter(exchange: str, force_demo: bool):
 class _MockStrategy:
     """Mock strategy for demo mode."""
 
+    def generate_signal(self, symbol: str, ohlcv: List[Dict[str, Any]] | None = None) -> Dict[str, Any]:
+        """Generate mock signal for a symbol."""
+        data = ohlcv or []
+        result = self.calculate_signal(data)
+        result["symbol"] = symbol
+        return result
+
     def calculate_signal(self, ohlcv: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Generate mock signal."""
         if not ohlcv:
@@ -89,8 +96,11 @@ class _MockMarketAdapter:
     def get_available_symbols(self) -> List[str]:
         return self._symbols
 
+    def get_tickers(self) -> List[str]:
+        return [symbol.split("/")[0] for symbol in self._symbols]
+
     def get_ohlcv(
-        self, symbol: str, timeframe: str = "1d", limit: int = 100
+        self, symbol: str, interval: str = "1d", limit: int = 100
     ) -> List[Dict[str, Any]]:
         """Generate mock OHLCV data."""
         base_price = 50_000_000 if "BTC" in symbol else 1_000_000
@@ -123,6 +133,11 @@ class SignalGenerator:
         self.strategy, self._is_mock_strategy = _load_strategy(force_demo)
         self.adapter, self._is_mock_adapter = _load_market_adapter(exchange, force_demo)
         self._is_demo_mode = self._is_mock_strategy or self._is_mock_adapter
+        if hasattr(self.strategy, "set_market_data"):
+            try:
+                self.strategy.set_market_data(self.adapter)
+            except Exception:
+                pass
 
     @property
     def is_demo_mode(self) -> bool:
@@ -145,7 +160,15 @@ class SignalGenerator:
     def get_symbols(self, limit: int = 20) -> List[str]:
         """Get available trading symbols."""
         try:
-            symbols = self.adapter.get_available_symbols()
+            if hasattr(self.adapter, "get_available_symbols"):
+                symbols = self.adapter.get_available_symbols()
+            elif hasattr(self.adapter, "get_symbols"):
+                symbols = self.adapter.get_symbols()
+            elif hasattr(self.adapter, "get_tickers"):
+                tickers = self.adapter.get_tickers()
+                symbols = [f"{t}/KRW" if "/" not in t else t for t in tickers]
+            else:
+                symbols = []
             return symbols[:limit] if symbols else []
         except Exception as exc:
             logger.warning("Failed to get symbols: %s", type(exc).__name__)
@@ -154,14 +177,32 @@ class SignalGenerator:
     def generate_signal(self, symbol: str) -> Dict[str, Any]:
         """Generate signal for a single symbol."""
         try:
-            ohlcv = self.adapter.get_ohlcv(symbol, timeframe="1d", limit=100)
-            signal_result = self.strategy.calculate_signal(ohlcv)
+            if hasattr(self.strategy, "generate_signal"):
+                result = self.strategy.generate_signal(symbol)
+            else:
+                ohlcv = []
+                if hasattr(self.adapter, "get_ohlcv"):
+                    try:
+                        ohlcv = self.adapter.get_ohlcv(symbol, interval="1d", limit=100)
+                    except TypeError:
+                        ohlcv = self.adapter.get_ohlcv(symbol, timeframe="1d", limit=100)
+                result = self.strategy.calculate_signal(ohlcv)
+
+            if isinstance(result, dict):
+                signal_value = result.get("signal", "HOLD")
+                strength = result.get("strength", 0.0)
+                timestamp = result.get("timestamp") or datetime.now().isoformat()
+            else:
+                signal_value = getattr(result.signal, "value", result.signal)
+                strength = getattr(result, "strength", 0.0)
+                ts = getattr(result, "timestamp", None)
+                timestamp = ts.isoformat() if ts else datetime.now().isoformat()
 
             return {
                 "symbol": symbol,
-                "signal": signal_result.get("signal", "HOLD"),
-                "strength": signal_result.get("strength", 0.0),
-                "timestamp": datetime.now().isoformat(),
+                "signal": signal_value,
+                "strength": strength,
+                "timestamp": timestamp,
                 "is_mock": self._is_demo_mode,
             }
         except Exception as exc:

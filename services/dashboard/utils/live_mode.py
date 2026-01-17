@@ -1,8 +1,16 @@
 """Common LIVE mode condition checking."""
 from __future__ import annotations
 
+import logging
 import os
 from typing import Tuple
+
+logger = logging.getLogger(__name__)
+
+try:
+    from libs.core.key_manager import KeyManager
+except Exception:
+    KeyManager = None  # type: ignore
 
 
 def check_live_conditions(exchange: str) -> Tuple[bool, str]:
@@ -17,14 +25,14 @@ def check_live_conditions(exchange: str) -> Tuple[bool, str]:
         return False, "MASP_DASHBOARD_LIVE not set to '1'"
 
     has_keys = False
-    try:
-        from libs.core.key_manager import KeyManager
 
-        km = KeyManager()
-        raw = km.get_raw_key(exchange)
-        has_keys = bool(raw and raw.get("api_key") and raw.get("secret_key"))
-    except Exception:
-        pass
+    if KeyManager is not None:
+        try:
+            km = KeyManager()
+            raw = km.get_raw_key(exchange)
+            has_keys = bool(raw and raw.get("api_key") and raw.get("secret_key"))
+        except Exception as exc:
+            logger.debug("KeyManager check failed: %s", type(exc).__name__)
 
     if not has_keys:
         api_key = os.getenv(f"{exchange.upper()}_API_KEY")
