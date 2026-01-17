@@ -15,6 +15,7 @@ from services.dashboard.utils.holdings import (
     get_holding_symbols,
     is_private_api_enabled,
 )
+from services.dashboard.utils.symbols import upbit_to_dashboard
 from services.dashboard.utils.upbit_symbols import get_all_upbit_symbols, get_symbol_count
 
 
@@ -120,7 +121,10 @@ def render_signal_preview_panel() -> None:
         holding_symbols = get_holding_symbols() if filter_by_holdings else []
         filtered_signals = []
         for signal in signals:
-            symbol = signal.get("symbol", "")
+            symbol_raw = signal.get("symbol", "")
+            symbol = (
+                upbit_to_dashboard(symbol_raw) if exchange == "upbit" else symbol_raw
+            )
             signal_type = signal.get("signal", "")
             is_holding = symbol in holding_symbols
 
