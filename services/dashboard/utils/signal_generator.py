@@ -174,19 +174,55 @@ class SignalGenerator:
             logger.warning("Failed to get symbols: %s", type(exc).__name__)
             return ["BTC/KRW", "ETH/KRW", "XRP/KRW", "SOL/KRW", "DOGE/KRW"][:limit]
 
+    def _get_ohlcv_safe(self, symbol: str) -> List[Dict[str, Any]]:
+        """Get OHLCV with interval/timeframe/positional fallback."""
+        if not hasattr(self.adapter, "get_ohlcv"):
+            return []
+        try:
+            return self.adapter.get_ohlcv(symbol, interval="1d", limit=100)
+        except TypeError:
+            pass
+        try:
+            return self.adapter.get_ohlcv(symbol, timeframe="1d", limit=100)
+        except TypeError:
+            pass
+        try:
+            return self.adapter.get_ohlcv(symbol, "1d", 100)
+        except Exception as exc:
+            logger.debug("get_ohlcv all attempts failed: %s", type(exc).__name__)
+            return []
+
     def generate_signal(self, symbol: str) -> Dict[str, Any]:
         """Generate signal for a single symbol."""
         try:
+            result = None
             if hasattr(self.strategy, "generate_signal"):
-                result = self.strategy.generate_signal(symbol)
-            else:
-                ohlcv = []
-                if hasattr(self.adapter, "get_ohlcv"):
-                    try:
-                        ohlcv = self.adapter.get_ohlcv(symbol, interval="1d", limit=100)
-                    except TypeError:
-                        ohlcv = self.adapter.get_ohlcv(symbol, timeframe="1d", limit=100)
-                result = self.strategy.calculate_signal(ohlcv)
+                try:
+                    result = self.strategy.generate_signal(symbol)
+                except TypeError:
+                    logger.debug("generate_signal(symbol) failed, trying (symbol, ohlcv)")
+                    ohlcv = self._get_ohlcv_safe(symbol)
+                    if ohlcv:
+                        try:
+                            result = self.strategy.generate_signal(symbol, ohlcv)
+                        except TypeError:
+                            logger.debug("generate_signal(symbol, ohlcv) also failed")
+                            result = None
+
+            if result is None and hasattr(self.strategy, "calculate_signal"):
+                ohlcv = self._get_ohlcv_safe(symbol)
+                if ohlcv:
+                    result = self.strategy.calculate_signal(ohlcv)
+
+            if result is None:
+                return {
+                    "symbol": symbol,
+                    "signal": "ERROR",
+                    "strength": 0.0,
+                    "error": "Signal generation failed",
+                    "timestamp": datetime.now().isoformat(),
+                    "is_mock": True,
+                }
 
             if isinstance(result, dict):
                 signal_value = result.get("signal", "HOLD")
