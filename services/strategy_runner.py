@@ -118,6 +118,13 @@ class StrategyRunner:
         else:
             md_exchange = "upbit_spot"
         self.market_data = market_data or AdapterFactory.create_market_data(md_exchange)
+
+        if self.strategy and hasattr(self.strategy, "set_market_data"):
+            self.strategy.set_market_data(self.market_data)
+            logger.info(
+                "[StrategyRunner] Injected %s market data into strategy",
+                md_exchange,
+            )
         
         # 포지션 상태
         self._positions: Dict[str, float] = {}  # symbol -> quantity

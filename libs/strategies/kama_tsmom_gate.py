@@ -131,6 +131,12 @@ class KamaTsmomGateStrategy(BaseStrategy):
         """TSMOM(90) signal: Close > Close[-90]."""
         prices = self._get_prices(symbol, self.tsmom_lookback + 10)
         if len(prices) <= self.tsmom_lookback:
+            logger.debug(
+                "[Strategy] TSMOM insufficient data for %s: %d <= %d",
+                symbol,
+                len(prices),
+                self.tsmom_lookback,
+            )
             return False
         return TSMOM_signal(prices, self.tsmom_lookback)
 
