@@ -157,19 +157,33 @@ class SignalGenerator:
             parts.append("Mock Adapter")
         return f"DEMO ({' + '.join(parts)})"
 
-    def get_symbols(self, limit: int = 20) -> List[str]:
-        """Get available trading symbols."""
+    def get_symbols(self, limit: int = 20, show_all: bool = False) -> List[str]:
+        """Get available trading symbols.
+
+        Args:
+            limit: Maximum symbols (ignored if show_all=True)
+            show_all: If True, return all symbols (listing only)
+        """
         try:
+            if not self._is_demo_mode and self.exchange == "upbit":
+                from services.dashboard.utils.upbit_symbols import get_all_upbit_symbols
+
+                symbols = get_all_upbit_symbols()
+                if symbols:
+                    return symbols if show_all else symbols[:limit]
+
             if hasattr(self.adapter, "get_available_symbols"):
                 symbols = self.adapter.get_available_symbols()
             elif hasattr(self.adapter, "get_symbols"):
                 symbols = self.adapter.get_symbols()
             elif hasattr(self.adapter, "get_tickers"):
+                from services.dashboard.utils.symbols import upbit_to_dashboard
+
                 tickers = self.adapter.get_tickers()
-                symbols = [f"{t}/KRW" if "/" not in t else t for t in tickers]
+                symbols = [upbit_to_dashboard(ticker) for ticker in tickers]
             else:
                 symbols = []
-            return symbols[:limit] if symbols else []
+            return symbols if show_all else (symbols[:limit] if symbols else [])
         except Exception as exc:
             logger.warning("Failed to get symbols: %s", type(exc).__name__)
             return ["BTC/KRW", "ETH/KRW", "XRP/KRW", "SOL/KRW", "DOGE/KRW"][:limit]
@@ -256,10 +270,12 @@ class SignalGenerator:
 
 
 @st.cache_data(ttl=60, show_spinner=False)
-def get_cached_symbols(exchange: str, limit: int = 20, allow_live: bool = True) -> List[str]:
+def get_cached_symbols(
+    exchange: str, limit: int = 20, allow_live: bool = True, show_all: bool = False
+) -> List[str]:
     """Get symbols with caching."""
     generator = SignalGenerator(exchange, allow_live=allow_live)
-    return generator.get_symbols(limit)
+    return generator.get_symbols(limit, show_all)
 
 
 @st.cache_data(ttl=60, show_spinner=False)
