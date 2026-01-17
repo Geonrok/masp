@@ -221,7 +221,7 @@ class SignalGenerator:
                     "strength": 0.0,
                     "error": "Signal generation failed",
                     "timestamp": datetime.now().isoformat(),
-                    "is_mock": True,
+                    "is_mock": self._is_demo_mode,
                 }
 
             if isinstance(result, dict):
@@ -251,7 +251,7 @@ class SignalGenerator:
                 "strength": 0.0,
                 "error": "Signal generation failed",
                 "timestamp": datetime.now().isoformat(),
-                "is_mock": True,
+                "is_mock": self._is_demo_mode,
             }
 
 
