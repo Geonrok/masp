@@ -1,0 +1,1 @@
+from services.dashboard.components.trade_history import render_trade_history_panel
