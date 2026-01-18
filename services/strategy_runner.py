@@ -9,10 +9,12 @@ Strategy Runner - 전략 신호를 실거래 주문으로 변환
 
 import logging
 import os
+import re
 import time
-from datetime import datetime, date
-from typing import Optional, Dict, List
+from datetime import date
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 from dotenv import load_dotenv
 
 # Load .env without overriding system environment variables.
@@ -33,10 +35,10 @@ MIN_ORDER_KRW = 5000
 class StrategyRunner:
     """
     전략 실행기
-    
+
     Usage:
         runner = StrategyRunner(
-            strategy_name="ma_crossover",
+            strategy_name="ma_crossover_v1",
             exchange="paper",  # "paper" | "upbit" | "bithumb"
             symbols=["BTC/KRW"],
             position_size_krw=10000
@@ -44,7 +46,7 @@ class StrategyRunner:
         runner.run_once()  # 1회 실행
         runner.run_loop(interval_seconds=60)  # 반복 실행
     """
-    
+
     def __init__(
         self,
         strategy_name: str,
@@ -56,32 +58,27 @@ class StrategyRunner:
         market_data=None,
         execution=None
     ):
-        """
-        초기화
-        
-        Args:
-            strategy_name: 전략 이름
-            exchange: "paper" | "upbit" | "bithumb"
-            symbols: 거래 종목 리스트
-            position_size_krw: 1회 주문 금액 (KRW)
-            config: Config 객체
-        """
         self.strategy_name = strategy_name
         self.exchange = exchange
         self.symbols = symbols or ["BTC/KRW"]
         self.position_size_krw = position_size_krw
-        
+
         # Config 로드
         self.config = config or Config(
             asset_class="crypto_spot",
             strategy_name=strategy_name
         )
 
-        self.strategy = strategy or get_strategy(strategy_name)
-        
+        # --- Phase 6D-Fix: 전략 로딩 canonicalization + fail-fast ---
+        self.strategy, loaded_key = self._load_strategy_with_fallback(strategy, strategy_name)
+        logger.info(
+            "[StrategyRunner] Strategy loaded: requested=%s loaded=%s type=%s",
+            strategy_name, loaded_key, type(self.strategy).__name__
+        )
+
         # 로그 디렉토리
         log_base = Path(f"logs/{exchange}_trades")
-        
+
         # 컴포넌트 초기화
         self.trade_logger = TradeLogger(log_dir=str(log_base / "trades"))
         self.health_monitor = StrategyHealthMonitor(self.config)
@@ -90,7 +87,7 @@ class StrategyRunner:
             self.health_monitor,
             report_dir=str(log_base / "reports")
         )
-        
+
         # 실행 어댑터
         execution_exchange = exchange
         adapter_mode = "paper"
@@ -102,6 +99,7 @@ class StrategyRunner:
         elif exchange in {"bithumb", "bithumb_spot"}:
             execution_exchange = "bithumb"
             adapter_mode = "live" if live_trading_enabled else "paper"
+
         self.execution = execution or AdapterFactory.create_execution(
             execution_exchange,
             adapter_mode=adapter_mode,
@@ -109,7 +107,7 @@ class StrategyRunner:
             trade_logger=self.trade_logger,
         )
         self._execution_adapter = self.execution
-        
+
         # 시세 어댑터
         if exchange in ["paper", "upbit", "upbit_spot"]:
             md_exchange = "upbit_spot"
@@ -117,21 +115,70 @@ class StrategyRunner:
             md_exchange = "bithumb_spot"
         else:
             md_exchange = "upbit_spot"
+
         self.market_data = market_data or AdapterFactory.create_market_data(md_exchange)
 
-        if self.strategy and hasattr(self.strategy, "set_market_data"):
+        # MarketData 주입 (duck-typing)
+        if hasattr(self.strategy, "set_market_data"):
             self.strategy.set_market_data(self.market_data)
-            logger.info(
-                "[StrategyRunner] Injected %s market data into strategy",
-                md_exchange,
+            logger.info("[StrategyRunner] Injected %s market data into strategy", md_exchange)
+        else:
+            logger.warning(
+                "[StrategyRunner] Strategy has no set_market_data(): %s",
+                type(self.strategy).__name__
             )
-        
+
         # 포지션 상태
         self._positions: Dict[str, float] = {}  # symbol -> quantity
         self._last_signals: Dict[str, str] = {}  # symbol -> signal
-        
-        logger.info(f"[StrategyRunner] Initialized: {strategy_name} on {exchange}")
-    
+
+        logger.info("[StrategyRunner] Initialized: %s on %s", strategy_name, exchange)
+
+    @staticmethod
+    def _canonicalize_strategy_name(name: str) -> List[str]:
+        """
+        전략 이름 정규화 - 다양한 형식 시도
+        예: "KAMA-TSMOM-Gate" -> "kama_tsmom_gate"
+        """
+        s = (name or "").strip()
+        if not s:
+            return []
+
+        lowered = s.lower()
+
+        # separators -> underscore
+        snake = re.sub(r"[\s\-\/]+", "_", lowered)
+        # collapse multiple underscores
+        compact = re.sub(r"_+", "_", snake).strip("_")
+
+        candidates: List[str] = []
+        for x in [s, lowered, snake, compact]:
+            if x and x not in candidates:
+                candidates.append(x)
+        return candidates
+
+    @classmethod
+    def _load_strategy_with_fallback(cls, injected_strategy, strategy_name: str):
+        """
+        전략 로딩 + fail-fast
+        - injected_strategy가 있으면 그대로 사용
+        - 없으면 canonicalization 후보를 순회하며 get_strategy() 시도
+        - 모두 실패 시 ValueError
+        """
+        if injected_strategy is not None:
+            return injected_strategy, "<injected>"
+
+        candidates = cls._canonicalize_strategy_name(strategy_name)
+        for key in candidates:
+            try:
+                st = get_strategy(key)
+                if st is not None:
+                    return st, key
+            except Exception as exc:
+                logger.warning("[StrategyRunner] get_strategy(%s) raised: %s", key, exc)
+
+        raise ValueError(f"Unknown strategy: {strategy_name} (tried: {candidates})")
+
     def run_once(self) -> Dict:
         """
         Run one cycle for all symbols with dynamic limits.
@@ -152,7 +199,7 @@ class StrategyRunner:
 
         health = self.health_monitor.check_health()
         if health.status.value in ["CRITICAL", "HALTED"]:
-            logger.warning(f"[StrategyRunner] Health {health.status.value} - skipping")
+            logger.warning("[StrategyRunner] Health %s - skipping", health.status.value)
             raise RuntimeError(f"Health {health.status.value}")
 
         gate_pass = self._compute_gate_pass()
@@ -167,19 +214,12 @@ class StrategyRunner:
             )
             available_krw = float("inf")
 
-        balance_label = (
-            "unlimited" if available_krw == float("inf") else f"{available_krw:,.0f} KRW"
-        )
-        max_buy = (
-            "unlimited"
-            if available_krw == float("inf")
-            else int(available_krw // self.position_size_krw)
-        )
+        balance_label = "unlimited" if available_krw == float("inf") else f"{available_krw:,.0f} KRW"
+        max_buy = "unlimited" if available_krw == float("inf") else int(available_krw // self.position_size_krw)
+
         logger.info(
             "[StrategyRunner] Processing %d symbols, Balance: %s, Max BUY: %s",
-            total,
-            balance_label,
-            max_buy,
+            total, balance_label, max_buy
         )
 
         for i, symbol in enumerate(self.symbols):
@@ -187,9 +227,7 @@ class StrategyRunner:
             if elapsed > max_execution_time:
                 logger.warning(
                     "[StrategyRunner] Max execution time reached (%ss), processed %d/%d symbols",
-                    max_execution_time,
-                    i,
-                    total,
+                    max_execution_time, i, total
                 )
                 break
 
@@ -202,10 +240,17 @@ class StrategyRunner:
                     time.sleep(0.1)
 
                 signal = self._generate_trade_signal(symbol, gate_pass)
+
+                # --- Phase 6D-Fix: signal=None은 HOLD로 숨기지 않는다 ---
+                if signal is None:
+                    logger.error("[%s] Strategy returned None signal", symbol)
+                    results[symbol] = {"action": "ERROR", "reason": "Strategy returned None"}
+                    continue
+
                 action, effective_gate = self._parse_signal(signal, gate_pass)
 
                 if action == "BUY" and not effective_gate:
-                    logger.warning(f"[{symbol}] Gate CLOSED. BUY blocked.")
+                    logger.warning("[%s] Gate CLOSED. BUY blocked.", symbol)
                     results[symbol] = {"action": "BLOCKED", "reason": "Gate Veto"}
                     continue
 
@@ -232,38 +277,36 @@ class StrategyRunner:
                     and available_krw != float("inf")
                 ):
                     available_krw -= self.position_size_krw
-                    remaining_label = f"{available_krw:,.0f} KRW"
                     logger.info(
                         "[StrategyRunner] %s BUY executed, remaining: %s",
-                        symbol,
-                        remaining_label,
+                        symbol, f"{available_krw:,.0f} KRW"
                     )
+
             except Exception as exc:
-                logger.error(f"[{symbol}] Error: {exc}", exc_info=True)
+                logger.error("[%s] Error: %s", symbol, exc, exc_info=True)
                 results[symbol] = {"action": "ERROR", "reason": str(exc)}
 
         elapsed = time.time() - start_time
-        actions = {}
+        actions: Dict[str, int] = {}
         for result in results.values():
             action = result.get("action", "UNKNOWN")
             actions[action] = actions.get(action, 0) + 1
 
         logger.info(
             "[Summary] Processed %d/%d symbols in %.1fs | Actions: %s",
-            len(results),
-            total,
-            elapsed,
-            actions,
+            len(results), total, elapsed, actions
         )
 
         return results
 
-    # Step 0 confirmed: TradeSignal.signal (Signal enum), no TradeSignal.gate_pass/action.
-    # generate_signal signature (KAMA-TSMOM-Gate): (symbol, gate_pass: Optional[bool] = None).
-    def _parse_signal(self, signal, default_gate_pass: bool) -> tuple[str, bool]:
-        """Gate 상태 추출 (방어적 접근)."""
+    def _parse_signal(self, signal, default_gate_pass: bool) -> Tuple[str, bool]:
+        """
+        Gate 상태 추출 (방어적 접근).
+        NOTE: signal=None은 상위에서 ERROR 처리하므로 여기서는 보조 방어만 유지.
+        """
         if signal is None:
-            return "HOLD", default_gate_pass
+            return "ERROR", default_gate_pass
+
         action = getattr(signal, "action", None)
         if action is None:
             raw_signal = getattr(signal, "signal", None)
@@ -271,10 +314,13 @@ class StrategyRunner:
                 action = raw_signal.value
             elif raw_signal is not None:
                 action = str(raw_signal)
+
         gate_pass = getattr(signal, "gate_pass", default_gate_pass)
         if gate_pass is None:
             gate_pass = default_gate_pass
-        logger.info("Signal: %s, Gate: %s", action, "OPEN" if gate_pass else "CLOSED")
+
+        # per-symbol 로그 폭발 방지: debug 권장
+        logger.debug("Signal: %s, Gate: %s", action, "OPEN" if gate_pass else "CLOSED")
         return action, gate_pass
 
     def _compute_gate_pass(self) -> bool:
@@ -297,21 +343,22 @@ class StrategyRunner:
         return None
 
     def _execute_trade_signal(self, symbol: str, signal, quote) -> Dict:
-        """Upbit 특화 주문 로직."""
+        """주문 실행 로직."""
         action, _gate_pass = self._parse_signal(signal, True)
         current_price = self._extract_price(quote)
+
+        if action == "ERROR":
+            return {"action": "ERROR", "reason": "signal=None"}
 
         if action == "HOLD":
             return {"action": "HOLD", "reason": getattr(signal, "reason", "N/A")}
 
         if action == "BUY":
-            # BithumbExecutionAdapter는 amount_krw= 파라미터를 지원
-            # position_size_krw를 amount_krw로 전달하면 내부에서 코인 수량으로 변환
             order = self.execution.place_order(
                 symbol,
                 "BUY",
                 order_type="MARKET",
-                amount_krw=self.position_size_krw,  # ✅ amount_krw 사용
+                amount_krw=self.position_size_krw,
             )
             return {"action": "BUY", "order_id": order.order_id or order.symbol}
 
@@ -323,18 +370,15 @@ class StrategyRunner:
             if estimated_value < MIN_ORDER_KRW:
                 logger.info(
                     "[%s] Dust Skip: %d KRW < %d",
-                    symbol,
-                    int(estimated_value),
-                    MIN_ORDER_KRW,
+                    symbol, int(estimated_value), MIN_ORDER_KRW
                 )
                 return {"action": "SKIP", "reason": f"Dust ({estimated_value:.0f} KRW)"}
 
-            # SELL은 코인 수량(balance)을 units= 파라미터로 전달
             order = self.execution.place_order(
                 symbol,
                 "SELL",
                 order_type="MARKET",
-                units=balance,  # ✅ units 명시
+                units=balance,
             )
             return {"action": "SELL", "order_id": order.order_id or order.symbol}
 
@@ -357,43 +401,32 @@ class StrategyRunner:
         return symbol
 
     def run_loop(self, interval_seconds: int = 60, max_iterations: int = None):
-        """
-        반복 실행
-        
-        Args:
-            interval_seconds: 실행 간격 (초)
-            max_iterations: 최대 반복 횟수 (None=무한)
-        """
         iteration = 0
-        
-        logger.info(f"[StrategyRunner] Starting loop (interval={interval_seconds}s)")
-        
+        logger.info("[StrategyRunner] Starting loop (interval=%ss)", interval_seconds)
+
         try:
             while max_iterations is None or iteration < max_iterations:
                 iteration += 1
-                logger.info(f"[StrategyRunner] Iteration {iteration}")
-                
+                logger.info("[StrategyRunner] Iteration %d", iteration)
+
                 results = self.run_once()
-                logger.info(f"[StrategyRunner] Results: {results}")
-                
+                logger.info("[StrategyRunner] Results: %s", results)
+
                 if results.get("status") == "HALTED":
                     logger.warning("[StrategyRunner] Halted - stopping loop")
                     break
-                
+
                 time.sleep(interval_seconds)
-                
+
         except KeyboardInterrupt:
             logger.info("[StrategyRunner] Interrupted by user")
-        
-        # 종료 시 Daily Report 생성
+
         self.generate_daily_report()
-    
+
     def generate_daily_report(self) -> str:
-        """Daily Report 생성"""
         return self.daily_reporter.generate()
-    
+
     def get_status(self) -> Dict:
-        """현재 상태 조회"""
         return {
             "strategy": self.strategy_name,
             "exchange": self.exchange,
@@ -404,28 +437,27 @@ class StrategyRunner:
         }
 
 
-# CLI 실행
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="Strategy Runner")
-    parser.add_argument("--strategy", default="ma_crossover", help="Strategy name")
+    parser.add_argument("--strategy", default="ma_crossover_v1", help="Strategy name")
     parser.add_argument("--exchange", default="paper", choices=["paper", "upbit", "bithumb"])
     parser.add_argument("--symbol", default="BTC/KRW", help="Trading symbol")
     parser.add_argument("--size", type=float, default=10000, help="Position size (KRW)")
     parser.add_argument("--interval", type=int, default=60, help="Loop interval (seconds)")
     parser.add_argument("--iterations", type=int, default=None, help="Max iterations")
     parser.add_argument("--once", action="store_true", help="Run once only")
-    
+
     args = parser.parse_args()
-    
+
     runner = StrategyRunner(
         strategy_name=args.strategy,
         exchange=args.exchange,
         symbols=[args.symbol],
         position_size_krw=args.size
     )
-    
+
     if args.once:
         result = runner.run_once()
         print(f"Result: {result}")
