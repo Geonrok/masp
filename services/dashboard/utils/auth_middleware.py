@@ -17,7 +17,11 @@ def enforce_auth(idle_seconds: int = 1800) -> bool:
         return False
 
     if auth.require_login(idle_seconds=idle_seconds):
-        auth.touch_activity()
+        auto_refresh = bool(st.session_state.get("masp_auto_refresh")) or bool(
+            st.session_state.get("auto_refresh_enabled")
+        )
+        if not auto_refresh:
+            auth.touch_activity()
         return True
 
     st.title("MASP Dashboard")
