@@ -20,6 +20,8 @@ from services.dashboard.components.signal_preview import render_signal_preview_p
 from services.dashboard.components.strategy_config import StrategyConfigPanel
 from services.dashboard.components.strategy_indicators import render_strategy_indicators
 from services.dashboard.components.telegram_settings import render_telegram_settings
+from services.dashboard.utils import auth
+from services.dashboard.utils.auth_middleware import enforce_auth
 from services.dashboard.utils.api_client import ConfigApiClient
 
 load_dotenv()
@@ -29,8 +31,11 @@ st.set_page_config(page_title="MASP Dashboard", layout="wide")
 if not os.getenv("MASP_ADMIN_TOKEN"):
     st.warning("MASP_ADMIN_TOKEN is not set. API calls may fail.")
 
+if not enforce_auth():
+    st.stop()
+
 st.title("MASP Dashboard")
-st.caption("Multi-Asset Strategy Platform - Phase 5G")
+st.caption("Multi-Asset Strategy Platform - Phase 7C")
 
 api = ConfigApiClient()
 
@@ -80,6 +85,9 @@ with tabs[7]:
 with st.sidebar:
     st.header("System Info")
     st.text("Version: 5.0.0")
-    st.text("Phase: 5G")
+    st.text("Phase: 7C")
+    if st.button("Logout"):
+        auth.clear_token()
+        st.rerun()
     if st.button("Refresh"):
         st.rerun()
