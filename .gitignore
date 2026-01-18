@@ -50,3 +50,6 @@ storage/encrypted_keys.json
 
 # Runtime storage
 storage/runtime_config.json
+
+# Phase outputs
+outputs/phase7A/
