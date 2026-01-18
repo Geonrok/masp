@@ -1,9 +1,26 @@
 """Exchange enable/disable status panel."""
 from __future__ import annotations
 
+import math
+import os
 import time
 
 import streamlit as st
+
+
+def _get_refresh_interval() -> float:
+    """Safely get auto refresh interval from environment."""
+    raw = os.getenv("MASP_AUTO_REFRESH_INTERVAL", "10.0")
+    try:
+        v = float(raw)
+        if not math.isfinite(v) or v <= 0:
+            return 10.0
+        return v
+    except ValueError:
+        return 10.0
+
+
+_AUTO_REFRESH_INTERVAL = _get_refresh_interval()
 
 
 class ExchangeStatusPanel:
@@ -17,7 +34,9 @@ class ExchangeStatusPanel:
         st.subheader("Exchange Status")
 
         auto_refresh = st.checkbox(
-            " Auto Refresh (10s)", value=False, key="auto_refresh_enabled"
+            f"Auto Refresh ({_AUTO_REFRESH_INTERVAL:.0f}s)",
+            value=False,
+            key="auto_refresh_enabled",
         )
         st.session_state["masp_auto_refresh"] = bool(auto_refresh)
 
@@ -25,7 +44,7 @@ class ExchangeStatusPanel:
             now = time.time()
             last = float(st.session_state.get(self._LAST_RERUN_TS_KEY, 0.0))
 
-            if (now - last) >= 10.0:
+            if (now - last) >= _AUTO_REFRESH_INTERVAL:
                 st.session_state[self._LAST_RERUN_TS_KEY] = now
                 st.rerun()
 

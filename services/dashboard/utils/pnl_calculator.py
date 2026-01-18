@@ -1,8 +1,9 @@
 """PnL (Profit and Loss) calculator utilities."""
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Any, Dict, List
 
 
 @dataclass
@@ -36,19 +37,35 @@ class PositionPnL:
         return (self.pnl_amount / self.cost_basis) * 100
 
 
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    """Safely convert value to float, returning default on failure."""
+    if value is None:
+        return default
+    try:
+        result = float(value)
+        if not math.isfinite(result):
+            return default
+        return result
+    except (ValueError, TypeError):
+        return default
+
+
 def calculate_portfolio_pnl(
     positions: List[Dict],
     current_prices: Dict[str, float],
 ) -> List[PositionPnL]:
-    """Calculate PnL for all positions."""
+    """Calculate PnL for all positions with safe parsing."""
     results = []
     for pos in positions:
         symbol = pos.get("symbol", "")
-        quantity = float(pos.get("quantity", 0))
-        avg_price = float(pos.get("avg_price", 0))
-        current_price = current_prices.get(symbol, avg_price)
+        if not symbol:
+            continue
 
-        if quantity > 0:
+        quantity = _safe_float(pos.get("quantity"), 0.0)
+        avg_price = _safe_float(pos.get("avg_price"), 0.0)
+        current_price = _safe_float(current_prices.get(symbol), avg_price)
+
+        if quantity > 0 and avg_price > 0:
             results.append(
                 PositionPnL(
                     symbol=symbol,

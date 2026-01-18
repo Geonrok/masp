@@ -1,89 +1,60 @@
-"""Positions panel for MASP Dashboard - displays account balances."""
+"""Positions panel component with PnL visualization."""
 from __future__ import annotations
-
-from typing import Any, Dict, List, Optional
 
 import streamlit as st
 
-from services.dashboard.utils.live_mode import check_live_conditions
-from services.dashboard.utils.holdings import (
-    clear_holdings_cache,
-    get_holdings_upbit,
-    is_private_api_enabled,
+from services.dashboard.utils.pnl_calculator import (
+    calculate_portfolio_pnl,
+    calculate_total_pnl,
 )
+from services.dashboard.components.pnl_chart import render_pnl_chart, render_pnl_summary
 
-def _render_demo_positions() -> None:
-    """Render demo positions for DEMO mode."""
-    demo_data = [
-        {"Currency": "BTC", "Balance": 0.01, "Locked": 0, "Avg Price": 50_000_000},
-        {"Currency": "ETH", "Balance": 0.5, "Locked": 0, "Avg Price": 3_000_000},
+
+def render_positions_panel() -> None:
+    """Render positions table and PnL charts with demo data."""
+    st.subheader(" Portfolio PnL Dashboard")
+    st.caption("Demo Data - Connect to live API for real positions")
+
+    positions = [
+        {"symbol": "BTC", "quantity": 0.5, "avg_price": 50_000_000},
+        {"symbol": "ETH", "quantity": 5.0, "avg_price": 3_000_000},
+        {"symbol": "XRP", "quantity": 1000.0, "avg_price": 800},
+        {"symbol": "SOL", "quantity": 10.0, "avg_price": 150_000},
     ]
-    st.dataframe(demo_data, use_container_width=True, hide_index=True)
 
+    current_prices = {
+        "BTC": 55_000_000,
+        "ETH": 2_800_000,
+        "XRP": 850,
+        "SOL": 160_000,
+    }
 
-def render_positions_panel(
-    exchange: Optional[str] = None, is_live: Optional[bool] = None
-) -> None:
-    """Render positions/balances panel."""
-    st.subheader("Positions")
+    pnl_list = calculate_portfolio_pnl(positions, current_prices)
+    total_pnl = calculate_total_pnl(pnl_list)
 
-    if exchange is None:
-        exchange = st.selectbox(
-            "Exchange",
-            options=["upbit", "bithumb"],
-            key="positions_exchange_select",
-        )
+    render_pnl_summary(total_pnl)
 
-    if is_live is None:
-        is_live, reason = check_live_conditions(exchange)
-    else:
-        reason = "LIVE mode provided" if is_live else "DEMO mode provided"
+    st.divider()
 
-    if not is_live:
-        st.info(f"DEMO Mode - {reason}")
-        _render_demo_positions()
-        return
+    col_chart, col_table = st.columns([1, 1])
 
-    if exchange != "upbit":
-        st.warning("Only Upbit holdings are supported in READ-ONLY mode.")
-        _render_demo_positions()
-        return
+    with col_chart:
+        render_pnl_chart(pnl_list)
 
-    if not is_private_api_enabled():
-        st.warning("Set MASP_ENABLE_LIVE_TRADING=1 to view real positions")
-        _render_demo_positions()
-        return
-
-    if st.button("Refresh", key="positions_refresh_btn", type="primary"):
-        clear_holdings_cache()
-        st.rerun()
-
-    holdings = get_holdings_upbit()
-
-    if not holdings:
-        st.warning("Unable to fetch positions. Check API configuration.")
-        return
-
-    data: List[Dict[str, Any]] = []
-    for entry in holdings:
-        try:
-            balance = float(entry.get("balance", 0))
-            locked = float(entry.get("locked", 0))
-            avg_price = float(entry.get("avg_buy_price", 0))
-        except (ValueError, TypeError):
-            continue
-
-        if balance > 0 or locked > 0:
-            data.append(
+    with col_table:
+        st.subheader("Position Details")
+        if pnl_list:
+            data = [
                 {
-                    "Currency": entry.get("currency", ""),
-                    "Balance": balance,
-                    "Locked": locked,
-                    "Avg Price": avg_price,
+                    "Symbol": p.symbol,
+                    "Qty": f"{p.quantity:,.4f}",
+                    "Avg": f"₩{p.avg_price:,.0f}",
+                    "Cur": f"₩{p.current_price:,.0f}",
+                    "PnL": f"₩{p.pnl_amount:+,.0f}",
+                    "RoI": f"{p.pnl_percent:+.2f}%",
                 }
-            )
-
-    if data:
-        st.dataframe(data, use_container_width=True, hide_index=True)
-    else:
-        st.info("No positions found")
+                for p in pnl_list
+            ]
+            st.dataframe(data, use_container_width=True, hide_index=True)
+        else:
+            st.info("No active positions.")

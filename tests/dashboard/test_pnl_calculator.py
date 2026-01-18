@@ -5,6 +5,7 @@ from services.dashboard.utils.pnl_calculator import (
     PositionPnL,
     calculate_portfolio_pnl,
     calculate_total_pnl,
+    _safe_float,
 )
 
 
@@ -63,4 +64,41 @@ def test_zero_quantity_excluded():
         {"symbol": "BTC", "quantity": 0, "avg_price": 50000.0},
     ]
     result = calculate_portfolio_pnl(positions, {"BTC": 55000.0})
+    assert len(result) == 0
+
+
+def test_safe_float_none_input():
+    assert _safe_float(None) == 0.0
+    assert _safe_float(None, 99.0) == 99.0
+
+
+def test_safe_float_invalid_string():
+    assert _safe_float("invalid") == 0.0
+    assert _safe_float("") == 0.0
+
+
+def test_safe_float_nan():
+    assert _safe_float(float("nan")) == 0.0
+
+
+def test_safe_float_inf():
+    assert _safe_float(float("inf")) == 0.0
+    assert _safe_float(float("-inf")) == 0.0
+
+
+def test_portfolio_pnl_missing_symbol():
+    positions = [
+        {"symbol": "", "quantity": 1.0, "avg_price": 100.0},
+        {"quantity": 1.0, "avg_price": 100.0},
+    ]
+    result = calculate_portfolio_pnl(positions, {})
+    assert len(result) == 0
+
+
+def test_portfolio_pnl_invalid_values():
+    positions = [
+        {"symbol": "BTC", "quantity": "invalid", "avg_price": 100.0},
+        {"symbol": "ETH", "quantity": 1.0, "avg_price": None},
+    ]
+    result = calculate_portfolio_pnl(positions, {"BTC": 100.0, "ETH": 100.0})
     assert len(result) == 0
