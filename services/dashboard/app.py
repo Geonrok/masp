@@ -35,6 +35,8 @@ from services.dashboard.providers.order_provider import (
     get_price_provider,
     get_balance_provider,
 )
+from services.dashboard.providers.trade_history_provider import get_trade_history_client
+from services.dashboard.providers.log_provider import get_log_provider
 from services.dashboard.components.trade_history import render_trade_history_panel
 from services.dashboard.components.strategy_performance import render_strategy_performance
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
@@ -115,7 +117,8 @@ with tabs[1]:
         render_positions_panel()
 
     with trading_subtabs[2]:
-        render_trade_history_panel()
+        # Real trade history from TradeLogger (or demo if unavailable)
+        render_trade_history_panel(api_client=get_trade_history_client())
 
 # =============================================================================
 # Tab 3: Analytics - Strategy performance, backtest, risk metrics
@@ -148,7 +151,8 @@ with tabs[3]:
     monitoring_subtabs = st.tabs(["Logs", "Alerts", "Scheduler"])
 
     with monitoring_subtabs[0]:
-        render_log_viewer()
+        # Real logs from log files (or demo if unavailable)
+        render_log_viewer(log_provider=get_log_provider())
 
     with monitoring_subtabs[1]:
         render_alert_history_panel()

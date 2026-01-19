@@ -6,12 +6,18 @@ from services.dashboard.providers.order_provider import (
     get_price_provider,
     get_balance_provider,
 )
+from services.dashboard.providers.trade_history_provider import get_trade_history_client
+from services.dashboard.providers.log_provider import get_log_provider
 
 __all__ = [
+    # 1순위 providers
     "get_portfolio_summary",
     "get_system_resources",
     "get_service_health",
     "get_execution_adapter",
     "get_price_provider",
     "get_balance_provider",
+    # 2순위 providers
+    "get_trade_history_client",
+    "get_log_provider",
 ]

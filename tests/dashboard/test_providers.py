@@ -279,3 +279,126 @@ def test_order_execution_wrapper_place_order():
     assert result["order_id"] == "test-123"
     assert result["executed_qty"] == 0.001
     assert result["fee"] == 25.0
+
+
+# =============================================================================
+# Trade History Provider Tests
+# =============================================================================
+
+
+def test_trade_history_provider_import():
+    """Test trade history provider imports correctly."""
+    from services.dashboard.providers import get_trade_history_client
+
+    assert callable(get_trade_history_client)
+
+
+def test_trade_history_api_client_with_mock():
+    """Test TradeHistoryApiClient with mock logger."""
+    from services.dashboard.providers.trade_history_provider import TradeHistoryApiClient
+    from datetime import date
+
+    mock_logger = MagicMock()
+    mock_logger.get_trades.return_value = [
+        {
+            "timestamp": "2024-01-01T10:00:00",
+            "exchange": "upbit",
+            "order_id": "T001",
+            "symbol": "BTC",
+            "side": "BUY",
+            "quantity": "0.1",
+            "price": "50000000",
+            "fee": "2500",
+            "pnl": "0",
+            "status": "FILLED",
+            "message": "",
+        }
+    ]
+
+    client = TradeHistoryApiClient(mock_logger)
+    trades = client.get_trade_history(days=1)
+
+    assert len(trades) >= 1
+    assert trades[0]["symbol"] == "BTC"
+    assert trades[0]["side"] == "BUY"
+
+
+def test_trade_history_api_client_get_daily_summary():
+    """Test TradeHistoryApiClient daily summary."""
+    from services.dashboard.providers.trade_history_provider import TradeHistoryApiClient
+
+    mock_logger = MagicMock()
+    mock_logger.get_daily_summary.return_value = {
+        "date": "2024-01-01",
+        "total_trades": 5,
+        "buy_count": 3,
+        "sell_count": 2,
+        "total_volume": 1000000.0,
+        "total_fee": 500.0,
+        "total_pnl": 10000.0,
+    }
+
+    client = TradeHistoryApiClient(mock_logger)
+    summary = client.get_daily_summary()
+
+    assert summary["total_trades"] == 5
+    assert summary["buy_count"] == 3
+
+
+# =============================================================================
+# Log Provider Tests
+# =============================================================================
+
+
+def test_log_provider_import():
+    """Test log provider imports correctly."""
+    from services.dashboard.providers import get_log_provider
+
+    assert callable(get_log_provider)
+
+
+def test_get_log_provider_returns_callable():
+    """Test get_log_provider returns a callable."""
+    from services.dashboard.providers.log_provider import get_log_provider
+
+    provider = get_log_provider()
+
+    assert callable(provider)
+
+
+def test_log_provider_returns_list():
+    """Test log provider returns a list."""
+    from services.dashboard.providers.log_provider import get_log_provider
+
+    provider = get_log_provider(log_dir="nonexistent_dir")
+    result = provider()
+
+    assert isinstance(result, list)
+
+
+def test_parse_log_level():
+    """Test log level parsing."""
+    from services.dashboard.providers.log_provider import _parse_log_level
+    from services.dashboard.components.log_viewer import LogLevel
+
+    assert _parse_log_level("DEBUG") == LogLevel.DEBUG
+    assert _parse_log_level("INFO") == LogLevel.INFO
+    assert _parse_log_level("WARNING") == LogLevel.WARNING
+    assert _parse_log_level("WARN") == LogLevel.WARNING
+    assert _parse_log_level("ERROR") == LogLevel.ERROR
+    assert _parse_log_level("CRITICAL") == LogLevel.CRITICAL
+
+
+def test_parse_log_line():
+    """Test log line parsing."""
+    from services.dashboard.providers.log_provider import _parse_log_line
+    from services.dashboard.components.log_viewer import LogLevel
+
+    # Standard Python logging format
+    line = "2024-01-01 12:00:00,000 - mymodule - INFO - Test message"
+    entry = _parse_log_line(line)
+
+    assert entry is not None
+    assert entry.level == LogLevel.INFO
+    assert entry.source == "mymodule"
+    assert "Test message" in entry.message
