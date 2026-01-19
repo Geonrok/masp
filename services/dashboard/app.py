@@ -43,6 +43,12 @@ from services.dashboard.providers.strategy_performance_provider import get_strat
 from services.dashboard.providers.positions_provider import get_positions_data
 from services.dashboard.providers.risk_metrics_provider import get_risk_metrics_data
 from services.dashboard.providers.backtest_provider import get_backtest_data
+from services.dashboard.providers.alert_manager_provider import (
+    get_alert_rules,
+    get_anomaly_thresholds,
+    get_alert_settings_callbacks,
+)
+from services.dashboard.components.alert_settings import render_alert_settings
 from services.dashboard.components.trade_history import render_trade_history_panel
 from services.dashboard.components.strategy_performance import render_strategy_performance
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
@@ -66,7 +72,7 @@ if not enforce_auth():
     st.stop()
 
 st.title("MASP Dashboard")
-st.caption("Multi-Asset Strategy Platform - Phase 7C-6 (Data Provider Integration)")
+st.caption("Multi-Asset Strategy Platform - Phase 7D-2 (Alert/Monitoring Enhancement)")
 
 api = ConfigApiClient()
 
@@ -178,11 +184,11 @@ with tabs[3]:
         render_scheduler_status(job_provider=get_scheduler_job_provider())
 
 # =============================================================================
-# Tab 5: Settings - Config, API keys, Telegram, Exchange controls
+# Tab 5: Settings - Config, API keys, Telegram, Alerts, Exchange controls
 # =============================================================================
 with tabs[4]:
     settings_subtabs = st.tabs(
-        ["Strategy Config", "API Keys", "Telegram", "Exchange Controls"]
+        ["Strategy Config", "API Keys", "Telegram", "Alerts", "Exchange Controls"]
     )
 
     with settings_subtabs[0]:
@@ -195,6 +201,18 @@ with tabs[4]:
         render_telegram_settings()
 
     with settings_subtabs[3]:
+        # Alert rules and anomaly threshold settings (Phase 7D-2)
+        callbacks = get_alert_settings_callbacks()
+        render_alert_settings(
+            rules=get_alert_rules(),
+            thresholds=get_anomaly_thresholds(),
+            on_rule_toggle=callbacks.get("on_rule_toggle"),
+            on_rule_delete=callbacks.get("on_rule_delete"),
+            on_rule_create=callbacks.get("on_rule_create"),
+            on_thresholds_save=callbacks.get("on_thresholds_save"),
+        )
+
+    with settings_subtabs[4]:
         render_exchange_controls(["upbit", "bithumb"])
 
 # =============================================================================

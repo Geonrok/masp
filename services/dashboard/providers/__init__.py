@@ -19,6 +19,17 @@ from services.dashboard.providers.backtest_provider import (
     get_strategy_names,
     get_backtest_provider,
 )
+from services.dashboard.providers.alert_manager_provider import (
+    get_alert_rules,
+    get_anomaly_thresholds,
+    toggle_rule,
+    delete_rule,
+    create_rule,
+    save_thresholds,
+    get_recent_alerts,
+    check_system_anomalies,
+    get_alert_settings_callbacks,
+)
 
 __all__ = [
     # 1순위 providers
@@ -43,4 +54,14 @@ __all__ = [
     "get_backtest_list",
     "get_strategy_names",
     "get_backtest_provider",
+    # alert manager providers (Phase 7D-2)
+    "get_alert_rules",
+    "get_anomaly_thresholds",
+    "toggle_rule",
+    "delete_rule",
+    "create_rule",
+    "save_thresholds",
+    "get_recent_alerts",
+    "check_system_anomalies",
+    "get_alert_settings_callbacks",
 ]
