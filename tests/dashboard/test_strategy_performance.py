@@ -200,6 +200,39 @@ def test_format_percent_decimals():
     assert result == "+15.6%"
 
 
+def test_format_plain_percent_positive():
+    """Test _format_plain_percent with positive values (no sign)."""
+    from services.dashboard.components.strategy_performance import _format_plain_percent
+
+    result = _format_plain_percent(22.5)
+    assert result == "22.50%"
+    assert "+" not in result
+
+
+def test_format_plain_percent_negative():
+    """Test _format_plain_percent with negative values (keeps negative sign)."""
+    from services.dashboard.components.strategy_performance import _format_plain_percent
+
+    result = _format_plain_percent(-5.5)
+    assert result == "-5.50%"
+
+
+def test_format_plain_percent_zero():
+    """Test _format_plain_percent with zero."""
+    from services.dashboard.components.strategy_performance import _format_plain_percent
+
+    result = _format_plain_percent(0.0)
+    assert result == "0.00%"
+
+
+def test_format_plain_percent_decimals():
+    """Test _format_plain_percent with custom decimals."""
+    from services.dashboard.components.strategy_performance import _format_plain_percent
+
+    result = _format_plain_percent(15.567, decimals=1)
+    assert result == "15.6%"
+
+
 def test_format_krw_large():
     """Test _format_krw with large values."""
     from services.dashboard.components.strategy_performance import _format_krw
@@ -593,5 +626,61 @@ def test_filter_strategies_by_period_empty_fallback():
     )
 
     # Should fallback to original list and indicate fallback was used
+    assert result == strategies
+    assert used_fallback is True
+
+
+def test_filter_strategies_by_period_allow_fallback_false():
+    """Test _filter_strategies_by_period returns empty list when allow_fallback=False."""
+    from services.dashboard.components.strategy_performance import (
+        _filter_strategies_by_period,
+        StrategyPerformance,
+        TimePeriod,
+    )
+
+    # All strategies start in the future (no sufficient history)
+    future_date = datetime(2030, 1, 1)
+    strategies = [
+        StrategyPerformance(
+            strategy_id="s1",
+            strategy_name="Future",
+            start_date=future_date,
+        ),
+    ]
+
+    ref_time = datetime(2026, 1, 15)
+    result, used_fallback = _filter_strategies_by_period(
+        strategies, TimePeriod.MONTH_1, reference_time=ref_time, allow_fallback=False
+    )
+
+    # Should return empty list with no fallback
+    assert result == []
+    assert used_fallback is False
+
+
+def test_filter_strategies_by_period_allow_fallback_true_explicit():
+    """Test _filter_strategies_by_period with explicit allow_fallback=True."""
+    from services.dashboard.components.strategy_performance import (
+        _filter_strategies_by_period,
+        StrategyPerformance,
+        TimePeriod,
+    )
+
+    # All strategies start in the future (no sufficient history)
+    future_date = datetime(2030, 1, 1)
+    strategies = [
+        StrategyPerformance(
+            strategy_id="s1",
+            strategy_name="Future",
+            start_date=future_date,
+        ),
+    ]
+
+    ref_time = datetime(2026, 1, 15)
+    result, used_fallback = _filter_strategies_by_period(
+        strategies, TimePeriod.MONTH_1, reference_time=ref_time, allow_fallback=True
+    )
+
+    # Should fallback to original list when allow_fallback=True
     assert result == strategies
     assert used_fallback is True

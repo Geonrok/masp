@@ -751,3 +751,61 @@ def test_sorting_mixed_timezone_logs():
     assert sorted_logs[0].message == "Naive late"
     assert sorted_logs[1].message == "Aware middle"
     assert sorted_logs[2].message == "Naive early"
+
+
+def test_strip_tzinfo_naive():
+    """Test _strip_tzinfo with naive datetime returns unchanged."""
+    from services.dashboard.components.log_viewer import _strip_tzinfo
+
+    naive = datetime(2026, 1, 15, 12, 0, 0)
+    result = _strip_tzinfo(naive)
+
+    assert result == naive
+    assert result.tzinfo is None
+
+
+def test_strip_tzinfo_aware():
+    """Test _strip_tzinfo with aware datetime strips tzinfo."""
+    from services.dashboard.components.log_viewer import _strip_tzinfo
+    from zoneinfo import ZoneInfo
+
+    tz = ZoneInfo("Asia/Seoul")
+    aware = datetime(2026, 1, 15, 12, 0, 0, tzinfo=tz)
+    result = _strip_tzinfo(aware)
+
+    # Same time values, tzinfo stripped
+    assert result.hour == 12  # Hour preserved (not converted to UTC)
+    assert result.tzinfo is None
+
+
+def test_safe_datetime_compare_aware_aware_correct():
+    """Test that two aware datetimes are compared by absolute UTC time."""
+    from services.dashboard.components.log_viewer import _safe_datetime_compare
+    from zoneinfo import ZoneInfo
+
+    utc = ZoneInfo("UTC")
+    kst = ZoneInfo("Asia/Seoul")  # UTC+9
+
+    # Same absolute time: 03:00 UTC = 12:00 KST
+    utc_time = datetime(2026, 1, 15, 3, 0, 0, tzinfo=utc)
+    kst_time = datetime(2026, 1, 15, 12, 0, 0, tzinfo=kst)
+
+    # Python compares aware datetimes by absolute UTC time
+    result = _safe_datetime_compare(utc_time, kst_time)
+    assert result == 0  # Equal
+
+
+def test_safe_datetime_compare_aware_different_times():
+    """Test aware datetimes with different absolute times."""
+    from services.dashboard.components.log_viewer import _safe_datetime_compare
+    from zoneinfo import ZoneInfo
+
+    utc = ZoneInfo("UTC")
+    kst = ZoneInfo("Asia/Seoul")  # UTC+9
+
+    # 04:00 UTC > 03:00 UTC (12:00 KST)
+    utc_later = datetime(2026, 1, 15, 4, 0, 0, tzinfo=utc)
+    kst_earlier = datetime(2026, 1, 15, 12, 0, 0, tzinfo=kst)  # = 03:00 UTC
+
+    result = _safe_datetime_compare(utc_later, kst_earlier)
+    assert result == 1  # utc_later > kst_earlier

@@ -172,8 +172,31 @@ def _get_demo_logs() -> List[LogEntry]:
     ]
 
 
+def _strip_tzinfo(dt: datetime) -> datetime:
+    """Strip timezone info from datetime for fallback comparison.
+
+    Used only when comparing mixed naive/aware datetimes, which is a
+    best-effort scenario with no perfect solution.
+
+    Args:
+        dt: Datetime to strip
+
+    Returns:
+        Naive datetime with tzinfo removed
+    """
+    return dt.replace(tzinfo=None) if dt.tzinfo else dt
+
+
 def _safe_datetime_compare(dt1: datetime, dt2: datetime) -> int:
     """Safely compare two datetimes, handling mixed timezone-awareness.
+
+    Comparison strategy:
+    - Both aware: Python compares by UTC absolute time (correct)
+    - Both naive: direct comparison (correct)
+    - Mixed (aware + naive): fallback to stripping tzinfo (best effort)
+
+    The mixed case has no perfect solution since naive datetime's timezone
+    is ambiguous. Stripping tzinfo treats both as local times.
 
     Args:
         dt1: First datetime
@@ -183,15 +206,16 @@ def _safe_datetime_compare(dt1: datetime, dt2: datetime) -> int:
         -1 if dt1 < dt2, 0 if equal, 1 if dt1 > dt2
     """
     try:
+        # Python handles aware vs aware correctly (compares by UTC)
         if dt1 < dt2:
             return -1
         elif dt1 > dt2:
             return 1
         return 0
     except TypeError:
-        # Mixed timezone-awareness: strip tzinfo for comparison
-        dt1_naive = dt1.replace(tzinfo=None) if dt1.tzinfo else dt1
-        dt2_naive = dt2.replace(tzinfo=None) if dt2.tzinfo else dt2
+        # Mixed aware/naive: fallback to stripping tzinfo (best effort)
+        dt1_naive = _strip_tzinfo(dt1)
+        dt2_naive = _strip_tzinfo(dt2)
         if dt1_naive < dt2_naive:
             return -1
         elif dt1_naive > dt2_naive:
@@ -271,13 +295,13 @@ def _format_relative_time(dt: datetime, reference: Optional[datetime] = None) ->
         else:
             now = datetime.now()
 
-    # Ensure both are comparable (handle mixed tz-awareness)
+    # Calculate time difference (handle mixed tz-awareness)
     try:
         diff = now - dt
     except TypeError:
         # Fallback: strip timezone info for comparison
-        now_naive = now.replace(tzinfo=None) if now.tzinfo else now
-        dt_naive = dt.replace(tzinfo=None) if dt.tzinfo else dt
+        now_naive = _strip_tzinfo(now)
+        dt_naive = _strip_tzinfo(dt)
         diff = now_naive - dt_naive
 
     if diff.total_seconds() < 0:
@@ -389,10 +413,8 @@ def render_log_viewer(
 
     # Sort by timestamp (newest first) with safe timezone handling
     def _safe_sort_key(entry: LogEntry) -> datetime:
-        """Get sort key, normalizing timezone for safe comparison."""
-        ts = entry.timestamp
-        # Strip timezone info for consistent sorting (avoids mixed tz comparison errors)
-        return ts.replace(tzinfo=None) if ts.tzinfo else ts
+        """Get sort key, stripping tzinfo for mixed-timezone ordering."""
+        return _strip_tzinfo(entry.timestamp)
 
     filtered_logs.sort(key=_safe_sort_key, reverse=True)
 

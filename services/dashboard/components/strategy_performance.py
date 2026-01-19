@@ -100,10 +100,16 @@ def _safe_divide(numerator: float, denominator: float, default: float = 0.0) -> 
 
 
 def _format_percent(value: float, decimals: int = 2) -> str:
-    """Format value as percentage string."""
+    """Format value as signed percentage string (for returns/PnL)."""
     safe_val = _safe_float(value, 0.0)
     sign = "+" if safe_val > 0 else ""
     return f"{sign}{safe_val:.{decimals}f}%"
+
+
+def _format_plain_percent(value: float, decimals: int = 2) -> str:
+    """Format value as plain percentage string without sign (for MDD, volatility, win rate)."""
+    safe_val = _safe_float(value, 0.0)
+    return f"{safe_val:.{decimals}f}%"
 
 
 def _format_krw(value: float) -> str:
@@ -243,6 +249,7 @@ def _filter_strategies_by_period(
     strategies: List[StrategyPerformance],
     period: TimePeriod,
     reference_time: Optional[datetime] = None,
+    allow_fallback: bool = True,
 ) -> tuple[List[StrategyPerformance], bool]:
     """Filter strategies that have sufficient history for the selected time period.
 
@@ -253,6 +260,8 @@ def _filter_strategies_by_period(
         strategies: List of strategy performances
         period: Time period filter
         reference_time: Reference time for filtering (defaults to now, injectable for tests)
+        allow_fallback: If True, returns all strategies when filter would be empty.
+                       If False, returns empty list when no strategies match.
 
     Returns:
         Tuple of (filtered strategies, used_fallback flag)
@@ -280,8 +289,10 @@ def _filter_strategies_by_period(
     if filtered:
         return filtered, False
     else:
-        # Fallback to all strategies when filter would return empty
-        return strategies, True
+        # Fallback to all strategies when filter would return empty (if allowed)
+        if allow_fallback:
+            return strategies, True
+        return [], False
 
 
 def _get_performance_summary(strategies: List[StrategyPerformance]) -> Dict[str, Any]:
@@ -436,7 +447,7 @@ def render_strategy_performance(
             st.metric("Total Trades", f"{summary['total_trades']:,}")
 
         with sum_cols[2]:
-            st.metric("Win Rate", _format_percent(summary["overall_win_rate"]))
+            st.metric("Win Rate", _format_plain_percent(summary["overall_win_rate"]))
 
         with sum_cols[3]:
             quality_ind = _get_quality_indicator(summary["avg_sharpe"])
@@ -444,7 +455,7 @@ def render_strategy_performance(
 
         st.caption(
             f"Active Strategies: {summary['active_count']} / {len(filtered_strategies)} | "
-            f"Max MDD: {_format_percent(summary['max_mdd'])}"
+            f"Max MDD: {_format_plain_percent(summary['max_mdd'])}"
         )
 
     # Individual strategies
@@ -477,9 +488,9 @@ def _render_strategy_card(
         with cols[1]:
             st.metric("Sharpe", _format_ratio(metrics.sharpe_ratio))
         with cols[2]:
-            st.metric("MDD", _format_percent(metrics.max_drawdown))
+            st.metric("MDD", _format_plain_percent(metrics.max_drawdown))
         with cols[3]:
-            st.metric("Win Rate", _format_percent(stats.win_rate))
+            st.metric("Win Rate", _format_plain_percent(stats.win_rate))
     else:
         # Full layout
         st.markdown("**Performance Metrics**")
@@ -498,11 +509,11 @@ def _render_strategy_card(
             st.caption(f"Sortino: {_format_ratio(metrics.sortino_ratio)}")
 
         with perf_cols[2]:
-            st.metric("Max Drawdown", _format_percent(metrics.max_drawdown))
+            st.metric("Max Drawdown", _format_plain_percent(metrics.max_drawdown))
             st.caption(_format_krw(metrics.max_drawdown_krw))
 
         with perf_cols[3]:
-            st.metric("Volatility", _format_percent(metrics.volatility))
+            st.metric("Volatility", _format_plain_percent(metrics.volatility))
             st.caption(f"Calmar: {_format_ratio(metrics.calmar_ratio)}")
 
         # Trade statistics
@@ -515,7 +526,7 @@ def _render_strategy_card(
                 st.caption(f"W: {stats.winning_trades} / L: {stats.losing_trades}")
 
             with trade_cols[1]:
-                st.metric("Win Rate", _format_percent(stats.win_rate))
+                st.metric("Win Rate", _format_plain_percent(stats.win_rate))
 
             with trade_cols[2]:
                 st.metric("Profit Factor", _format_ratio(stats.profit_factor))
