@@ -546,10 +546,25 @@ class UpbitSpotExecution(ExecutionAdapter):
         self,
         symbol: str,
         side: str,
-        quantity: float,
+        quantity: float = None,
         order_type: str = "MARKET",
         price: Optional[float] = None,
+        *,
+        units: Optional[float] = None,
+        amount_krw: Optional[float] = None,
     ) -> OrderResult:
+        """
+        Place an order on Upbit.
+
+        Args:
+            symbol: Trading pair (e.g., "BTC/KRW")
+            side: "BUY" or "SELL"
+            quantity: [DEPRECATED] Use units or amount_krw instead
+            order_type: "MARKET" or "LIMIT"
+            price: Limit price (for LIMIT orders)
+            units: Coin quantity (for SELL or LIMIT BUY)
+            amount_krw: KRW amount (for MARKET BUY)
+        """
         self._ensure_live_trading()
         self._ensure_credentials()
 
@@ -561,8 +576,25 @@ class UpbitSpotExecution(ExecutionAdapter):
         if order_type_upper not in self.VALID_ORDER_TYPES:
             raise ValueError(f"Invalid order type: {order_type_upper}")
 
-        if quantity <= 0:
-            raise ValueError("Quantity must be positive")
+        # Handle parameter compatibility
+        if quantity is not None and units is None and amount_krw is None:
+            # Legacy: quantity used as units for SELL/LIMIT, amount_krw for MARKET BUY
+            if side_upper == "BUY" and order_type_upper == "MARKET":
+                amount_krw = quantity
+            else:
+                units = quantity
+
+        # Validate parameters
+        if side_upper == "BUY" and order_type_upper == "MARKET":
+            if amount_krw is None and units is None:
+                raise ValueError("[Upbit] MARKET BUY requires amount_krw")
+            if amount_krw is not None and amount_krw < self.MIN_ORDER_KRW:
+                raise ValueError(f"[Upbit] MARKET BUY requires at least {self.MIN_ORDER_KRW} KRW")
+        elif side_upper == "SELL":
+            if units is None:
+                raise ValueError("[Upbit] SELL requires units")
+            if units <= 0:
+                raise ValueError("Units must be positive")
 
         market = self._convert_symbol(symbol)
         identifier = str(uuid.uuid4())
@@ -579,27 +611,26 @@ class UpbitSpotExecution(ExecutionAdapter):
                 if price is not None:
                     raise ValueError(
                         "[Upbit] MARKET BUY does not accept 'price' parameter. "
-                        f"Use 'quantity' as KRW amount. Got price={price}"
-                    )
-                if quantity < self.MIN_ORDER_KRW:
-                    raise ValueError(
-                        f"[Upbit] MARKET BUY requires at least {self.MIN_ORDER_KRW} KRW"
+                        f"Use 'amount_krw' for KRW amount. Got price={price}"
                     )
                 params["ord_type"] = "price"
-                params["price"] = str(quantity)
+                params["price"] = str(int(amount_krw))
             else:
                 params["ord_type"] = "market"
-                params["volume"] = str(quantity)
+                params["volume"] = str(units)
         else:
             if price is None or price <= 0:
                 raise ValueError("Limit price must be positive")
             params["ord_type"] = "limit"
             params["price"] = str(price)
-            params["volume"] = str(quantity)
+            params["volume"] = str(units)
+
+        # Determine quantity for result
+        result_quantity = units if units is not None else amount_krw
 
         try:
             data = self._request("POST", "/orders", params=params, is_order=True)
-            return self._to_order_result(data, symbol, side_upper, quantity, price)
+            return self._to_order_result(data, symbol, side_upper, result_quantity, price)
         except requests.exceptions.Timeout:
             start_time = time.monotonic()
             attempts = 0
@@ -607,7 +638,7 @@ class UpbitSpotExecution(ExecutionAdapter):
                 attempts += 1
                 recovered = self._get_order_by_identifier(identifier)
                 if recovered:
-                    return self._to_order_result(recovered, symbol, side_upper, quantity, price)
+                    return self._to_order_result(recovered, symbol, side_upper, result_quantity, price)
                 if attempts < self.MAX_RECOVERY_ATTEMPTS:
                     time.sleep(2 ** attempts)
             return OrderResult(success=False, message="Timeout and order not found", mock=False)
