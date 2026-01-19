@@ -257,8 +257,7 @@ class MultiExchangeScheduler:
                 from libs.adapters.real_binance_spot import BinanceSpotMarketData
                 md = BinanceSpotMarketData()
                 all_symbols = md.get_all_symbols()
-                # Filter top symbols by volume or limit count
-                return all_symbols[:50]  # Limit to top 50 for performance
+                return all_symbols  # All USDT pairs
             except Exception as e:
                 logger.warning(
                     "[MultiExchangeScheduler] Failed to fetch Binance Spot symbols: %s",
@@ -272,8 +271,7 @@ class MultiExchangeScheduler:
                 from libs.adapters.real_binance_futures import BinanceFuturesMarketData
                 md = BinanceFuturesMarketData()
                 all_symbols = md.get_all_symbols()
-                # Filter top perpetuals
-                return all_symbols[:30]  # Limit to top 30 for performance
+                return all_symbols  # All USDT-M perpetuals
             except Exception as e:
                 logger.warning(
                     "[MultiExchangeScheduler] Failed to fetch Binance Futures symbols: %s",
