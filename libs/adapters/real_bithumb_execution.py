@@ -6,14 +6,28 @@ Bithumb 실주문 어댑터
 """
 
 import logging
-from typing import Optional, Dict, List
+import time
+from typing import Optional, Dict, List, Callable, TypeVar
 from datetime import datetime
 from dataclasses import dataclass
+from enum import Enum
+import functools
+import random
 
 from libs.adapters.bithumb_api_v2 import BithumbAPIV2
 from libs.core.config import Config
 
+T = TypeVar("T")
+
 logger = logging.getLogger(__name__)
+
+
+class OrderState(Enum):
+    """Bithumb 주문 상태."""
+    WAIT = "wait"          # 체결 대기
+    WATCH = "watch"        # 예약 주문 대기
+    DONE = "done"          # 체결 완료
+    CANCEL = "cancel"      # 취소됨
 
 
 @dataclass
@@ -31,6 +45,47 @@ class BithumbOrderResult:
     fee: float
     created_at: datetime
     message: str = ""
+
+
+@dataclass
+class OrderStatus:
+    """주문 상태 상세 정보."""
+    order_id: str
+    market: str
+    side: str
+    ord_type: str
+    state: str
+    volume: float           # 주문 수량
+    remaining_volume: float  # 미체결 수량
+    executed_volume: float   # 체결 수량
+    price: Optional[float]  # 지정가
+    avg_price: Optional[float]  # 평균 체결가
+    trades_count: int       # 체결 건수
+    created_at: datetime
+    paid_fee: float = 0.0
+    locked: float = 0.0     # 동결 금액
+
+    @property
+    def is_done(self) -> bool:
+        """체결 완료 여부."""
+        return self.state == OrderState.DONE.value
+
+    @property
+    def is_canceled(self) -> bool:
+        """취소 여부."""
+        return self.state == OrderState.CANCEL.value
+
+    @property
+    def is_pending(self) -> bool:
+        """체결 대기 여부."""
+        return self.state in (OrderState.WAIT.value, OrderState.WATCH.value)
+
+    @property
+    def fill_ratio(self) -> float:
+        """체결률 (0.0~1.0)."""
+        if self.volume == 0:
+            return 0.0
+        return self.executed_volume / self.volume
 
 
 class BithumbExecutionAdapter:
@@ -258,7 +313,7 @@ class BithumbExecutionAdapter:
             logger.error(f"[BithumbExecution] Order failed: {e}")
             return self._rejected_order(symbol, side, units or 0, str(e))
     
-    def cancel_order(self, order_id: str, symbol: str) -> bool:
+    def cancel_order(self, order_id: str, symbol: str = None) -> bool:
         """주문 취소"""
         try:
             result = self.bithumb.cancel_order(order_id)
@@ -266,9 +321,660 @@ class BithumbExecutionAdapter:
         except Exception as e:
             logger.error(f"[BithumbExecution] Cancel failed: {e}")
             return False
-    
+
+    # ========== 주문 상태 추적 기능 (Phase 8) ==========
+
+    def get_order_status(self, order_id: str) -> Optional[OrderStatus]:
+        """
+        주문 상태 조회.
+
+        Args:
+            order_id: 주문 UUID
+
+        Returns:
+            OrderStatus 또는 None
+        """
+        try:
+            result = self.bithumb.get_order(order_id)
+            if not result:
+                return None
+
+            return self._parse_order_status(result)
+        except Exception as e:
+            logger.error(f"[BithumbExecution] get_order_status failed: {e}")
+            return None
+
+    def wait_for_fill(
+        self,
+        order_id: str,
+        timeout_seconds: float = 30.0,
+        poll_interval: float = 0.5,
+    ) -> Optional[OrderStatus]:
+        """
+        주문 체결 대기.
+
+        Args:
+            order_id: 주문 UUID
+            timeout_seconds: 최대 대기 시간
+            poll_interval: 폴링 간격
+
+        Returns:
+            최종 OrderStatus 또는 None (타임아웃)
+        """
+        start_time = time.time()
+        last_status = None
+
+        while time.time() - start_time < timeout_seconds:
+            status = self.get_order_status(order_id)
+
+            if status is None:
+                logger.warning(f"[BithumbExecution] Order {order_id} not found")
+                return last_status
+
+            last_status = status
+
+            if status.is_done:
+                logger.info(
+                    f"[BithumbExecution] Order {order_id} filled: "
+                    f"{status.executed_volume:.8f} @ avg {status.avg_price or 0:,.0f}"
+                )
+                return status
+
+            if status.is_canceled:
+                logger.warning(f"[BithumbExecution] Order {order_id} was canceled")
+                return status
+
+            # 부분 체결 로그
+            if status.executed_volume > 0:
+                logger.info(
+                    f"[BithumbExecution] Order {order_id} partial fill: "
+                    f"{status.fill_ratio:.1%} ({status.executed_volume:.8f}/{status.volume:.8f})"
+                )
+
+            time.sleep(poll_interval)
+
+        logger.warning(
+            f"[BithumbExecution] Timeout waiting for {order_id} "
+            f"(last state: {last_status.state if last_status else 'unknown'})"
+        )
+        return last_status
+
+    def get_open_orders(self, symbol: str = None) -> List[OrderStatus]:
+        """
+        미체결 주문 목록 조회.
+
+        Args:
+            symbol: 종목 필터 (예: "BTC/KRW")
+
+        Returns:
+            미체결 OrderStatus 목록
+        """
+        try:
+            market = self._convert_symbol(symbol) if symbol else None
+            result = self.bithumb.get_orders(
+                market=market,
+                states=["wait", "watch"],
+                limit=100,
+            )
+
+            orders = []
+            for item in result or []:
+                status = self._parse_order_status(item)
+                if status:
+                    orders.append(status)
+
+            return orders
+        except Exception as e:
+            logger.error(f"[BithumbExecution] get_open_orders failed: {e}")
+            return []
+
+    def get_recent_orders(
+        self,
+        symbol: str = None,
+        limit: int = 20,
+        states: List[str] = None,
+    ) -> List[OrderStatus]:
+        """
+        최근 주문 목록 조회.
+
+        Args:
+            symbol: 종목 필터
+            limit: 최대 개수
+            states: 상태 필터 (기본: 전체)
+
+        Returns:
+            OrderStatus 목록
+        """
+        try:
+            market = self._convert_symbol(symbol) if symbol else None
+            result = self.bithumb.get_orders(
+                market=market,
+                states=states,
+                limit=limit,
+            )
+
+            orders = []
+            for item in result or []:
+                status = self._parse_order_status(item)
+                if status:
+                    orders.append(status)
+
+            return orders
+        except Exception as e:
+            logger.error(f"[BithumbExecution] get_recent_orders failed: {e}")
+            return []
+
+    def get_order_chance(self, symbol: str) -> Optional[Dict]:
+        """
+        주문 가능 정보 조회 (수수료, 제한 등).
+
+        Args:
+            symbol: 종목 (예: "BTC/KRW")
+
+        Returns:
+            주문 가능 정보 dict
+        """
+        try:
+            market = self._convert_symbol(symbol)
+            return self.bithumb.get_orders_chance(market)
+        except Exception as e:
+            logger.error(f"[BithumbExecution] get_order_chance failed: {e}")
+            return None
+
+    def _parse_order_status(self, data: Dict) -> Optional[OrderStatus]:
+        """API 응답을 OrderStatus로 변환."""
+        if not data:
+            return None
+
+        try:
+            # 평균 체결가 계산
+            avg_price = None
+            if data.get("trades"):
+                trades = data["trades"]
+                total_value = sum(
+                    float(t.get("price", 0)) * float(t.get("volume", 0))
+                    for t in trades
+                )
+                total_volume = sum(float(t.get("volume", 0)) for t in trades)
+                if total_volume > 0:
+                    avg_price = total_value / total_volume
+            elif data.get("avg_price"):
+                avg_price = float(data["avg_price"])
+
+            return OrderStatus(
+                order_id=data.get("uuid", ""),
+                market=data.get("market", ""),
+                side=data.get("side", ""),
+                ord_type=data.get("ord_type", ""),
+                state=data.get("state", ""),
+                volume=float(data.get("volume", 0)),
+                remaining_volume=float(data.get("remaining_volume", 0)),
+                executed_volume=float(data.get("executed_volume", 0)),
+                price=float(data["price"]) if data.get("price") else None,
+                avg_price=avg_price,
+                trades_count=int(data.get("trades_count", 0)),
+                created_at=datetime.fromisoformat(
+                    data.get("created_at", "").replace("Z", "+00:00")
+                ) if data.get("created_at") else datetime.now(),
+                paid_fee=float(data.get("paid_fee", 0)),
+                locked=float(data.get("locked", 0)),
+            )
+        except Exception as e:
+            logger.warning(f"[BithumbExecution] _parse_order_status failed: {e}")
+            return None
+
+    # ========== 포지션 동기화 기능 (Phase 8-2) ==========
+
+    def sync_positions(self, symbols: List[str] = None) -> Dict[str, Dict]:
+        """
+        거래소 실제 잔고를 기준으로 포지션 동기화.
+
+        Args:
+            symbols: 동기화할 종목 목록 (없으면 전체)
+
+        Returns:
+            {symbol: {"balance": float, "locked": float, "avg_buy_price": float}}
+        """
+        try:
+            accounts = self.bithumb.get_accounts()
+            positions = {}
+
+            for account in accounts or []:
+                currency = account.get("currency", "")
+
+                # KRW 제외
+                if currency == "KRW":
+                    continue
+
+                symbol = f"{currency}/KRW"
+
+                # symbols 필터링
+                if symbols and symbol not in symbols:
+                    continue
+
+                balance = float(account.get("balance", 0))
+                locked = float(account.get("locked", 0))
+                avg_buy_price = float(account.get("avg_buy_price", 0))
+
+                # 유의미한 잔고만 포함 (0.00001 이상)
+                if balance > 0.00001 or locked > 0.00001:
+                    positions[symbol] = {
+                        "balance": balance,
+                        "locked": locked,
+                        "total": balance + locked,
+                        "avg_buy_price": avg_buy_price,
+                        "currency": currency,
+                    }
+
+            logger.info(
+                f"[BithumbExecution] sync_positions: {len(positions)} positions found"
+            )
+            return positions
+
+        except Exception as e:
+            logger.error(f"[BithumbExecution] sync_positions failed: {e}")
+            return {}
+
+    def get_position(self, symbol: str) -> Optional[Dict]:
+        """
+        특정 종목 포지션 조회.
+
+        Args:
+            symbol: 종목 (예: "BTC/KRW")
+
+        Returns:
+            {balance, locked, avg_buy_price} 또는 None
+        """
+        positions = self.sync_positions([symbol])
+        return positions.get(symbol)
+
+    def get_position_value(self, symbol: str) -> float:
+        """
+        특정 종목 포지션의 현재 가치 (KRW).
+
+        Args:
+            symbol: 종목
+
+        Returns:
+            현재가 기준 포지션 가치
+        """
+        position = self.get_position(symbol)
+        if not position:
+            return 0.0
+
+        current_price = self.get_current_price(symbol)
+        if not current_price:
+            return 0.0
+
+        return position["total"] * current_price
+
+    def get_total_portfolio_value(self) -> Dict[str, float]:
+        """
+        전체 포트폴리오 가치 계산.
+
+        Returns:
+            {
+                "krw_balance": float,
+                "positions_value": float,
+                "total_value": float,
+                "positions": {symbol: value}
+            }
+        """
+        try:
+            krw_balance = self.get_balance("KRW")
+            positions = self.sync_positions()
+            positions_value = 0.0
+            position_values = {}
+
+            for symbol, pos in positions.items():
+                current_price = self.get_current_price(symbol)
+                if current_price:
+                    value = pos["total"] * current_price
+                    positions_value += value
+                    position_values[symbol] = value
+
+            return {
+                "krw_balance": krw_balance,
+                "positions_value": positions_value,
+                "total_value": krw_balance + positions_value,
+                "positions": position_values,
+            }
+
+        except Exception as e:
+            logger.error(f"[BithumbExecution] get_total_portfolio_value failed: {e}")
+            return {
+                "krw_balance": 0.0,
+                "positions_value": 0.0,
+                "total_value": 0.0,
+                "positions": {},
+            }
+
+    def get_pnl(self, symbol: str) -> Optional[Dict]:
+        """
+        특정 종목의 손익 계산.
+
+        Args:
+            symbol: 종목
+
+        Returns:
+            {
+                "unrealized_pnl": float,
+                "unrealized_pnl_pct": float,
+                "avg_buy_price": float,
+                "current_price": float,
+                "quantity": float,
+            }
+        """
+        position = self.get_position(symbol)
+        if not position or position["total"] == 0:
+            return None
+
+        current_price = self.get_current_price(symbol)
+        if not current_price:
+            return None
+
+        avg_buy_price = position.get("avg_buy_price", 0)
+        quantity = position["total"]
+        current_value = quantity * current_price
+        cost_basis = quantity * avg_buy_price
+
+        if cost_basis > 0:
+            unrealized_pnl = current_value - cost_basis
+            unrealized_pnl_pct = (current_price - avg_buy_price) / avg_buy_price * 100
+        else:
+            unrealized_pnl = 0.0
+            unrealized_pnl_pct = 0.0
+
+        return {
+            "unrealized_pnl": unrealized_pnl,
+            "unrealized_pnl_pct": unrealized_pnl_pct,
+            "avg_buy_price": avg_buy_price,
+            "current_price": current_price,
+            "quantity": quantity,
+            "current_value": current_value,
+            "cost_basis": cost_basis,
+        }
+
+    # ========== 에러 복구 및 재시도 (Phase 8-3) ==========
+
+    def _retry_operation(
+        self,
+        operation: Callable[[], T],
+        operation_name: str,
+        max_retries: int = 3,
+        base_delay: float = 1.0,
+        retryable_exceptions: tuple = (ConnectionError, TimeoutError),
+    ) -> T:
+        """
+        일반 작업에 대한 재시도 래퍼.
+
+        Args:
+            operation: 실행할 callable
+            operation_name: 로깅용 작업 이름
+            max_retries: 최대 재시도 횟수
+            base_delay: 초기 대기 시간
+            retryable_exceptions: 재시도할 예외 타입
+
+        Returns:
+            작업 결과
+
+        Raises:
+            마지막 예외 (모든 재시도 실패 시)
+        """
+        last_exception = None
+
+        for attempt in range(max_retries + 1):
+            try:
+                return operation()
+
+            except retryable_exceptions as e:
+                last_exception = e
+                if attempt < max_retries:
+                    delay = self._calculate_backoff(attempt, base_delay)
+                    logger.warning(
+                        f"[BithumbExecution] {operation_name} attempt {attempt + 1}/{max_retries} "
+                        f"failed: {type(e).__name__}. Retrying in {delay:.1f}s"
+                    )
+                    time.sleep(delay)
+                else:
+                    logger.error(
+                        f"[BithumbExecution] {operation_name} failed after {max_retries + 1} attempts: {e}"
+                    )
+
+            except Exception as e:
+                # 재시도 불가능한 예외는 즉시 raise
+                logger.error(f"[BithumbExecution] {operation_name} non-retryable error: {e}")
+                raise
+
+        if last_exception:
+            raise last_exception
+        raise RuntimeError(f"Unexpected failure in {operation_name}")
+
+    @staticmethod
+    def _calculate_backoff(attempt: int, base_delay: float, max_delay: float = 30.0) -> float:
+        """지수 백오프 + 지터 계산."""
+        delay = base_delay * (2 ** attempt)
+        delay = min(delay, max_delay)
+        # ±20% 지터
+        jitter = delay * 0.2 * (random.random() * 2 - 1)
+        return max(0.1, delay + jitter)
+
+    def place_order_with_retry(
+        self,
+        symbol: str,
+        side: str,
+        *,
+        units: Optional[float] = None,
+        amount_krw: Optional[float] = None,
+        order_type: str = "MARKET",
+        price: Optional[float] = None,
+        max_retries: int = 2,
+    ) -> BithumbOrderResult:
+        """
+        재시도 로직이 포함된 주문 실행.
+
+        네트워크 오류 시 자동 재시도합니다.
+        주문 중복 방지를 위해 주문 전 상태를 확인합니다.
+
+        Args:
+            symbol: 종목
+            side: "BUY" 또는 "SELL"
+            units: 코인 수량
+            amount_krw: KRW 금액 (BUY 전용)
+            order_type: 주문 유형
+            price: 지정가 (LIMIT 전용)
+            max_retries: 최대 재시도 횟수
+
+        Returns:
+            BithumbOrderResult
+        """
+
+        def attempt_order():
+            return self.place_order(
+                symbol,
+                side,
+                units=units,
+                amount_krw=amount_krw,
+                order_type=order_type,
+                price=price,
+            )
+
+        return self._retry_operation(
+            attempt_order,
+            f"place_order({symbol}, {side})",
+            max_retries=max_retries,
+            base_delay=1.0,
+            retryable_exceptions=(ConnectionError, TimeoutError),
+        )
+
+    def safe_cancel_order(
+        self,
+        order_id: str,
+        symbol: str = None,
+        max_retries: int = 2,
+    ) -> bool:
+        """
+        안전한 주문 취소 (상태 확인 포함).
+
+        Args:
+            order_id: 주문 UUID
+            symbol: 종목 (옵션)
+            max_retries: 최대 재시도
+
+        Returns:
+            취소 성공 여부
+        """
+        # 1. 주문 상태 확인
+        status = self.get_order_status(order_id)
+
+        if status is None:
+            logger.warning(f"[BithumbExecution] Order {order_id} not found for cancel")
+            return False
+
+        if status.is_done:
+            logger.info(f"[BithumbExecution] Order {order_id} already filled, cannot cancel")
+            return False
+
+        if status.is_canceled:
+            logger.info(f"[BithumbExecution] Order {order_id} already canceled")
+            return True
+
+        # 2. 취소 시도 (재시도 포함)
+        def attempt_cancel():
+            return self.cancel_order(order_id, symbol)
+
+        try:
+            return self._retry_operation(
+                attempt_cancel,
+                f"cancel_order({order_id})",
+                max_retries=max_retries,
+            )
+        except Exception as e:
+            logger.error(f"[BithumbExecution] safe_cancel_order failed: {e}")
+            return False
+
+    def verify_order_execution(
+        self,
+        order_id: str,
+        expected_side: str,
+        expected_symbol: str,
+        timeout_seconds: float = 10.0,
+    ) -> Optional[OrderStatus]:
+        """
+        주문 실행 검증.
+
+        주문 후 실제로 체결되었는지 확인합니다.
+
+        Args:
+            order_id: 주문 UUID
+            expected_side: 예상 주문 방향
+            expected_symbol: 예상 종목
+            timeout_seconds: 검증 대기 시간
+
+        Returns:
+            OrderStatus (체결 완료 시) 또는 None
+        """
+        status = self.wait_for_fill(order_id, timeout_seconds=timeout_seconds)
+
+        if status is None:
+            logger.error(f"[BithumbExecution] Order {order_id} verification failed: not found")
+            return None
+
+        # 검증
+        expected_market = self._convert_symbol(expected_symbol)
+        expected_api_side = "bid" if expected_side.upper() == "BUY" else "ask"
+
+        if status.market != expected_market:
+            logger.error(
+                f"[BithumbExecution] Order {order_id} market mismatch: "
+                f"expected {expected_market}, got {status.market}"
+            )
+            return None
+
+        if status.side != expected_api_side:
+            logger.error(
+                f"[BithumbExecution] Order {order_id} side mismatch: "
+                f"expected {expected_api_side}, got {status.side}"
+            )
+            return None
+
+        if status.is_done:
+            logger.info(
+                f"[BithumbExecution] Order {order_id} verified: "
+                f"{status.executed_volume:.8f} @ {status.avg_price or 0:,.0f}"
+            )
+            return status
+
+        if status.is_canceled:
+            logger.warning(f"[BithumbExecution] Order {order_id} was canceled during verification")
+            return status
+
+        logger.warning(
+            f"[BithumbExecution] Order {order_id} verification incomplete: state={status.state}"
+        )
+        return status
+
+    def recover_from_error(self, error: Exception, context: Dict) -> Dict:
+        """
+        에러 복구 시도.
+
+        Args:
+            error: 발생한 예외
+            context: 에러 컨텍스트 (symbol, side, order_id 등)
+
+        Returns:
+            복구 결과 {"recovered": bool, "action": str, "details": ...}
+        """
+        error_type = type(error).__name__
+        symbol = context.get("symbol", "")
+        side = context.get("side", "")
+        order_id = context.get("order_id", "")
+
+        logger.info(f"[BithumbExecution] Attempting recovery from {error_type}")
+
+        # 1. 네트워크 오류 - 연결 재확인
+        if isinstance(error, (ConnectionError, TimeoutError)):
+            try:
+                # 연결 테스트
+                self.get_balance("KRW")
+                return {
+                    "recovered": True,
+                    "action": "connection_restored",
+                    "details": "Connection recovered after retry",
+                }
+            except Exception as e:
+                return {
+                    "recovered": False,
+                    "action": "connection_failed",
+                    "details": str(e),
+                }
+
+        # 2. 주문 관련 오류 - 미체결 주문 확인
+        if order_id:
+            try:
+                status = self.get_order_status(order_id)
+                if status:
+                    return {
+                        "recovered": True,
+                        "action": "order_status_found",
+                        "details": {
+                            "state": status.state,
+                            "executed_volume": status.executed_volume,
+                            "remaining_volume": status.remaining_volume,
+                        },
+                    }
+            except Exception:
+                pass
+
+        # 3. 복구 불가
+        return {
+            "recovered": False,
+            "action": "recovery_failed",
+            "details": f"Could not recover from {error_type}: {error}",
+        }
+
     # ========== Private Methods ==========
-    
+
     def _convert_symbol(self, symbol: str) -> str:
         """심볼 변환: BTC/KRW -> KRW-BTC"""
         base, quote = symbol.split("/")
