@@ -1,0 +1,78 @@
+# =============================================================================
+# MASP (Multi-Asset Strategy Platform) Docker Compose
+# =============================================================================
+
+version: "3.8"
+
+services:
+  # Config API Server
+  config-api:
+    build: .
+    container_name: masp-config-api
+    ports:
+      - "8000:8000"
+    environment:
+      - MASP_ADMIN_TOKEN=${MASP_ADMIN_TOKEN}
+      - MASP_ENABLE_LIVE_TRADING=${MASP_ENABLE_LIVE_TRADING:-0}
+      - UPBIT_API_KEY=${UPBIT_API_KEY}
+      - UPBIT_API_SECRET=${UPBIT_API_SECRET}
+      - BITHUMB_API_KEY=${BITHUMB_API_KEY}
+      - BITHUMB_API_SECRET=${BITHUMB_API_SECRET}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Streamlit Dashboard
+  dashboard:
+    build: .
+    container_name: masp-dashboard
+    command: streamlit run services/dashboard/app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - MASP_ADMIN_TOKEN=${MASP_ADMIN_TOKEN}
+      - MASP_DASHBOARD_PASSWORD=${MASP_DASHBOARD_PASSWORD}
+      - MASP_ENABLE_LIVE_TRADING=${MASP_ENABLE_LIVE_TRADING:-0}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - config-api
+    restart: unless-stopped
+
+  # Scheduler Service (optional)
+  scheduler:
+    build: .
+    container_name: masp-scheduler
+    command: python -m services.multi_exchange_scheduler
+    environment:
+      - MASP_ADMIN_TOKEN=${MASP_ADMIN_TOKEN}
+      - MASP_ENABLE_LIVE_TRADING=${MASP_ENABLE_LIVE_TRADING:-0}
+      - UPBIT_API_KEY=${UPBIT_API_KEY}
+      - UPBIT_API_SECRET=${UPBIT_API_SECRET}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - config-api
+    restart: unless-stopped
+    profiles:
+      - scheduler
+
+volumes:
+  data:
+  logs:
+
+networks:
+  default:
+    name: masp-network

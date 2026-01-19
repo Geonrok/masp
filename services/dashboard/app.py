@@ -79,7 +79,7 @@ if not enforce_auth():
     st.stop()
 
 st.title("MASP Dashboard")
-st.caption("Multi-Asset Strategy Platform - Phase 7D-3 (Multi-Exchange Extension)")
+st.caption("Multi-Asset Strategy Platform - Phase 7D-5 (Documentation & Deployment)")
 
 api = ConfigApiClient()
 
@@ -241,8 +241,8 @@ with st.sidebar:
     st.divider()
 
     st.subheader("Quick Info")
-    st.text("Version: 5.1.0")
-    st.text("Phase: 7C-6")
+    st.text("Version: 5.2.0")
+    st.text("Phase: 7D")
 
     st.divider()
 
