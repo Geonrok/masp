@@ -1,2 +1,3 @@
-from services.dashboard.components.trade_history import render_trade_history_panel
+﻿from services.dashboard.components.trade_history import render_trade_history_panel
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
+from services.dashboard.components.portfolio_summary import render_portfolio_summary
