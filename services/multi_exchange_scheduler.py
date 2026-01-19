@@ -13,6 +13,11 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+# Add project root to path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 try:
     import yaml
     HAS_YAML = True
