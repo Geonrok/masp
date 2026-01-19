@@ -604,3 +604,383 @@ def test_calculate_daily_returns_empty():
 
     assert returns == []
     assert dates == []
+
+
+# =============================================================================
+# Backtest Provider Tests (Phase 7D-1)
+# =============================================================================
+
+
+def test_backtest_provider_import():
+    """Test backtest provider imports correctly."""
+    from services.dashboard.providers import (
+        get_backtest_data,
+        get_backtest_list,
+        get_strategy_names,
+        get_backtest_provider,
+    )
+
+    assert callable(get_backtest_data)
+    assert callable(get_backtest_list)
+    assert callable(get_strategy_names)
+    assert callable(get_backtest_provider)
+
+
+def test_get_backtest_data_returns_none_when_no_store():
+    """Test backtest data returns None when BacktestStore unavailable."""
+    from services.dashboard.providers.backtest_provider import get_backtest_data
+
+    with patch(
+        "services.dashboard.providers.backtest_provider._get_backtest_store",
+        return_value=None,
+    ):
+        result = get_backtest_data()
+        assert result is None
+
+
+def test_get_backtest_list_returns_empty_when_no_store():
+    """Test backtest list returns empty list when no store."""
+    from services.dashboard.providers.backtest_provider import get_backtest_list
+
+    with patch(
+        "services.dashboard.providers.backtest_provider._get_backtest_store",
+        return_value=None,
+    ):
+        result = get_backtest_list()
+        assert result == []
+
+
+def test_get_strategy_names_returns_empty_when_no_store():
+    """Test strategy names returns empty list when no store."""
+    from services.dashboard.providers.backtest_provider import get_strategy_names
+
+    with patch(
+        "services.dashboard.providers.backtest_provider._get_backtest_store",
+        return_value=None,
+    ):
+        result = get_strategy_names()
+        assert result == []
+
+
+def test_get_backtest_provider_returns_none_when_no_store():
+    """Test backtest provider returns None when no store."""
+    from services.dashboard.providers.backtest_provider import get_backtest_provider
+
+    with patch(
+        "services.dashboard.providers.backtest_provider._get_backtest_store",
+        return_value=None,
+    ):
+        result = get_backtest_provider()
+        assert result is None
+
+
+def test_get_backtest_provider_returns_none_when_no_backtests():
+    """Test backtest provider returns None when no backtests exist."""
+    from services.dashboard.providers.backtest_provider import get_backtest_provider
+
+    mock_store = MagicMock()
+    mock_store.list_backtests.return_value = []
+
+    with patch(
+        "services.dashboard.providers.backtest_provider._get_backtest_store",
+        return_value=mock_store,
+    ):
+        result = get_backtest_provider()
+        assert result is None
+
+
+def test_get_backtest_provider_returns_callable():
+    """Test backtest provider returns callable when backtests exist."""
+    from services.dashboard.providers.backtest_provider import get_backtest_provider
+
+    mock_store = MagicMock()
+    mock_store.list_backtests.return_value = [{"backtest_id": "bt_001"}]
+
+    with patch(
+        "services.dashboard.providers.backtest_provider._get_backtest_store",
+        return_value=mock_store,
+    ):
+        with patch(
+            "services.dashboard.providers.backtest_provider.get_backtest_data",
+            return_value={"dates": [], "daily_returns": []},
+        ):
+            result = get_backtest_provider()
+            assert callable(result)
+
+
+# =============================================================================
+# BacktestStore Tests (Phase 7D-1)
+# =============================================================================
+
+
+def test_backtest_result_dataclass():
+    """Test BacktestResult dataclass."""
+    from libs.adapters.backtest_store import BacktestResult
+
+    result = BacktestResult(
+        backtest_id="bt_001",
+        strategy_name="TestStrategy",
+        created_at="2025-01-01T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-31",
+        dates=["2025-01-01", "2025-01-02"],
+        daily_returns=[0.01, -0.005],
+        total_return=0.5,
+        sharpe_ratio=1.2,
+        max_drawdown=-0.05,
+    )
+
+    assert result.backtest_id == "bt_001"
+    assert result.strategy_name == "TestStrategy"
+    assert len(result.dates) == 2
+
+
+def test_backtest_result_to_dict():
+    """Test BacktestResult to_dict method."""
+    from libs.adapters.backtest_store import BacktestResult
+
+    result = BacktestResult(
+        backtest_id="bt_001",
+        strategy_name="TestStrategy",
+        created_at="2025-01-01T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-31",
+    )
+
+    data = result.to_dict()
+
+    assert isinstance(data, dict)
+    assert data["backtest_id"] == "bt_001"
+    assert data["strategy_name"] == "TestStrategy"
+
+
+def test_backtest_result_from_dict():
+    """Test BacktestResult from_dict method."""
+    from libs.adapters.backtest_store import BacktestResult
+
+    data = {
+        "backtest_id": "bt_002",
+        "strategy_name": "AnotherStrategy",
+        "created_at": "2025-01-02T10:00:00",
+        "initial_capital": 5000000,
+        "start_date": "2025-01-01",
+        "end_date": "2025-01-31",
+        "dates": ["2025-01-01"],
+        "daily_returns": [0.02],
+        "total_return": 2.0,
+    }
+
+    result = BacktestResult.from_dict(data)
+
+    assert result.backtest_id == "bt_002"
+    assert result.strategy_name == "AnotherStrategy"
+    assert result.initial_capital == 5000000.0
+    assert result.total_return == 2.0
+
+
+def test_backtest_result_to_viewer_format():
+    """Test BacktestResult to_viewer_format method."""
+    from libs.adapters.backtest_store import BacktestResult
+    from datetime import date
+
+    result = BacktestResult(
+        backtest_id="bt_001",
+        strategy_name="TestStrategy",
+        created_at="2025-01-01T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-02",
+        dates=["2025-01-01", "2025-01-02"],
+        daily_returns=[0.01, -0.005],
+    )
+
+    viewer_data = result.to_viewer_format()
+
+    assert "dates" in viewer_data
+    assert "daily_returns" in viewer_data
+    assert "initial_capital" in viewer_data
+    assert "strategy_name" in viewer_data
+    assert len(viewer_data["dates"]) == 2
+    assert isinstance(viewer_data["dates"][0], date)
+
+
+def test_backtest_store_initialization(tmp_path):
+    """Test BacktestStore initialization."""
+    from libs.adapters.backtest_store import BacktestStore
+
+    store = BacktestStore(store_dir=str(tmp_path))
+
+    assert store.store_dir.exists()
+
+
+def test_backtest_store_save_and_load(tmp_path):
+    """Test BacktestStore save and load methods."""
+    from libs.adapters.backtest_store import BacktestStore, BacktestResult
+
+    store = BacktestStore(store_dir=str(tmp_path))
+
+    result = BacktestResult(
+        backtest_id="bt_test_001",
+        strategy_name="TestStrategy",
+        created_at="2025-01-01T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-31",
+        dates=["2025-01-01"],
+        daily_returns=[0.01],
+        total_return=1.0,
+    )
+
+    # Save
+    success = store.save(result)
+    assert success is True
+
+    # Load
+    loaded = store.load("TestStrategy", "bt_test_001")
+    assert loaded is not None
+    assert loaded.backtest_id == "bt_test_001"
+    assert loaded.strategy_name == "TestStrategy"
+
+
+def test_backtest_store_list_backtests(tmp_path):
+    """Test BacktestStore list_backtests method."""
+    from libs.adapters.backtest_store import BacktestStore, BacktestResult
+
+    store = BacktestStore(store_dir=str(tmp_path))
+
+    # Save two backtests
+    result1 = BacktestResult(
+        backtest_id="bt_001",
+        strategy_name="Strategy1",
+        created_at="2025-01-01T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-31",
+    )
+    result2 = BacktestResult(
+        backtest_id="bt_002",
+        strategy_name="Strategy2",
+        created_at="2025-01-02T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-31",
+    )
+
+    store.save(result1)
+    store.save(result2)
+
+    # List
+    backtests = store.list_backtests()
+
+    assert len(backtests) == 2
+    # Should be sorted by created_at descending
+    assert backtests[0]["backtest_id"] == "bt_002"
+    assert backtests[1]["backtest_id"] == "bt_001"
+
+
+def test_backtest_store_get_latest(tmp_path):
+    """Test BacktestStore get_latest method."""
+    from libs.adapters.backtest_store import BacktestStore, BacktestResult
+
+    store = BacktestStore(store_dir=str(tmp_path))
+
+    result1 = BacktestResult(
+        backtest_id="bt_001",
+        strategy_name="TestStrategy",
+        created_at="2025-01-01T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-31",
+    )
+    result2 = BacktestResult(
+        backtest_id="bt_002",
+        strategy_name="TestStrategy",
+        created_at="2025-01-02T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-31",
+    )
+
+    store.save(result1)
+    store.save(result2)
+
+    # Get latest
+    latest = store.get_latest("TestStrategy")
+
+    assert latest is not None
+    assert latest.backtest_id == "bt_002"
+
+
+def test_backtest_store_delete(tmp_path):
+    """Test BacktestStore delete method."""
+    from libs.adapters.backtest_store import BacktestStore, BacktestResult
+
+    store = BacktestStore(store_dir=str(tmp_path))
+
+    result = BacktestResult(
+        backtest_id="bt_to_delete",
+        strategy_name="TestStrategy",
+        created_at="2025-01-01T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-31",
+    )
+
+    store.save(result)
+
+    # Verify exists
+    loaded = store.load("TestStrategy", "bt_to_delete")
+    assert loaded is not None
+
+    # Delete
+    success = store.delete("TestStrategy", "bt_to_delete")
+    assert success is True
+
+    # Verify deleted
+    loaded = store.load("TestStrategy", "bt_to_delete")
+    assert loaded is None
+
+
+def test_backtest_store_get_strategy_names(tmp_path):
+    """Test BacktestStore get_strategy_names method."""
+    from libs.adapters.backtest_store import BacktestStore, BacktestResult
+
+    store = BacktestStore(store_dir=str(tmp_path))
+
+    result1 = BacktestResult(
+        backtest_id="bt_001",
+        strategy_name="StrategyA",
+        created_at="2025-01-01T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-31",
+    )
+    result2 = BacktestResult(
+        backtest_id="bt_002",
+        strategy_name="StrategyB",
+        created_at="2025-01-01T10:00:00",
+        initial_capital=10000000.0,
+        start_date="2025-01-01",
+        end_date="2025-01-31",
+    )
+
+    store.save(result1)
+    store.save(result2)
+
+    names = store.get_strategy_names()
+
+    assert len(names) == 2
+    assert "StrategyA" in names
+    assert "StrategyB" in names
+
+
+def test_generate_backtest_id():
+    """Test generate_backtest_id function."""
+    from libs.adapters.backtest_store import generate_backtest_id
+
+    backtest_id = generate_backtest_id()
+
+    assert backtest_id.startswith("bt_")
+    assert len(backtest_id) == 18  # bt_ + YYYYMMDD_HHMMSS

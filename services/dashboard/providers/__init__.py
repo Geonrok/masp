@@ -13,6 +13,12 @@ from services.dashboard.providers.scheduler_provider import get_scheduler_job_pr
 from services.dashboard.providers.strategy_performance_provider import get_strategy_performance_provider
 from services.dashboard.providers.positions_provider import get_positions_data
 from services.dashboard.providers.risk_metrics_provider import get_risk_metrics_data
+from services.dashboard.providers.backtest_provider import (
+    get_backtest_data,
+    get_backtest_list,
+    get_strategy_names,
+    get_backtest_provider,
+)
 
 __all__ = [
     # 1순위 providers
@@ -32,4 +38,9 @@ __all__ = [
     # 추가 providers
     "get_positions_data",
     "get_risk_metrics_data",
+    # backtest providers (Phase 7D-1)
+    "get_backtest_data",
+    "get_backtest_list",
+    "get_strategy_names",
+    "get_backtest_provider",
 ]

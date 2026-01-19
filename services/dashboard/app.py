@@ -42,6 +42,7 @@ from services.dashboard.providers.scheduler_provider import get_scheduler_job_pr
 from services.dashboard.providers.strategy_performance_provider import get_strategy_performance_provider
 from services.dashboard.providers.positions_provider import get_positions_data
 from services.dashboard.providers.risk_metrics_provider import get_risk_metrics_data
+from services.dashboard.providers.backtest_provider import get_backtest_data
 from services.dashboard.components.trade_history import render_trade_history_panel
 from services.dashboard.components.strategy_performance import render_strategy_performance
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
@@ -139,7 +140,8 @@ with tabs[2]:
         render_strategy_performance(performance_provider=get_strategy_performance_provider())
 
     with analytics_subtabs[1]:
-        render_backtest_viewer()
+        # Real backtest data from BacktestStore (or demo if unavailable)
+        render_backtest_viewer(backtest_data=get_backtest_data())
 
     with analytics_subtabs[2]:
         # Real risk metrics from trade history (or demo if unavailable)
