@@ -100,8 +100,8 @@ def test_metrics_calculation():
     from services.dashboard.components.backtest_viewer import _calculate_metrics
 
     initial = 1_000_000
-    # 10 days of 1% daily return
-    returns = [0.01] * 10
+    # 10 days of varying positive returns (need variance for Sharpe calculation)
+    returns = [0.015, 0.008, 0.012, 0.005, 0.018, 0.007, 0.011, 0.009, 0.014, 0.006]
     # Calculate expected equity
     equity = [initial]
     for r in returns:
@@ -111,17 +111,40 @@ def test_metrics_calculation():
     metrics = _calculate_metrics(returns, equity, initial)
 
     # Total return: (final/initial - 1) * 100
-    expected_total = ((1.01**10) - 1) * 100
+    expected_final = initial
+    for r in returns:
+        expected_final *= (1 + r)
+    expected_total = (expected_final / initial - 1) * 100
     assert abs(metrics["total_return"] - expected_total) < 0.01
 
     # Win rate: 100% (all positive)
     assert metrics["win_rate"] == 100.0
 
-    # Sharpe > 0 (positive returns)
+    # Sharpe > 0 (positive returns with variance)
     assert metrics["sharpe"] > 0
 
     # MDD = 0 (always increasing)
     assert metrics["mdd"] == 0.0
+
+
+def test_metrics_calculation_constant_returns():
+    """Test Sharpe=0 when all returns are identical (zero variance)."""
+    from services.dashboard.components.backtest_viewer import _calculate_metrics
+
+    initial = 1_000_000
+    # All identical returns -> std = 0 -> Sharpe undefined, returns 0
+    returns = [0.01] * 10
+    equity = [initial]
+    for r in returns:
+        equity.append(equity[-1] * (1 + r))
+    equity = equity[1:]
+
+    metrics = _calculate_metrics(returns, equity, initial)
+
+    # Sharpe should be 0 when std = 0 (mathematically undefined)
+    assert metrics["sharpe"] == 0.0
+    # Win rate still 100%
+    assert metrics["win_rate"] == 100.0
 
 
 def test_zero_returns_handling():
