@@ -1,8 +1,9 @@
-﻿import React, { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import type { SystemStatus } from '../api/types';
 import RealtimeLineChart from '../components/charts/RealtimeLineChart';
+import ExchangeStatusPanel from '../components/dashboard/ExchangeStatusPanel';
 
 const StatusPanel = React.memo(function StatusPanel() {
   const { data: status, isLoading, isError, isFetching } = useQuery<SystemStatus>({
@@ -78,6 +79,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
       <StatusPanel />
+      <ExchangeStatusPanel />
       <ChartSection />
     </div>
   );

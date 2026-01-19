@@ -14,7 +14,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from services.api.config import api_config
-from services.api.models.schemas import BaseResponse, KillSwitchRequest, KillSwitchResponse, SystemStatus
+from services.api.models.schemas import (
+    BaseResponse,
+    KillSwitchRequest,
+    KillSwitchResponse,
+    SystemStatus,
+    ExchangeStatus,
+    ExchangeStatusResponse,
+)
 from services.api.routes import strategy, positions, trades, health, settings, config, keys
 from services.api.websocket.stream import router as ws_router
 
@@ -148,6 +155,79 @@ async def get_status():
         uptime_seconds=uptime,
         exchanges=["upbit", "bithumb", "binance_spot", "binance_futures", "paper"],
         active_strategies=len(strategy_manager.active_strategies),
+    )
+
+
+@app.get("/api/v1/exchanges", response_model=ExchangeStatusResponse)
+async def get_exchange_status():
+    """Get status of all configured exchanges."""
+    import json
+    from pathlib import Path
+
+    config_path = Path("config/schedule_config.json")
+    exchanges_status = []
+
+    # Default exchange definitions
+    exchange_defs = {
+        "upbit": {"quote": "KRW", "name": "Upbit"},
+        "bithumb": {"quote": "KRW", "name": "Bithumb"},
+        "binance_spot": {"quote": "USDT", "name": "Binance Spot"},
+        "binance_futures": {"quote": "USDT", "name": "Binance Futures"},
+    }
+
+    if config_path.exists():
+        try:
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            exchanges_config = config.get("exchanges", {})
+
+            for exchange_name, cfg in exchanges_config.items():
+                enabled = cfg.get("enabled", False)
+                schedule = cfg.get("schedule", {})
+                hour = schedule.get("hour", 0)
+                minute = schedule.get("minute", 0)
+                timezone = schedule.get("timezone", "Asia/Seoul")
+                tz_label = "UTC" if timezone == "UTC" else "KST"
+
+                symbols_cfg = cfg.get("symbols", [])
+                if isinstance(symbols_cfg, str):
+                    if symbols_cfg in ("ALL_KRW", "ALL_USDT", "ALL_USDT_PERP"):
+                        symbols_count = -1  # Dynamic
+                    else:
+                        symbols_count = 1
+                else:
+                    symbols_count = len(symbols_cfg)
+
+                quote_currency = exchange_defs.get(exchange_name, {}).get("quote", "KRW")
+                if cfg.get("position_size_usdt"):
+                    quote_currency = "USDT"
+
+                exchanges_status.append(ExchangeStatus(
+                    exchange=exchange_name,
+                    enabled=enabled,
+                    connected=enabled,  # Simplified: assume connected if enabled
+                    quote_currency=quote_currency,
+                    schedule=f"{hour:02d}:{minute:02d} {tz_label}",
+                    symbols_count=symbols_count,
+                ))
+
+        except Exception as e:
+            logger.error("Failed to load exchange config: %s", e)
+
+    # Add any missing exchanges from defaults
+    configured_exchanges = {ex.exchange for ex in exchanges_status}
+    for name, defs in exchange_defs.items():
+        if name not in configured_exchanges:
+            exchanges_status.append(ExchangeStatus(
+                exchange=name,
+                enabled=False,
+                connected=False,
+                quote_currency=defs["quote"],
+            ))
+
+    return ExchangeStatusResponse(
+        success=True,
+        message="Exchange status retrieved",
+        exchanges=exchanges_status,
     )
 
 

@@ -53,6 +53,8 @@ class StrategyRunner:
         exchange: str = "paper",
         symbols: List[str] = None,
         position_size_krw: float = 10000,
+        position_size_usdt: float = 0,
+        leverage: int = 1,
         config: Config = None,
         strategy=None,
         market_data=None,
@@ -62,6 +64,13 @@ class StrategyRunner:
         self.exchange = exchange
         self.symbols = symbols or ["BTC/KRW"]
         self.position_size_krw = position_size_krw
+        self.position_size_usdt = position_size_usdt
+        self.leverage = leverage
+
+        # Determine quote currency based on exchange
+        self._is_usdt_based = exchange in {"binance_spot", "binance_futures"}
+        self._quote_currency = "USDT" if self._is_usdt_based else "KRW"
+        self._position_size = position_size_usdt if self._is_usdt_based else position_size_krw
 
         # Config 로드
         self.config = config or Config(
@@ -99,6 +108,12 @@ class StrategyRunner:
         elif exchange in {"bithumb", "bithumb_spot"}:
             execution_exchange = "bithumb"
             adapter_mode = "live" if live_trading_enabled else "paper"
+        elif exchange == "binance_spot":
+            execution_exchange = "binance_spot"
+            adapter_mode = "live" if live_trading_enabled else "paper"
+        elif exchange == "binance_futures":
+            execution_exchange = "binance_futures"
+            adapter_mode = "live" if live_trading_enabled else "paper"
 
         self.execution = execution or AdapterFactory.create_execution(
             execution_exchange,
@@ -113,6 +128,10 @@ class StrategyRunner:
             md_exchange = "upbit_spot"
         elif exchange in ["bithumb", "bithumb_spot"]:
             md_exchange = "bithumb_spot"
+        elif exchange == "binance_spot":
+            md_exchange = "binance_spot"
+        elif exchange == "binance_futures":
+            md_exchange = "binance_futures"
         else:
             md_exchange = "upbit_spot"
 
@@ -205,17 +224,17 @@ class StrategyRunner:
         gate_pass = self._compute_gate_pass()
 
         try:
-            raw_balance = self.execution.get_balance("KRW")
-            available_krw = float(raw_balance) if raw_balance is not None else 0.0
+            raw_balance = self.execution.get_balance(self._quote_currency)
+            available_balance = float(raw_balance) if raw_balance is not None else 0.0
         except Exception as exc:
             logger.warning(
                 "[StrategyRunner] Balance check failed: %s, proceeding without limit",
                 exc,
             )
-            available_krw = float("inf")
+            available_balance = float("inf")
 
-        balance_label = "unlimited" if available_krw == float("inf") else f"{available_krw:,.0f} KRW"
-        max_buy = "unlimited" if available_krw == float("inf") else int(available_krw // self.position_size_krw)
+        balance_label = "unlimited" if available_balance == float("inf") else f"{available_balance:,.2f} {self._quote_currency}"
+        max_buy = "unlimited" if available_balance == float("inf") else int(available_balance // self._position_size) if self._position_size > 0 else 0
 
         logger.info(
             "[StrategyRunner] Processing %d symbols, Balance: %s, Max BUY: %s",
@@ -256,8 +275,8 @@ class StrategyRunner:
 
                 if (
                     action == "BUY"
-                    and available_krw != float("inf")
-                    and available_krw < self.position_size_krw
+                    and available_balance != float("inf")
+                    and available_balance < self._position_size
                 ):
                     logger.warning("[%s] BUY skipped: insufficient balance", symbol)
                     results[symbol] = {"action": "SKIP", "reason": "insufficient_balance"}
@@ -274,12 +293,12 @@ class StrategyRunner:
                 if (
                     action == "BUY"
                     and result.get("action") == "BUY"
-                    and available_krw != float("inf")
+                    and available_balance != float("inf")
                 ):
-                    available_krw -= self.position_size_krw
+                    available_balance -= self._position_size
                     logger.info(
-                        "[StrategyRunner] %s BUY executed, remaining: %s",
-                        symbol, f"{available_krw:,.0f} KRW"
+                        "[StrategyRunner] %s BUY executed, remaining: %.2f %s",
+                        symbol, available_balance, self._quote_currency
                     )
 
             except Exception as exc:
@@ -353,12 +372,16 @@ class StrategyRunner:
         if action == "HOLD":
             return {"action": "HOLD", "reason": getattr(signal, "reason", "N/A")}
 
+        # Minimum order size based on quote currency
+        min_order = 5 if self._is_usdt_based else MIN_ORDER_KRW
+
         if action == "BUY":
+            # For USDT-based exchanges, use amount_krw parameter (adapter will interpret as USDT)
             order = self.execution.place_order(
                 symbol,
                 "BUY",
                 order_type="MARKET",
-                amount_krw=self.position_size_krw,
+                amount_krw=self._position_size,
             )
             return {"action": "BUY", "order_id": order.order_id or order.symbol}
 
@@ -367,12 +390,12 @@ class StrategyRunner:
             balance = self.execution.get_balance(base_asset) or 0
             estimated_value = balance * current_price
 
-            if estimated_value < MIN_ORDER_KRW:
+            if estimated_value < min_order:
                 logger.info(
-                    "[%s] Dust Skip: %d KRW < %d",
-                    symbol, int(estimated_value), MIN_ORDER_KRW
+                    "[%s] Dust Skip: %.2f %s < %.2f",
+                    symbol, estimated_value, self._quote_currency, min_order
                 )
-                return {"action": "SKIP", "reason": f"Dust ({estimated_value:.0f} KRW)"}
+                return {"action": "SKIP", "reason": f"Dust ({estimated_value:.2f} {self._quote_currency})"}
 
             order = self.execution.place_order(
                 symbol,
@@ -442,20 +465,27 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Strategy Runner")
     parser.add_argument("--strategy", default="ma_crossover_v1", help="Strategy name")
-    parser.add_argument("--exchange", default="paper", choices=["paper", "upbit", "bithumb"])
+    parser.add_argument("--exchange", default="paper",
+                       choices=["paper", "upbit", "bithumb", "binance_spot", "binance_futures"])
     parser.add_argument("--symbol", default="BTC/KRW", help="Trading symbol")
-    parser.add_argument("--size", type=float, default=10000, help="Position size (KRW)")
+    parser.add_argument("--size", type=float, default=10000, help="Position size (KRW/USDT)")
+    parser.add_argument("--leverage", type=int, default=1, help="Leverage (for futures)")
     parser.add_argument("--interval", type=int, default=60, help="Loop interval (seconds)")
     parser.add_argument("--iterations", type=int, default=None, help="Max iterations")
     parser.add_argument("--once", action="store_true", help="Run once only")
 
     args = parser.parse_args()
 
+    # Determine position size based on exchange
+    is_usdt = args.exchange in {"binance_spot", "binance_futures"}
+
     runner = StrategyRunner(
         strategy_name=args.strategy,
         exchange=args.exchange,
         symbols=[args.symbol],
-        position_size_krw=args.size
+        position_size_krw=0 if is_usdt else args.size,
+        position_size_usdt=args.size if is_usdt else 0,
+        leverage=args.leverage,
     )
 
     if args.once:

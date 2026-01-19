@@ -46,6 +46,23 @@ class SystemStatus(BaseResponse):
     active_strategies: int
 
 
+class ExchangeStatus(BaseModel):
+    """Individual exchange status."""
+    exchange: str
+    enabled: bool = False
+    connected: bool = False
+    quote_currency: str = "KRW"
+    schedule: Optional[str] = None
+    next_run: Optional[str] = None
+    last_run: Optional[str] = None
+    symbols_count: int = 0
+
+
+class ExchangeStatusResponse(BaseResponse):
+    """Response with all exchange statuses."""
+    exchanges: List[ExchangeStatus] = Field(default_factory=list)
+
+
 class KillSwitchRequest(BaseModel):
     confirm: bool
 

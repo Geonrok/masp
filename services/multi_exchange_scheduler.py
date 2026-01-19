@@ -1,6 +1,6 @@
 """
 MultiExchangeScheduler - Multi-Asset Strategy Platform Core Scheduler
-MASP Phase 3A - Dual Exchange Support (Upbit 09:00 + Bithumb 00:00)
+MASP Phase 9 - Multi Exchange Support (Upbit, Bithumb, Binance Spot/Futures)
 """
 from __future__ import annotations
 
@@ -183,58 +183,110 @@ class MultiExchangeScheduler:
     def _init_exchanges(self) -> None:
         """Initialize runners and triggers for each enabled exchange."""
         exchanges = self._config.get("exchanges", {})
-        
+
         for exchange_name, cfg in exchanges.items():
             if not cfg.get("enabled", False):
                 logger.info(f"[MultiExchangeScheduler] {exchange_name} disabled, skipping")
                 continue
 
-            # Normalize symbols (string -> list, ALL_KRW -> dynamic fetch).
+            # Normalize symbols (string -> list, ALL_KRW/ALL_USDT -> dynamic fetch).
             symbols_cfg = cfg.get("symbols", ["BTC/KRW"])
-            if symbols_cfg == "ALL_KRW" and exchange_name == "upbit":
-                from libs.adapters.upbit_public import get_all_krw_symbols
+            symbols = self._resolve_symbols(exchange_name, symbols_cfg)
 
-                symbols = get_all_krw_symbols()
-                logger.info(
-                    "[MultiExchangeScheduler] %s: Loaded %d KRW symbols",
+            if not symbols:
+                logger.warning(
+                    "[MultiExchangeScheduler] %s: No symbols resolved, skipping",
                     exchange_name,
-                    len(symbols),
                 )
-            elif symbols_cfg == "ALL_KRW" and exchange_name == "bithumb":
-                symbols = BithumbPublic().get_all_krw_symbols()
-                logger.info(
-                    "[MultiExchangeScheduler] %s: Loaded %d KRW symbols",
-                    exchange_name,
-                    len(symbols),
-                )
-            elif isinstance(symbols_cfg, str):
-                symbols = [symbols_cfg]
-            else:
-                symbols = symbols_cfg
+                continue
 
-            # Create StrategyRunner
+            logger.info(
+                "[MultiExchangeScheduler] %s: Loaded %d symbols",
+                exchange_name,
+                len(symbols),
+            )
+
+            # Determine position size (KRW vs USDT)
+            position_size_krw = cfg.get("position_size_krw", 0)
+            position_size_usdt = cfg.get("position_size_usdt", 0)
+            leverage = cfg.get("leverage", 1)  # For futures
+
+            # Create StrategyRunner with appropriate config
             runner = StrategyRunner(
                 strategy_name=cfg.get("strategy", "KAMA-TSMOM-Gate"),
                 exchange=exchange_name,
                 symbols=symbols,
-                position_size_krw=cfg.get("position_size_krw", 10000),
+                position_size_krw=position_size_krw or position_size_usdt,
+                position_size_usdt=position_size_usdt,
+                leverage=leverage,
             )
             self._runners[exchange_name] = runner
-            
+
             # Create CronTrigger
             sched = cfg.get("schedule", {})
+            timezone = sched.get("timezone", "Asia/Seoul")
             trigger = CronTrigger(
                 hour=int(sched.get("hour", 9)),
                 minute=int(sched.get("minute", 0)),
-                timezone=sched.get("timezone", "Asia/Seoul"),
+                timezone=timezone,
             )
             self._triggers[exchange_name] = trigger
             init_hour = int(sched.get("hour", 9))
             init_minute = int(sched.get("minute", 0))
+            tz_label = "UTC" if timezone == "UTC" else "KST"
             logger.info(
                 f"[MultiExchangeScheduler] {exchange_name.upper()} initialized: "
-                f"{init_hour:02d}:{init_minute:02d} KST"
+                f"{init_hour:02d}:{init_minute:02d} {tz_label}"
             )
+
+    def _resolve_symbols(self, exchange_name: str, symbols_cfg) -> list:
+        """Resolve symbol configuration to actual symbol list."""
+        # ALL_KRW for Korean exchanges
+        if symbols_cfg == "ALL_KRW":
+            if exchange_name == "upbit":
+                from libs.adapters.upbit_public import get_all_krw_symbols
+                return get_all_krw_symbols()
+            elif exchange_name == "bithumb":
+                return BithumbPublic().get_all_krw_symbols()
+            else:
+                return ["BTC/KRW"]
+
+        # ALL_USDT for Binance Spot
+        if symbols_cfg == "ALL_USDT" and exchange_name == "binance_spot":
+            try:
+                from libs.adapters.real_binance_spot import BinanceSpotMarketData
+                md = BinanceSpotMarketData()
+                all_symbols = md.get_all_symbols()
+                # Filter top symbols by volume or limit count
+                return all_symbols[:50]  # Limit to top 50 for performance
+            except Exception as e:
+                logger.warning(
+                    "[MultiExchangeScheduler] Failed to fetch Binance Spot symbols: %s",
+                    e,
+                )
+                return ["BTC/USDT", "ETH/USDT"]
+
+        # ALL_USDT_PERP for Binance Futures
+        if symbols_cfg == "ALL_USDT_PERP" and exchange_name == "binance_futures":
+            try:
+                from libs.adapters.real_binance_futures import BinanceFuturesMarketData
+                md = BinanceFuturesMarketData()
+                all_symbols = md.get_all_symbols()
+                # Filter top perpetuals
+                return all_symbols[:30]  # Limit to top 30 for performance
+            except Exception as e:
+                logger.warning(
+                    "[MultiExchangeScheduler] Failed to fetch Binance Futures symbols: %s",
+                    e,
+                )
+                return ["BTC/USDT:PERP", "ETH/USDT:PERP"]
+
+        # String -> single item list
+        if isinstance(symbols_cfg, str):
+            return [symbols_cfg]
+
+        # Already a list
+        return symbols_cfg or []
 
     def _register_signal_handlers(self) -> None:
         """Register graceful shutdown handlers."""

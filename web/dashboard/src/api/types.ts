@@ -13,6 +13,21 @@ export interface SystemStatus extends BaseResponse {
   active_strategies: number;
 }
 
+export interface ExchangeStatus {
+  exchange: string;
+  enabled: boolean;
+  connected: boolean;
+  quote_currency: string;
+  schedule?: string;
+  next_run?: string;
+  last_run?: string;
+  symbols_count: number;
+}
+
+export interface ExchangeStatusResponse extends BaseResponse {
+  exchanges: ExchangeStatus[];
+}
+
 export interface StrategyInfo {
   strategy_id: string;
   name: string;

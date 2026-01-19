@@ -23,6 +23,31 @@
         "timezone": "Asia/Seoul",
         "jitter": 30
       }
+    },
+    "binance_spot": {
+      "enabled": true,
+      "strategy": "KAMA-TSMOM-Gate",
+      "symbols": "ALL_USDT",
+      "position_size_usdt": 100,
+      "schedule": {
+        "hour": 0,
+        "minute": 0,
+        "timezone": "UTC",
+        "jitter": 30
+      }
+    },
+    "binance_futures": {
+      "enabled": true,
+      "strategy": "KAMA-TSMOM-Gate",
+      "symbols": "ALL_USDT_PERP",
+      "position_size_usdt": 100,
+      "leverage": 10,
+      "schedule": {
+        "hour": 8,
+        "minute": 0,
+        "timezone": "UTC",
+        "jitter": 30
+      }
     }
   },
   "telegram": {
@@ -31,5 +56,5 @@
     "notify_daily_summary": true,
     "notify_errors": true
   },
-  "_comment": "MASP Phase 5 - All KRW symbols + Telegram"
+  "_comment": "MASP Phase 9 - Binance Spot/Futures added"
 }
