@@ -402,3 +402,149 @@ def test_parse_log_line():
     assert entry.level == LogLevel.INFO
     assert entry.source == "mymodule"
     assert "Test message" in entry.message
+
+
+# =============================================================================
+# Alert Provider Tests
+# =============================================================================
+
+
+def test_alert_provider_import():
+    """Test alert provider imports correctly."""
+    from services.dashboard.providers import get_alert_store
+
+    assert callable(get_alert_store)
+
+
+def test_get_alert_store_returns_none_when_no_alerts():
+    """Test alert store returns None when no alert files exist."""
+    from services.dashboard.providers.alert_provider import get_alert_store
+
+    result = get_alert_store(log_dir="nonexistent_dir")
+
+    assert result is None
+
+
+def test_parse_alert_type():
+    """Test alert type parsing."""
+    from services.dashboard.providers.alert_provider import _parse_alert_type
+    from services.dashboard.providers.alert_provider import (
+        ALERT_TYPE_TRADE,
+        ALERT_TYPE_SIGNAL,
+        ALERT_TYPE_ERROR,
+        ALERT_TYPE_SYSTEM,
+    )
+
+    assert _parse_alert_type("TRADE") == ALERT_TYPE_TRADE
+    assert _parse_alert_type("SIGNAL") == ALERT_TYPE_SIGNAL
+    assert _parse_alert_type("ERROR") == ALERT_TYPE_ERROR
+    assert _parse_alert_type("WARNING") == ALERT_TYPE_ERROR
+    assert _parse_alert_type("unknown") == ALERT_TYPE_SYSTEM
+
+
+# =============================================================================
+# Scheduler Provider Tests
+# =============================================================================
+
+
+def test_scheduler_provider_import():
+    """Test scheduler provider imports correctly."""
+    from services.dashboard.providers import get_scheduler_job_provider
+
+    assert callable(get_scheduler_job_provider)
+
+
+def test_get_scheduler_job_provider_returns_callable():
+    """Test scheduler job provider returns a callable."""
+    from services.dashboard.providers.scheduler_provider import get_scheduler_job_provider
+
+    provider = get_scheduler_job_provider()
+
+    assert callable(provider)
+
+
+def test_scheduler_provider_returns_jobs():
+    """Test scheduler provider returns list of jobs."""
+    from services.dashboard.providers.scheduler_provider import get_scheduled_jobs
+    from services.dashboard.components.scheduler_status import ScheduledJob
+
+    jobs = get_scheduled_jobs()
+
+    assert isinstance(jobs, list)
+    # Should return static jobs when APScheduler not available
+    assert len(jobs) >= 1
+    for job in jobs:
+        assert isinstance(job, ScheduledJob)
+
+
+def test_parse_job_type():
+    """Test job type parsing."""
+    from services.dashboard.providers.scheduler_provider import _parse_job_type
+    from services.dashboard.components.scheduler_status import JobType
+
+    assert _parse_job_type("BTC Momentum Strategy") == JobType.STRATEGY
+    assert _parse_job_type("Market Data Fetch") == JobType.DATA_FETCH
+    assert _parse_job_type("Daily Report") == JobType.REPORT
+    assert _parse_job_type("Log Cleanup") == JobType.CLEANUP
+
+
+# =============================================================================
+# Strategy Performance Provider Tests
+# =============================================================================
+
+
+def test_strategy_performance_provider_import():
+    """Test strategy performance provider imports correctly."""
+    from services.dashboard.providers import get_strategy_performance_provider
+
+    assert callable(get_strategy_performance_provider)
+
+
+def test_calculate_sharpe_ratio():
+    """Test Sharpe ratio calculation."""
+    from services.dashboard.providers.strategy_performance_provider import _calculate_sharpe_ratio
+
+    # Constant returns should give low Sharpe
+    returns = [1.0, 1.0, 1.0, 1.0, 1.0]
+    sharpe = _calculate_sharpe_ratio(returns)
+    assert isinstance(sharpe, float)
+
+    # Varying returns
+    returns = [1.0, -0.5, 2.0, -1.0, 1.5, 0.8, -0.3]
+    sharpe = _calculate_sharpe_ratio(returns)
+    assert isinstance(sharpe, float)
+
+
+def test_calculate_max_drawdown():
+    """Test max drawdown calculation."""
+    from services.dashboard.providers.strategy_performance_provider import _calculate_max_drawdown
+
+    # Increasing returns = no drawdown
+    returns = [1.0, 1.0, 1.0, 1.0]
+    mdd = _calculate_max_drawdown(returns)
+    assert mdd >= 0.0
+
+    # Returns with drawdown
+    returns = [5.0, -10.0, 3.0, -5.0]
+    mdd = _calculate_max_drawdown(returns)
+    assert mdd > 0.0
+
+
+def test_calculate_trade_stats():
+    """Test trade statistics calculation."""
+    from services.dashboard.providers.strategy_performance_provider import _calculate_trade_stats
+
+    trades = [
+        {"pnl": 100},
+        {"pnl": -50},
+        {"pnl": 200},
+        {"pnl": -30},
+        {"pnl": 150},
+    ]
+
+    stats = _calculate_trade_stats(trades)
+
+    assert stats.total_trades == 5
+    assert stats.winning_trades == 3
+    assert stats.losing_trades == 2
+    assert stats.win_rate == 60.0

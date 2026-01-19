@@ -8,6 +8,9 @@ from services.dashboard.providers.order_provider import (
 )
 from services.dashboard.providers.trade_history_provider import get_trade_history_client
 from services.dashboard.providers.log_provider import get_log_provider
+from services.dashboard.providers.alert_provider import get_alert_store
+from services.dashboard.providers.scheduler_provider import get_scheduler_job_provider
+from services.dashboard.providers.strategy_performance_provider import get_strategy_performance_provider
 
 __all__ = [
     # 1순위 providers
@@ -20,4 +23,8 @@ __all__ = [
     # 2순위 providers
     "get_trade_history_client",
     "get_log_provider",
+    # 3순위 providers
+    "get_alert_store",
+    "get_scheduler_job_provider",
+    "get_strategy_performance_provider",
 ]

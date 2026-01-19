@@ -37,6 +37,9 @@ from services.dashboard.providers.order_provider import (
 )
 from services.dashboard.providers.trade_history_provider import get_trade_history_client
 from services.dashboard.providers.log_provider import get_log_provider
+from services.dashboard.providers.alert_provider import get_alert_store
+from services.dashboard.providers.scheduler_provider import get_scheduler_job_provider
+from services.dashboard.providers.strategy_performance_provider import get_strategy_performance_provider
 from services.dashboard.components.trade_history import render_trade_history_panel
 from services.dashboard.components.strategy_performance import render_strategy_performance
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
@@ -129,7 +132,8 @@ with tabs[2]:
     )
 
     with analytics_subtabs[0]:
-        render_strategy_performance()
+        # Real strategy performance from trade history (or demo if unavailable)
+        render_strategy_performance(performance_provider=get_strategy_performance_provider())
 
     with analytics_subtabs[1]:
         render_backtest_viewer()
@@ -155,10 +159,12 @@ with tabs[3]:
         render_log_viewer(log_provider=get_log_provider())
 
     with monitoring_subtabs[1]:
-        render_alert_history_panel()
+        # Real alert history from logs (or demo if unavailable)
+        render_alert_history_panel(alert_store=get_alert_store())
 
     with monitoring_subtabs[2]:
-        render_scheduler_status()
+        # Real scheduler status from APScheduler (or static jobs if unavailable)
+        render_scheduler_status(job_provider=get_scheduler_job_provider())
 
 # =============================================================================
 # Tab 5: Settings - Config, API keys, Telegram, Exchange controls
