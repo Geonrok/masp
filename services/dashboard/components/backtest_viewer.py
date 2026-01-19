@@ -1,0 +1,327 @@
+"""Backtest viewer component for equity curve and performance metrics."""
+from __future__ import annotations
+
+import math
+import random
+from datetime import date, timedelta
+from typing import Any, Dict, List
+
+import plotly.graph_objects as go
+import streamlit as st
+
+
+# =============================================================================
+# Safe Math Helpers (GPT 필수보강 #3)
+# =============================================================================
+
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    """Convert value to float with finite check."""
+    if value is None:
+        return default
+    try:
+        result = float(value)
+        return result if math.isfinite(result) else default
+    except (ValueError, TypeError):
+        return default
+
+
+def _safe_div(num: float, den: float, default: float = 0.0) -> float:
+    """Safe division with zero and non-finite guards."""
+    if den == 0 or not math.isfinite(den):
+        return default
+    result = num / den
+    return result if math.isfinite(result) else default
+
+
+# =============================================================================
+# Demo Data (GPT 필수보강 #2: 시드 고정)
+# =============================================================================
+
+
+def _get_demo_backtest_data() -> Dict[str, Any]:
+    """Generate deterministic demo backtest data.
+    
+    Uses fixed seed (42) and start date (2025-01-01) for reproducibility.
+    """
+    rng = random.Random(42)
+    start_date = date(2025, 1, 1)
+    num_days = 100
+    
+    # Generate daily returns: mean ~0.1%, std ~2%
+    daily_returns = [rng.gauss(0.001, 0.02) for _ in range(num_days)]
+    
+    # Generate dates
+    dates = [start_date + timedelta(days=i) for i in range(num_days)]
+    
+    return {
+        "dates": dates,
+        "daily_returns": daily_returns,
+        "initial_capital": 10_000_000,  # 1000만원
+        "strategy_name": "KAMA-TSMOM-Gate",
+    }
+
+
+# =============================================================================
+# Calculation Functions
+# =============================================================================
+
+
+def _calculate_equity_curve(
+    daily_returns: List[float], initial_capital: float
+) -> List[float]:
+    """Calculate equity curve from daily returns using cumulative product."""
+    if not daily_returns:
+        return [initial_capital]
+    
+    equity = [initial_capital]
+    for ret in daily_returns:
+        safe_ret = _safe_float(ret, 0.0)
+        new_value = equity[-1] * (1 + safe_ret)
+        equity.append(_safe_float(new_value, equity[-1]))
+    
+    return equity[1:]  # Exclude initial capital (return values at end of each day)
+
+
+def _calculate_drawdown(equity_curve: List[float]) -> List[float]:
+    """Calculate drawdown series from equity curve.
+    
+    Drawdown = (current - peak) / peak
+    Returns negative values (0 at new peaks).
+    """
+    if not equity_curve:
+        return []
+    
+    drawdowns = []
+    peak = equity_curve[0]
+    
+    for value in equity_curve:
+        safe_value = _safe_float(value, peak)
+        if safe_value > peak:
+            peak = safe_value
+        dd = _safe_div(safe_value - peak, peak, 0.0)
+        drawdowns.append(dd)
+    
+    return drawdowns
+
+
+def _calculate_metrics(
+    daily_returns: List[float], equity_curve: List[float], initial_capital: float
+) -> Dict[str, float]:
+    """Calculate backtest performance metrics.
+    
+    Annualization unified to 252 trading days (GPT 필수보강 #1).
+    """
+    TRADING_DAYS = 252
+    
+    # Handle empty/insufficient data (GPT 필수보강 #4)
+    if not daily_returns or not equity_curve:
+        return {
+            "total_return": 0.0,
+            "cagr": 0.0,
+            "mdd": 0.0,
+            "sharpe": 0.0,
+            "win_rate": 0.0,
+        }
+    
+    n_days = len(daily_returns)
+    final_value = _safe_float(equity_curve[-1], initial_capital)
+    initial = _safe_float(initial_capital, 1.0)
+    
+    # Total Return: (final/initial - 1) * 100
+    total_return = _safe_div(final_value, initial, 1.0) - 1.0
+    total_return_pct = total_return * 100
+    
+    # CAGR: ((final/initial) ** (252/days) - 1) * 100
+    if n_days > 0 and initial > 0:
+        ratio = _safe_div(final_value, initial, 1.0)
+        if ratio > 0:
+            exponent = _safe_div(TRADING_DAYS, n_days, 1.0)
+            cagr = (ratio ** exponent - 1) * 100
+            cagr = _safe_float(cagr, 0.0)
+        else:
+            cagr = 0.0
+    else:
+        cagr = 0.0
+    
+    # MDD: min(drawdown) * 100
+    drawdowns = _calculate_drawdown(equity_curve)
+    mdd = min(drawdowns) * 100 if drawdowns else 0.0
+    mdd = _safe_float(mdd, 0.0)
+    
+    # Sharpe: (mean/std) * sqrt(252), std=0 → 0
+    safe_returns = [_safe_float(r, 0.0) for r in daily_returns]
+    if len(safe_returns) > 1:
+        mean_ret = sum(safe_returns) / len(safe_returns)
+        variance = sum((r - mean_ret) ** 2 for r in safe_returns) / len(safe_returns)
+        std_ret = math.sqrt(variance) if variance > 0 else 0.0
+        
+        if std_ret > 0:
+            sharpe = _safe_div(mean_ret, std_ret, 0.0) * math.sqrt(TRADING_DAYS)
+            sharpe = _safe_float(sharpe, 0.0)
+        else:
+            sharpe = 0.0
+    else:
+        sharpe = 0.0
+    
+    # Win Rate: count(r>0)/N * 100, N=0 → 0
+    if safe_returns:
+        wins = sum(1 for r in safe_returns if r > 0)
+        win_rate = _safe_div(wins, len(safe_returns), 0.0) * 100
+    else:
+        win_rate = 0.0
+    
+    return {
+        "total_return": _safe_float(total_return_pct, 0.0),
+        "cagr": _safe_float(cagr, 0.0),
+        "mdd": _safe_float(mdd, 0.0),
+        "sharpe": _safe_float(sharpe, 0.0),
+        "win_rate": _safe_float(win_rate, 0.0),
+    }
+
+
+# =============================================================================
+# Visualization
+# =============================================================================
+
+
+def _render_equity_chart(dates: List[date], equity_curve: List[float]) -> None:
+    """Render equity curve line chart."""
+    fig = go.Figure()
+    
+    fig.add_trace(
+        go.Scatter(
+            x=dates,
+            y=equity_curve,
+            mode="lines",
+            name="Equity",
+            line=dict(color="#00C853", width=2),
+        )
+    )
+    
+    fig.update_layout(
+        title="Equity Curve",
+        xaxis_title="Date",
+        yaxis_title="Portfolio Value (KRW)",
+        template="plotly_dark",
+        height=350,
+        margin=dict(l=40, r=40, t=60, b=40),
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def _render_drawdown_chart(dates: List[date], drawdowns: List[float]) -> None:
+    """Render drawdown area chart (red, fill below 0)."""
+    # Convert to percentage
+    dd_percent = [d * 100 for d in drawdowns]
+    
+    fig = go.Figure()
+    
+    fig.add_trace(
+        go.Scatter(
+            x=dates,
+            y=dd_percent,
+            mode="lines",
+            name="Drawdown",
+            line=dict(color="#FF5252", width=1),
+            fill="tozeroy",
+            fillcolor="rgba(255, 82, 82, 0.3)",
+        )
+    )
+    
+    fig.update_layout(
+        title="Drawdown",
+        xaxis_title="Date",
+        yaxis_title="Drawdown (%)",
+        template="plotly_dark",
+        height=250,
+        margin=dict(l=40, r=40, t=60, b=40),
+        yaxis=dict(range=[min(dd_percent) * 1.1 if dd_percent else -10, 5]),
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+
+# =============================================================================
+# Main Render Function
+# =============================================================================
+
+
+def render_backtest_viewer(backtest_data: Dict[str, Any] | None = None) -> None:
+    """Render backtest performance viewer with metrics and charts.
+    
+    Args:
+        backtest_data: Dict with keys: dates, daily_returns, initial_capital, strategy_name
+                      If None, uses demo data.
+    """
+    st.subheader("Backtest Performance")
+    
+    # Use demo data if not provided
+    if backtest_data is None:
+        st.caption("Demo Data - Run backtest for actual results")
+        backtest_data = _get_demo_backtest_data()
+    
+    # Extract data
+    dates = backtest_data.get("dates", [])
+    daily_returns = backtest_data.get("daily_returns", [])
+    initial_capital = _safe_float(backtest_data.get("initial_capital", 10_000_000))
+    strategy_name = backtest_data.get("strategy_name", "Strategy")
+    
+    # Handle empty data (GPT 필수보강 #4)
+    if not daily_returns or len(daily_returns) < 1:
+        st.info("No backtest data available. Run a backtest to see results.")
+        return
+    
+    # Calculate equity curve and metrics
+    equity_curve = _calculate_equity_curve(daily_returns, initial_capital)
+    
+    # Ensure dates and equity_curve have same length
+    if len(dates) != len(equity_curve):
+        # Adjust dates to match equity curve length
+        if len(dates) > len(equity_curve):
+            dates = dates[:len(equity_curve)]
+        else:
+            # Generate missing dates
+            last_date = dates[-1] if dates else date(2025, 1, 1)
+            while len(dates) < len(equity_curve):
+                last_date = last_date + timedelta(days=1)
+                dates.append(last_date)
+    
+    metrics = _calculate_metrics(daily_returns, equity_curve, initial_capital)
+    drawdowns = _calculate_drawdown(equity_curve)
+    
+    # Display strategy name
+    st.caption(f"Strategy: {strategy_name}")
+    
+    # Metrics row
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric(
+            "Total Return",
+            f"{metrics['total_return']:+.2f}%",
+            delta=f"CAGR: {metrics['cagr']:+.2f}%",
+        )
+    
+    with col2:
+        st.metric(
+            "Max Drawdown",
+            f"{metrics['mdd']:.2f}%",
+        )
+    
+    with col3:
+        st.metric(
+            "Sharpe Ratio",
+            f"{metrics['sharpe']:.2f}",
+        )
+    
+    with col4:
+        st.metric(
+            "Win Rate",
+            f"{metrics['win_rate']:.1f}%",
+        )
+    
+    # Charts
+    _render_equity_chart(dates, equity_curve)
+    _render_drawdown_chart(dates, drawdowns)
