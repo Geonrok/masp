@@ -26,6 +26,10 @@ from services.dashboard.components.telegram_settings import render_telegram_sett
 from services.dashboard.components.system_status import render_system_status
 from services.dashboard.components.portfolio_summary import render_portfolio_summary
 from services.dashboard.components.order_panel import render_order_panel
+
+# Phase 7C-6: Data providers
+from services.dashboard.providers.portfolio_provider import get_portfolio_summary
+from services.dashboard.providers.system_provider import get_system_resources, get_service_health
 from services.dashboard.components.trade_history import render_trade_history_panel
 from services.dashboard.components.strategy_performance import render_strategy_performance
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
@@ -49,7 +53,7 @@ if not enforce_auth():
     st.stop()
 
 st.title("MASP Dashboard")
-st.caption("Multi-Asset Strategy Platform - Phase 7C-5")
+st.caption("Multi-Asset Strategy Platform - Phase 7C-6 (Data Provider Integration)")
 
 api = ConfigApiClient()
 
@@ -71,10 +75,16 @@ with tabs[0]:
     col1, col2 = st.columns([1, 1])
 
     with col1:
-        render_system_status()
+        # Real system resources via psutil
+        render_system_status(
+            resource_provider=get_system_resources,
+            service_provider=get_service_health,
+        )
 
     with col2:
-        render_portfolio_summary()
+        # Real portfolio data (or demo if MASP_ENABLE_LIVE_TRADING!=1)
+        portfolio = get_portfolio_summary()
+        render_portfolio_summary(portfolio=portfolio)
 
     st.divider()
 
@@ -166,8 +176,8 @@ with st.sidebar:
     st.divider()
 
     st.subheader("Quick Info")
-    st.text("Version: 5.0.0")
-    st.text("Phase: 7C-5")
+    st.text("Version: 5.1.0")
+    st.text("Phase: 7C-6")
 
     st.divider()
 
