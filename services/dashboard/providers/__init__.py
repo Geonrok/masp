@@ -11,6 +11,8 @@ from services.dashboard.providers.log_provider import get_log_provider
 from services.dashboard.providers.alert_provider import get_alert_store
 from services.dashboard.providers.scheduler_provider import get_scheduler_job_provider
 from services.dashboard.providers.strategy_performance_provider import get_strategy_performance_provider
+from services.dashboard.providers.positions_provider import get_positions_data
+from services.dashboard.providers.risk_metrics_provider import get_risk_metrics_data
 
 __all__ = [
     # 1순위 providers
@@ -27,4 +29,7 @@ __all__ = [
     "get_alert_store",
     "get_scheduler_job_provider",
     "get_strategy_performance_provider",
+    # 추가 providers
+    "get_positions_data",
+    "get_risk_metrics_data",
 ]

@@ -40,6 +40,8 @@ from services.dashboard.providers.log_provider import get_log_provider
 from services.dashboard.providers.alert_provider import get_alert_store
 from services.dashboard.providers.scheduler_provider import get_scheduler_job_provider
 from services.dashboard.providers.strategy_performance_provider import get_strategy_performance_provider
+from services.dashboard.providers.positions_provider import get_positions_data
+from services.dashboard.providers.risk_metrics_provider import get_risk_metrics_data
 from services.dashboard.components.trade_history import render_trade_history_panel
 from services.dashboard.components.strategy_performance import render_strategy_performance
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
@@ -117,7 +119,8 @@ with tabs[1]:
         )
 
     with trading_subtabs[1]:
-        render_positions_panel()
+        # Real positions data (or demo if MASP_ENABLE_LIVE_TRADING!=1)
+        render_positions_panel(positions_data=get_positions_data())
 
     with trading_subtabs[2]:
         # Real trade history from TradeLogger (or demo if unavailable)
@@ -139,7 +142,13 @@ with tabs[2]:
         render_backtest_viewer()
 
     with analytics_subtabs[2]:
-        render_risk_metrics_panel()
+        # Real risk metrics from trade history (or demo if unavailable)
+        risk_data = get_risk_metrics_data()
+        if risk_data:
+            returns, equity_curve, dates = risk_data
+            render_risk_metrics_panel(returns=returns, equity_curve=equity_curve, dates=dates)
+        else:
+            render_risk_metrics_panel()
 
     with analytics_subtabs[3]:
         col1, col2 = st.columns([1, 1])

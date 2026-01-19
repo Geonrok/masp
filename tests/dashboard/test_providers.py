@@ -548,3 +548,59 @@ def test_calculate_trade_stats():
     assert stats.winning_trades == 3
     assert stats.losing_trades == 2
     assert stats.win_rate == 60.0
+
+
+# =============================================================================
+# Positions Provider Tests
+# =============================================================================
+
+
+def test_positions_provider_import():
+    """Test positions provider imports correctly."""
+    from services.dashboard.providers import get_positions_data
+
+    assert callable(get_positions_data)
+
+
+def test_get_positions_data_returns_none_when_disabled():
+    """Test positions data returns None when live trading is disabled."""
+    from services.dashboard.providers.positions_provider import get_positions_data
+
+    with patch.dict("os.environ", {"MASP_ENABLE_LIVE_TRADING": "0"}, clear=False):
+        result = get_positions_data()
+        assert result is None
+
+
+# =============================================================================
+# Risk Metrics Provider Tests
+# =============================================================================
+
+
+def test_risk_metrics_provider_import():
+    """Test risk metrics provider imports correctly."""
+    from services.dashboard.providers import get_risk_metrics_data
+
+    assert callable(get_risk_metrics_data)
+
+
+def test_calculate_equity_curve():
+    """Test equity curve calculation."""
+    from services.dashboard.providers.risk_metrics_provider import _calculate_equity_curve
+
+    returns = [1.0, -0.5, 2.0, -1.0]  # percent
+    equity = _calculate_equity_curve(returns, initial_capital=100.0)
+
+    assert len(equity) == 5  # initial + 4 returns
+    assert equity[0] == 100.0
+    assert equity[1] == 101.0  # 100 * 1.01
+    assert abs(equity[2] - 100.495) < 0.001  # 101 * 0.995
+
+
+def test_calculate_daily_returns_empty():
+    """Test daily returns calculation with empty trades."""
+    from services.dashboard.providers.risk_metrics_provider import _calculate_daily_returns
+
+    returns, dates = _calculate_daily_returns([])
+
+    assert returns == []
+    assert dates == []
