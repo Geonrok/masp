@@ -30,6 +30,11 @@ from services.dashboard.components.order_panel import render_order_panel
 # Phase 7C-6: Data providers
 from services.dashboard.providers.portfolio_provider import get_portfolio_summary
 from services.dashboard.providers.system_provider import get_system_resources, get_service_health
+from services.dashboard.providers.order_provider import (
+    get_execution_adapter,
+    get_price_provider,
+    get_balance_provider,
+)
 from services.dashboard.components.trade_history import render_trade_history_panel
 from services.dashboard.components.strategy_performance import render_strategy_performance
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
@@ -99,7 +104,12 @@ with tabs[1]:
     trading_subtabs = st.tabs(["Order Panel", "Positions", "Trade History"])
 
     with trading_subtabs[0]:
-        render_order_panel()
+        # Real execution adapter (or demo if MASP_ENABLE_LIVE_TRADING!=1)
+        render_order_panel(
+            execution_adapter=get_execution_adapter(),
+            price_provider=get_price_provider(),
+            balance_provider=get_balance_provider(),
+        )
 
     with trading_subtabs[1]:
         render_positions_panel()

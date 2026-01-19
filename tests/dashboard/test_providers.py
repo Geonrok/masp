@@ -194,3 +194,88 @@ def test_check_telegram_configured():
 
         assert status == ServiceStatus.HEALTHY
         assert message == ""
+
+
+# =============================================================================
+# Order Provider Tests
+# =============================================================================
+
+
+def test_order_provider_import():
+    """Test order provider modules import correctly."""
+    from services.dashboard.providers import (
+        get_execution_adapter,
+        get_price_provider,
+        get_balance_provider,
+    )
+
+    assert callable(get_execution_adapter)
+    assert callable(get_price_provider)
+    assert callable(get_balance_provider)
+
+
+def test_get_execution_adapter_returns_none_when_disabled():
+    """Test execution adapter returns None when live trading is disabled."""
+    from services.dashboard.providers.order_provider import get_execution_adapter
+
+    with patch.dict("os.environ", {"MASP_ENABLE_LIVE_TRADING": "0"}, clear=False):
+        result = get_execution_adapter()
+        assert result is None
+
+
+def test_get_price_provider_returns_none_when_disabled():
+    """Test price provider returns None when live trading is disabled."""
+    from services.dashboard.providers.order_provider import get_price_provider
+
+    with patch.dict("os.environ", {"MASP_ENABLE_LIVE_TRADING": "0"}, clear=False):
+        result = get_price_provider()
+        assert result is None
+
+
+def test_get_balance_provider_returns_none_when_disabled():
+    """Test balance provider returns None when live trading is disabled."""
+    from services.dashboard.providers.order_provider import get_balance_provider
+
+    with patch.dict("os.environ", {"MASP_ENABLE_LIVE_TRADING": "0"}, clear=False):
+        result = get_balance_provider()
+        assert result is None
+
+
+def test_is_live_trading_enabled():
+    """Test live trading enabled check."""
+    from services.dashboard.providers.order_provider import is_live_trading_enabled
+
+    with patch.dict("os.environ", {"MASP_ENABLE_LIVE_TRADING": "0"}, clear=False):
+        assert is_live_trading_enabled() is False
+
+    with patch.dict("os.environ", {"MASP_ENABLE_LIVE_TRADING": "1"}, clear=False):
+        assert is_live_trading_enabled() is True
+
+
+def test_order_execution_wrapper_place_order():
+    """Test OrderExecutionWrapper place_order method."""
+    from services.dashboard.providers.order_provider import OrderExecutionWrapper
+    from dataclasses import dataclass
+    from datetime import datetime
+
+    # Mock adapter
+    @dataclass
+    class MockOrderResult:
+        order_id: str = "test-123"
+        status: str = "FILLED"
+        filled_quantity: float = 0.001
+        filled_price: float = 50000000.0
+        fee: float = 25.0
+        message: str = "Order placed successfully"
+
+    mock_adapter = MagicMock()
+    mock_adapter.get_current_price.return_value = 50000000.0
+    mock_adapter.place_order.return_value = MockOrderResult()
+
+    wrapper = OrderExecutionWrapper(mock_adapter)
+    result = wrapper.place_order("BTC", "buy", units=0.001)
+
+    assert result["success"] is True
+    assert result["order_id"] == "test-123"
+    assert result["executed_qty"] == 0.001
+    assert result["fee"] == 25.0
