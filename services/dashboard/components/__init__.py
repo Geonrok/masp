@@ -2,3 +2,4 @@
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
 from services.dashboard.components.portfolio_summary import render_portfolio_summary
 from services.dashboard.components.log_viewer import render_log_viewer
+from services.dashboard.components.scheduler_status import render_scheduler_status
