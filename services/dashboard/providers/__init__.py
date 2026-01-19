@@ -30,6 +30,15 @@ from services.dashboard.providers.alert_manager_provider import (
     check_system_anomalies,
     get_alert_settings_callbacks,
 )
+from services.dashboard.providers.multi_exchange_provider import (
+    get_exchange_list,
+    get_exchange_status,
+    get_price_comparison,
+    find_arbitrage_opportunities,
+    get_best_exchange,
+    perform_health_check,
+    get_registry_summary,
+)
 
 __all__ = [
     # 1순위 providers
@@ -64,4 +73,12 @@ __all__ = [
     "get_recent_alerts",
     "check_system_anomalies",
     "get_alert_settings_callbacks",
+    # multi-exchange providers (Phase 7D-3)
+    "get_exchange_list",
+    "get_exchange_status",
+    "get_price_comparison",
+    "find_arbitrage_opportunities",
+    "get_best_exchange",
+    "perform_health_check",
+    "get_registry_summary",
 ]

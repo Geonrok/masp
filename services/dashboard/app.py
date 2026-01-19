@@ -49,6 +49,13 @@ from services.dashboard.providers.alert_manager_provider import (
     get_alert_settings_callbacks,
 )
 from services.dashboard.components.alert_settings import render_alert_settings
+from services.dashboard.providers.multi_exchange_provider import (
+    get_exchange_list,
+    get_price_comparison,
+    find_arbitrage_opportunities,
+    perform_health_check,
+)
+from services.dashboard.components.multi_exchange_view import render_multi_exchange_view
 from services.dashboard.components.trade_history import render_trade_history_panel
 from services.dashboard.components.strategy_performance import render_strategy_performance
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
@@ -72,7 +79,7 @@ if not enforce_auth():
     st.stop()
 
 st.title("MASP Dashboard")
-st.caption("Multi-Asset Strategy Platform - Phase 7D-2 (Alert/Monitoring Enhancement)")
+st.caption("Multi-Asset Strategy Platform - Phase 7D-3 (Multi-Exchange Extension)")
 
 api = ConfigApiClient()
 
@@ -112,10 +119,10 @@ with tabs[0]:
     ExchangeStatusPanel(api).render()
 
 # =============================================================================
-# Tab 2: Trading - Order panel, positions, trade history
+# Tab 2: Trading - Order panel, positions, trade history, multi-exchange
 # =============================================================================
 with tabs[1]:
-    trading_subtabs = st.tabs(["Order Panel", "Positions", "Trade History"])
+    trading_subtabs = st.tabs(["Order Panel", "Positions", "Trade History", "Multi-Exchange"])
 
     with trading_subtabs[0]:
         # Real execution adapter (or demo if MASP_ENABLE_LIVE_TRADING!=1)
@@ -132,6 +139,15 @@ with tabs[1]:
     with trading_subtabs[2]:
         # Real trade history from TradeLogger (or demo if unavailable)
         render_trade_history_panel(api_client=get_trade_history_client())
+
+    with trading_subtabs[3]:
+        # Multi-exchange price comparison and arbitrage (Phase 7D-3)
+        render_multi_exchange_view(
+            exchanges=get_exchange_list(),
+            comparison_provider=get_price_comparison,
+            arbitrage_provider=find_arbitrage_opportunities,
+            health_check_callback=perform_health_check,
+        )
 
 # =============================================================================
 # Tab 3: Analytics - Strategy performance, backtest, risk metrics
