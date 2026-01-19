@@ -20,6 +20,17 @@ class MarketQuote:
 
 
 @dataclass
+class OHLCV:
+    """OHLCV candlestick data."""
+    timestamp: str
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+
+
+@dataclass
 class OrderResult:
     """Result of an order attempt."""
     success: bool

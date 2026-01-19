@@ -14,34 +14,40 @@ from libs.adapters.base import MarketDataAdapter, ExecutionAdapter
 logger = logging.getLogger(__name__)
 
 
-AdapterType = Literal["upbit_spot", "bithumb_spot", "binance_futures", "mock", "paper"]
+AdapterType = Literal[
+    "upbit_spot", "bithumb_spot",
+    "binance_spot", "binance_futures",
+    "mock", "paper"
+]
 
 
 class AdapterFactory:
     """
     Factory for creating exchange adapters.
-    
+
     Market Data:
         - upbit_spot: Upbit 현물 시세
         - bithumb_spot: Bithumb 현물 시세
+        - binance_spot: Binance 현물 시세
         - binance_futures: Binance 선물 시세
         - mock: Mock 시세
-        
+
     Execution:
         - paper: 모의 거래 (Paper Trading)
         - upbit_spot: Upbit 실거래
         - upbit: Upbit 실거래 (deprecated alias)
         - bithumb: Bithumb 실거래
+        - binance_spot: Binance 현물 실거래
         - binance_futures: Binance 선물 실거래
         - mock: Mock 실행
-    
+
     Usage:
         # 시세 조회
         market_data = AdapterFactory.create_market_data("upbit_spot")
-        
+
         # 모의 거래
         paper = AdapterFactory.create_execution("paper")
-        
+
         # 실거래 (Config 필요)
         upbit = AdapterFactory.create_execution("upbit_spot", adapter_mode="live")
     """
@@ -73,6 +79,10 @@ class AdapterFactory:
         if exchange_name == "bithumb_spot":
             from libs.adapters.real_bithumb_spot import BithumbSpotMarketData
             return BithumbSpotMarketData(**kwargs)
+
+        if exchange_name == "binance_spot":
+            from libs.adapters.real_binance_spot import BinanceSpotMarketData
+            return BinanceSpotMarketData(**kwargs)
 
         if exchange_name == "binance_futures":
             from libs.adapters.real_binance_futures import BinanceFuturesMarketData
@@ -193,9 +203,47 @@ class AdapterFactory:
                 **kwargs,
             )
 
+        if exchange_name == "binance_spot":
+            if adapter_mode in {"live", "execution"}:
+                if os.getenv("MASP_ENABLE_LIVE_TRADING") != "1":
+                    raise RuntimeError(
+                        "[Factory] Binance Spot live trading disabled. "
+                        "Set MASP_ENABLE_LIVE_TRADING=1 or use adapter_mode='paper'"
+                    )
+                from libs.adapters.real_binance_spot import BinanceSpotExecution
+                return BinanceSpotExecution(**kwargs)
+
+            # Paper mode for binance_spot
+            from libs.adapters.paper_execution import PaperExecutionAdapter
+            market_data = AdapterFactory.create_market_data("binance_spot")
+            return PaperExecutionAdapter(
+                market_data_adapter=market_data,
+                initial_balance=kwargs.pop("initial_balance", 10_000),  # USDT
+                config=config,
+                trade_logger=trade_logger,
+                **kwargs,
+            )
+
         if exchange_name == "binance_futures":
-            from libs.adapters.real_binance_futures import BinanceFuturesExecution
-            return BinanceFuturesExecution(**kwargs)
+            if adapter_mode in {"live", "execution"}:
+                if os.getenv("MASP_ENABLE_LIVE_TRADING") != "1":
+                    raise RuntimeError(
+                        "[Factory] Binance Futures live trading disabled. "
+                        "Set MASP_ENABLE_LIVE_TRADING=1 or use adapter_mode='paper'"
+                    )
+                from libs.adapters.real_binance_futures import BinanceFuturesExecution
+                return BinanceFuturesExecution(**kwargs)
+
+            # Paper mode for binance_futures
+            from libs.adapters.paper_execution import PaperExecutionAdapter
+            market_data = AdapterFactory.create_market_data("binance_futures")
+            return PaperExecutionAdapter(
+                market_data_adapter=market_data,
+                initial_balance=kwargs.pop("initial_balance", 10_000),  # USDT
+                config=config,
+                trade_logger=trade_logger,
+                **kwargs,
+            )
 
         if exchange_name == "mock":
             from libs.adapters.mock import MockExecutionAdapter
@@ -207,13 +255,21 @@ class AdapterFactory:
     def get_available_exchanges() -> dict:
         """
         사용 가능한 거래소 목록
-        
+
         Returns:
             dict: {"market_data": [...], "execution": [...]}
         """
         return {
-            "market_data": ["upbit_spot", "bithumb_spot", "binance_futures", "mock"],
-            "execution": ["paper", "upbit_spot", "upbit", "bithumb", "binance_futures", "mock"]
+            "market_data": [
+                "upbit_spot", "bithumb_spot",
+                "binance_spot", "binance_futures",
+                "mock"
+            ],
+            "execution": [
+                "paper", "upbit_spot", "upbit", "bithumb",
+                "binance_spot", "binance_futures",
+                "mock"
+            ]
         }
     
     @staticmethod
