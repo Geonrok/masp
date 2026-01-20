@@ -68,6 +68,16 @@ from libs.core.resilience import (
     ResilienceBuilder,
     DEFAULT_RETRY_POLICY,
 )
+from libs.core.env_validator import (
+    EnvironmentValidator,
+    EnvVarType,
+    EnvVarSpec,
+    ValidationResult as EnvValidationResult,
+    create_masp_validator,
+    validate_environment,
+    require_env,
+    get_env,
+)
 
 __all__ = [
     # Config
@@ -141,4 +151,13 @@ __all__ = [
     "Bulkhead",
     "ResilienceBuilder",
     "DEFAULT_RETRY_POLICY",
+    # Environment validation
+    "EnvironmentValidator",
+    "EnvVarType",
+    "EnvVarSpec",
+    "EnvValidationResult",
+    "create_masp_validator",
+    "validate_environment",
+    "require_env",
+    "get_env",
 ]
