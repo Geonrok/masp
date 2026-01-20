@@ -93,6 +93,19 @@ from libs.core.metrics import (
     get_metrics,
     get_health_checker,
 )
+from libs.core.config_utils import (
+    ConfigPriority,
+    ConfigSource,
+    DefaultConfigSource,
+    EnvConfigSource,
+    FileConfigSource,
+    RuntimeConfigSource,
+    ConfigChange,
+    ConfigHierarchy,
+    ConfigValidator as HierarchyConfigValidator,
+    ConfigWatcher,
+    ConfigDiff,
+)
 
 __all__ = [
     # Config
@@ -189,4 +202,16 @@ __all__ = [
     "counted",
     "get_metrics",
     "get_health_checker",
+    # Config utilities
+    "ConfigPriority",
+    "ConfigSource",
+    "DefaultConfigSource",
+    "EnvConfigSource",
+    "FileConfigSource",
+    "RuntimeConfigSource",
+    "ConfigChange",
+    "ConfigHierarchy",
+    "HierarchyConfigValidator",
+    "ConfigWatcher",
+    "ConfigDiff",
 ]
