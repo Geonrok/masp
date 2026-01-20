@@ -70,73 +70,47 @@ Format: `<type>: <subject>`
 
 ## 🔄 자동 검수 워크플로우 (필수)
 
-Claude는 모든 작업에서 **직접** Codex/Gemini 검수를 실행합니다.
+Claude는 모든 작업에서 **직접** bash_tool을 사용하여 Codex/Gemini 검수를 실행합니다.
 사용자 개입 없이 자동으로 검수하고, P1 이슈를 해결합니다.
 
-### 검수 대상
-| 단계 | 검수 내용 |
-|------|----------|
-| 계획 | 설계 누락, 보안 이슈, 아키텍처 문제 |
-| 코딩 | 버그, 보안 취약점, 베스트 프랙티스 위반 |
+### 검수 실행 (Claude가 직접 수행)
 
-### 검수 실행 방법
-
-Claude는 bash_tool을 사용하여 검수 스크립트 실행:
-
-**계획 검수:**
+**계획 검수** - 계획 작성 후 Claude가 실행:
 ```bash
-./scripts/review-plan.ps1 -Content "계획 내용"
+powershell -ExecutionPolicy Bypass -File ./scripts/review-plan.ps1 -Content "계획 내용"
 ```
 
-**코드 검수:**
+**코드 검수** - 코딩 완료 후 Claude가 실행:
 ```bash
-./scripts/review-code.ps1
+powershell -ExecutionPolicy Bypass -File ./scripts/review-code.ps1
 ```
 
 ### 자동 검수 프로세스
 
 #### Phase 작업 시
 1. 계획 작성
-2. `review-plan.ps1` 실행하여 계획 검수
-3. P1 이슈 있으면 수정 후 재검수 (P1=0 될 때까지)
-4. 코딩 진행
-5. `review-code.ps1` 실행하여 코드 검수
-6. P1 이슈 있으면 수정 후 재검수 (P1=0 될 때까지)
-7. 커밋
+2. **Claude가 bash_tool로 review-plan.ps1 실행**
+3. 검수 결과 분석 → P1 있으면 수정 후 재검수
+4. P1 = 0 확인 후 코딩 진행
+5. 코딩 완료
+6. **Claude가 bash_tool로 review-code.ps1 실행**
+7. 검수 결과 분석 → P1 있으면 수정 후 재검수
+8. P1 = 0 확인 후 커밋
 
 #### 단순 작업 시
 1. 작업 완료
-2. `review-code.ps1` 실행
-3. P1 이슈 있으면 수정 후 재검수
-4. 커밋
+2. **Claude가 bash_tool로 review-code.ps1 실행**
+3. P1 있으면 수정 후 재검수
+4. P1 = 0 확인 후 커밋
 
 ### 검수 통과 기준
 | 등급 | 의미 | 조치 |
 |------|------|------|
-| P1 (Critical) | 버그, 보안, 크래시 | **필수 수정** (0개 될 때까지) |
+| P1 (Critical) | 버그, 보안, 크래시 | **필수 수정** (0개 될 때까지 재검수) |
 | P2 (Important) | 성능, UX, 안정성 | 권장 수정 |
 | P3 (Minor) | 스타일, 명명 | 스킵 가능 |
 
 ### 금지 사항
 - ❌ 검수 없이 커밋 금지
 - ❌ P1 > 0 상태로 커밋 금지
-- ❌ 검수 스킵 금지
-
-### 검수 결과 보고 형식
-```
-## 검수 결과
-
-### Codex
-- P1: N개
-- P2: N개
-- P3: N개
-- 상세: ...
-
-### Gemini
-- P1: N개
-- P2: N개
-- P3: N개
-- 상세: ...
-
-### 판정: ✅ 통과 / ❌ 재검수 필요
-```
+- ❌ 사용자에게 검수 실행 요청 금지 (Claude가 직접 실행)
