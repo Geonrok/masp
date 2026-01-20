@@ -69,6 +69,7 @@ class StrategyRunner:
 
         # Determine quote currency based on exchange
         self._is_usdt_based = exchange in {"binance_spot", "binance_futures"}
+        self._is_kr_stock = exchange in {"ebest", "ebest_spot", "ebest_kospi", "ebest_kosdaq"}
         self._quote_currency = "USDT" if self._is_usdt_based else "KRW"
         self._position_size = position_size_usdt if self._is_usdt_based else position_size_krw
 
@@ -114,6 +115,9 @@ class StrategyRunner:
         elif exchange == "binance_futures":
             execution_exchange = "binance_futures"
             adapter_mode = "live" if live_trading_enabled else "paper"
+        elif exchange in {"ebest", "ebest_spot", "ebest_kospi", "ebest_kosdaq"}:
+            execution_exchange = exchange
+            adapter_mode = "live" if live_trading_enabled else "paper"
 
         self.execution = execution or AdapterFactory.create_execution(
             execution_exchange,
@@ -132,6 +136,8 @@ class StrategyRunner:
             md_exchange = "binance_spot"
         elif exchange == "binance_futures":
             md_exchange = "binance_futures"
+        elif exchange in {"ebest", "ebest_spot", "ebest_kospi", "ebest_kosdaq"}:
+            md_exchange = "ebest_spot"
         else:
             md_exchange = "upbit_spot"
 
@@ -466,7 +472,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Strategy Runner")
     parser.add_argument("--strategy", default="ma_crossover_v1", help="Strategy name")
     parser.add_argument("--exchange", default="paper",
-                       choices=["paper", "upbit", "bithumb", "binance_spot", "binance_futures"])
+                       choices=["paper", "upbit", "bithumb", "binance_spot", "binance_futures",
+                                "ebest", "ebest_spot", "ebest_kospi", "ebest_kosdaq"])
     parser.add_argument("--symbol", default="BTC/KRW", help="Trading symbol")
     parser.add_argument("--size", type=float, default=10000, help="Position size (KRW/USDT)")
     parser.add_argument("--leverage", type=int, default=1, help="Leverage (for futures)")

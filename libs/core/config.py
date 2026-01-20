@@ -128,6 +128,32 @@ class Config(BaseModel):
         exclude=True,
         description="Korea broker account number"
     )
+
+    # eBest (LS Securities) Open API
+    ebest_app_key: Optional[SecretStr] = Field(
+        default_factory=lambda: SecretStr(os.getenv("EBEST_APP_KEY", "")) if os.getenv("EBEST_APP_KEY") else None,
+        repr=False,
+        exclude=True,
+        description="eBest/LS Securities Open API app key"
+    )
+    ebest_app_secret: Optional[SecretStr] = Field(
+        default_factory=lambda: SecretStr(os.getenv("EBEST_APP_SECRET", "")) if os.getenv("EBEST_APP_SECRET") else None,
+        repr=False,
+        exclude=True,
+        description="eBest/LS Securities Open API app secret"
+    )
+    ebest_account_no: Optional[SecretStr] = Field(
+        default_factory=lambda: SecretStr(os.getenv("EBEST_ACCOUNT_NO", "")) if os.getenv("EBEST_ACCOUNT_NO") else None,
+        repr=False,
+        exclude=True,
+        description="eBest/LS Securities trading account number"
+    )
+    ebest_account_pwd: Optional[SecretStr] = Field(
+        default_factory=lambda: SecretStr(os.getenv("EBEST_ACCOUNT_PWD", "")) if os.getenv("EBEST_ACCOUNT_PWD") else None,
+        repr=False,
+        exclude=True,
+        description="eBest/LS Securities transaction password"
+    )
     
     # Service metadata
     service_name: Optional[str] = Field(default=None, description="Service name override")

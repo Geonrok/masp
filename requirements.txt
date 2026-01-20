@@ -18,7 +18,9 @@ prometheus_client==0.24.1
 httpx>=0.27.0
 pyupbit>=0.2.33
 pybithumb>=0.2.5
+ebest>=1.0.2  # LS Securities (eBest) Open API
 ccxt>=4.0.0
 ta>=0.11.0
 scipy>=1.11.0
 tzdata>=2024.1  # Windows ZoneInfo
+backports.zoneinfo>=0.2.1;python_version<"3.9"  # ZoneInfo for Python 3.8

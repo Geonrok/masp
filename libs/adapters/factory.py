@@ -24,8 +24,12 @@ _execution_classes: dict[str, Type[ExecutionAdapter]] = {}
 AdapterType = Literal[
     "upbit_spot", "bithumb_spot",
     "binance_spot", "binance_futures",
+    "ebest_spot", "ebest_kospi", "ebest_kosdaq",
     "mock", "paper"
 ]
+
+# Constants for exchange name sets
+EBEST_EXCHANGES = {"ebest", "ebest_spot", "ebest_kospi", "ebest_kosdaq"}
 
 
 class AdapterFactory:
@@ -82,6 +86,9 @@ class AdapterFactory:
             elif exchange_name == "mock":
                 from libs.adapters.mock import MockMarketDataAdapter
                 _market_data_classes[exchange_name] = MockMarketDataAdapter
+            elif exchange_name in EBEST_EXCHANGES:
+                from libs.adapters.real_ebest_spot import EbestSpotMarketData
+                _market_data_classes[exchange_name] = EbestSpotMarketData
             else:
                 raise ValueError(f"Unknown market data adapter type: {exchange_name}")
 
@@ -264,6 +271,61 @@ class AdapterFactory:
             from libs.adapters.mock import MockExecutionAdapter
             return MockExecutionAdapter(**kwargs)
 
+        if exchange_name in EBEST_EXCHANGES:
+            # Extract credentials from config or kwargs
+            ebest_app_key = kwargs.get("app_key")
+            ebest_app_secret = kwargs.get("app_secret")
+            ebest_account_no = kwargs.get("account_no")
+            ebest_account_pwd = kwargs.get("account_pwd")
+
+            if config is not None:
+                if ebest_app_key is None and hasattr(config, "ebest_app_key") and config.ebest_app_key:
+                    ebest_app_key = config.ebest_app_key.get_secret_value()
+                if ebest_app_secret is None and hasattr(config, "ebest_app_secret") and config.ebest_app_secret:
+                    ebest_app_secret = config.ebest_app_secret.get_secret_value()
+                if ebest_account_no is None and hasattr(config, "ebest_account_no") and config.ebest_account_no:
+                    ebest_account_no = config.ebest_account_no.get_secret_value()
+                if ebest_account_pwd is None and hasattr(config, "ebest_account_pwd") and config.ebest_account_pwd:
+                    ebest_account_pwd = config.ebest_account_pwd.get_secret_value()
+
+            if adapter_mode in {"live", "execution"}:
+                if os.getenv("MASP_ENABLE_LIVE_TRADING") != "1":
+                    raise RuntimeError(
+                        "[Factory] eBest live trading disabled. "
+                        "Set MASP_ENABLE_LIVE_TRADING=1 or use adapter_mode='paper'"
+                    )
+                # Validate credentials for live mode
+                if not ebest_app_key or not ebest_app_secret:
+                    raise ValueError(
+                        "[Factory] eBest live trading requires EBEST_APP_KEY and EBEST_APP_SECRET. "
+                        "Set environment variables or provide via config."
+                    )
+                from libs.adapters.real_ebest_execution import EbestSpotExecution
+                adapter = EbestSpotExecution(
+                    app_key=ebest_app_key,
+                    app_secret=ebest_app_secret,
+                    account_no=ebest_account_no,
+                    account_pwd=ebest_account_pwd,
+                )
+                if trade_logger:
+                    adapter.set_trade_logger(trade_logger)
+                return adapter
+
+            # Paper mode for eBest
+            from libs.adapters.paper_execution import PaperExecutionAdapter
+            market_data = AdapterFactory.create_market_data(
+                "ebest_spot",
+                app_key=ebest_app_key,
+                app_secret=ebest_app_secret,
+            )
+            return PaperExecutionAdapter(
+                market_data_adapter=market_data,
+                initial_balance=kwargs.pop("initial_balance", 10_000_000),  # 10M KRW
+                config=config,
+                trade_logger=trade_logger,
+                **kwargs,
+            )
+
         raise ValueError(f"Unknown exchange: {exchange_name}")
 
     @staticmethod
@@ -278,11 +340,13 @@ class AdapterFactory:
             "market_data": [
                 "upbit_spot", "bithumb_spot",
                 "binance_spot", "binance_futures",
+                "ebest_spot", "ebest_kospi", "ebest_kosdaq",
                 "mock"
             ],
             "execution": [
                 "paper", "upbit_spot", "upbit", "bithumb",
                 "binance_spot", "binance_futures",
+                "ebest", "ebest_spot", "ebest_kospi", "ebest_kosdaq",
                 "mock"
             ]
         }
