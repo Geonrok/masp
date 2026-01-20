@@ -336,6 +336,47 @@ class CacheError(StorageError):
 
 
 # =============================================================================
+# Network/Communication Errors
+# =============================================================================
+
+class NetworkError(MASPError):
+    """Base class for network-related errors."""
+    error_code = "NETWORK_ERROR"
+
+
+class TimeoutError(NetworkError):
+    """Operation timed out."""
+    error_code = "NETWORK_TIMEOUT"
+
+
+# =============================================================================
+# Exchange Errors
+# =============================================================================
+
+class ExchangeError(MASPError):
+    """Base class for exchange-related errors."""
+    error_code = "EXCHANGE_ERROR"
+
+
+# =============================================================================
+# Data Errors
+# =============================================================================
+
+class DataError(MASPError):
+    """Base class for data-related errors."""
+    error_code = "DATA_ERROR"
+
+
+# =============================================================================
+# Execution Errors
+# =============================================================================
+
+class ExecutionError(MASPError):
+    """Base class for execution-related errors."""
+    error_code = "EXECUTION_ERROR"
+
+
+# =============================================================================
 # Notification Errors
 # =============================================================================
 

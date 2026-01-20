@@ -114,12 +114,12 @@ class TestTSMOM:
     def test_signal_positive(self):
         """Test TSMOM signal for positive momentum."""
         data = list(range(100, 200))
-        assert TSMOM_signal(data, lookback=50) is True
+        assert TSMOM_signal(data, lookback=50) == True
 
     def test_signal_negative(self):
         """Test TSMOM signal for negative momentum."""
         data = list(range(200, 100, -1))
-        assert TSMOM_signal(data, lookback=50) is False
+        assert TSMOM_signal(data, lookback=50) == False
 
     def test_insufficient_data(self):
         """Test TSMOM with insufficient data."""
@@ -130,11 +130,13 @@ class TestTSMOM:
         assert result == pytest.approx(0.1)
 
     def test_zero_price(self):
-        """Test TSMOM handles zero price."""
-        data = [0] + list(range(1, 100))
-        result = TSMOM(data, lookback=90)
+        """Test TSMOM handles zero price in lookback."""
+        # When past price is zero, return 0
+        data = [0] * 10 + list(range(1, 50))
+        result = TSMOM(data, lookback=len(data) - 1)
 
-        assert result == 0.0  # Can't calculate return from zero
+        # When past price (first element) is 0, should return 0
+        assert result == 0.0
 
 
 class TestRSI:

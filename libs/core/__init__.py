@@ -14,6 +14,10 @@ from libs.core.exceptions import (
     RiskError,
     ValidationError,
     StorageError,
+    NetworkError,
+    ExchangeError,
+    DataError,
+    ExecutionError,
 )
 from libs.core.structured_logging import (
     configure_logging,
@@ -103,6 +107,10 @@ __all__ = [
     "RiskError",
     "ValidationError",
     "StorageError",
+    "NetworkError",
+    "ExchangeError",
+    "DataError",
+    "ExecutionError",
     # Structured logging
     "configure_logging",
     "get_logger",
