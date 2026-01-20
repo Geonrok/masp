@@ -18,7 +18,8 @@ class TestFixedFractionalSizer:
 
     def test_basic_calculation(self):
         """Test basic position size calculation."""
-        sizer = FixedFractionalSizer(risk_percent=0.02)
+        # Use max_position_percent=0.6 to avoid cap (position_value=50000, cap=60000)
+        sizer = FixedFractionalSizer(risk_percent=0.02, max_position_percent=0.6)
         result = sizer.calculate(
             capital=100000,
             entry_price=50000,
@@ -123,9 +124,11 @@ class TestVolatilityBasedSizer:
 
     def test_basic_calculation(self):
         """Test basic ATR-based sizing."""
+        # Use max_position_percent=0.6 to avoid cap (position_value=50000, cap=60000)
         sizer = VolatilityBasedSizer(
             risk_percent=0.02,
             atr_multiplier=2.0,
+            max_position_percent=0.6,
         )
 
         result = sizer.calculate(
@@ -142,18 +145,21 @@ class TestVolatilityBasedSizer:
 
     def test_high_volatility_reduces_size(self):
         """Test that higher ATR results in smaller position."""
-        sizer = VolatilityBasedSizer(risk_percent=0.02, atr_multiplier=2.0)
+        # Use higher max_position_percent to avoid cap affecting the comparison
+        sizer = VolatilityBasedSizer(
+            risk_percent=0.02, atr_multiplier=2.0, max_position_percent=0.6
+        )
 
         result_low_vol = sizer.calculate(
             capital=100000,
             entry_price=50000,
-            atr=500,
+            atr=500,  # Low volatility -> quantity = 2000/1000 = 2
         )
 
         result_high_vol = sizer.calculate(
             capital=100000,
             entry_price=50000,
-            atr=2000,
+            atr=2000,  # High volatility -> quantity = 2000/4000 = 0.5
         )
 
         # Higher ATR should result in smaller position
@@ -226,10 +232,15 @@ class TestDrawdownGuard:
 
     def test_max_drawdown_breach(self):
         """Test that max drawdown triggers halt."""
-        guard = DrawdownGuard(max_drawdown_limit=0.15)  # 15% max DD
+        # Set daily_loss_limit high (20%) so max_drawdown_limit (15%) triggers first
+        guard = DrawdownGuard(
+            max_drawdown_limit=0.15,
+            daily_loss_limit=0.20,
+            weekly_loss_limit=0.30,
+        )
         guard.initialize(100000)
 
-        # Multiple losses totaling 15%+
+        # Multiple losses totaling 16%
         guard.record_trade("BTC", pnl=-10000, side="buy")
         guard.record_trade("ETH", pnl=-6000, side="buy")
 
@@ -258,11 +269,22 @@ class TestDrawdownGuard:
         guard = DrawdownGuard(daily_loss_limit=0.01)
         guard.initialize(100000)
 
+        # Record a trade that exceeds daily limit (1.5% > 1%)
         guard.record_trade("BTC", pnl=-1500, side="buy")
+        # check_risk() triggers the halt check
+        state = guard.check_risk()
+        assert state.status == RiskStatus.HALTED
         assert guard.is_halted is True
 
+        # Reset halt - this clears is_halted flag
         guard.reset_halt()
         assert guard.is_halted is False
+
+        # Note: can_trade() calls check_risk() which will re-halt if limits
+        # are still breached. This is correct risk management behavior.
+        # To truly resume trading, either clear history or add profit.
+        # Add profit to bring daily P&L within limits
+        guard.record_trade("BTC", pnl=1000, side="sell")  # Now -500 (0.5% < 1%)
         assert guard.can_trade() is True
 
     def test_get_metrics(self):

@@ -8,6 +8,7 @@ error handling across the MASP platform.
 from __future__ import annotations
 
 import functools
+import inspect
 import logging
 import traceback
 from contextlib import contextmanager
@@ -31,16 +32,18 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 # Exception mapping for common error types
-EXCEPTION_MAP: dict[Type[Exception], Type[MASPError]] = {
-    ConnectionError: NetworkError,
-    TimeoutError: NetworkError,
-    OSError: NetworkError,
-    ValueError: ValidationError,
-    KeyError: DataError,
-    TypeError: DataError,
-    FileNotFoundError: ConfigurationError,
-    PermissionError: ConfigurationError,
-}
+# Note: More specific types must come before their parent types
+# FileNotFoundError/PermissionError must be checked before OSError
+EXCEPTION_MAP: list[tuple[Type[Exception], Type[MASPError]]] = [
+    (FileNotFoundError, ConfigurationError),
+    (PermissionError, ConfigurationError),
+    (ConnectionError, NetworkError),
+    (TimeoutError, NetworkError),
+    (OSError, NetworkError),
+    (ValueError, ValidationError),
+    (KeyError, DataError),
+    (TypeError, DataError),
+]
 
 
 def classify_exception(exc: Exception) -> Type[MASPError]:
@@ -53,7 +56,7 @@ def classify_exception(exc: Exception) -> Type[MASPError]:
     Returns:
         Appropriate MASPError subclass
     """
-    for exc_type, masp_type in EXCEPTION_MAP.items():
+    for exc_type, masp_type in EXCEPTION_MAP:
         if isinstance(exc, exc_type):
             return masp_type
 
@@ -65,10 +68,12 @@ def classify_exception(exc: Exception) -> Type[MASPError]:
         return NetworkError
     if any(x in exc_str for x in ["api", "exchange", "rate limit"]):
         return ExchangeError
-    if any(x in exc_str for x in ["config", "setting", "parameter"]):
-        return ConfigurationError
+    # Check validation patterns BEFORE config patterns
+    # ("invalid parameter" should be ValidationError, not ConfigurationError)
     if any(x in exc_str for x in ["invalid", "validation", "required"]):
         return ValidationError
+    if any(x in exc_str for x in ["config", "setting"]):
+        return ConfigurationError
 
     return AdapterError  # Default to adapter error
 
@@ -272,7 +277,7 @@ def handle_adapter_exceptions(
 
         import asyncio
 
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
             return async_wrapper  # type: ignore
         return sync_wrapper  # type: ignore
 
@@ -384,6 +389,9 @@ def retry_with_backoff(
                         f"after {delay:.1f}s: {exc}"
                     )
                     await asyncio.sleep(delay)
+                except Exception as exc:
+                    # Non-retryable exception, wrap and re-raise immediately
+                    raise wrap_exception(exc, context or func.__name__)
 
             raise wrap_exception(last_exc, context or func.__name__)
 
@@ -408,10 +416,13 @@ def retry_with_backoff(
                         f"after {delay:.1f}s: {exc}"
                     )
                     time.sleep(delay)
+                except Exception as exc:
+                    # Non-retryable exception, wrap and re-raise immediately
+                    raise wrap_exception(exc, context or func.__name__)
 
             raise wrap_exception(last_exc, context or func.__name__)
 
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
             return async_wrapper  # type: ignore
         return sync_wrapper  # type: ignore
 

@@ -177,29 +177,42 @@ class TestCompositeStrategy:
         assert decisions[0].action == Action.BUY
 
 
+class ContextAwareMockStrategy(BaseStrategy):
+    """Mock strategy that uses context.symbols."""
+
+    def __init__(self, name: str, action: Action = Action.BUY):
+        self._name = name
+        self._action = action
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    def execute(self, context) -> list:
+        # Only return decisions for symbols in context
+        return [Decision(s, self._action) for s in context.symbols]
+
+
 class TestFilteredStrategy:
     """Tests for FilteredStrategy."""
 
     def test_with_volume_filter(self, mock_context):
         """Test strategy with volume filter."""
-        strategy = MockStrategy("test", [
-            Decision("BTC", Action.BUY),
-            Decision("ETH", Action.BUY),
-            Decision("XRP", Action.BUY),
-        ])
+        # Use a context-aware strategy that respects filtered symbols
+        strategy = ContextAwareMockStrategy("test", Action.BUY)
 
         volume_filter = VolumeFilter(min_volume=100000)
         filtered_strategy = FilteredStrategy(strategy, [volume_filter])
 
-        # Execute (XRP should be filtered out due to low volume)
+        # Execute (XRP should be filtered out due to low volume < 100000)
         mock_context.symbols = ["BTC", "ETH", "XRP"]
         decisions = filtered_strategy.execute(mock_context)
 
         symbols = [d.symbol for d in decisions]
-        # XRP filtered at symbol level, so no decision for it in main execution
-        assert "XRP" not in symbols or any(
-            d.symbol == "XRP" and d.action == Action.SKIP for d in decisions
-        )
+        # XRP filtered at symbol level, so not in decisions
+        assert "XRP" not in symbols
+        assert "BTC" in symbols
+        assert "ETH" in symbols
 
 
 class TestCooldownStrategy:

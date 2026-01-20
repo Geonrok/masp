@@ -28,15 +28,25 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-# Skip all tests if credentials not available
+# Skip all tests if credentials not available or integration tests disabled
 EBEST_CREDENTIALS_AVAILABLE = bool(
     os.getenv("EBEST_APP_KEY") and os.getenv("EBEST_APP_SECRET")
 )
 
-pytestmark = pytest.mark.skipif(
-    not EBEST_CREDENTIALS_AVAILABLE,
-    reason="EBEST_APP_KEY and EBEST_APP_SECRET not set"
-)
+# Integration tests require explicit opt-in: RUN_EBEST_INTEGRATION=1
+RUN_INTEGRATION_TESTS = os.getenv("RUN_EBEST_INTEGRATION") == "1"
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        not EBEST_CREDENTIALS_AVAILABLE,
+        reason="EBEST_APP_KEY and EBEST_APP_SECRET not set"
+    ),
+    pytest.mark.skipif(
+        not RUN_INTEGRATION_TESTS,
+        reason="Integration tests disabled. Set RUN_EBEST_INTEGRATION=1 to run"
+    ),
+]
 
 
 class TestEbestMarketData:

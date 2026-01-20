@@ -20,8 +20,12 @@ from libs.notifications.deduplication import (
 class TestSlackNotifier:
     """Tests for Slack notifier."""
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_disabled_without_webhook(self):
         """Test notifier is disabled without webhook URL."""
+        # Clear env vars to ensure no fallback
+        import os
+        os.environ.pop("SLACK_WEBHOOK_URL", None)
         notifier = SlackNotifier(webhook_url=None)
         assert not notifier.enabled
 
@@ -30,13 +34,16 @@ class TestSlackNotifier:
         notifier = SlackNotifier(webhook_url="https://hooks.slack.com/test")
         assert notifier.enabled
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_send_message_when_disabled(self):
         """Test send returns False when disabled."""
+        import os
+        os.environ.pop("SLACK_WEBHOOK_URL", None)
         notifier = SlackNotifier(webhook_url=None)
         result = notifier.send_message("Test message")
         assert result is False
 
-    @patch("libs.notifications.slack.httpx.Client")
+    @patch("httpx.Client")
     def test_send_message_success(self, mock_client):
         """Test successful message send."""
         mock_response = Mock()
@@ -47,7 +54,7 @@ class TestSlackNotifier:
         result = notifier.send_message("Test message")
         assert result is True
 
-    @patch("libs.notifications.slack.httpx.Client")
+    @patch("httpx.Client")
     def test_send_trade_notification(self, mock_client):
         """Test trade notification."""
         mock_response = Mock()
@@ -135,12 +142,14 @@ class TestAlertDeduplicator:
 
     def test_different_alerts_allowed(self):
         """Test different alerts are allowed."""
-        dedup = AlertDeduplicator()
+        # Use EXACT strategy to distinguish different messages
+        config = DeduplicationConfig(strategy=DeduplicationStrategy.EXACT)
+        dedup = AlertDeduplicator(dedup_config=config)
 
-        dedup.should_send(message="Alert 1", alert_type="SYSTEM")
+        dedup.should_send(message="First alert message", alert_type="SYSTEM")
 
         should_send, reason = dedup.should_send(
-            message="Alert 2",
+            message="Different alert message",
             alert_type="SYSTEM",
         )
         assert should_send is True
@@ -177,19 +186,21 @@ class TestAlertDeduplicator:
         rate_limits = {
             "HIGH": RateLimitConfig(max_alerts=2, window_seconds=60),
         }
-        dedup = AlertDeduplicator(rate_limits=rate_limits)
+        # Use EXACT strategy so each message is distinct and gets counted
+        config = DeduplicationConfig(strategy=DeduplicationStrategy.EXACT)
+        dedup = AlertDeduplicator(dedup_config=config, rate_limits=rate_limits)
 
         # Send 2 alerts (should be allowed)
         for i in range(2):
             dedup.should_send(
-                message=f"Alert {i}",
+                message=f"Unique alert message number {i}",
                 alert_type="SYSTEM",
                 priority="HIGH",
             )
 
         # Third alert should be rate limited
         should_send, reason = dedup.should_send(
-            message="Alert 3",
+            message="Third unique alert message",
             alert_type="SYSTEM",
             priority="HIGH",
         )

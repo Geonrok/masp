@@ -160,9 +160,19 @@ class PortfolioOptimizer:
         # Covariance matrix (annualized)
         self.cov_matrix = np.cov(self.returns_matrix, rowvar=False) * 252
 
+        # Handle single strategy case (cov returns scalar)
+        if self.n_strategies == 1:
+            self.cov_matrix = np.array([[self.cov_matrix]])
+            self.mean_returns = np.array([self.mean_returns])
+
         # Correlation matrix
         std_devs = np.sqrt(np.diag(self.cov_matrix))
+        # Avoid division by zero
+        std_devs = np.where(std_devs == 0, 1e-10, std_devs)
         self.corr_matrix = self.cov_matrix / np.outer(std_devs, std_devs)
+
+        # Ensure correlation matrix diagonal is exactly 1.0 (numerical stability)
+        np.fill_diagonal(self.corr_matrix, 1.0)
 
         # Individual volatilities
         self.volatilities = std_devs
@@ -229,32 +239,39 @@ class PortfolioOptimizer:
         method: OptimizationMethod,
     ) -> OptimizationResult:
         """Build optimization result with metrics."""
+        # Ensure weights is 1D array
+        weights = np.atleast_1d(weights).flatten()
+
         # Portfolio return and volatility
-        port_return = np.dot(weights, self.mean_returns)
+        port_return = np.dot(weights, self.mean_returns.flatten())
         port_vol = np.sqrt(np.dot(weights.T, np.dot(self.cov_matrix, weights)))
 
+        # Ensure scalars (in case of single strategy)
+        port_return = float(np.asarray(port_return).item())
+        port_vol = float(np.asarray(port_vol).item())
+
         # Sharpe ratio
-        sharpe = (port_return - self.risk_free_rate) / port_vol if port_vol > 0 else 0
+        sharpe = (port_return - self.risk_free_rate) / port_vol if port_vol > 0 else 0.0
 
         # Diversification ratio
-        weighted_vol = np.dot(weights, self.volatilities)
+        weighted_vol = float(np.dot(weights, self.volatilities.flatten()))
         div_ratio = weighted_vol / port_vol if port_vol > 0 else 1.0
 
         # Effective N (Herfindahl index inverse)
-        effective_n = 1.0 / np.sum(weights ** 2) if np.any(weights > 0) else 0
+        effective_n = 1.0 / float(np.sum(weights ** 2)) if np.any(weights > 0) else 0.0
 
         return OptimizationResult(
             weights=weights,
             strategy_names=[s.name for s in self.strategies],
             method=method,
-            expected_return=float(port_return),
-            expected_volatility=float(port_vol),
+            expected_return=port_return,
+            expected_volatility=port_vol,
             sharpe_ratio=float(sharpe),
             diversification_ratio=float(div_ratio),
             effective_n=float(effective_n),
             metadata={
-                "mean_returns": self.mean_returns.tolist(),
-                "volatilities": self.volatilities.tolist(),
+                "mean_returns": self.mean_returns.flatten().tolist(),
+                "volatilities": self.volatilities.flatten().tolist(),
                 "correlation_matrix": self.corr_matrix.tolist(),
             },
         )
@@ -467,7 +484,10 @@ class PortfolioOptimizer:
 
     def _correlation_distance(self) -> np.ndarray:
         """Calculate correlation distance matrix."""
-        return np.sqrt(0.5 * (1 - self.corr_matrix))
+        dist = np.sqrt(0.5 * (1 - self.corr_matrix))
+        # Ensure diagonal is exactly 0 (required by squareform)
+        np.fill_diagonal(dist, 0.0)
+        return dist
 
     def _get_quasi_diag(self, link: np.ndarray) -> List[int]:
         """Sort indices based on hierarchical clustering."""

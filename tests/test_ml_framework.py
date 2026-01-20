@@ -339,11 +339,29 @@ class TestMLPipeline:
 
     def test_walk_forward(self, sample_ohlcv):
         """Test walk-forward fitting."""
+        # Use minimal feature config to avoid losing too many samples to NaN
+        feature_config = FeatureConfig(
+            include_returns=True,
+            include_volatility=True,
+            include_momentum=False,
+            include_ma=False,  # Disable long lookback MAs
+            include_volume=False,
+            include_rsi=False,  # Disable RSI (14-day lookback)
+            include_macd=False,  # Disable MACD (26-day lookback)
+            include_bollinger=False,
+            include_atr=False,
+            include_skewness=False,
+            include_kurtosis=False,
+            lag_periods=[],
+            normalize=False,
+        )
         config = PipelineConfig(
             model_type="random_forest",
             model_params={"n_estimators": 10},
             walk_forward=True,
-            walk_forward_windows=3,
+            walk_forward_windows=2,  # Reduced from 3 to allow more data per window
+            min_samples=50,  # Reduced from 100
+            feature_config=feature_config,
         )
         pipeline = MLPipeline(config)
         results = pipeline.walk_forward_fit(sample_ohlcv, "TEST")
