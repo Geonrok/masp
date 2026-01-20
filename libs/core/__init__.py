@@ -24,6 +24,16 @@ from libs.core.structured_logging import (
     get_trace_id,
     LogContext,
 )
+from libs.core.exception_handlers import (
+    handle_exceptions,
+    handle_adapter_exceptions,
+    exception_context,
+    safe_execute,
+    wrap_exception,
+    log_and_suppress,
+    retry_with_backoff,
+    ExceptionAggregator,
+)
 
 __all__ = [
     # Config
@@ -57,4 +67,13 @@ __all__ = [
     "generate_trace_id",
     "get_trace_id",
     "LogContext",
+    # Exception handlers
+    "handle_exceptions",
+    "handle_adapter_exceptions",
+    "exception_context",
+    "safe_execute",
+    "wrap_exception",
+    "log_and_suppress",
+    "retry_with_backoff",
+    "ExceptionAggregator",
 ]
