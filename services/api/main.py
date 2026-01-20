@@ -8,6 +8,8 @@ import logging
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
+from functools import lru_cache
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -30,11 +32,41 @@ logger = logging.getLogger(__name__)
 _start_time = datetime.now()
 
 
+# ============================================================================
+# Configuration Caching
+# ============================================================================
+@lru_cache(maxsize=1)
+def _load_schedule_config() -> dict:
+    """Load schedule config with caching. Call invalidate_config_cache() to refresh."""
+    config_path = Path("config/schedule_config.json")
+    if config_path.exists():
+        try:
+            return json.loads(config_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.error("Failed to load schedule config: %s", e)
+    return {}
+
+
+def invalidate_config_cache():
+    """Invalidate the schedule config cache."""
+    _load_schedule_config.cache_clear()
+    logger.info("[API] Schedule config cache invalidated")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Application lifespan - initialize shared state."""
+    from services.api.routes.strategy import StrategyManager
+
     logger.info("[API] Starting MASP API Server v1.0...")
     logger.info("[API] Host: %s:%s", api_config.host, api_config.port)
     logger.info("[API] Mode: Single Worker (state-safe)")
+
+    # Initialize app state
+    app.state.strategy_manager = StrategyManager()
+    app.state.schedule_config = _load_schedule_config()
+
+    logger.info("[API] App state initialized")
     yield
     logger.info("[API] Shutting down API Server...")
 
@@ -49,47 +81,12 @@ app = FastAPI(
 
 @app.middleware("http")
 async def add_request_id(request: Request, call_next):
+    """Add request ID to headers. No body modification for performance."""
     request_id = str(uuid.uuid4())[:8]
     request.state.request_id = request_id
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
-
-    content_type = response.headers.get("content-type", "")
-    if content_type.startswith("application/json") and hasattr(response, "body_iterator"):
-        try:
-            # Collect response body for JSON rewriting.
-            body = b""
-            async for chunk in response.body_iterator:
-                body += chunk
-
-            data = json.loads(body)
-            data["request_id"] = request_id
-            data["timestamp"] = datetime.now().isoformat()
-
-            headers_to_exclude = {
-                "content-length",
-                "content-type",
-                "content-encoding",
-                "transfer-encoding",
-            }
-            filtered_headers = {
-                k: v
-                for k, v in response.headers.items()
-                if k.lower() not in headers_to_exclude
-            }
-
-            return JSONResponse(
-                content=data,
-                status_code=response.status_code,
-                headers=filtered_headers,
-            )
-        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-            logger.warning("[%s] JSON parse failed: %s", request_id, str(exc))
-            return JSONResponse(
-                content={"error": "Response processing failed", "request_id": request_id},
-                status_code=500,
-            )
-
+    response.headers["X-Timestamp"] = datetime.now().isoformat()
     return response
 
 
@@ -143,10 +140,18 @@ app.include_router(ws_router, prefix="/ws", tags=["WebSocket"])
 
 
 @app.get("/api/v1/status", response_model=SystemStatus)
-async def get_status():
-    from services.api.routes.strategy import strategy_manager
+async def get_status(request: Request):
+    """Get system status (uses app.state for strategy manager with fallback)."""
+    from services.api.routes.strategy import strategy_manager as fallback_manager
 
     uptime = (datetime.now() - _start_time).total_seconds()
+    request_id = getattr(request.state, "request_id", "unknown")
+
+    # Use app state if available, fallback for tests
+    if hasattr(request.app.state, "strategy_manager"):
+        manager = request.app.state.strategy_manager
+    else:
+        manager = fallback_manager
 
     return SystemStatus(
         success=True,
@@ -154,17 +159,15 @@ async def get_status():
         version="1.0.0",
         uptime_seconds=uptime,
         exchanges=["upbit", "bithumb", "binance_spot", "binance_futures", "paper"],
-        active_strategies=len(strategy_manager.active_strategies),
+        active_strategies=len(manager.active_strategies),
+        request_id=request_id,
+        timestamp=datetime.now(),
     )
 
 
 @app.get("/api/v1/exchanges", response_model=ExchangeStatusResponse)
 async def get_exchange_status():
-    """Get status of all configured exchanges."""
-    import json
-    from pathlib import Path
-
-    config_path = Path("config/schedule_config.json")
+    """Get status of all configured exchanges (uses cached config)."""
     exchanges_status = []
 
     # Default exchange definitions
@@ -175,43 +178,39 @@ async def get_exchange_status():
         "binance_futures": {"quote": "USDT", "name": "Binance Futures"},
     }
 
-    if config_path.exists():
-        try:
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-            exchanges_config = config.get("exchanges", {})
+    # Use cached config
+    config = _load_schedule_config()
+    exchanges_config = config.get("exchanges", {})
 
-            for exchange_name, cfg in exchanges_config.items():
-                enabled = cfg.get("enabled", False)
-                schedule = cfg.get("schedule", {})
-                hour = schedule.get("hour", 0)
-                minute = schedule.get("minute", 0)
-                timezone = schedule.get("timezone", "Asia/Seoul")
-                tz_label = "UTC" if timezone == "UTC" else "KST"
+    for exchange_name, cfg in exchanges_config.items():
+        enabled = cfg.get("enabled", False)
+        schedule = cfg.get("schedule", {})
+        hour = schedule.get("hour", 0)
+        minute = schedule.get("minute", 0)
+        timezone = schedule.get("timezone", "Asia/Seoul")
+        tz_label = "UTC" if timezone == "UTC" else "KST"
 
-                symbols_cfg = cfg.get("symbols", [])
-                if isinstance(symbols_cfg, str):
-                    if symbols_cfg in ("ALL_KRW", "ALL_USDT", "ALL_USDT_PERP"):
-                        symbols_count = -1  # Dynamic
-                    else:
-                        symbols_count = 1
-                else:
-                    symbols_count = len(symbols_cfg)
+        symbols_cfg = cfg.get("symbols", [])
+        if isinstance(symbols_cfg, str):
+            if symbols_cfg in ("ALL_KRW", "ALL_USDT", "ALL_USDT_PERP"):
+                symbols_count = -1  # Dynamic
+            else:
+                symbols_count = 1
+        else:
+            symbols_count = len(symbols_cfg)
 
-                quote_currency = exchange_defs.get(exchange_name, {}).get("quote", "KRW")
-                if cfg.get("position_size_usdt"):
-                    quote_currency = "USDT"
+        quote_currency = exchange_defs.get(exchange_name, {}).get("quote", "KRW")
+        if cfg.get("position_size_usdt"):
+            quote_currency = "USDT"
 
-                exchanges_status.append(ExchangeStatus(
-                    exchange=exchange_name,
-                    enabled=enabled,
-                    connected=enabled,  # Simplified: assume connected if enabled
-                    quote_currency=quote_currency,
-                    schedule=f"{hour:02d}:{minute:02d} {tz_label}",
-                    symbols_count=symbols_count,
-                ))
-
-        except Exception as e:
-            logger.error("Failed to load exchange config: %s", e)
+        exchanges_status.append(ExchangeStatus(
+            exchange=exchange_name,
+            enabled=enabled,
+            connected=enabled,  # Simplified: assume connected if enabled
+            quote_currency=quote_currency,
+            schedule=f"{hour:02d}:{minute:02d} {tz_label}",
+            symbols_count=symbols_count,
+        ))
 
     # Add any missing exchanges from defaults
     configured_exchanges = {ex.exchange for ex in exchanges_status}
@@ -233,7 +232,8 @@ async def get_exchange_status():
 
 @app.post("/api/v1/kill-switch", response_model=KillSwitchResponse)
 async def kill_switch(request: Request, body: KillSwitchRequest):
-    from services.api.routes.strategy import strategy_manager
+    """Emergency kill switch - stops all strategies."""
+    from services.api.routes.strategy import strategy_manager as fallback_manager
 
     request_id = getattr(request.state, "request_id", "unknown")
 
@@ -242,7 +242,13 @@ async def kill_switch(request: Request, body: KillSwitchRequest):
 
     logger.critical("[%s] KILL SWITCH ACTIVATED", request_id)
 
-    stopped = strategy_manager.stop_all()
+    # Use app state if available, fallback for tests
+    if hasattr(request.app.state, "strategy_manager"):
+        manager = request.app.state.strategy_manager
+    else:
+        manager = fallback_manager
+
+    stopped = manager.stop_all()
 
     return KillSwitchResponse(
         success=True,

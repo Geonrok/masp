@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
 
 from libs.strategies.loader import list_available_strategies
@@ -17,6 +17,8 @@ class StrategyActionRequest(BaseModel):
 
 
 class StrategyManager:
+    """Manages active strategies."""
+
     def __init__(self) -> None:
         self.active_strategies: set[str] = set()
 
@@ -51,12 +53,24 @@ class StrategyManager:
         return count
 
 
+# Legacy global instance (for backward compatibility with imports and tests)
 strategy_manager = StrategyManager()
 
 
+# Dependency injection: Get StrategyManager from app state (with fallback)
+def get_strategy_manager(request: Request) -> StrategyManager:
+    """Get StrategyManager from app state with fallback to module-level instance."""
+    if hasattr(request.app.state, "strategy_manager"):
+        return request.app.state.strategy_manager
+    # Fallback for tests that don't use lifespan
+    return strategy_manager
+
+
 @router.get("/list", response_model=StrategyListResponse)
-async def list_strategies():
-    strategies = strategy_manager.list_strategies()
+async def list_strategies(
+    manager: StrategyManager = Depends(get_strategy_manager)
+):
+    strategies = manager.list_strategies()
     return StrategyListResponse(
         success=True,
         message="Strategy list",
@@ -65,15 +79,21 @@ async def list_strategies():
 
 
 @router.post("/start", response_model=BaseResponse)
-async def start_strategy(request: StrategyActionRequest):
+async def start_strategy(
+    request: StrategyActionRequest,
+    manager: StrategyManager = Depends(get_strategy_manager)
+):
     try:
-        strategy_manager.start(request.strategy_id)
+        manager.start(request.strategy_id)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return BaseResponse(success=True, message=f"Strategy started: {request.strategy_id}")
 
 
 @router.post("/stop", response_model=BaseResponse)
-async def stop_strategy(request: StrategyActionRequest):
-    strategy_manager.stop(request.strategy_id)
+async def stop_strategy(
+    request: StrategyActionRequest,
+    manager: StrategyManager = Depends(get_strategy_manager)
+):
+    manager.stop(request.strategy_id)
     return BaseResponse(success=True, message=f"Strategy stopped: {request.strategy_id}")

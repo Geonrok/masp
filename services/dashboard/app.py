@@ -64,16 +64,12 @@ from services.dashboard.components.log_viewer import render_log_viewer
 from services.dashboard.components.alert_history import render_alert_history_panel
 from services.dashboard.components.scheduler_status import render_scheduler_status
 
-from services.dashboard.utils import auth
-from services.dashboard.utils.auth_middleware import enforce_auth
+from services.dashboard.utils.auth_middleware import enforce_auth, logout
 from services.dashboard.utils.api_client import ConfigApiClient
 
 load_dotenv()
 
 st.set_page_config(page_title="MASP Dashboard", layout="wide")
-
-if not os.getenv("MASP_ADMIN_TOKEN"):
-    st.warning("MASP_ADMIN_TOKEN is not set. API calls may fail.")
 
 if not enforce_auth():
     st.stop()
@@ -251,5 +247,5 @@ with st.sidebar:
         st.rerun()
 
     if st.button("Logout", use_container_width=True, type="secondary"):
-        auth.clear_token()
+        logout()
         st.rerun()

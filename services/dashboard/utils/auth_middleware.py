@@ -1,32 +1,45 @@
-"""Authentication enforcement for Streamlit dashboard."""
-from __future__ import annotations
+"""Authentication enforcement for Streamlit dashboard.
 
-import os
+Supports Google OAuth authentication via streamlit-google-auth.
+"""
+from __future__ import annotations
 
 import streamlit as st
 
-from services.dashboard.components.login import render_login
-from services.dashboard.utils import auth
+from services.dashboard.components.firebase_login import (
+    render_firebase_login,
+    check_firebase_auth,
+    clear_firebase_user,
+)
 
 
 def enforce_auth(idle_seconds: int = 1800) -> bool:
-    """Render login UI when unauthenticated or expired."""
-    if not os.getenv("MASP_ADMIN_TOKEN"):
-        st.title("MASP Dashboard")
-        st.error("⚠️ MASP_ADMIN_TOKEN is not configured. Set it before using the dashboard.")
-        return False
+    """Render login UI when unauthenticated.
 
-    if auth.require_login(idle_seconds=idle_seconds):
-        auto_refresh = bool(st.session_state.get("masp_auto_refresh")) or bool(
-            st.session_state.get("auto_refresh_enabled")
-        )
-        if not auto_refresh:
-            auth.touch_activity()
+    Args:
+        idle_seconds: Session timeout in seconds (not used with OAuth)
+
+    Returns:
+        True if authenticated, False otherwise.
+    """
+    # Check if user is authenticated
+    user = check_firebase_auth()
+
+    if user:
         return True
 
+    # Not authenticated - show login
     st.title("MASP Dashboard")
-    st.info("Authentication required.")
-    if render_login():
-        st.success("Login successful.")
+    st.info("Please sign in with Google to continue.")
+
+    result = render_firebase_login()
+
+    if result:
         st.rerun()
+
     return False
+
+
+def logout() -> None:
+    """Clear authentication and logout."""
+    clear_firebase_user()

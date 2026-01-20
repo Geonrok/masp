@@ -204,13 +204,13 @@ class StrategyRunner:
 
         Dynamic limits:
             1. Balance-based: skip BUY if available_krw < position_size_krw
-            2. Time-based: stop after max_execution_time (5 minutes)
+            2. Time-based: stop after MASP_MAX_EXECUTION_TIME (default 1800s)
             3. Rate limit: 0.1s between symbols
         """
         results = {}
         total = len(self.symbols)
         start_time = time.time()
-        max_execution_time = 300
+        max_execution_time = int(os.getenv("MASP_MAX_EXECUTION_TIME", "1800"))
 
         if os.getenv("STOP_TRADING") == "1" or self.config.is_kill_switch_active():
             logger.critical("Kill-Switch Activated! Trading Halted.")

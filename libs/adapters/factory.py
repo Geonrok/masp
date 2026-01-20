@@ -3,15 +3,22 @@ Adapter Factory for creating market data and execution adapters
 
 Provides a centralized way to create adapters for different exchanges.
 Phase 2C - Extended with Upbit/Bithumb execution, Paper trading
+Optimized with class caching for faster repeated instantiation.
 """
 
 import logging
 import os
 import warnings
-from typing import Literal, Optional
+from typing import Literal, Optional, Type
 from libs.adapters.base import MarketDataAdapter, ExecutionAdapter
 
 logger = logging.getLogger(__name__)
+
+# ============================================================================
+# Adapter Class Cache - Prevents repeated imports
+# ============================================================================
+_market_data_classes: dict[str, Type[MarketDataAdapter]] = {}
+_execution_classes: dict[str, Type[ExecutionAdapter]] = {}
 
 
 AdapterType = Literal[
@@ -53,12 +60,40 @@ class AdapterFactory:
     """
     
     @staticmethod
+    def _get_market_data_class(exchange_name: str) -> Type[MarketDataAdapter]:
+        """Get MarketData adapter class with caching."""
+        # Normalize name
+        if exchange_name == "upbit":
+            exchange_name = "upbit_spot"
+
+        if exchange_name not in _market_data_classes:
+            if exchange_name == "upbit_spot":
+                from libs.adapters.real_upbit_spot import UpbitSpotMarketData
+                _market_data_classes[exchange_name] = UpbitSpotMarketData
+            elif exchange_name == "bithumb_spot":
+                from libs.adapters.real_bithumb_spot import BithumbSpotMarketData
+                _market_data_classes[exchange_name] = BithumbSpotMarketData
+            elif exchange_name == "binance_spot":
+                from libs.adapters.real_binance_spot import BinanceSpotMarketData
+                _market_data_classes[exchange_name] = BinanceSpotMarketData
+            elif exchange_name == "binance_futures":
+                from libs.adapters.real_binance_futures import BinanceFuturesMarketData
+                _market_data_classes[exchange_name] = BinanceFuturesMarketData
+            elif exchange_name == "mock":
+                from libs.adapters.mock import MockMarketDataAdapter
+                _market_data_classes[exchange_name] = MockMarketDataAdapter
+            else:
+                raise ValueError(f"Unknown market data adapter type: {exchange_name}")
+
+        return _market_data_classes[exchange_name]
+
+    @staticmethod
     def create_market_data(
         exchange_name: str,
         **kwargs
     ) -> MarketDataAdapter:
         """
-        Create a MarketData adapter.
+        Create a MarketData adapter (uses cached class loading).
 
         Args:
             exchange_name: "upbit_spot" | "bithumb_spot" | "binance_futures" | "mock"
@@ -71,28 +106,8 @@ class AdapterFactory:
             ValueError: If exchange_name is unknown
         """
         logger.info(f"[FACTORY] Creating MarketData adapter: {exchange_name}")
-
-        if exchange_name in {"upbit", "upbit_spot"}:
-            from libs.adapters.real_upbit_spot import UpbitSpotMarketData
-            return UpbitSpotMarketData(**kwargs)
-
-        if exchange_name == "bithumb_spot":
-            from libs.adapters.real_bithumb_spot import BithumbSpotMarketData
-            return BithumbSpotMarketData(**kwargs)
-
-        if exchange_name == "binance_spot":
-            from libs.adapters.real_binance_spot import BinanceSpotMarketData
-            return BinanceSpotMarketData(**kwargs)
-
-        if exchange_name == "binance_futures":
-            from libs.adapters.real_binance_futures import BinanceFuturesMarketData
-            return BinanceFuturesMarketData(**kwargs)
-
-        if exchange_name == "mock":
-            from libs.adapters.mock import MockMarketDataAdapter
-            return MockMarketDataAdapter(**kwargs)
-
-        raise ValueError(f"Unknown market data adapter type: {exchange_name}")
+        adapter_class = AdapterFactory._get_market_data_class(exchange_name)
+        return adapter_class(**kwargs)
 
     @staticmethod
     def create_execution(
