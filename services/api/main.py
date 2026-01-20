@@ -259,15 +259,36 @@ async def kill_switch(request: Request, body: KillSwitchRequest):
 
 
 def start_server():
+    """Start the API server with optional SSL/TLS support.
+
+    SSL is configured via environment variables:
+        API_SSL_ENABLED=1
+        API_SSL_CERTFILE=/path/to/cert.pem
+        API_SSL_KEYFILE=/path/to/key.pem
+        API_SSL_KEYFILE_PASSWORD=optional_password
+    """
     import uvicorn
 
-    uvicorn.run(
-        "services.api.main:app",
-        host=api_config.host,
-        port=api_config.port,
-        workers=1,
-        reload=api_config.debug,
-    )
+    # Build uvicorn configuration
+    uvicorn_config = {
+        "app": "services.api.main:app",
+        "host": api_config.host,
+        "port": api_config.port,
+        "workers": 1,
+        "reload": api_config.debug,
+    }
+
+    # Add SSL configuration if enabled
+    if api_config.is_https:
+        uvicorn_config["ssl_certfile"] = api_config.ssl_certfile
+        uvicorn_config["ssl_keyfile"] = api_config.ssl_keyfile
+        if api_config.ssl_keyfile_password:
+            uvicorn_config["ssl_keyfile_password"] = api_config.ssl_keyfile_password
+        logger.info(f"[API] Starting with HTTPS on {api_config.base_url}")
+    else:
+        logger.info(f"[API] Starting with HTTP on {api_config.base_url}")
+
+    uvicorn.run(**uvicorn_config)
 
 
 if __name__ == "__main__":

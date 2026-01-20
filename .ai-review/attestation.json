@@ -1,0 +1,10 @@
+{
+  "version": 5,
+  "baseSha": "1dd27be81a352d506f078ac332b3c79b7cf169ca",
+  "mergeBaseSha": "1dd27be81a352d506f078ac332b3c79b7cf169ca",
+  "headSha": "903e51175a52cb1707c470e281680e039c03a83f",
+  "diffSha256": "6fd7b827467243f2e48f2f09ede2a51b9b41c3acbeed44fa608180fc0b4b3300",
+  "reviewer": "auto",
+  "aiModel": "auto",
+  "generatedAtUtc": "2026-01-21T07:18:14Z"
+}
