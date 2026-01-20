@@ -46,6 +46,16 @@ from libs.core.validation import (
     sanitize_numeric,
     sanitize_symbol,
 )
+from libs.core.thread_safety import (
+    ThreadSafeDict,
+    ThreadSafeList,
+    ThreadSafeCounter,
+    LRUCache,
+    NamedLockManager,
+    RateLimiter,
+    synchronized,
+    get_lock_manager,
+)
 
 __all__ = [
     # Config
@@ -99,4 +109,13 @@ __all__ = [
     "sanitize_string",
     "sanitize_numeric",
     "sanitize_symbol",
+    # Thread safety
+    "ThreadSafeDict",
+    "ThreadSafeList",
+    "ThreadSafeCounter",
+    "LRUCache",
+    "NamedLockManager",
+    "RateLimiter",
+    "synchronized",
+    "get_lock_manager",
 ]
