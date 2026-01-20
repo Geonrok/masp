@@ -56,6 +56,18 @@ from libs.core.thread_safety import (
     synchronized,
     get_lock_manager,
 )
+from libs.core.resilience import (
+    CircuitBreaker,
+    CircuitBreakerConfig,
+    CircuitBreakerRegistry,
+    RetryPolicy,
+    with_retry,
+    with_fallback,
+    with_timeout,
+    Bulkhead,
+    ResilienceBuilder,
+    DEFAULT_RETRY_POLICY,
+)
 
 __all__ = [
     # Config
@@ -118,4 +130,15 @@ __all__ = [
     "RateLimiter",
     "synchronized",
     "get_lock_manager",
+    # Resilience
+    "CircuitBreaker",
+    "CircuitBreakerConfig",
+    "CircuitBreakerRegistry",
+    "RetryPolicy",
+    "with_retry",
+    "with_fallback",
+    "with_timeout",
+    "Bulkhead",
+    "ResilienceBuilder",
+    "DEFAULT_RETRY_POLICY",
 ]
