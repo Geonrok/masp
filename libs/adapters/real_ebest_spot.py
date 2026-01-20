@@ -148,7 +148,9 @@ class EbestSpotMarketData(MarketDataAdapter):
                 logger.warning(f"[eBest] No data for {symbol}")
                 return None
 
-            out_block = result.get("t1102OutBlock", {})
+            # ResponseValue has .body attribute containing the parsed JSON
+            body = result.body if hasattr(result, 'body') else result
+            out_block = body.get("t1102OutBlock", {}) if isinstance(body, dict) else {}
             if not out_block:
                 logger.warning(f"[eBest] Empty response for {symbol}")
                 return None
@@ -251,7 +253,9 @@ class EbestSpotMarketData(MarketDataAdapter):
                 logger.warning(f"[eBest] No OHLCV data for {symbol}")
                 return []
 
-            out_block = result.get("t1305OutBlock1", [])
+            # ResponseValue has .body attribute containing the parsed JSON
+            body = result.body if hasattr(result, 'body') else result
+            out_block = body.get("t1305OutBlock1", []) if isinstance(body, dict) else []
             if not out_block:
                 logger.warning(f"[eBest] Empty OHLCV response for {symbol}")
                 return []
@@ -329,7 +333,9 @@ class EbestSpotMarketData(MarketDataAdapter):
                 logger.warning(f"[eBest] No symbol data for market={market}")
                 return []
 
-            out_block = result.get("t8430OutBlock", [])
+            # ResponseValue has .body attribute containing the parsed JSON
+            body = result.body if hasattr(result, 'body') else result
+            out_block = body.get("t8430OutBlock", []) if isinstance(body, dict) else []
             if not out_block:
                 logger.warning(f"[eBest] Empty symbol response for market={market}")
                 return []

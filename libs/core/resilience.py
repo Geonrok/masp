@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import functools
+import inspect
 import logging
 import random
 import time
@@ -220,7 +221,7 @@ class CircuitBreaker:
                 self.record_failure(e)
                 raise
 
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
             return async_wrapper
         return sync_wrapper
 
@@ -349,7 +350,7 @@ def with_retry(
 
             raise last_exception
 
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
             return async_wrapper
         return sync_wrapper
 
@@ -391,7 +392,7 @@ def with_fallback(fallback_value: T = None, fallback_fn: Optional[Callable[..., 
                     return fallback_fn(*args, **kwargs)
                 return fallback_value
 
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
             return async_wrapper
         return sync_wrapper
 

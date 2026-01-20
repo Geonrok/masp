@@ -12,7 +12,7 @@ import logging
 import sys
 import traceback
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 from contextvars import ContextVar
@@ -86,7 +86,7 @@ class JSONFormatter(logging.Formatter):
 
         # Timestamp
         if self.include_timestamp:
-            log_data["timestamp"] = datetime.utcnow().isoformat() + "Z"
+            log_data["timestamp"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
         # Standard fields
         log_data["level"] = record.levelname

@@ -197,9 +197,11 @@ class EbestSpotExecution(ExecutionAdapter):
                     mock=False,
                 )
 
-            out_block = result.get("CSPAT00600OutBlock2", {})
+            # ResponseValue has .body attribute containing the parsed JSON
+            body = result.body if hasattr(result, 'body') else result
+            out_block = body.get("CSPAT00600OutBlock2", {}) if isinstance(body, dict) else {}
             if not out_block:
-                error_msg = result.get("rsp_msg", "Unknown error")
+                error_msg = body.get("rsp_msg", "Unknown error") if isinstance(body, dict) else "Unknown error"
                 return OrderResult(
                     success=False,
                     symbol=symbol,
@@ -312,12 +314,14 @@ class EbestSpotExecution(ExecutionAdapter):
                 logger.error(f"[eBest] Cancel order failed: no response")
                 return False
 
-            out_block = result.get("CSPAT00800OutBlock2", {})
+            # ResponseValue has .body attribute containing the parsed JSON
+            body = result.body if hasattr(result, 'body') else result
+            out_block = body.get("CSPAT00800OutBlock2", {}) if isinstance(body, dict) else {}
             if out_block and out_block.get("OrdNo"):
                 logger.info(f"[eBest] Order {order_id} cancelled")
                 return True
 
-            error_msg = result.get("rsp_msg", "Unknown error")
+            error_msg = body.get("rsp_msg", "Unknown error") if isinstance(body, dict) else "Unknown error"
             logger.error(f"[eBest] Cancel order failed: {error_msg}")
             return False
 
@@ -361,7 +365,9 @@ class EbestSpotExecution(ExecutionAdapter):
             if not result:
                 return None
 
-            out_block = result.get("t0425OutBlock1", [])
+            # ResponseValue has .body attribute containing the parsed JSON
+            body = result.body if hasattr(result, 'body') else result
+            out_block = body.get("t0425OutBlock1", []) if isinstance(body, dict) else []
             for order in out_block:
                 if str(order.get("ordno", "")) == order_id:
                     return {
@@ -428,16 +434,19 @@ class EbestSpotExecution(ExecutionAdapter):
             if not result:
                 return None
 
+            # ResponseValue has .body attribute containing the parsed JSON
+            body = result.body if hasattr(result, 'body') else result
+
             # If asking for KRW (cash), return available buying power
             if asset.upper() == "KRW":
-                out_block = result.get("t0424OutBlock", {})
+                out_block = body.get("t0424OutBlock", {}) if isinstance(body, dict) else {}
                 # mamt = available buying power (tradable cash)
                 # sunamt = total net assets (includes stock valuation)
                 available_cash = float(out_block.get("mamt", 0))
                 return available_cash
 
             # If asking for a specific stock, find it in holdings
-            out_block1 = result.get("t0424OutBlock1", [])
+            out_block1 = body.get("t0424OutBlock1", []) if isinstance(body, dict) else []
             for holding in out_block1:
                 if holding.get("expcode", "") == asset:
                     return float(holding.get("janqty", 0))  # 잔고수량
@@ -495,10 +504,12 @@ class EbestSpotExecution(ExecutionAdapter):
             if not result:
                 return []
 
+            # ResponseValue has .body attribute containing the parsed JSON
+            body = result.body if hasattr(result, 'body') else result
             balances = []
 
             # Cash balance
-            out_block = result.get("t0424OutBlock", {})
+            out_block = body.get("t0424OutBlock", {}) if isinstance(body, dict) else {}
             balances.append({
                 "currency": "KRW",
                 "balance": float(out_block.get("sunamt", 0)),
@@ -506,7 +517,7 @@ class EbestSpotExecution(ExecutionAdapter):
             })
 
             # Stock holdings
-            out_block1 = result.get("t0424OutBlock1", [])
+            out_block1 = body.get("t0424OutBlock1", []) if isinstance(body, dict) else []
             for holding in out_block1:
                 balances.append({
                     "currency": holding.get("expcode", ""),
