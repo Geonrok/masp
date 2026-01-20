@@ -13,6 +13,21 @@ from libs.notifications.alert_manager import (
     AnomalyDetector,
     get_alert_manager,
 )
+from libs.notifications.slack import (
+    SlackNotifier,
+    SlackAttachment,
+)
+from libs.notifications.email import (
+    EmailNotifier,
+    EmailConfig,
+)
+from libs.notifications.deduplication import (
+    AlertDeduplicator,
+    AlertAggregator,
+    DeduplicationConfig,
+    DeduplicationStrategy,
+    RateLimitConfig,
+)
 
 __all__ = [
     # Telegram
@@ -27,4 +42,16 @@ __all__ = [
     "AlertRule",
     "AnomalyDetector",
     "get_alert_manager",
+    # Slack
+    "SlackNotifier",
+    "SlackAttachment",
+    # Email
+    "EmailNotifier",
+    "EmailConfig",
+    # Deduplication
+    "AlertDeduplicator",
+    "AlertAggregator",
+    "DeduplicationConfig",
+    "DeduplicationStrategy",
+    "RateLimitConfig",
 ]
