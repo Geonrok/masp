@@ -82,6 +82,17 @@ from libs.core.env_validator import (
     require_env,
     get_env,
 )
+from libs.core.metrics import (
+    MetricsRegistry,
+    MetricType,
+    HealthChecker,
+    HealthStatus,
+    ComponentHealth,
+    timed,
+    counted,
+    get_metrics,
+    get_health_checker,
+)
 
 __all__ = [
     # Config
@@ -168,4 +179,14 @@ __all__ = [
     "validate_environment",
     "require_env",
     "get_env",
+    # Metrics and observability
+    "MetricsRegistry",
+    "MetricType",
+    "HealthChecker",
+    "HealthStatus",
+    "ComponentHealth",
+    "timed",
+    "counted",
+    "get_metrics",
+    "get_health_checker",
 ]
