@@ -17,9 +17,9 @@ def is_private_api_enabled() -> bool:
     return os.getenv("MASP_ENABLE_LIVE_TRADING", "").strip() == "1"
 
 
-@st.cache_data(ttl=60, show_spinner=False)
+@st.cache_data(ttl=5, show_spinner=False)
 def get_holdings_upbit() -> List[Dict[str, Any]]:
-    """Get Upbit holdings (cached 60s).
+    """Get Upbit holdings (cached 5s for real-time updates).
 
     Requires: MASP_ENABLE_LIVE_TRADING=1
     """
@@ -55,6 +55,41 @@ def get_holding_symbols() -> List[str]:
     return symbols
 
 
+@st.cache_data(ttl=5, show_spinner=False)
+def get_holdings_bithumb() -> List[Dict[str, Any]]:
+    """Get Bithumb holdings (cached 5s for real-time updates).
+
+    Requires: MASP_ENABLE_LIVE_TRADING=1
+
+    Returns:
+        List of dicts with currency, balance (avg_buy_price not available from API)
+    """
+    if not is_private_api_enabled():
+        logger.debug("Private API not enabled")
+        return []
+
+    try:
+        from libs.adapters.real_bithumb_execution import BithumbExecution
+
+        adapter = BithumbExecution()
+        balances = adapter.get_all_balances()  # Dict[str, float]
+
+        # Convert to same format as Upbit for consistency
+        holdings = []
+        for currency, balance in balances.items():
+            if balance > 0:
+                holdings.append({
+                    "currency": currency,
+                    "balance": balance,
+                    "avg_buy_price": None,  # Bithumb API doesn't provide this
+                })
+        return holdings
+    except Exception as exc:
+        logger.warning("Failed to get Bithumb holdings: %s", type(exc).__name__)
+        return []
+
+
 def clear_holdings_cache() -> None:
     """Clear holdings cache for refresh."""
     get_holdings_upbit.clear()
+    get_holdings_bithumb.clear()

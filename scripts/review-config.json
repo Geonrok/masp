@@ -1,0 +1,33 @@
+{
+  "reviewers": {
+    "codex": {
+      "enabled": true,
+      "weight": 1.0,
+      "command": "codex --quiet --json"
+    },
+    "gemini": {
+      "enabled": true,
+      "weight": 1.0,
+      "command": "gemini --json"
+    },
+    "copilot": {
+      "enabled": true,
+      "weight": 0.8,
+      "command": "gh copilot explain"
+    }
+  },
+  "cache": {
+    "enabled": true,
+    "directory": "review-results/.cache",
+    "maxAgeHours": 24
+  },
+  "log": {
+    "enabled": true,
+    "directory": "review-results"
+  },
+  "consensus": {
+    "passThreshold": 0.5,
+    "p1CriticalAny": true
+  },
+  "timeout": 300
+}

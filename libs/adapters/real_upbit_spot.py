@@ -23,6 +23,7 @@ import jwt
 from libs.adapters.base import MarketDataAdapter, ExecutionAdapter, MarketQuote, OrderResult
 from libs.adapters.rate_limit import TokenBucket
 from libs.core.market_cache import MarketCache
+from libs.adapters.trade_logger import TradeLogger
 
 logger = logging.getLogger(__name__)
 
@@ -539,6 +540,7 @@ class UpbitSpotExecution(ExecutionAdapter):
         self._last_identifier: Optional[str] = None
         self._last_jwt_payload: Optional[Dict[str, str]] = None
         self._last_response_headers: Dict[str, str] = {}
+        self._trade_logger = TradeLogger()
 
         logger.info("[Upbit] Execution adapter initialized")
 
@@ -630,7 +632,9 @@ class UpbitSpotExecution(ExecutionAdapter):
 
         try:
             data = self._request("POST", "/orders", params=params, is_order=True)
-            return self._to_order_result(data, symbol, side_upper, result_quantity, price)
+            result = self._to_order_result(data, symbol, side_upper, result_quantity, price)
+            self._log_trade(result, data)
+            return result
         except requests.exceptions.Timeout:
             start_time = time.monotonic()
             attempts = 0
@@ -638,7 +642,9 @@ class UpbitSpotExecution(ExecutionAdapter):
                 attempts += 1
                 recovered = self._get_order_by_identifier(identifier)
                 if recovered:
-                    return self._to_order_result(recovered, symbol, side_upper, result_quantity, price)
+                    result = self._to_order_result(recovered, symbol, side_upper, result_quantity, price)
+                    self._log_trade(result, recovered)
+                    return result
                 if attempts < self.MAX_RECOVERY_ATTEMPTS:
                     time.sleep(2 ** attempts)
             return OrderResult(success=False, message="Timeout and order not found", mock=False)
@@ -671,6 +677,48 @@ class UpbitSpotExecution(ExecutionAdapter):
         data = self._request("GET", "/accounts", params={}, is_order=False)
         return data if isinstance(data, list) else []
 
+    def get_closed_orders(
+        self,
+        market: Optional[str] = None,
+        limit: int = 100,
+        page: int = 1,
+    ) -> List[Dict[str, Any]]:
+        """Get closed (completed) orders from Upbit.
+
+        Args:
+            market: Market symbol (e.g., "KRW-BTC"). If None, gets all markets.
+            limit: Number of orders to fetch (max 100)
+            page: Page number for pagination
+
+        Returns:
+            List of closed order dicts with keys:
+            - uuid, side, ord_type, price, state, market,
+            - created_at, volume, remaining_volume, executed_volume,
+            - trades_count, paid_fee, avg_price
+        """
+        self._ensure_live_trading()
+        self._ensure_credentials()
+
+        params: Dict[str, Any] = {
+            "state": "done",  # Completed orders
+            "limit": min(limit, 100),
+            "page": page,
+            "order_by": "desc",
+        }
+        if market:
+            params["market"] = market
+
+        try:
+            # Upbit API: /v1/orders with state=done parameter
+            data = self._request("GET", "/orders", params=params, is_order=False)
+            if isinstance(data, list):
+                logger.info(f"[Upbit] Fetched {len(data)} closed orders")
+                return data
+            return []
+        except Exception as e:
+            logger.error(f"[Upbit] Failed to get closed orders: {e}")
+            return []
+
     def _ensure_live_trading(self) -> None:
         if os.getenv("MASP_ENABLE_LIVE_TRADING") != "1":
             raise RuntimeError(
@@ -681,7 +729,6 @@ class UpbitSpotExecution(ExecutionAdapter):
         if not self.access_key or not self.secret_key:
             raise ValueError("UPBIT_ACCESS_KEY and UPBIT_SECRET_KEY are required")
 
-
     def get_ohlcv(
         self,
         symbol: str,
@@ -690,20 +737,20 @@ class UpbitSpotExecution(ExecutionAdapter):
         to: str = None,
     ) -> List:
         """
-        Get OHLCV candle data.
-        
+        Get OHLCV candle data (uses self._session for UpbitSpotExecution).
+
         Args:
             symbol: Trading symbol (e.g., "BTC/KRW")
             interval: Candle interval ("1m", "5m", "15m", "1h", "4h", "1d", "1w")
             limit: Number of candles (max 200)
             to: End datetime (ISO format, optional)
-        
+
         Returns:
             List of OHLCV objects (oldest first)
         """
         from dataclasses import dataclass
         from datetime import datetime as dt
-        
+
         @dataclass
         class OHLCVCandle:
             timestamp: dt
@@ -712,13 +759,13 @@ class UpbitSpotExecution(ExecutionAdapter):
             low: float
             close: float
             volume: float
-        
+
         if _circuit_is_open():
             logger.warning("[Upbit] Circuit breaker open, returning empty for get_ohlcv")
             return []
-        
+
         market = self._convert_symbol(symbol)
-        
+
         # Interval mapping (Upbit API format)
         interval_map = {
             "1m": ("minutes", 1),
@@ -732,29 +779,29 @@ class UpbitSpotExecution(ExecutionAdapter):
             "1w": ("weeks", None),
             "1M": ("months", None),
         }
-        
+
         if interval not in interval_map:
             logger.warning(f"[Upbit] Unknown interval {interval}, using 1d")
             interval = "1d"
-        
+
         candle_type, unit = interval_map[interval]
-        
+
         if candle_type == "minutes":
             url = f"{self.BASE_URL}/candles/{candle_type}/{unit}"
         else:
             url = f"{self.BASE_URL}/candles/{candle_type}"
-        
+
         params = {
             "market": market,
             "count": min(limit, 200),
         }
         if to:
             params["to"] = to
-        
+
         try:
             time.sleep(random.uniform(0.05, 0.15))  # Decorrelated jitter
-            
-            resp = self.session.get(url, params=params, timeout=5)
+
+            resp = self._session.get(url, params=params, timeout=5)
             
             if resp.status_code == 418:
                 _open_circuit(self.CIRCUIT_BREAKER_COOLDOWN_SECONDS)
@@ -1039,3 +1086,48 @@ class UpbitSpotExecution(ExecutionAdapter):
             message=data.get("error", {}).get("message") if isinstance(data.get("error"), dict) else None,
             mock=False,
         )
+
+    def _log_trade(self, result: OrderResult, raw_data: Dict[str, Any]) -> None:
+        """Log trade to TradeLogger after successful order.
+
+        Args:
+            result: OrderResult from order execution
+            raw_data: Raw response data from Upbit API
+        """
+        if not result.success:
+            return
+
+        try:
+            # Calculate fee from raw data if available
+            fee = 0.0
+            if "paid_fee" in raw_data:
+                fee = float(raw_data.get("paid_fee", 0))
+            elif "trades" in raw_data:
+                for trade in raw_data.get("trades", []):
+                    fee += float(trade.get("fee", 0) or 0)
+
+            # Get executed volume and price
+            executed_vol = float(raw_data.get("executed_volume", 0) or result.quantity or 0)
+            avg_price = float(raw_data.get("avg_price", 0) or result.price or 0)
+            if avg_price == 0 and result.price:
+                avg_price = result.price
+
+            trade_record = {
+                "timestamp": raw_data.get("created_at") or raw_data.get("timestamp"),
+                "exchange": "upbit",
+                "order_id": result.order_id,
+                "symbol": result.symbol,
+                "side": result.side,
+                "quantity": executed_vol,
+                "price": avg_price,
+                "fee": fee,
+                "pnl": 0.0,  # PnL calculated later based on position tracking
+                "status": result.status,
+                "message": result.message or "",
+            }
+
+            self._trade_logger.log_trade(trade_record)
+            logger.info(f"[Upbit] Trade logged: {result.symbol} {result.side} {executed_vol}")
+
+        except Exception as e:
+            logger.warning(f"[Upbit] Failed to log trade: {e}")

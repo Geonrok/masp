@@ -188,26 +188,26 @@ def _calculate_metrics(
 def _render_equity_chart(dates: List[date], equity_curve: List[float]) -> None:
     """Render equity curve line chart."""
     fig = go.Figure()
-    
+
     fig.add_trace(
         go.Scatter(
             x=dates,
             y=equity_curve,
             mode="lines",
-            name="Equity",
+            name="자산",
             line=dict(color="#00C853", width=2),
         )
     )
-    
+
     fig.update_layout(
-        title="Equity Curve",
-        xaxis_title="Date",
-        yaxis_title="Portfolio Value (KRW)",
+        title="자산 곡선",
+        xaxis_title="날짜",
+        yaxis_title="포트폴리오 가치 (KRW)",
         template="plotly_dark",
         height=350,
         margin=dict(l=40, r=40, t=60, b=40),
     )
-    
+
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -215,31 +215,31 @@ def _render_drawdown_chart(dates: List[date], drawdowns: List[float]) -> None:
     """Render drawdown area chart (red, fill below 0)."""
     # Convert to percentage
     dd_percent = [d * 100 for d in drawdowns]
-    
+
     fig = go.Figure()
-    
+
     fig.add_trace(
         go.Scatter(
             x=dates,
             y=dd_percent,
             mode="lines",
-            name="Drawdown",
+            name="낙폭",
             line=dict(color="#FF5252", width=1),
             fill="tozeroy",
             fillcolor="rgba(255, 82, 82, 0.3)",
         )
     )
-    
+
     fig.update_layout(
-        title="Drawdown",
-        xaxis_title="Date",
-        yaxis_title="Drawdown (%)",
+        title="낙폭 (Drawdown)",
+        xaxis_title="날짜",
+        yaxis_title="낙폭 (%)",
         template="plotly_dark",
         height=250,
         margin=dict(l=40, r=40, t=60, b=40),
         yaxis=dict(range=[min(dd_percent) * 1.1 if dd_percent else -10, 5]),
     )
-    
+
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -250,32 +250,32 @@ def _render_drawdown_chart(dates: List[date], drawdowns: List[float]) -> None:
 
 def render_backtest_viewer(backtest_data: Dict[str, Any] | None = None) -> None:
     """Render backtest performance viewer with metrics and charts.
-    
+
     Args:
         backtest_data: Dict with keys: dates, daily_returns, initial_capital, strategy_name
                       If None, uses demo data.
     """
-    st.subheader("Backtest Performance")
-    
+    st.subheader("백테스트 성과")
+
     # Use demo data if not provided
     if backtest_data is None:
-        st.caption("Demo Data - Run backtest for actual results")
+        st.caption("데모 데이터 - 실제 백테스트 실행 시 결과 표시")
         backtest_data = _get_demo_backtest_data()
-    
+
     # Extract data
     dates = backtest_data.get("dates", [])
     daily_returns = backtest_data.get("daily_returns", [])
     initial_capital = _safe_float(backtest_data.get("initial_capital", 10_000_000))
     strategy_name = backtest_data.get("strategy_name", "Strategy")
-    
+
     # Handle empty data (GPT 필수보강 #4)
     if not daily_returns or len(daily_returns) < 1:
-        st.info("No backtest data available. Run a backtest to see results.")
+        st.info("백테스트 데이터가 없습니다. 백테스트를 실행하세요.")
         return
-    
+
     # Calculate equity curve and metrics
     equity_curve = _calculate_equity_curve(daily_returns, initial_capital)
-    
+
     # Ensure dates and equity_curve have same length
     if len(dates) != len(equity_curve):
         # Adjust dates to match equity curve length
@@ -287,41 +287,41 @@ def render_backtest_viewer(backtest_data: Dict[str, Any] | None = None) -> None:
             while len(dates) < len(equity_curve):
                 last_date = last_date + timedelta(days=1)
                 dates.append(last_date)
-    
+
     metrics = _calculate_metrics(daily_returns, equity_curve, initial_capital)
     drawdowns = _calculate_drawdown(equity_curve)
-    
+
     # Display strategy name
-    st.caption(f"Strategy: {strategy_name}")
-    
+    st.caption(f"전략: {strategy_name}")
+
     # Metrics row
     col1, col2, col3, col4 = st.columns(4)
-    
+
     with col1:
         st.metric(
-            "Total Return",
+            "총 수익률",
             f"{metrics['total_return']:+.2f}%",
             delta=f"CAGR: {metrics['cagr']:+.2f}%",
         )
-    
+
     with col2:
         st.metric(
-            "Max Drawdown",
+            "최대 낙폭 (MDD)",
             f"{metrics['mdd']:.2f}%",
         )
-    
+
     with col3:
         st.metric(
-            "Sharpe Ratio",
+            "샤프 비율",
             f"{metrics['sharpe']:.2f}",
         )
-    
+
     with col4:
         st.metric(
-            "Win Rate",
+            "승률",
             f"{metrics['win_rate']:.1f}%",
         )
-    
+
     # Charts
     _render_equity_chart(dates, equity_curve)
     _render_drawdown_chart(dates, drawdowns)

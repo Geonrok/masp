@@ -6,6 +6,8 @@ import math
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
+import streamlit as st
+
 logger = logging.getLogger(__name__)
 
 
@@ -117,8 +119,11 @@ def _calculate_equity_curve(
     return equity
 
 
+@st.cache_data(ttl=30, show_spinner=False)
 def get_risk_metrics_data(days: int = 30) -> Optional[Tuple[List[float], List[float], List[date]]]:
     """Get data for risk_metrics_panel.
+
+    Cached for 30 seconds to reduce file reads.
 
     Args:
         days: Number of days to analyze

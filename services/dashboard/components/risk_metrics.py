@@ -421,7 +421,7 @@ def _generate_dates_for_length(length: int, base_date: Optional[date] = None) ->
 def _render_equity_chart(dates: List[date], equity_curve: List[float]) -> None:
     """Render equity curve line chart."""
     if not dates or not equity_curve:
-        st.info("No equity data to display.")
+        st.info("자산 데이터가 없습니다.")
         return
 
     # Align lengths to minimum
@@ -435,7 +435,7 @@ def _render_equity_chart(dates: List[date], equity_curve: List[float]) -> None:
             x=plot_dates,
             y=plot_equity,
             mode="lines",
-            name="Equity",
+            name="자산",
             line=dict(color="#00C853", width=2),
             fill="tozeroy",
             fillcolor="rgba(0, 200, 83, 0.1)",
@@ -443,12 +443,12 @@ def _render_equity_chart(dates: List[date], equity_curve: List[float]) -> None:
     )
 
     fig.update_layout(
-        title="Equity Curve",
+        title="자산 곡선",
         template="plotly_dark",
         height=300,
         margin=dict(l=20, r=20, t=60, b=20),
-        xaxis_title="Date",
-        yaxis_title="Equity (KRW)",
+        xaxis_title="날짜",
+        yaxis_title="자산 (KRW)",
         yaxis_tickformat=",",
     )
 
@@ -458,7 +458,7 @@ def _render_equity_chart(dates: List[date], equity_curve: List[float]) -> None:
 def _render_drawdown_chart(dates: List[date], drawdowns: List[float]) -> None:
     """Render drawdown area chart."""
     if not dates or not drawdowns:
-        st.info("No drawdown data to display.")
+        st.info("낙폭 데이터가 없습니다.")
         return
 
     # Align lengths to minimum
@@ -474,7 +474,7 @@ def _render_drawdown_chart(dates: List[date], drawdowns: List[float]) -> None:
             x=plot_dates,
             y=dd_percent,
             mode="lines",
-            name="Drawdown",
+            name="낙폭",
             line=dict(color="#FF5252", width=2),
             fill="tozeroy",
             fillcolor="rgba(255, 82, 82, 0.3)",
@@ -482,12 +482,12 @@ def _render_drawdown_chart(dates: List[date], drawdowns: List[float]) -> None:
     )
 
     fig.update_layout(
-        title="Drawdown",
+        title="낙폭 (Drawdown)",
         template="plotly_dark",
         height=250,
         margin=dict(l=20, r=20, t=60, b=20),
-        xaxis_title="Date",
-        yaxis_title="Drawdown (%)",
+        xaxis_title="날짜",
+        yaxis_title="낙폭 (%)",
         yaxis_autorange="reversed",  # Drawdown shows negative direction
     )
 
@@ -499,20 +499,20 @@ def _render_metrics_cards(metrics: RiskMetrics) -> None:
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric("Sharpe Ratio", f"{metrics.sharpe_ratio:.2f}")
-        st.metric("Sortino Ratio", f"{metrics.sortino_ratio:.2f}")
+        st.metric("샤프 비율", f"{metrics.sharpe_ratio:.2f}")
+        st.metric("소르티노 비율", f"{metrics.sortino_ratio:.2f}")
 
     with col2:
-        st.metric("Max Drawdown", f"{metrics.max_drawdown_pct:.2f}%")
-        st.metric("Calmar Ratio", f"{metrics.calmar_ratio:.2f}")
+        st.metric("최대 낙폭 (MDD)", f"{metrics.max_drawdown_pct:.2f}%")
+        st.metric("칼마 비율", f"{metrics.calmar_ratio:.2f}")
 
     with col3:
-        st.metric("Volatility", f"{metrics.volatility_pct:.2f}%")
-        st.metric("Win Rate", f"{metrics.win_rate_pct:.1f}%")
+        st.metric("변동성", f"{metrics.volatility_pct:.2f}%")
+        st.metric("승률", f"{metrics.win_rate_pct:.1f}%")
 
     with col4:
-        st.metric("Profit Factor", f"{metrics.profit_factor:.2f}")
-        st.metric("Trading Days", f"{metrics.trading_days}")
+        st.metric("손익비", f"{metrics.profit_factor:.2f}")
+        st.metric("거래일 수", f"{metrics.trading_days}일")
 
 
 def _render_return_stats(metrics: RiskMetrics) -> None:
@@ -522,28 +522,28 @@ def _render_return_stats(metrics: RiskMetrics) -> None:
     with col1:
         color = "normal" if metrics.total_return_pct >= 0 else "inverse"
         st.metric(
-            "Total Return",
+            "총 수익률",
             f"{metrics.total_return_pct:+.2f}%",
             delta_color=color,
         )
 
     with col2:
         st.metric(
-            "Avg Daily Return",
+            "평균 일간 수익률",
             f"{metrics.avg_return_pct:+.4f}%",
         )
 
     with col3:
         # Risk-adjusted return interpretation
         if metrics.sharpe_ratio >= 2.0:
-            rating = "Excellent"
+            rating = "우수"
         elif metrics.sharpe_ratio >= 1.0:
-            rating = "Good"
+            rating = "양호"
         elif metrics.sharpe_ratio >= 0.5:
-            rating = "Moderate"
+            rating = "보통"
         else:
-            rating = "Low"
-        st.metric("Risk-Adjusted Rating", rating)
+            rating = "미흡"
+        st.metric("위험조정 수익 등급", rating)
 
 
 # =============================================================================
@@ -575,7 +575,7 @@ def render_risk_metrics_panel(
         dates: List of dates. If None, generates based on data length or uses demo.
         risk_free_rate: Annual risk-free rate for calculations.
     """
-    st.subheader("Risk Metrics")
+    st.subheader("리스크 지표")
 
     # Handle partial input: fill missing data independently
     use_demo = False
@@ -594,11 +594,11 @@ def render_risk_metrics_panel(
         equity_curve = _generate_equity_from_returns(returns)
 
     if use_demo:
-        st.caption("Demo Data - Connect to live API for real metrics")
+        st.caption("데모 데이터 - 실제 거래 기록 연동 시 실제 지표 표시")
 
     # Safety check after processing
     if not returns or not equity_curve:
-        st.info("No data available for risk analysis.")
+        st.info("리스크 분석을 위한 데이터가 없습니다.")
         return
 
     # Calculate metrics

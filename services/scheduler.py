@@ -15,6 +15,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from services.strategy_runner import StrategyRunner
+from libs.core.startup_validator import validate_startup, validate_api_keys
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +148,34 @@ class DailyScheduler:
         logger.error("[DailyScheduler] run_once called from a running event loop")
         return False
 
-    async def run_forever(self) -> None:
+    async def run_forever(self, validate_keys: bool = True, strict: bool = False) -> None:
+        """
+        Run the scheduler forever.
+
+        Args:
+            validate_keys: If True, validate API keys for enabled exchanges at startup
+            strict: If True, raise exception if validation fails
+        """
+        # Validate API keys at startup
+        if validate_keys:
+            logger.info("[DailyScheduler] Validating API keys at startup...")
+            validation_result = validate_api_keys(
+                schedule_config_path=str(self._config_path),
+                raise_on_error=strict,
+            )
+            if not validation_result.is_valid:
+                logger.error(
+                    "[DailyScheduler] API key validation failed: %d errors",
+                    len(validation_result.errors),
+                )
+                for err in validation_result.errors:
+                    logger.error("  - %s", err)
+                if strict:
+                    return
+
+            for warn in validation_result.warnings:
+                logger.warning("[DailyScheduler] %s", warn)
+
         self._register_signal_handlers()
         self._configure_scheduler()
         self._running = True

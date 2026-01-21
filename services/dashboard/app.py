@@ -69,24 +69,24 @@ from services.dashboard.utils.api_client import ConfigApiClient
 
 load_dotenv()
 
-st.set_page_config(page_title="MASP Dashboard", layout="wide")
+st.set_page_config(page_title="MASP 대시보드", layout="wide")
 
 if not enforce_auth():
     st.stop()
 
-st.title("MASP Dashboard")
-st.caption("Multi-Asset Strategy Platform - Phase 7D-5 (Documentation & Deployment)")
+st.title("MASP 대시보드")
+st.caption("멀티에셋 전략 플랫폼 - Phase 7D-5")
 
 api = ConfigApiClient()
 
 # Main navigation tabs
 tabs = st.tabs(
     [
-        "Overview",
-        "Trading",
-        "Analytics",
-        "Monitoring",
-        "Settings",
+        "개요",
+        "거래",
+        "분석",
+        "모니터링",
+        "설정",
     ]
 )
 
@@ -111,14 +111,14 @@ with tabs[0]:
     st.divider()
 
     # Exchange status (existing)
-    st.subheader("Exchange Status")
+    st.subheader("거래소 상태")
     ExchangeStatusPanel(api).render()
 
 # =============================================================================
 # Tab 2: Trading - Order panel, positions, trade history, multi-exchange
 # =============================================================================
 with tabs[1]:
-    trading_subtabs = st.tabs(["Order Panel", "Positions", "Trade History", "Multi-Exchange"])
+    trading_subtabs = st.tabs(["주문", "포지션", "거래 내역", "멀티 거래소"])
 
     with trading_subtabs[0]:
         # Real execution adapter (or demo if MASP_ENABLE_LIVE_TRADING!=1)
@@ -150,7 +150,7 @@ with tabs[1]:
 # =============================================================================
 with tabs[2]:
     analytics_subtabs = st.tabs(
-        ["Strategy Performance", "Backtest Viewer", "Risk Metrics", "Signals"]
+        ["전략 성과", "백테스트", "리스크 지표", "시그널"]
     )
 
     with analytics_subtabs[0]:
@@ -181,7 +181,7 @@ with tabs[2]:
 # Tab 4: Monitoring - Logs, alerts, scheduler
 # =============================================================================
 with tabs[3]:
-    monitoring_subtabs = st.tabs(["Logs", "Alerts", "Scheduler"])
+    monitoring_subtabs = st.tabs(["로그", "알림", "스케줄러"])
 
     with monitoring_subtabs[0]:
         # Real logs from log files (or demo if unavailable)
@@ -200,7 +200,7 @@ with tabs[3]:
 # =============================================================================
 with tabs[4]:
     settings_subtabs = st.tabs(
-        ["Strategy Config", "API Keys", "Telegram", "Alerts", "Exchange Controls"]
+        ["전략 설정", "API 키", "텔레그램", "알림 설정", "거래소 제어"]
     )
 
     with settings_subtabs[0]:
@@ -232,20 +232,20 @@ with tabs[4]:
 # =============================================================================
 with st.sidebar:
     st.header("MASP")
-    st.caption("Multi-Asset Strategy Platform")
+    st.caption("멀티에셋 전략 플랫폼")
 
     st.divider()
 
-    st.subheader("Quick Info")
-    st.text("Version: 5.2.0")
+    st.subheader("정보")
+    st.text("버전: 5.2.0")
     st.text("Phase: 7D")
 
     st.divider()
 
-    st.subheader("Actions")
-    if st.button("Refresh", use_container_width=True):
+    st.subheader("작업")
+    if st.button("새로고침", use_container_width=True):
         st.rerun()
 
-    if st.button("Logout", use_container_width=True, type="secondary"):
+    if st.button("로그아웃", use_container_width=True, type="secondary"):
         logout()
         st.rerun()

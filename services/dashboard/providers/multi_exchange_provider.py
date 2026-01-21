@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
+import streamlit as st
+
 logger = logging.getLogger(__name__)
 
 # Singleton coordinator
@@ -38,8 +40,11 @@ def _get_registry():
         return None
 
 
+@st.cache_data(ttl=60, show_spinner=False)
 def get_exchange_list() -> List[Dict[str, Any]]:
     """Get list of all registered exchanges.
+
+    Cached for 60 seconds since exchange list rarely changes.
 
     Returns:
         List of exchange info dicts

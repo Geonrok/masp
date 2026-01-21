@@ -29,8 +29,8 @@ def enforce_auth(idle_seconds: int = 1800) -> bool:
         return True
 
     # Not authenticated - show login
-    st.title("MASP Dashboard")
-    st.info("Please sign in with Google to continue.")
+    st.title("MASP 대시보드")
+    st.info("계속하려면 Google로 로그인하세요.")
 
     result = render_firebase_login()
 

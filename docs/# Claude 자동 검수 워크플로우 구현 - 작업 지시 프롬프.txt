@@ -1,0 +1,309 @@
+# Claude 자동 검수 워크플로우 구현 - 작업 지시 프롬프트
+
+아래 프롬프트를 Claude에게 입력하세요:
+
+---
+
+```
+## MASP 프로젝트 - 자동 검수 워크플로우 구현
+
+### 프로젝트 정보
+- 위치: E:\투자\Multi-Asset Strategy Platform
+- 현재 상태: Phase 9 완료, 739 테스트 통과
+
+### 작업 목표
+Claude가 모든 작업(계획, 실행, 코딩)을 Codex CLI + Gemini CLI로 **자동 검수**하는 워크플로우 구축
+
+### 핵심 요구사항
+1. 사용자 개입 없이 Claude가 직접 검수 실행
+2. P1 이슈 0개 될 때까지 자동 수정 및 재검수
+3. 계획/코드 모두 검수 대상
+
+---
+
+### 생성/수정할 파일
+
+#### 1. AGENTS.md 업데이트 (프로젝트 루트)
+
+기존 AGENTS.md에 다음 섹션 추가:
+
+```markdown
+## 🔄 자동 검수 워크플로우 (필수)
+
+Claude는 모든 작업에서 **직접** Codex/Gemini 검수를 실행합니다.
+사용자 개입 없이 자동으로 검수하고, P1 이슈를 해결합니다.
+
+### 검수 대상
+| 단계 | 검수 내용 |
+|------|----------|
+| 계획 | 설계 누락, 보안 이슈, 아키텍처 문제 |
+| 코딩 | 버그, 보안 취약점, 베스트 프랙티스 위반 |
+
+### 검수 실행 방법
+
+Claude는 bash_tool을 사용하여 검수 스크립트 실행:
+
+**계획 검수:**
+```bash
+./scripts/review-plan.ps1 -Content "계획 내용"
+```
+
+**코드 검수:**
+```bash
+./scripts/review-code.ps1
+```
+
+### 자동 검수 프로세스
+
+#### Phase 작업 시
+1. 계획 작성
+2. `review-plan.ps1` 실행하여 계획 검수
+3. P1 이슈 있으면 수정 후 재검수 (P1=0 될 때까지)
+4. 코딩 진행
+5. `review-code.ps1` 실행하여 코드 검수
+6. P1 이슈 있으면 수정 후 재검수 (P1=0 될 때까지)
+7. 커밋
+
+#### 단순 작업 시
+1. 작업 완료
+2. `review-code.ps1` 실행
+3. P1 이슈 있으면 수정 후 재검수
+4. 커밋
+
+### 검수 통과 기준
+| 등급 | 의미 | 조치 |
+|------|------|------|
+| P1 (Critical) | 버그, 보안, 크래시 | **필수 수정** (0개 될 때까지) |
+| P2 (Important) | 성능, UX, 안정성 | 권장 수정 |
+| P3 (Minor) | 스타일, 명명 | 스킵 가능 |
+
+### 금지 사항
+- ❌ 검수 없이 커밋 금지
+- ❌ P1 > 0 상태로 커밋 금지
+- ❌ 검수 스킵 금지
+
+### 검수 결과 보고 형식
+```
+## 검수 결과
+
+### Codex
+- P1: N개
+- P2: N개
+- P3: N개
+- 상세: ...
+
+### Gemini
+- P1: N개
+- P2: N개
+- P3: N개
+- 상세: ...
+
+### 판정: ✅ 통과 / ❌ 재검수 필요
+```
+```
+
+---
+
+#### 2. scripts/review-plan.ps1 (신규 생성)
+
+계획/설계 검수 스크립트:
+
+```powershell
+<#
+.SYNOPSIS
+    계획/설계 자동 검수 (Codex + Gemini 병렬)
+.PARAMETER Content
+    검수할 계획 내용 (문자열 또는 파일 경로)
+#>
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$Content
+)
+
+# 파일이면 읽기
+if (Test-Path $Content) {
+    $Content = Get-Content $Content -Raw
+}
+
+$prompt = @"
+다음 구현 계획을 검수해주세요.
+
+## 검수 기준
+- P1 (Critical): 심각한 설계 결함, 보안 이슈, 필수 기능 누락
+- P2 (Important): 성능 우려, 확장성 문제, 개선 권장
+- P3 (Minor): 명명, 문서화, 스타일 제안
+
+## 출력 형식
+P1: N개
+- [P1-1] 이슈 설명
+- [P1-2] 이슈 설명
+
+P2: N개
+- [P2-1] 이슈 설명
+
+P3: N개
+- [P3-1] 이슈 설명
+
+## 계획 내용
+$Content
+"@
+
+Write-Host "=== Plan Review ===" -ForegroundColor Cyan
+Write-Host ""
+
+# 병렬 실행
+$codexJob = Start-Job -ScriptBlock {
+    param($p)
+    echo $p | codex chat 2>&1
+} -ArgumentList $prompt
+
+$geminiJob = Start-Job -ScriptBlock {
+    param($p)
+    echo $p | gemini 2>&1
+} -ArgumentList $prompt
+
+Write-Host "Codex + Gemini 검수 중..." -ForegroundColor Gray
+
+Wait-Job $codexJob, $geminiJob | Out-Null
+
+$codexResult = Receive-Job $codexJob
+$geminiResult = Receive-Job $geminiJob
+
+Remove-Job $codexJob, $geminiJob
+
+Write-Host ""
+Write-Host "=== Codex ===" -ForegroundColor Cyan
+Write-Host $codexResult
+Write-Host ""
+Write-Host "=== Gemini ===" -ForegroundColor Green
+Write-Host $geminiResult
+```
+
+---
+
+#### 3. scripts/review-code.ps1 (신규 생성)
+
+코드 검수 스크립트:
+
+```powershell
+<#
+.SYNOPSIS
+    코드 자동 검수 (Codex + Gemini 병렬)
+#>
+
+$diff = git diff --staged 2>$null
+if (-not $diff) { $diff = git diff 2>$null }
+
+if (-not $diff) {
+    Write-Host "No changes to review" -ForegroundColor Yellow
+    exit 0
+}
+
+$prompt = @"
+다음 코드 변경사항을 검수해주세요.
+
+## 검수 기준
+- P1 (Critical): 버그, 보안 취약점, 크래시 위험, P0 규칙 위반
+- P2 (Important): 성능 이슈, 에러 핸들링 부족, 테스트 누락
+- P3 (Minor): 명명, 스타일, 주석
+
+## P0 규칙 (절대 위반 금지)
+- requests 직접 사용 금지 → ConfigApiClient 사용
+- KeyManager 직접 import 금지
+- API 키 하드코딩 금지
+
+## 출력 형식
+P1: N개
+- [P1-1] 파일:라인 - 이슈 설명
+
+P2: N개
+- [P2-1] 파일:라인 - 이슈 설명
+
+P3: N개
+- [P3-1] 파일:라인 - 이슈 설명
+
+## 코드 변경사항
+$diff
+"@
+
+Write-Host "=== Code Review ===" -ForegroundColor Cyan
+Write-Host ""
+
+# 병렬 실행
+$codexJob = Start-Job -ScriptBlock {
+    codex review --uncommitted 2>&1
+}
+
+$geminiJob = Start-Job -ScriptBlock {
+    param($p)
+    echo $p | gemini 2>&1
+} -ArgumentList $prompt
+
+Write-Host "Codex + Gemini 검수 중..." -ForegroundColor Gray
+
+Wait-Job $codexJob, $geminiJob | Out-Null
+
+$codexResult = Receive-Job $codexJob
+$geminiResult = Receive-Job $geminiJob
+
+Remove-Job $codexJob, $geminiJob
+
+Write-Host ""
+Write-Host "=== Codex ===" -ForegroundColor Cyan
+Write-Host $codexResult
+Write-Host ""
+Write-Host "=== Gemini ===" -ForegroundColor Green
+Write-Host $geminiResult
+```
+
+---
+
+### 작업 순서
+
+1. 프로젝트 디렉토리로 이동
+2. 기존 AGENTS.md 읽기
+3. 자동 검수 워크플로우 섹션 추가
+4. scripts/review-plan.ps1 생성
+5. scripts/review-code.ps1 생성
+6. 스크립트 실행 권한 확인
+7. 테스트: 간단한 계획으로 review-plan.ps1 실행
+8. 테스트: 코드 변경 후 review-code.ps1 실행
+9. Git 커밋
+
+### 커밋 메시지
+```
+feat: Add automated review workflow (Codex + Gemini)
+
+- Update AGENTS.md with auto-review rules
+- Add scripts/review-plan.ps1 for plan verification
+- Add scripts/review-code.ps1 for code verification
+- Claude now auto-reviews all work before commit
+```
+
+### 주의사항
+- 기존 AGENTS.md 내용 유지하면서 섹션 추가
+- 기존 scripts/review-parallel.ps1과 공존 (삭제하지 않음)
+- PowerShell 문법 준수
+- UTF-8 인코딩
+
+### 완료 후 확인
+- [ ] AGENTS.md에 자동 검수 섹션 추가됨
+- [ ] scripts/review-plan.ps1 생성됨
+- [ ] scripts/review-code.ps1 생성됨
+- [ ] 스크립트 실행 테스트 완료
+- [ ] Git 커밋 완료
+
+작업을 시작하세요.
+```
+
+---
+
+## 사용 방법
+
+```powershell
+cd "E:\투자\Multi-Asset Strategy Platform"
+claude
+# 위 프롬프트 붙여넣기
+```
+
+작업 완료 후 결과를 공유해주세요!

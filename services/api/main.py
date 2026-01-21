@@ -24,7 +24,7 @@ from services.api.models.schemas import (
     ExchangeStatus,
     ExchangeStatusResponse,
 )
-from services.api.routes import strategy, positions, trades, health, settings, config, keys
+from services.api.routes import strategy, positions, trades, health, settings, config, keys, monitoring, users
 from services.api.websocket.stream import router as ws_router
 
 logger = logging.getLogger(__name__)
@@ -136,6 +136,8 @@ app.include_router(health.router, prefix="/api/v1/health", tags=["Health"])
 app.include_router(settings.router, prefix="/api/v1/settings", tags=["Settings"])
 app.include_router(config.router)
 app.include_router(keys.router)
+app.include_router(monitoring.router, prefix="/api/v1/monitoring", tags=["Monitoring"])
+app.include_router(users.router, prefix="/api/v1/users", tags=["Users"])
 app.include_router(ws_router, prefix="/ws", tags=["WebSocket"])
 
 

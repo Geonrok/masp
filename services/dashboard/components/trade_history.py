@@ -123,6 +123,30 @@ def _get_demo_trades() -> List[Dict[str, Any]]:
     ]
 
 
+def _normalize_datetime(dt: Any) -> Optional[datetime]:
+    """Convert datetime to naive datetime for comparison.
+
+    Handles strings, timezone-aware, and timezone-naive datetimes.
+    """
+    if dt is None:
+        return None
+
+    if isinstance(dt, str):
+        try:
+            # Parse ISO format string
+            parsed = datetime.fromisoformat(dt.replace("Z", "+00:00"))
+            # Remove timezone info for comparison
+            return parsed.replace(tzinfo=None)
+        except (ValueError, TypeError):
+            return None
+
+    if isinstance(dt, datetime):
+        # Remove timezone info if present
+        return dt.replace(tzinfo=None)
+
+    return None
+
+
 def _filter_trades(
     trades: List[Dict[str, Any]],
     exchange: Optional[str] = None,
@@ -133,17 +157,27 @@ def _filter_trades(
     """Filter trades by criteria."""
     result = trades
 
-    if exchange and exchange != "ALL":
+    if exchange and exchange not in ("ALL", "전체"):
         result = [t for t in result if t.get("exchange") == exchange.lower()]
 
-    if symbol and symbol != "ALL":
+    if symbol and symbol not in ("ALL", "전체"):
         result = [t for t in result if t.get("symbol") == symbol]
 
-    if start_date:
-        result = [t for t in result if t.get("timestamp", datetime.min) >= start_date]
+    # Normalize filter dates
+    start_naive = _normalize_datetime(start_date)
+    end_naive = _normalize_datetime(end_date)
 
-    if end_date:
-        result = [t for t in result if t.get("timestamp", datetime.max) <= end_date]
+    if start_naive:
+        def check_start(t):
+            ts = _normalize_datetime(t.get("timestamp"))
+            return ts is not None and ts >= start_naive
+        result = [t for t in result if check_start(t)]
+
+    if end_naive:
+        def check_end(t):
+            ts = _normalize_datetime(t.get("timestamp"))
+            return ts is not None and ts <= end_naive
+        result = [t for t in result if check_end(t)]
 
     return result
 
@@ -166,16 +200,16 @@ def _get_filter_hash(exchange: str, symbol: str, start_date, end_date) -> str:
 
 def render_trade_history_panel(api_client=None) -> None:
     """Render trade history table with filters."""
-    st.subheader("Trade History")
+    st.subheader("거래 내역")
 
     if api_client is not None:
         try:
             trades = api_client.get_trade_history()
         except Exception as exc:
-            st.warning(f"API error: {exc}. Using demo data.")
+            st.warning(f"API 오류: {exc}. 데모 데이터를 사용합니다.")
             trades = _get_demo_trades()
     else:
-        st.caption("Demo Data - Connect to live API for real trades")
+        st.caption("데모 데이터 - 실제 거래 내역은 라이브 API 연결 필요")
         trades = _get_demo_trades()
 
     col1, col2, col3, col4 = st.columns(4)
@@ -184,24 +218,24 @@ def render_trade_history_panel(api_client=None) -> None:
         exchange_set = set(
             t.get("exchange", "").upper() for t in trades if t.get("exchange")
         )
-        exchanges = ["ALL"] + sorted(exchange_set)
-        exchange_filter = st.selectbox("Exchange", exchanges, key="th_exchange")
+        exchanges = ["전체"] + sorted(exchange_set)
+        exchange_filter = st.selectbox("거래소", exchanges, key="th_exchange")
 
     with col2:
         symbol_set = set(t.get("symbol", "") for t in trades if t.get("symbol"))
-        symbols = ["ALL"] + sorted(symbol_set)
-        symbol_filter = st.selectbox("Symbol", symbols, key="th_symbol")
+        symbols = ["전체"] + sorted(symbol_set)
+        symbol_filter = st.selectbox("종목", symbols, key="th_symbol")
 
     with col3:
         start_date = st.date_input(
-            "Start Date",
+            "시작일",
             value=datetime.now().date() - timedelta(days=7),
             key="th_start",
         )
 
     with col4:
         end_date = st.date_input(
-            "End Date",
+            "종료일",
             value=datetime.now().date(),
             key="th_end",
         )
@@ -237,12 +271,12 @@ def render_trade_history_panel(api_client=None) -> None:
             {
                 "Time": t["timestamp"].strftime("%Y-%m-%d %H:%M"),
                 "Exchange": t.get("exchange", "").upper(),
-                "Symbol": t.get("symbol", ""),
-                "Side": t.get("side", ""),
-                "Qty": f"{t.get('quantity', 0):,.4f}",
-                "Price": f"₩{t.get('price', 0):,.0f}",
-                "Total": f"₩{t.get('total', 0):,.0f}",
-                "Status": t.get("status", ""),
+                "종목": t.get("symbol", ""),
+                "구분": t.get("side", ""),
+                "수량": f"{t.get('quantity', 0):,.4f}",
+                "가격": f"₩{t.get('price', 0):,.0f}",
+                "총액": f"₩{t.get('total', 0):,.0f}",
+                "상태": t.get("status", ""),
             }
             for t in page_items
         ]
@@ -250,14 +284,14 @@ def render_trade_history_panel(api_client=None) -> None:
 
         col_prev, col_info, col_next = st.columns([1, 2, 1])
         with col_prev:
-            if st.button("◀ Prev", disabled=(page <= 1), key="th_prev"):
+            if st.button("◀ 이전", disabled=(page <= 1), key="th_prev"):
                 st.session_state["th_page"] = page - 1
                 st.rerun()
         with col_info:
-            st.caption(f"Page {page} / {total_pages} ({len(filtered)} trades)")
+            st.caption(f"페이지 {page} / {total_pages} (총 {len(filtered)}건)")
         with col_next:
-            if st.button("Next ▶", disabled=(page >= total_pages), key="th_next"):
+            if st.button("다음 ▶", disabled=(page >= total_pages), key="th_next"):
                 st.session_state["th_page"] = page + 1
                 st.rerun()
     else:
-        st.info("No trades found for the selected filters.")
+        st.info("선택한 필터에 해당하는 거래 내역이 없습니다.")

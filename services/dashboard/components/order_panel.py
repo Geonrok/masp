@@ -286,13 +286,13 @@ def render_order_panel(
         price_provider: Function to get current price for a symbol
         balance_provider: Function to get current balances
     """
-    st.subheader("Manual Order (Paper Mode)")
+    st.subheader("수동 주문 (모의 거래)")
 
     # Determine if we're in demo mode
     is_demo = execution_adapter is None
 
     if is_demo:
-        st.caption("Demo Mode - Orders are simulated")
+        st.caption("데모 모드 - 주문이 시뮬레이션됩니다")
         symbols = _get_demo_symbols()
         prices = _get_demo_prices()
         balances = _get_demo_balances()
@@ -304,7 +304,7 @@ def render_order_panel(
         )
 
     # Balance display
-    st.markdown("**Available Balance**")
+    st.markdown("**사용 가능 잔고**")
     bal_cols = st.columns(4)
     display_assets = ["KRW", "BTC", "ETH", "XRP"]
     for i, asset in enumerate(display_assets):
@@ -323,7 +323,7 @@ def render_order_panel(
     with col_left:
         # Symbol selection
         selected_symbol = st.selectbox(
-            "Symbol",
+            "종목",
             options=symbols,
             key=_key("symbol"),
         )
@@ -338,13 +338,13 @@ def render_order_panel(
         # Validate price
         price_invalid = current_price <= 0
         if price_invalid:
-            st.warning("Price unavailable - orders disabled")
+            st.warning("가격 정보 없음 - 주문 비활성화")
         else:
-            st.caption(f"Current Price: {_format_krw(current_price)}")
+            st.caption(f"현재가: {_format_krw(current_price)}")
 
         # Order side
         side = st.radio(
-            "Side",
+            "매수/매도",
             options=[OrderSide.BUY.value, OrderSide.SELL.value],
             horizontal=True,
             key=_key("side"),
@@ -353,7 +353,7 @@ def render_order_panel(
         # Order type (LIMIT only available in demo mode)
         if is_demo:
             order_type = st.radio(
-                "Order Type",
+                "주문 유형",
                 options=[OrderType.MARKET.value, OrderType.LIMIT.value],
                 horizontal=True,
                 key=_key("order_type"),
@@ -361,12 +361,12 @@ def render_order_panel(
         else:
             # Non-demo: LIMIT not supported by most adapters
             order_type = OrderType.MARKET.value
-            st.caption("Order Type: MARKET (LIMIT not supported)")
+            st.caption("주문 유형: 시장가 (지정가 미지원)")
 
     with col_right:
         # Quantity input
         quantity = st.number_input(
-            f"Quantity ({selected_symbol})",
+            f"수량 ({selected_symbol})",
             min_value=0.0,
             step=0.00000001 if selected_symbol in ("BTC", "ETH") else 1.0,
             format="%.8f" if selected_symbol in ("BTC", "ETH") else "%.4f",
@@ -376,7 +376,7 @@ def render_order_panel(
         # Amount input (alternative, BUY only)
         is_sell = side == OrderSide.SELL.value
         amount_krw = st.number_input(
-            "Amount (KRW)" + (" (BUY only)" if is_sell else ""),
+            "금액 (KRW)" + (" (매수만)" if is_sell else ""),
             min_value=0.0,
             step=10000.0,
             format="%.0f",
@@ -390,7 +390,7 @@ def render_order_panel(
             default_limit_price = current_price if not price_invalid else 0.0
             price_step = 1000.0 if current_price > 100000 else 10.0 if current_price > 0 else 1000.0
             limit_price = st.number_input(
-                "Limit Price (KRW)",
+                "지정가 (KRW)",
                 min_value=0.0,
                 value=default_limit_price,
                 step=price_step,
@@ -402,7 +402,7 @@ def render_order_panel(
 
     # Order estimate
     st.divider()
-    st.markdown("**Order Estimate**")
+    st.markdown("**주문 예상**")
 
     # Normalize order_price
     raw_order_price = limit_price if order_type == OrderType.LIMIT.value else current_price
@@ -428,14 +428,14 @@ def render_order_panel(
 
     est_cols = st.columns(4)
     with est_cols[0]:
-        st.metric("Quantity", _format_quantity(estimate["quantity"], selected_symbol))
+        st.metric("수량", _format_quantity(estimate["quantity"], selected_symbol))
     with est_cols[1]:
-        st.metric("Total Value", _format_krw(estimate["total_value"]))
+        st.metric("총 금액", _format_krw(estimate["total_value"]))
     with est_cols[2]:
         fee_pct = _FEE_RATE * 100
-        st.metric(f"Fee ({fee_pct:.2f}%)", _format_krw(estimate["fee"]))
+        st.metric(f"수수료 ({fee_pct:.2f}%)", _format_krw(estimate["fee"]))
     with est_cols[3]:
-        label = "Total Cost" if side == OrderSide.BUY.value else "Net Proceeds"
+        label = "총 비용" if side == OrderSide.BUY.value else "순 수익"
         st.metric(label, _format_krw(estimate["net_value"]))
 
     # Submit button
@@ -443,7 +443,7 @@ def render_order_panel(
     btn_cols = st.columns([3, 1, 1])
 
     with btn_cols[1]:
-        if st.button("Clear", key=_key("clear_btn")):
+        if st.button("초기화", key=_key("clear_btn")):
             _clear_order_form()
             st.rerun()
 
@@ -523,22 +523,22 @@ def render_order_panel(
 
     # Order history
     st.divider()
-    st.markdown("**Recent Orders (This Session)**")
+    st.markdown("**최근 주문 (현재 세션)**")
 
     history = _get_order_history()
 
     if not history:
-        st.info("No orders placed in this session.")
+        st.info("이 세션에서 주문한 내역이 없습니다.")
     else:
         history_data = [
             {
-                "Time": h["timestamp"].strftime("%H:%M:%S"),
-                "Symbol": h["symbol"],
-                "Side": h["side"],
-                "Qty": _format_quantity(h["quantity"], h["symbol"]),
-                "Price": _format_krw(h["price"]),
-                "Total": _format_krw(h["total"]),
-                "Status": h["status"],
+                "시간": h["timestamp"].strftime("%H:%M:%S"),
+                "종목": h["symbol"],
+                "구분": h["side"],
+                "수량": _format_quantity(h["quantity"], h["symbol"]),
+                "가격": _format_krw(h["price"]),
+                "총액": _format_krw(h["total"]),
+                "상태": h["status"],
             }
             for h in history[:10]  # Show last 10
         ]

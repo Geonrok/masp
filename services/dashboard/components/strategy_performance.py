@@ -344,14 +344,14 @@ def _get_return_indicator(value: float) -> str:
 def _get_quality_indicator(sharpe: float) -> str:
     """Get quality indicator based on Sharpe ratio."""
     if sharpe >= 2.0:
-        return "[EXCELLENT]"
+        return "[우수]"
     elif sharpe >= 1.0:
-        return "[GOOD]"
+        return "[양호]"
     elif sharpe >= 0.5:
-        return "[FAIR]"
+        return "[보통]"
     elif sharpe >= 0:
-        return "[POOR]"
-    return "[NEGATIVE]"
+        return "[미흡]"
+    return "[음수]"
 
 
 def render_strategy_performance(
@@ -370,34 +370,68 @@ def render_strategy_performance(
         show_trade_stats: Whether to show trade statistics
         compact: Whether to use compact layout
     """
-    st.subheader("Strategy Performance")
+    st.subheader("전략 성과")
 
-    # Get data
+    # Get data - always show demo data if no real data
     is_demo = performance_provider is None
-    if is_demo:
-        st.caption("Demo Mode")
+    strategies = None
 
-    try:
-        strategies = (
-            performance_provider() if performance_provider is not None else _get_demo_strategies()
-        )
-    except Exception:
-        strategies = _get_demo_strategies()
-        st.warning("Failed to load performance data, showing demo data")
+    if performance_provider is not None:
+        try:
+            strategies = performance_provider()
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("Failed to get performance data: %s", e)
+            strategies = None
 
+    # Fallback to demo data if no strategies
     if not strategies:
-        st.info("No strategy performance data available.")
-        return
+        strategies = _get_demo_strategies()
+        is_demo = True
+
+    if is_demo:
+        st.caption("데모 데이터 - 실제 전략 성과는 거래 기록 연동 필요")
+
+        # Trade history sync button
+        sync_col1, sync_col2 = st.columns([1, 4])
+        with sync_col1:
+            if st.button("🔄 거래 내역 동기화", key=_key("sync_trades")):
+                with st.spinner("거래소에서 거래 내역을 가져오는 중..."):
+                    try:
+                        from services.dashboard.utils.trade_sync import sync_all_trades
+                        result = sync_all_trades(limit_per_exchange=100)
+
+                        total = result["total_synced"]
+                        if total > 0:
+                            # Clear caches to reload fresh data
+                            st.cache_data.clear()
+                            st.success(
+                                f"✅ {total}개 거래 동기화 완료\n"
+                                f"- Upbit: {result['upbit']['synced']}건\n"
+                                f"- Bithumb: {result['bithumb']['synced']}건"
+                            )
+                            st.rerun()
+                        else:
+                            msgs = []
+                            if result['upbit']['message']:
+                                msgs.append(f"Upbit: {result['upbit']['message']}")
+                            if result['bithumb']['message']:
+                                msgs.append(f"Bithumb: {result['bithumb']['message']}")
+                            st.warning("동기화할 거래 내역이 없습니다.\n" + "\n".join(msgs))
+                    except Exception as e:
+                        st.error(f"동기화 실패: {e}")
+        with sync_col2:
+            st.caption("거래소 API에서 체결된 주문 내역을 가져옵니다.")
 
     # Min history filter (filters strategies by minimum running period)
     col_filter, col_spacer = st.columns([2, 4])
     with col_filter:
         selected_period = st.selectbox(
-            "Min History",
+            "최소 기간",
             options=[p.value for p in TimePeriod],
             index=2,  # Default to 1M
             key=_key("period"),
-            help="Filter strategies by minimum running period. Metrics shown are all-time values.",
+            help="선택한 기간 이상 운용된 전략만 표시합니다.",
         )
 
     # Convert selected period string to enum (with fallback for corrupted session state)
@@ -415,57 +449,58 @@ def render_strategy_performance(
     # Show filter status
     if used_fallback:
         st.warning(
-            f"No strategies with {selected_period}+ history; showing all {len(strategies)} strategies"
+            f"{selected_period} 이상 운용된 전략이 없어 전체 {len(strategies)}개 전략을 표시합니다."
         )
     elif len(filtered_strategies) < len(strategies):
         st.caption(
-            f"Showing {len(filtered_strategies)} strategies with {selected_period}+ history "
-            f"(filtered from {len(strategies)} total)"
+            f"{selected_period} 이상 운용 중인 {len(filtered_strategies)}개 전략 표시 "
+            f"(전체 {len(strategies)}개 중)"
         )
 
     # Note about metrics scope
     if period_enum != TimePeriod.ALL:
-        st.caption("Note: Metrics shown are all-time values, not period-specific.")
+        st.caption("참고: 표시된 지표는 전체 기간 기준입니다.")
 
     # Summary section
     if show_summary:
         summary = _get_performance_summary(filtered_strategies)
 
-        st.markdown("**Portfolio Summary**")
+        st.markdown("**포트폴리오 요약**")
         sum_cols = st.columns(4)
 
         with sum_cols[0]:
             ret_ind = _get_return_indicator(summary["total_return"])
             st.metric(
-                f"Sum of Returns {ret_ind}",
+                f"총 수익률 {ret_ind}",
                 _format_percent(summary["total_return"]),
-                help="Sum of individual strategy returns (not portfolio return)",
+                help="개별 전략 수익률의 합계",
             )
-            st.caption(f"Sum PnL: {_format_krw(summary['total_return_krw'])}")
+            st.caption(f"총 손익: {_format_krw(summary['total_return_krw'])}")
 
         with sum_cols[1]:
-            st.metric("Total Trades", f"{summary['total_trades']:,}")
+            st.metric("총 거래 수", f"{summary['total_trades']:,}")
 
         with sum_cols[2]:
-            st.metric("Win Rate", _format_plain_percent(summary["overall_win_rate"]))
+            st.metric("승률", _format_plain_percent(summary["overall_win_rate"]))
 
         with sum_cols[3]:
             quality_ind = _get_quality_indicator(summary["avg_sharpe"])
-            st.metric(f"Avg Sharpe {quality_ind}", _format_ratio(summary["avg_sharpe"]))
+            st.metric(f"평균 샤프 {quality_ind}", _format_ratio(summary["avg_sharpe"]))
 
         st.caption(
-            f"Active Strategies: {summary['active_count']} / {len(filtered_strategies)} | "
-            f"Max MDD: {_format_plain_percent(summary['max_mdd'])}"
+            f"활성 전략: {summary['active_count']} / {len(filtered_strategies)}개 | "
+            f"최대 MDD: {_format_plain_percent(summary['max_mdd'])}"
         )
 
     # Individual strategies
     if show_details:
         st.divider()
-        st.markdown("**Strategy Details**")
+        st.markdown("**전략별 상세**")
 
         for strategy in filtered_strategies:
+            status_label = "[활성]" if strategy.is_active else "[중지]"
             with st.expander(
-                f"{'[ACTIVE]' if strategy.is_active else '[PAUSED]'} {strategy.strategy_name}",
+                f"{status_label} {strategy.strategy_name}",
                 expanded=strategy.is_active and not compact,
             ):
                 _render_strategy_card(strategy, show_trade_stats, compact)
@@ -484,62 +519,62 @@ def _render_strategy_card(
     if compact:
         cols = st.columns(4)
         with cols[0]:
-            st.metric("Return", _format_percent(metrics.total_return))
+            st.metric("수익률", _format_percent(metrics.total_return))
         with cols[1]:
-            st.metric("Sharpe", _format_ratio(metrics.sharpe_ratio))
+            st.metric("샤프", _format_ratio(metrics.sharpe_ratio))
         with cols[2]:
             st.metric("MDD", _format_plain_percent(metrics.max_drawdown))
         with cols[3]:
-            st.metric("Win Rate", _format_plain_percent(stats.win_rate))
+            st.metric("승률", _format_plain_percent(stats.win_rate))
     else:
         # Full layout
-        st.markdown("**Performance Metrics**")
+        st.markdown("**성과 지표**")
         perf_cols = st.columns(4)
 
         with perf_cols[0]:
             ret_ind = _get_return_indicator(metrics.total_return)
             st.metric(
-                f"Total Return {ret_ind}",
+                f"총 수익률 {ret_ind}",
                 _format_percent(metrics.total_return),
                 delta=_format_krw(metrics.total_return_krw),
             )
 
         with perf_cols[1]:
-            st.metric("Sharpe Ratio", _format_ratio(metrics.sharpe_ratio))
-            st.caption(f"Sortino: {_format_ratio(metrics.sortino_ratio)}")
+            st.metric("샤프 비율", _format_ratio(metrics.sharpe_ratio))
+            st.caption(f"소르티노: {_format_ratio(metrics.sortino_ratio)}")
 
         with perf_cols[2]:
-            st.metric("Max Drawdown", _format_plain_percent(metrics.max_drawdown))
+            st.metric("최대 낙폭 (MDD)", _format_plain_percent(metrics.max_drawdown))
             st.caption(_format_krw(metrics.max_drawdown_krw))
 
         with perf_cols[3]:
-            st.metric("Volatility", _format_plain_percent(metrics.volatility))
-            st.caption(f"Calmar: {_format_ratio(metrics.calmar_ratio)}")
+            st.metric("변동성", _format_plain_percent(metrics.volatility))
+            st.caption(f"칼마: {_format_ratio(metrics.calmar_ratio)}")
 
         # Trade statistics
         if show_trade_stats:
-            st.markdown("**Trade Statistics**")
+            st.markdown("**거래 통계**")
             trade_cols = st.columns(4)
 
             with trade_cols[0]:
-                st.metric("Total Trades", f"{stats.total_trades:,}")
-                st.caption(f"W: {stats.winning_trades} / L: {stats.losing_trades}")
+                st.metric("총 거래", f"{stats.total_trades:,}회")
+                st.caption(f"승: {stats.winning_trades} / 패: {stats.losing_trades}")
 
             with trade_cols[1]:
-                st.metric("Win Rate", _format_plain_percent(stats.win_rate))
+                st.metric("승률", _format_plain_percent(stats.win_rate))
 
             with trade_cols[2]:
-                st.metric("Profit Factor", _format_ratio(stats.profit_factor))
+                st.metric("손익비", _format_ratio(stats.profit_factor))
                 st.caption(
-                    f"Avg W: {_format_krw(stats.avg_win)} / Avg L: {_format_krw(stats.avg_loss)}"
+                    f"평균 익: {_format_krw(stats.avg_win)} / 평균 손: {_format_krw(stats.avg_loss)}"
                 )
 
             with trade_cols[3]:
-                st.metric("Avg Hold Time", f"{stats.avg_holding_time_hours:.1f}h")
+                st.metric("평균 보유", f"{stats.avg_holding_time_hours:.1f}시간")
 
     # Start date info
     if strategy.start_date:
-        st.caption(f"Started: {strategy.start_date.strftime('%Y-%m-%d')}")
+        st.caption(f"시작일: {strategy.start_date.strftime('%Y-%m-%d')}")
 
 
 def get_performance_export_data(

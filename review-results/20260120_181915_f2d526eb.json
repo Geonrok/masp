@@ -1,0 +1,45 @@
+﻿{
+    "diffHash":  "160D14FBF7D2F2C5",
+    "id":  "f2d526eb",
+    "diffLines":  1,
+    "timestamp":  "2026-01-20T18:19:15.5332961+09:00",
+    "consensus":  {
+                      "passRatio":  1,
+                      "reason":  "Consensus passed (100%)",
+                      "passed":  true
+                  },
+    "duration":  2.4102475,
+    "issues":  [
+
+               ],
+    "reviewers":  [
+                      {
+                          "error":  false,
+                          "name":  "Gemini",
+                          "timeout":  false,
+                          "p2":  0,
+                          "p3":  1,
+                          "p1":  0
+                      },
+                      {
+                          "error":  false,
+                          "name":  "Copilot",
+                          "timeout":  false,
+                          "p2":  1,
+                          "p3":  0,
+                          "p1":  0
+                      },
+                      {
+                          "error":  false,
+                          "name":  "Codex",
+                          "timeout":  false,
+                          "p2":  1,
+                          "p3":  2,
+                          "p1":  0
+                      }
+                  ],
+    "git":  {
+                "branch":  "master",
+                "commit":  "1dd27be"
+            }
+}

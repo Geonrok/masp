@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+# Pre-push hook: Run AI-review verify (blocking)
+
+HOOKS_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+echo "[pre-push] Running AI-review verify..."
+"$HOOKS_DIR/ai-review-hook.sh" verify
+
+# Exit code propagated from ai-review-hook.sh

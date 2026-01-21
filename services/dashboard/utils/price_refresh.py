@@ -16,7 +16,7 @@ class PriceCache:
 
 
 _CACHE_KEY = "masp_price_cache"
-_DEFAULT_TTL = 10  # seconds
+_DEFAULT_TTL = 5  # seconds (match auto-refresh interval)
 
 
 def get_cached_prices() -> Optional[PriceCache]:

@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+set -e
+
+echo "[pre-commit] Enforcing MASP workflow: running review-code gate..."
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/precommit_guard.ps1

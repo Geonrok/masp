@@ -5,6 +5,8 @@ import logging
 import os
 from typing import Any, Dict, List, Optional, Tuple
 
+import streamlit as st
+
 logger = logging.getLogger(__name__)
 
 
@@ -31,7 +33,7 @@ def _get_holdings_upbit() -> List[Dict]:
 
 
 def _get_current_prices(symbols: List[str]) -> Dict[str, float]:
-    """Get current prices for symbols.
+    """Get current prices for symbols using batch API.
 
     Args:
         symbols: List of symbols (e.g., ["BTC", "ETH"])
@@ -39,6 +41,9 @@ def _get_current_prices(symbols: List[str]) -> Dict[str, float]:
     Returns:
         Dict mapping symbol to current price
     """
+    if not symbols:
+        return {}
+
     prices: Dict[str, float] = {}
 
     try:
@@ -46,13 +51,15 @@ def _get_current_prices(symbols: List[str]) -> Dict[str, float]:
 
         market_data = UpbitSpotMarketData()
 
-        for symbol in symbols:
-            try:
-                quote = market_data.get_quote(f"{symbol}/KRW")
-                if quote and "price" in quote:
-                    prices[symbol] = float(quote["price"])
-            except Exception as e:
-                logger.debug("Failed to get price for %s: %s", symbol, e)
+        # Convert to full symbols and use batch API
+        full_symbols = [f"{symbol}/KRW" for symbol in symbols]
+        quotes = market_data.get_quotes(full_symbols)
+
+        for full_symbol, quote in quotes.items():
+            if quote and "price" in quote:
+                # Convert back to currency code (BTC/KRW -> BTC)
+                currency = full_symbol.split("/")[0]
+                prices[currency] = float(quote["price"])
 
     except ImportError:
         logger.debug("UpbitSpotMarketData not available")
@@ -62,8 +69,11 @@ def _get_current_prices(symbols: List[str]) -> Dict[str, float]:
     return prices
 
 
+@st.cache_data(ttl=5, show_spinner=False)
 def get_positions_data() -> Optional[Tuple[List[Dict], Dict[str, float]]]:
     """Get positions and current prices for positions_panel.
+
+    Cached for 5 seconds to reduce API calls.
 
     Returns:
         Tuple of (positions_list, current_prices_dict) or None for demo mode
@@ -88,7 +98,8 @@ def get_positions_data() -> Optional[Tuple[List[Dict], Dict[str, float]]]:
 
         try:
             balance = float(entry.get("balance", 0))
-            avg_price = float(entry.get("avg_buy_price", 0))
+            avg_buy_price_raw = entry.get("avg_buy_price")
+            avg_price = float(avg_buy_price_raw) if avg_buy_price_raw is not None else 0.0
         except (ValueError, TypeError):
             continue
 

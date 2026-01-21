@@ -21,6 +21,29 @@ _market_data_classes: dict[str, Type[MarketDataAdapter]] = {}
 _execution_classes: dict[str, Type[ExecutionAdapter]] = {}
 
 
+def clear_adapter_cache() -> None:
+    """
+    Clear the adapter class cache.
+
+    Use this in tests to ensure fresh adapter loading.
+    """
+    _market_data_classes.clear()
+    _execution_classes.clear()
+
+
+def get_cached_adapters() -> dict:
+    """
+    Get info about currently cached adapter classes.
+
+    Returns:
+        dict with 'market_data' and 'execution' lists of cached adapter names.
+    """
+    return {
+        "market_data": list(_market_data_classes.keys()),
+        "execution": list(_execution_classes.keys()),
+    }
+
+
 AdapterType = Literal[
     "upbit_spot", "bithumb_spot",
     "binance_spot", "binance_futures",

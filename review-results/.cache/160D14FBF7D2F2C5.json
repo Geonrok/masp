@@ -1,0 +1,52 @@
+﻿{
+    "timestamp":  "2026-01-20T18:19:15.4450083+09:00",
+    "result":  {
+                   "consensus":  {
+                                     "passRatio":  1,
+                                     "issues":  [
+
+                                                ],
+                                     "reason":  "Consensus passed (100%)",
+                                     "passed":  true
+                                 },
+                   "reviewResults":  {
+                                         "duration":  2.4102475,
+                                         "results":  {
+                                                         "Gemini":  {
+                                                                        "p1":  0,
+                                                                        "issues":  [
+
+                                                                                   ],
+                                                                        "p2":  0,
+                                                                        "p3":  1,
+                                                                        "PSComputerName":  "localhost",
+                                                                        "RunspaceId":  "df222ba2-cc11-433f-8b8b-3bf9c538f577",
+                                                                        "PSShowComputerName":  false
+                                                                    },
+                                                         "Copilot":  {
+                                                                         "p1":  0,
+                                                                         "issues":  [
+
+                                                                                    ],
+                                                                         "p2":  1,
+                                                                         "p3":  0,
+                                                                         "PSComputerName":  "localhost",
+                                                                         "RunspaceId":  "da1a1ff7-dd44-4d39-86ba-104ab7f3c83e",
+                                                                         "PSShowComputerName":  false
+                                                                     },
+                                                         "Codex":  {
+                                                                       "p1":  0,
+                                                                       "issues":  [
+
+                                                                                  ],
+                                                                       "p2":  1,
+                                                                       "p3":  2,
+                                                                       "PSComputerName":  "localhost",
+                                                                       "RunspaceId":  "c5648617-df65-4ed3-b507-54f9ab1f136b",
+                                                                       "PSShowComputerName":  false
+                                                                   }
+                                                     }
+                                     }
+               },
+    "hash":  "160D14FBF7D2F2C5"
+}

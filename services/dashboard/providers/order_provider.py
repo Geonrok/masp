@@ -5,6 +5,8 @@ import logging
 import os
 from typing import Any, Callable, Dict, List, Optional
 
+import streamlit as st
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,6 +19,7 @@ def is_live_trading_enabled() -> bool:
     return os.getenv("MASP_ENABLE_LIVE_TRADING", "0") == "1"
 
 
+@st.cache_resource(show_spinner=False)
 def _get_upbit_execution():
     """Get UpbitExecutionAdapter instance.
 
@@ -30,7 +33,7 @@ def _get_upbit_execution():
         from libs.adapters.real_upbit_execution import UpbitExecutionAdapter
         from libs.core.config import Config
 
-        config = Config(asset_class="spot", strategy_name="dashboard")
+        config = Config(asset_class="crypto_spot", strategy_name="dashboard")
         return UpbitExecutionAdapter(config)
     except ImportError as e:
         logger.warning("UpbitExecutionAdapter import failed: %s", e)
@@ -120,7 +123,7 @@ class OrderExecutionWrapper:
         )
 
         # Convert result to order_panel format
-        success = result.status not in ("REJECTED",)
+        success = result.status is not None and result.status not in ("REJECTED",)
         total_value = result.filled_quantity * result.filled_price
 
         return {

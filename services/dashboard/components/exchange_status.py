@@ -4,6 +4,7 @@ from __future__ import annotations
 import math
 import os
 import time
+from typing import Dict, Any, Optional
 
 import streamlit as st
 
@@ -22,19 +23,37 @@ def _get_refresh_interval() -> float:
 
 _AUTO_REFRESH_INTERVAL = _get_refresh_interval()
 
+# Demo exchange configurations (used when API is unavailable)
+_DEMO_EXCHANGE_CONFIGS: Dict[str, Dict[str, Any]] = {
+    "upbit": {"enabled": True, "name": "Upbit", "region": "KR", "type": "spot"},
+    "bithumb": {"enabled": True, "name": "Bithumb", "region": "KR", "type": "spot"},
+    "binance": {"enabled": False, "name": "Binance", "region": "Global", "type": "spot"},
+    "binance_futures": {"enabled": False, "name": "Binance Futures", "region": "Global", "type": "futures"},
+}
+
 
 class ExchangeStatusPanel:
     EXCHANGES = ["upbit", "bithumb", "binance", "binance_futures"]
     _LAST_RERUN_TS_KEY = "masp_last_auto_refresh_rerun_ts"
+    _DEMO_MODE_KEY = "exchange_status_demo_mode"
 
     def __init__(self, api_client) -> None:
         self.api = api_client
+        self._is_demo_mode = False
+
+    def _get_config(self, exchange: str) -> Optional[Dict[str, Any]]:
+        """Get exchange config from API, fallback to demo data."""
+        config = self.api.get_exchange_config(exchange)
+        if config is None:
+            self._is_demo_mode = True
+            return _DEMO_EXCHANGE_CONFIGS.get(exchange)
+        return config
 
     def render(self) -> None:
-        st.subheader("Exchange Status")
+        self._is_demo_mode = False
 
         auto_refresh = st.checkbox(
-            f"Auto Refresh ({_AUTO_REFRESH_INTERVAL:.0f}s)",
+            f"자동 새로고침 ({_AUTO_REFRESH_INTERVAL:.0f}초)",
             value=False,
             key="auto_refresh_enabled",
         )
@@ -55,23 +74,38 @@ class ExchangeStatusPanel:
                 st.text(exchange.upper())
 
             with col2:
-                config = self.api.get_exchange_config(exchange)
+                config = self._get_config(exchange)
                 if config is None:
-                    status = "ERROR"
+                    status = "오프라인"
                     enabled = False
                 else:
                     enabled = config.get("enabled", False)
-                    status = "ENABLED" if enabled else "DISABLED"
-                st.text(status)
+                    status = "활성" if enabled else "비활성"
+
+                # Color-coded status
+                if enabled:
+                    st.markdown(f":green[{status}]")
+                else:
+                    st.markdown(f":gray[{status}]")
 
             with col3:
                 if config is not None:
-                    btn_label = "Disable" if enabled else "Enable"
+                    btn_label = "비활성화" if enabled else "활성화"
                     if st.button(btn_label, key=f"status_toggle_{exchange}"):
-                        success = self.api.toggle_exchange(exchange, not enabled)
-                        if success:
+                        if self._is_demo_mode:
+                            # Toggle in demo mode (session state only)
+                            demo_key = f"demo_exchange_{exchange}_enabled"
+                            current = st.session_state.get(demo_key, enabled)
+                            st.session_state[demo_key] = not current
+                            _DEMO_EXCHANGE_CONFIGS[exchange]["enabled"] = not current
                             st.rerun()
                         else:
-                            st.error(
-                                f"Failed to toggle {exchange}. Check API server."
-                            )
+                            success = self.api.toggle_exchange(exchange, not enabled)
+                            if success:
+                                st.rerun()
+                            else:
+                                st.error(f"{exchange} 전환 실패. API 서버를 확인하세요.")
+
+        # Show demo mode indicator
+        if self._is_demo_mode:
+            st.caption("데모 모드 - API 서버 연결 시 실제 상태 표시")

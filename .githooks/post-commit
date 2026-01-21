@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+# Post-commit hook: Run AI-review autogen (non-blocking)
+
+HOOKS_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+echo "[post-commit] Triggering AI-review autogen..."
+"$HOOKS_DIR/ai-review-hook.sh" autogen || true
+
+# Always exit 0 - autogen is non-blocking
+exit 0

@@ -15,6 +15,7 @@ import functools
 import random
 
 from libs.adapters.bithumb_api_v2 import BithumbAPIV2
+from libs.adapters.trade_logger import TradeLogger
 from libs.core.config import Config
 
 T = TypeVar("T")
@@ -110,8 +111,8 @@ class BithumbExecutionAdapter:
         secret_key = config.bithumb_secret_key.get_secret_value()
         self.bithumb = BithumbAPIV2(api_key, secret_key)
         
-        self._trade_logger = None
-        logger.info("[BithumbExecution] Adapter initialized")
+        self._trade_logger = TradeLogger()
+        logger.info("[BithumbExecution] Adapter initialized with TradeLogger")
     
     def _validate_config(self):
         """설정 검증"""
@@ -1066,6 +1067,41 @@ class BithumbExecutionAdapter:
             message=reason
         )
     
+    def get_closed_orders(
+        self,
+        market: Optional[str] = None,
+        limit: int = 100,
+        page: int = 1,
+    ) -> List[Dict[str, Any]]:
+        """Get closed (completed) orders from Bithumb.
+
+        Args:
+            market: Market symbol (e.g., "KRW-BTC"). If None, gets all markets.
+            limit: Number of orders to fetch (max 100)
+            page: Page number for pagination
+
+        Returns:
+            List of closed order dicts with keys:
+            - uuid, side, ord_type, price, state, market,
+            - created_at, volume, remaining_volume, executed_volume,
+            - trades_count, paid_fee, avg_price
+        """
+        try:
+            orders = self.bithumb.get_orders(
+                market=market,
+                state="done",  # Completed orders only
+                limit=min(limit, 100),
+                page=page,
+                order_by="desc",
+            )
+            if isinstance(orders, list):
+                logger.info(f"[BithumbExecution] Fetched {len(orders)} closed orders")
+                return orders
+            return []
+        except Exception as e:
+            logger.error(f"[BithumbExecution] Failed to get closed orders: {e}")
+            return []
+
     def _log_trade(self, order: BithumbOrderResult):
         """TradeLogger에 기록"""
         self._trade_logger.log_trade({
@@ -1080,3 +1116,14 @@ class BithumbExecutionAdapter:
             "status": order.status,
             "message": order.message
         })
+
+
+# Alias for backward compatibility (used by holdings.py)
+class BithumbExecution(BithumbExecutionAdapter):
+    """Simplified BithumbExecution that loads config from environment variables."""
+
+    def __init__(self, config: Config = None):
+        """Initialize with optional config. If not provided, loads from environment."""
+        if config is None:
+            config = Config()
+        super().__init__(config)

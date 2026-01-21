@@ -1,6 +1,7 @@
 """
 MASP Test Configuration (Phase 4)
-Prometheus Registry Isolation
+- Prometheus Registry Isolation
+- Global State Reset
 """
 
 import pytest
@@ -19,3 +20,31 @@ def reset_prometheus_registry():
 
     if hasattr(metrics, "cleanup_for_tests"):
         metrics.cleanup_for_tests()
+
+
+@pytest.fixture(autouse=True)
+def reset_global_state():
+    """Reset all registered global state after each test."""
+    yield
+    # Reset after test completes
+    try:
+        from libs.core.state_manager import reset_all_state
+        reset_all_state()
+    except ImportError:
+        pass  # Module not available yet
+
+
+@pytest.fixture
+def clean_state():
+    """
+    Fixture for tests that need completely clean state.
+
+    Usage:
+        def test_something(clean_state):
+            # State is reset before this test runs
+            pass
+    """
+    from libs.core.state_manager import reset_all_state
+    reset_all_state()
+    yield
+    reset_all_state()

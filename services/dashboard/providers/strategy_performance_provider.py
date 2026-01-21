@@ -6,6 +6,8 @@ import math
 from datetime import date, datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional
 
+import streamlit as st
+
 from services.dashboard.components.strategy_performance import (
     PerformanceMetrics,
     StrategyPerformance,
@@ -316,8 +318,11 @@ def _calculate_strategy_performance(
     )
 
 
+@st.cache_data(ttl=30, show_spinner=False)
 def get_strategy_performances(days: int = 30) -> List[StrategyPerformance]:
     """Get strategy performances from trade history.
+
+    Cached for 30 seconds to reduce file reads.
 
     Args:
         days: Number of days to analyze

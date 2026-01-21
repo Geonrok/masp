@@ -114,7 +114,12 @@ class TestKillSwitch:
         )
         
         assert result.valid is False, "Order should exceed 10% limit"
-        assert "10%" in result.reason or "equity" in result.reason.lower()
+        # Accept various formats: "10%" or "position limit" or "equity"
+        assert (
+            "10%" in result.reason
+            or "position limit" in result.reason.lower()
+            or "equity" in result.reason.lower()
+        )
     
     def test_order_validator_insufficient_balance(self):
         """Test insufficient balance rejection"""

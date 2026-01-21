@@ -2,11 +2,29 @@
 from __future__ import annotations
 
 import math
+import os
+import time
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import plotly.graph_objects as go
 import streamlit as st
+
+
+def _get_refresh_interval() -> float:
+    """Safely get auto refresh interval from environment."""
+    raw = os.getenv("MASP_AUTO_REFRESH_INTERVAL", "5.0")
+    try:
+        v = float(raw)
+        if not math.isfinite(v) or v <= 0:
+            return 5.0
+        return v
+    except ValueError:
+        return 5.0
+
+
+_AUTO_REFRESH_INTERVAL = _get_refresh_interval()
 
 
 # =============================================================================
@@ -230,29 +248,113 @@ def _render_allocation_chart(
 
 
 def _render_position_table(positions: List[PortfolioPosition]) -> None:
-    """Render positions as a table."""
+    """Render positions as a table with color-coded PnL."""
     if not positions:
-        st.info("No positions to display.")
+        st.info("보유 포지션이 없습니다.")
         return
-    
+
     # Sort by value descending
     sorted_positions = sorted(positions, key=lambda p: p.value, reverse=True)
-    
-    data = [
-        {
-            "Symbol": p.symbol.upper(),
-            "Exchange": p.exchange.upper(),
-            "Quantity": f"{p.quantity:,.4f}",
-            "Avg Price": f"KRW {p.avg_price:,.0f}",
-            "Current": f"KRW {p.current_price:,.0f}",
-            "Value": f"KRW {p.value:,.0f}",
-            "PnL": f"KRW {p.pnl:+,.0f}",
-            "PnL%": f"{p.pnl_percent:+.2f}%",
-        }
-        for p in sorted_positions
-    ]
-    
-    st.dataframe(data, use_container_width=True, hide_index=True)
+
+    # Render each position as a row with metrics
+    for p in sorted_positions:
+        col1, col2, col3, col4, col5 = st.columns([2, 1.5, 1.5, 1.5, 1.5])
+
+        with col1:
+            st.markdown(f"**{p.symbol.upper()}**")
+            st.caption(f"{p.exchange.upper()}")
+
+        with col2:
+            st.metric("수량", f"{p.quantity:,.4f}")
+
+        with col3:
+            st.metric("평균단가", f"₩{p.avg_price:,.0f}")
+
+        with col4:
+            # Current price with change indicator
+            price_change = p.current_price - p.avg_price
+            price_change_pct = _safe_div(price_change, p.avg_price, 0) * 100
+            st.metric(
+                "현재가",
+                f"₩{p.current_price:,.0f}",
+                delta=f"{price_change_pct:+.2f}%",
+                delta_color="normal" if price_change >= 0 else "inverse",
+            )
+
+        with col5:
+            # PnL with color
+            st.metric(
+                "평가손익",
+                f"₩{p.pnl:+,.0f}",
+                delta=f"{p.pnl_percent:+.2f}%",
+                delta_color="normal" if p.pnl >= 0 else "inverse",
+            )
+
+        st.divider()
+
+
+# =============================================================================
+# Fragment for Position Details (Optimized Tab Switching)
+# =============================================================================
+
+
+def _position_details_content(positions: List[PortfolioPosition]) -> None:
+    """Inner content for position details tabs."""
+    # Get unique exchanges from positions
+    exchanges = sorted(set(p.exchange.upper() for p in positions))
+
+    if not exchanges:
+        st.info("보유 포지션이 없습니다.")
+        return
+
+    # Create tabs: "전체" + each exchange
+    tab_labels = ["전체"] + exchanges
+    position_tabs = st.tabs(tab_labels)
+
+    # "전체" tab - show all positions
+    with position_tabs[0]:
+        _render_position_table(positions)
+
+    # Individual exchange tabs
+    for i, exchange in enumerate(exchanges, start=1):
+        with position_tabs[i]:
+            exchange_positions = [
+                p for p in positions
+                if p.exchange.upper() == exchange
+            ]
+            if exchange_positions:
+                # Show exchange summary
+                exchange_value = sum(p.value for p in exchange_positions)
+                exchange_pnl = sum(p.pnl for p in exchange_positions)
+                exchange_cost = sum(p.cost for p in exchange_positions)
+                exchange_pnl_pct = _safe_div(exchange_pnl, exchange_cost, 0.0) * 100
+
+                summary_col1, summary_col2, summary_col3 = st.columns(3)
+                with summary_col1:
+                    st.metric(f"{exchange} 평가금액", f"₩{exchange_value:,.0f}")
+                with summary_col2:
+                    st.metric(
+                        f"{exchange} 손익",
+                        f"₩{exchange_pnl:+,.0f}",
+                        delta=f"{exchange_pnl_pct:+.2f}%",
+                        delta_color="normal" if exchange_pnl >= 0 else "inverse",
+                    )
+                with summary_col3:
+                    st.metric(f"{exchange} 종목 수", f"{len(exchange_positions)}개")
+
+                st.divider()
+                _render_position_table(exchange_positions)
+            else:
+                st.info(f"{exchange}에 보유 포지션이 없습니다.")
+
+
+# Try to use @st.fragment for fast tab switching (Streamlit 1.33+)
+# Falls back to regular function for older versions
+try:
+    _render_position_details_fragment = st.fragment(_position_details_content)
+except AttributeError:
+    # Streamlit < 1.33 doesn't have fragment
+    _render_position_details_fragment = _position_details_content
 
 
 # =============================================================================
@@ -265,21 +367,59 @@ def render_portfolio_summary(
     view_mode: str = "exchange",
 ) -> None:
     """Render portfolio summary with metrics and allocation chart.
-    
+
     Args:
         portfolio: Portfolio data. If None, uses demo data.
         view_mode: Allocation view mode - "exchange" or "symbol".
     """
-    st.subheader("Portfolio Summary")
-    
+    st.subheader("포트폴리오 요약")
+
+    # Auto-refresh control
+    refresh_col1, refresh_col2, refresh_col3 = st.columns([2, 1, 1])
+    with refresh_col1:
+        auto_refresh = st.checkbox(
+            f"자동 새로고침 ({_AUTO_REFRESH_INTERVAL:.0f}초)",
+            value=False,
+            key="portfolio_auto_refresh",
+        )
+    with refresh_col2:
+        if st.button("🔄 새로고침", key="portfolio_manual_refresh"):
+            # Clear all caches to force fresh data
+            from services.dashboard.utils.holdings import clear_holdings_cache
+            clear_holdings_cache()
+            st.rerun()
+    with refresh_col3:
+        st.caption(f"업데이트: {datetime.now().strftime('%H:%M:%S')}")
+
+    # Auto-refresh using streamlit-autorefresh (install: pip install streamlit-autorefresh)
+    if auto_refresh:
+        try:
+            from streamlit_autorefresh import st_autorefresh
+            # Returns count of refreshes, triggers rerun every interval_ms
+            st_autorefresh(
+                interval=int(_AUTO_REFRESH_INTERVAL * 1000),
+                limit=None,
+                key="portfolio_autorefresh_counter",
+            )
+        except ImportError:
+            # Fallback to manual refresh hint
+            st.info(
+                f"💡 깜빡임 없는 자동 새로고침을 위해: `pip install streamlit-autorefresh`"
+            )
+            now = time.time()
+            last = float(st.session_state.get("portfolio_last_refresh_ts", 0.0))
+            if (now - last) >= _AUTO_REFRESH_INTERVAL:
+                st.session_state["portfolio_last_refresh_ts"] = now
+                st.rerun()
+
     # Use demo data if not provided
     if portfolio is None:
-        st.caption("Demo Data - Connect to live API for real portfolio")
+        st.caption("데모 데이터 - 실제 포트폴리오는 라이브 API 연결 필요")
         portfolio = _get_demo_portfolio()
-    
+
     # Handle empty portfolio
     if not portfolio.positions and portfolio.cash_balance <= 0:
-        st.info("No portfolio data available.")
+        st.info("포트폴리오 데이터가 없습니다.")
         return
     
     # Summary metrics row
@@ -287,29 +427,29 @@ def render_portfolio_summary(
     
     with col1:
         st.metric(
-            "Total Assets",
+            "총 자산",
             f"KRW {portfolio.total_assets:,.0f}",
         )
-    
+
     with col2:
         st.metric(
-            "Invested",
+            "투자 금액",
             f"KRW {portfolio.total_value:,.0f}",
             delta=f"{portfolio.invested_ratio:.1f}%",
         )
-    
+
     with col3:
         pnl_color = "normal" if portfolio.total_pnl >= 0 else "inverse"
         st.metric(
-            "Total PnL",
+            "총 손익",
             f"KRW {portfolio.total_pnl:+,.0f}",
             delta=f"{portfolio.total_pnl_percent:+.2f}%",
             delta_color=pnl_color,
         )
-    
+
     with col4:
         st.metric(
-            "Cash",
+            "현금",
             f"KRW {portfolio.cash_balance:,.0f}",
             delta=f"{portfolio.cash_ratio:.1f}%",
         )
@@ -341,6 +481,6 @@ def render_portfolio_summary(
             show_cash=True,
         )
     
-    # Position details table
-    st.subheader("Position Details")
-    _render_position_table(portfolio.positions)
+    # Position details table with exchange tabs (using fragment for fast tab switching)
+    st.subheader("포지션 상세")
+    _render_position_details_fragment(portfolio.positions)
