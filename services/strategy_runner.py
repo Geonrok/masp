@@ -27,6 +27,7 @@ from libs.analytics.strategy_health import StrategyHealthMonitor
 from libs.analytics.daily_report import DailyReportGenerator
 from libs.strategies.base import Signal as StrategySignal
 from libs.strategies.loader import get_strategy
+from libs.notifications.telegram import TelegramNotifier, format_trade_message, format_daily_summary
 
 logger = logging.getLogger(__name__)
 MIN_ORDER_KRW = 5000
@@ -157,7 +158,93 @@ class StrategyRunner:
         self._positions: Dict[str, float] = {}  # symbol -> quantity
         self._last_signals: Dict[str, str] = {}  # symbol -> signal
 
+        # Telegram 알림 (best-effort, 설정 없으면 비활성화)
+        self._notifier = TelegramNotifier()
+        if self._notifier.enabled:
+            logger.info("[StrategyRunner] Telegram notifications enabled")
+
         logger.info("[StrategyRunner] Initialized: %s on %s", strategy_name, exchange)
+
+    def _sync_positions_from_exchange(self) -> None:
+        """
+        거래소의 실제 보유량을 전략의 _positions에 동기화.
+
+        BTC Gate 실패 시 SELL 시그널이 제대로 생성되려면
+        전략이 실제 보유 포지션을 알아야 합니다.
+
+        Supports two formats:
+        - Upbit: List[Dict] with {'currency': 'BTC', 'balance': '0.001', 'locked': '0'}
+        - Bithumb: Dict[str, float] with {'BTC': 0.001, 'KRW': 1000}
+        """
+        if not hasattr(self.execution, 'get_all_balances'):
+            logger.debug("[StrategyRunner] Execution adapter has no get_all_balances method")
+            return
+
+        try:
+            balances = self.execution.get_all_balances()
+            if not balances:
+                return
+
+            synced = 0
+
+            # Handle Dict[str, float] format (Bithumb)
+            if isinstance(balances, dict):
+                for currency, total in balances.items():
+                    if currency in ('KRW', 'USDT', 'P'):
+                        continue  # Skip quote currencies and special tokens
+
+                    try:
+                        total = float(total)
+                    except (ValueError, TypeError):
+                        continue
+
+                    if total <= 0:
+                        continue
+
+                    if self._is_usdt_based:
+                        symbol = f"{currency}/USDT"
+                    else:
+                        symbol = f"{currency}/KRW"
+
+                    if self.strategy and hasattr(self.strategy, 'update_position'):
+                        self.strategy.update_position(symbol, total)
+                        synced += 1
+
+                    self._positions[symbol] = total
+
+            # Handle List[Dict] format (Upbit)
+            else:
+                for item in balances:
+                    currency = item.get('currency', '')
+                    if currency in ('KRW', 'USDT'):
+                        continue
+
+                    try:
+                        balance = float(item.get('balance', 0))
+                        locked = float(item.get('locked', 0))
+                        total = balance + locked
+                    except (ValueError, TypeError):
+                        continue
+
+                    if total <= 0:
+                        continue
+
+                    if self._is_usdt_based:
+                        symbol = f"{currency}/USDT"
+                    else:
+                        symbol = f"{currency}/KRW"
+
+                    if self.strategy and hasattr(self.strategy, 'update_position'):
+                        self.strategy.update_position(symbol, total)
+                        synced += 1
+
+                    self._positions[symbol] = total
+
+            if synced > 0:
+                logger.info("[StrategyRunner] Synced %d positions from exchange", synced)
+
+        except Exception as exc:
+            logger.warning("[StrategyRunner] Position sync failed: %s", exc)
 
     @staticmethod
     def _canonicalize_strategy_name(name: str) -> List[str]:
@@ -217,6 +304,9 @@ class StrategyRunner:
         total = len(self.symbols)
         start_time = time.time()
         max_execution_time = int(os.getenv("MASP_MAX_EXECUTION_TIME", "1800"))
+
+        # 거래소 보유량을 전략에 동기화 (BTC Gate 실패 시 SELL 시그널 생성용)
+        self._sync_positions_from_exchange()
 
         if os.getenv("STOP_TRADING") == "1" or self.config.is_kill_switch_active():
             logger.critical("Kill-Switch Activated! Trading Halted.")
@@ -389,6 +479,8 @@ class StrategyRunner:
                 order_type="MARKET",
                 amount_krw=self._position_size,
             )
+            # Telegram 알림 (best-effort)
+            self._send_trade_notification(symbol, "BUY", self._position_size, current_price, "FILLED")
             return {"action": "BUY", "order_id": order.order_id or order.symbol}
 
         if action == "SELL":
@@ -409,6 +501,8 @@ class StrategyRunner:
                 order_type="MARKET",
                 units=balance,
             )
+            # Telegram 알림 (best-effort)
+            self._send_trade_notification(symbol, "SELL", balance, current_price, "FILLED")
             return {"action": "SELL", "order_id": order.order_id or order.symbol}
 
         return {"action": "UNKNOWN", "reason": str(action)}
@@ -452,8 +546,30 @@ class StrategyRunner:
 
         self.generate_daily_report()
 
+    def _send_trade_notification(
+        self, symbol: str, side: str, quantity: float, price: float, status: str
+    ) -> None:
+        """Send trade notification via Telegram (best-effort, swallow errors)."""
+        if not self._notifier.enabled:
+            return
+        try:
+            msg = format_trade_message(self.exchange, symbol, side, quantity, price, status)
+            self._notifier.send_message_sync(msg)
+        except Exception as exc:
+            logger.debug("[Telegram] Notification failed (swallowed): %s", exc)
+
     def generate_daily_report(self) -> str:
-        return self.daily_reporter.generate()
+        report = self.daily_reporter.generate()
+        # Send daily summary via Telegram (best-effort)
+        if self._notifier.enabled:
+            try:
+                trades_today = self.trade_logger.get_trade_count(date.today())
+                pnl = self.trade_logger.get_daily_pnl(date.today()) if hasattr(self.trade_logger, 'get_daily_pnl') else 0
+                msg = format_daily_summary(self.exchange, trades_today, pnl)
+                self._notifier.send_message_sync(msg)
+            except Exception as exc:
+                logger.debug("[Telegram] Daily summary failed (swallowed): %s", exc)
+        return report
 
     def get_status(self) -> Dict:
         return {
