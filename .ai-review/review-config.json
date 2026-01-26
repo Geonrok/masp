@@ -1,0 +1,70 @@
+{
+  "version": "1.0.0",
+  "reviewers": {
+    "codex": {
+      "name": "Codex CLI",
+      "model": "gpt-5.2-codex-medium",
+      "focus": ["security", "bugs", "error-handling"],
+      "prompt": "prompts/codex-review.md",
+      "file_patterns": ["*.py"],
+      "priority": 1
+    },
+    "gemini": {
+      "name": "Gemini CLI",
+      "model": "gemini-3-pro-preview",
+      "focus": ["statistics", "backtest", "data-analysis"],
+      "prompt": "prompts/gemini-review.md",
+      "file_patterns": ["*backtest*.py", "*strategy*.py", "*analysis*.py", "research/*"],
+      "priority": 2
+    },
+    "opencode": {
+      "name": "OpenCode CLI",
+      "model": "big-pickle",
+      "focus": ["performance", "optimization", "scalability"],
+      "prompt": "prompts/opencode-review.md",
+      "file_patterns": ["*runner*.py", "*adapter*.py", "*engine*.py"],
+      "priority": 3
+    },
+    "copilot": {
+      "name": "Copilot CLI",
+      "model": "claude-sonnet-4.5",
+      "focus": ["code-quality", "standards", "final-approval"],
+      "prompt": "prompts/copilot-review.md",
+      "file_patterns": ["*"],
+      "priority": 4,
+      "final_reviewer": true
+    }
+  },
+  "routing_rules": {
+    "libs/strategies/": ["gemini", "codex"],
+    "libs/backtest/": ["gemini", "opencode"],
+    "libs/adapters/": ["codex", "opencode"],
+    "libs/risk/": ["codex", "gemini"],
+    "services/": ["codex", "opencode"],
+    "tests/": ["copilot"],
+    "default": ["codex", "copilot"]
+  },
+  "severity_levels": {
+    "P0": {
+      "name": "Blocking",
+      "action": "BLOCK_MERGE",
+      "description": "Must fix before merge"
+    },
+    "P1": {
+      "name": "Important",
+      "action": "REQUEST_CHANGES",
+      "description": "Should fix, can override with justification"
+    },
+    "P2": {
+      "name": "Suggestion",
+      "action": "COMMENT",
+      "description": "Nice to have improvements"
+    }
+  },
+  "output": {
+    "directory": "reviews",
+    "format": "markdown",
+    "summary_file": "summary.json",
+    "keep_history": 30
+  }
+}
