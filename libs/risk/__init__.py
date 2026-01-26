@@ -2,6 +2,13 @@
 MASP Risk Management Module
 
 Provides position sizing, drawdown protection, and risk metrics calculation.
+
+Veto System (v2.0):
+4-Layer hierarchical veto for trade filtering:
+1. Kill Switch - Manual emergency stop
+2. Market Structure - ADX, Choppiness Index
+3. On-Chain - Exchange inflow analysis
+4. Derivatives - Funding rate analysis
 """
 
 from libs.risk.position_sizer import (
@@ -11,11 +18,29 @@ from libs.risk.position_sizer import (
     VolatilityBasedSizer,
 )
 from libs.risk.drawdown_guard import DrawdownGuard
+from libs.risk.veto_manager import (
+    VetoManager,
+    VetoConfig,
+    VetoResult,
+    VetoLevel,
+    calculate_adx,
+    calculate_choppiness_index,
+    calculate_funding_rate_signal,
+)
 
 __all__ = [
+    # Position Sizing
     "PositionSizer",
     "FixedFractionalSizer",
     "KellyCriterionSizer",
     "VolatilityBasedSizer",
     "DrawdownGuard",
+    # Veto System (v2.0)
+    "VetoManager",
+    "VetoConfig",
+    "VetoResult",
+    "VetoLevel",
+    "calculate_adx",
+    "calculate_choppiness_index",
+    "calculate_funding_rate_signal",
 ]

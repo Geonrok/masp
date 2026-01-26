@@ -64,6 +64,17 @@ from services.dashboard.components.log_viewer import render_log_viewer
 from services.dashboard.components.alert_history import render_alert_history_panel
 from services.dashboard.components.scheduler_status import render_scheduler_status
 
+# Phase 7E: Market Regime & Signal components
+from services.dashboard.components.market_regime_panel import (
+    render_market_regime_panel,
+    render_signal_status_panel,
+)
+from services.dashboard.providers.market_regime_provider import (
+    get_market_regime_analysis,
+    get_daily_signal_summary,
+    get_trading_recommendation,
+)
+
 from services.dashboard.utils.auth_middleware import enforce_auth, logout
 from services.dashboard.utils.api_client import ConfigApiClient
 
@@ -75,7 +86,7 @@ if not enforce_auth():
     st.stop()
 
 st.title("MASP 대시보드")
-st.caption("멀티에셋 전략 플랫폼 - Phase 7D-5")
+st.caption("멀티에셋 전략 플랫폼 - Phase 7E")
 
 api = ConfigApiClient()
 
@@ -146,22 +157,54 @@ with tabs[1]:
         )
 
 # =============================================================================
-# Tab 3: Analytics - Strategy performance, backtest, risk metrics
+# Tab 3: Analytics - Strategy performance, backtest, risk metrics, market regime
 # =============================================================================
 with tabs[2]:
     analytics_subtabs = st.tabs(
-        ["전략 성과", "백테스트", "리스크 지표", "시그널"]
+        ["시장 국면", "전략 성과", "백테스트", "리스크 지표", "시그널"]
     )
 
     with analytics_subtabs[0]:
+        # Market Regime Analysis (Phase 7E)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            render_market_regime_panel(analysis_provider=get_market_regime_analysis)
+        with col2:
+            render_signal_status_panel(signal_provider=get_daily_signal_summary)
+
+        # Trading Recommendation
+        st.divider()
+        recommendation = get_trading_recommendation()
+        rec_color = {
+            'AGGRESSIVE_LONG': '#4CAF50',
+            'LONG': '#8BC34A',
+            'CAUTIOUS_LONG': '#CDDC39',
+            'SELECTIVE': '#FFEB3B',
+            'CAUTIOUS': '#FF9800',
+            'WAIT': '#9E9E9E',
+            'STAY_OUT': '#F44336',
+        }.get(recommendation.get('action', 'WAIT'), '#9E9E9E')
+
+        st.markdown(
+            f"""
+            <div style="background-color: {rec_color}; padding: 15px; border-radius: 8px;">
+                <h3 style="color: white; margin: 0;">매매 권고: {recommendation.get('action', 'N/A')}</h3>
+                <p style="color: white; margin: 5px 0;">포지션 사이즈: {recommendation.get('position_size', 0) * 100:.0f}%</p>
+                <p style="color: white; margin: 0; font-size: 14px;">{recommendation.get('message', '')}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with analytics_subtabs[1]:
         # Real strategy performance from trade history (or demo if unavailable)
         render_strategy_performance(performance_provider=get_strategy_performance_provider())
 
-    with analytics_subtabs[1]:
+    with analytics_subtabs[2]:
         # Real backtest data from BacktestStore (or demo if unavailable)
         render_backtest_viewer(backtest_data=get_backtest_data())
 
-    with analytics_subtabs[2]:
+    with analytics_subtabs[3]:
         # Real risk metrics from trade history (or demo if unavailable)
         risk_data = get_risk_metrics_data()
         if risk_data:
@@ -170,7 +213,7 @@ with tabs[2]:
         else:
             render_risk_metrics_panel()
 
-    with analytics_subtabs[3]:
+    with analytics_subtabs[4]:
         col1, col2 = st.columns([1, 1])
         with col1:
             render_strategy_indicators()

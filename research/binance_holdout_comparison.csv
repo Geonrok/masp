@@ -1,0 +1,3 @@
+strategy,upbit_holdout,bithumb_holdout,binance_holdout,binance_source
+"KAMA=10, TSMOM=60",3.162,2.581,2.512433945590555,estimated
+"KAMA=5, TSMOM=90",2.35,1.81,2.54,actual

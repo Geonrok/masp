@@ -9,6 +9,7 @@ from typing import Optional, Type
 from libs.strategies.base import BaseStrategy
 from libs.strategies.mock_strategy import MockStrategy, TrendFollowingMockStrategy
 from libs.strategies.ma_crossover_strategy import MACrossoverStrategy
+from libs.strategies.atlas_futures import ATLASFuturesStrategy
 
 
 # Strategy registry - maps strategy_id to class
@@ -16,12 +17,13 @@ STRATEGY_REGISTRY: dict[str, type[BaseStrategy]] = {
     "mock_strategy": MockStrategy,
     "trend_following_mock": TrendFollowingMockStrategy,
     "ma_crossover_v1": MACrossoverStrategy,
+    "atlas_futures_p04": ATLASFuturesStrategy,
 }
 
 # Strategy metadata registry (not necessarily loadable)
 AVAILABLE_STRATEGIES: list[dict] = []
 
-# ATLAS-Futures registration (metadata only)
+# ATLAS-Futures registration (fully integrated)
 AVAILABLE_STRATEGIES.append({
     "strategy_id": "atlas_futures_p04",
     "id": "atlas_futures_p04",
@@ -33,7 +35,7 @@ AVAILABLE_STRATEGIES.append({
     "config_class": "ATLASFuturesConfig",
     "markets": ["futures"],
     "exchanges": ["binance_futures"],
-    "status": "phase_1b_ready",
+    "status": "phase_4_ready",
 })
 
 # KAMA-TSMOM-Gate registration (metadata only)
@@ -127,10 +129,18 @@ def load_strategies(strategy_ids: list[str]) -> list[BaseStrategy]:
     return strategies
 
 
+def _get_attr(cls, *names, default: str = "unknown") -> str:
+    """Get attribute from class, trying multiple names (case-insensitive fallback)."""
+    for name in names:
+        if hasattr(cls, name):
+            return getattr(cls, name)
+    return default
+
+
 def list_available_strategies() -> list[dict]:
     """
     List all available strategies.
-    
+
     Returns:
         List of strategy metadata dicts
     """
@@ -139,9 +149,9 @@ def list_available_strategies() -> list[dict]:
         result[strategy_id] = {
             "strategy_id": strategy_id,
             "id": strategy_id,
-            "name": strategy_class.name,
-            "version": strategy_class.version,
-            "description": strategy_class.description,
+            "name": _get_attr(strategy_class, "name", "NAME"),
+            "version": _get_attr(strategy_class, "version", "VERSION"),
+            "description": _get_attr(strategy_class, "description", "DESCRIPTION"),
         }
     for entry in AVAILABLE_STRATEGIES:
         strategy_id = entry.get("strategy_id")

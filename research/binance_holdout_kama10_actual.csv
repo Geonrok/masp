@@ -1,0 +1,2 @@
+strategy,market,sharpe,mdd,total_return,avg_positions
+"KAMA=10, TSMOM=60",binance,-0.9065746209300596,-0.45201304038742446,-0.4442976012816487,7.449315068493151
