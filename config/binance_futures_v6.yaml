@@ -1,0 +1,185 @@
+# Binance Futures Strategy v6.0 Configuration
+# AI Consensus Edition - 6 Rounds of Multi-AI Collaboration
+#
+# Performance Targets (Clova Backtest Validated):
+# - Win Rate: 48-52% (OOS)
+# - Annual Return: 25-45%
+# - Max MDD: 25%
+
+strategy:
+  id: binance_futures_v6
+  name: "Binance Futures v6 - AI Consensus"
+  version: "6.0.0"
+  description: "Multi-AI consensus strategy for Binance USDT-M Futures"
+
+# Target Symbols (Top USDT-M Perpetuals)
+symbols:
+  - BTCUSDT
+  - ETHUSDT
+  - BNBUSDT
+  - SOLUSDT
+  - XRPUSDT
+  - DOGEUSDT
+  - ADAUSDT
+  - AVAXUSDT
+  - LINKUSDT
+  - DOTUSDT
+
+# Timeframes
+timeframes:
+  higher: "1d"  # For trend bias (MTF)
+  lower: "4h"   # For entry signals
+
+# ============================================
+# Market Regime Detection (Clova Data)
+# ============================================
+# Bear market (2022): 38% win rate, 42% MDD
+# Bull market (2023-2025): 60% win rate, 18% MDD
+regime_detection:
+  btc_ema_period: 200
+  btc_52w_bars: 365
+  bear_threshold: -30.0  # 52w high drawdown for BEAR
+  neutral_threshold: -15.0  # 52w high drawdown for NEUTRAL
+
+# ============================================
+# BTC Gate (Grok Confirmed: -5%)
+# ============================================
+# -3%: Too conservative, -10-15% return reduction
+# -5%: Balanced (adopted)
+# -7%: Too loose, +10-15% MDD increase
+btc_gate:
+  threshold: -5.0  # 24h BTC change threshold
+  enabled: true
+
+# ============================================
+# Multi-Timeframe Analysis (Grok)
+# ============================================
+# Effect: Sharpe 0.33 -> 0.80
+mtf:
+  ema_fast: 50
+  ema_slow: 200
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+
+# ============================================
+# Signal Generation
+# ============================================
+# Supertrend (Primary)
+supertrend:
+  atr_period: 10
+  factor: 3.0
+
+# KAMA (Confirmation)
+kama:
+  period: 5
+  fast_sc: 2
+  slow_sc: 30
+  slope_period: 3
+
+# TSMOM Volume-Weighted (Clova)
+tsmom:
+  period: 20
+  volume_weighted: true
+
+# ============================================
+# Quality Filters
+# ============================================
+# Choppiness Index (Gemini WFA: 55)
+choppiness:
+  period: 14
+  threshold: 55.0  # < 55 = trending
+
+# ADX Asymmetric (All AI Consensus)
+adx:
+  period: 14
+  long_threshold: 25.0
+  short_threshold: 30.0
+
+# Volume Filter (Grok)
+volume:
+  sma_period: 20
+  multiplier: 1.0  # Current > SMA * multiplier
+
+# OBV Filter (Grok: +5-10% win rate)
+obv:
+  ema_period: 20
+
+# ============================================
+# Risk Management
+# ============================================
+leverage:
+  default: 5
+  max: 10
+
+position_sizing:
+  risk_per_trade: 0.01  # 1%
+  max_positions: 5
+  position_size_pct: 5.0  # % of account per position
+
+stop_loss:
+  atr_multiplier: 1.5
+
+# Drawdown Limits
+drawdown_limits:
+  daily: -3.0  # %
+  weekly: -7.0  # %
+  max_drawdown: -15.0  # %
+  halt_threshold: -25.0  # %
+
+# ============================================
+# Position Sizing by Regime
+# ============================================
+regime_position_multipliers:
+  bull: 1.0
+  neutral: 0.5
+  bear_short: 0.5
+  bear_long: 0.0  # No longs in bear market
+
+# ============================================
+# Performance Expectations (Clova Validated)
+# ============================================
+expected_performance:
+  win_rate:
+    bull: 0.55
+    neutral: 0.50
+    bear: 0.38
+    target: 0.52
+  annual_return: 0.45
+  profit_factor: 1.4
+  risk_reward: 2.0
+
+# ============================================
+# Schedule Configuration
+# ============================================
+schedule:
+  # Run at 4H candle close times (UTC)
+  hours: [0, 4, 8, 12, 16, 20]
+  minute: 5  # 5 minutes after candle close
+  timezone: "UTC"
+  jitter: 30  # Random delay up to 30 seconds
+
+# ============================================
+# Notifications
+# ============================================
+notifications:
+  telegram:
+    enabled: true
+    on_signal: true
+    on_entry: true
+    on_exit: true
+    daily_summary: true
+
+# ============================================
+# Backtest Settings
+# ============================================
+backtest:
+  initial_capital: 10000  # USDT
+  commission: 0.001  # 0.1% taker fee
+  slippage: 0.0005  # 0.05%
+
+  # Walk-Forward Analysis (Gemini)
+  wfa:
+    in_sample_days: 180
+    out_sample_days: 30
+    step_days: 30

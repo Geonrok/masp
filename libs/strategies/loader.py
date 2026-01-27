@@ -10,6 +10,7 @@ from libs.strategies.base import BaseStrategy
 from libs.strategies.mock_strategy import MockStrategy, TrendFollowingMockStrategy
 from libs.strategies.ma_crossover_strategy import MACrossoverStrategy
 from libs.strategies.atlas_futures import ATLASFuturesStrategy
+from libs.strategies.binance_futures_v6 import BinanceFuturesV6Strategy
 
 
 # Strategy registry - maps strategy_id to class
@@ -18,6 +19,7 @@ STRATEGY_REGISTRY: dict[str, type[BaseStrategy]] = {
     "trend_following_mock": TrendFollowingMockStrategy,
     "ma_crossover_v1": MACrossoverStrategy,
     "atlas_futures_p04": ATLASFuturesStrategy,
+    "binance_futures_v6": BinanceFuturesV6Strategy,
 }
 
 # Strategy metadata registry (not necessarily loadable)
@@ -50,6 +52,34 @@ AVAILABLE_STRATEGIES.append({
     "markets": ["spot"],
     "exchanges": ["upbit_spot", "paper"],
     "status": "phase_3a_ready",
+})
+
+# Binance Futures v6 - AI Consensus Strategy
+AVAILABLE_STRATEGIES.append({
+    "strategy_id": "binance_futures_v6",
+    "id": "binance_futures_v6",
+    "name": "Binance Futures v6 - AI Consensus",
+    "version": "6.0.0",
+    "description": "Multi-AI consensus strategy (6 rounds, 10 AIs) for Binance USDT-M Futures",
+    "module": "libs.strategies.binance_futures_v6",
+    "class_name": "BinanceFuturesV6Strategy",
+    "config_class": "BinanceFuturesV6Config",
+    "markets": ["futures"],
+    "exchanges": ["binance_futures"],
+    "status": "backtest_pending",
+    "features": [
+        "market_regime_detection",
+        "multi_timeframe_analysis",
+        "supertrend_kama_tsmom",
+        "quality_filters",
+        "btc_gate",
+        "regime_adaptive_sizing",
+    ],
+    "expected_performance": {
+        "win_rate": "48-52%",
+        "annual_return": "25-45%",
+        "max_mdd": "25%",
+    },
 })
 
 
