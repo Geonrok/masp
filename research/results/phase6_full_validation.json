@@ -1,0 +1,1461 @@
+{
+  "generated_at": "2026-01-27T17:23:50.617735",
+  "strategy": {
+    "name": "ATR Expansion Breakout",
+    "timeframe": "1h",
+    "entry": "Donchian(96) breakout + EMA(200) trend + ATR expansion(1.3x)",
+    "exit": "ATR 3x stop | ATR 8x profit target | 72-bar max hold | reversal",
+    "position_sizing": "Volatility targeting 10% annual, max 5 positions, max 5% each"
+  },
+  "universe": {
+    "total_symbols": 387,
+    "tier_a": 157,
+    "tier_b": 100,
+    "tier_c": 130
+  },
+  "per_symbol_results": {
+    "1000FLOKIUSDT": {
+      "total_return": 0.0056236314802216025,
+      "win_rate": 0.38372093023255816,
+      "profit_factor": 1.1283253178423396,
+      "trade_count": 86,
+      "periods": 25,
+      "profitable_periods": 14
+    },
+    "1000LUNCUSDT": {
+      "total_return": -0.021699606093720014,
+      "win_rate": 0.3119266055045872,
+      "profit_factor": 0.7662657634070686,
+      "trade_count": 109,
+      "periods": 33,
+      "profitable_periods": 12
+    },
+    "1000PEPEUSDT": {
+      "total_return": 0.04801713267290775,
+      "win_rate": 0.3956043956043956,
+      "profit_factor": 1.747241307689706,
+      "trade_count": 91,
+      "periods": 26,
+      "profitable_periods": 13
+    },
+    "1000SHIBUSDT": {
+      "total_return": -0.00050923410527004,
+      "win_rate": 0.34415584415584416,
+      "profit_factor": 1.0748089892154555,
+      "trade_count": 154,
+      "periods": 44,
+      "profitable_periods": 19
+    },
+    "1000XECUSDT": {
+      "total_return": -0.013351071138761439,
+      "win_rate": 0.3586206896551724,
+      "profit_factor": 0.9021860203981219,
+      "trade_count": 145,
+      "periods": 44,
+      "profitable_periods": 12
+    },
+    "1INCHUSDT": {
+      "total_return": -0.0074572122419430675,
+      "win_rate": 0.4228187919463087,
+      "profit_factor": 0.9468744734079153,
+      "trade_count": 149,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "AAVEUSDT": {
+      "total_return": 0.0027397955966481646,
+      "win_rate": 0.46206896551724136,
+      "profit_factor": 1.0449550460907326,
+      "trade_count": 145,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "ACHUSDT": {
+      "total_return": -0.015678813177403605,
+      "win_rate": 0.3181818181818182,
+      "profit_factor": 0.8264001256993705,
+      "trade_count": 88,
+      "periods": 28,
+      "profitable_periods": 9
+    },
+    "ADAUSDT": {
+      "total_return": 0.006326216744873214,
+      "win_rate": 0.45714285714285713,
+      "profit_factor": 1.1695816902593306,
+      "trade_count": 210,
+      "periods": 66,
+      "profitable_periods": 29
+    },
+    "AGLDUSDT": {
+      "total_return": -0.03887447646528985,
+      "win_rate": 0.30666666666666664,
+      "profit_factor": 0.39876523884357834,
+      "trade_count": 75,
+      "periods": 23,
+      "profitable_periods": 5
+    },
+    "ALGOUSDT": {
+      "total_return": -0.04430342133390486,
+      "win_rate": 0.3673469387755102,
+      "profit_factor": 0.7772560782965026,
+      "trade_count": 196,
+      "periods": 62,
+      "profitable_periods": 24
+    },
+    "ALICEUSDT": {
+      "total_return": -0.01958498760289118,
+      "win_rate": 0.40875912408759124,
+      "profit_factor": 0.8340856083511043,
+      "trade_count": 137,
+      "periods": 44,
+      "profitable_periods": 19
+    },
+    "ANKRUSDT": {
+      "total_return": -0.02133858156116375,
+      "win_rate": 0.3716216216216216,
+      "profit_factor": 0.7828688812162619,
+      "trade_count": 148,
+      "periods": 44,
+      "profitable_periods": 17
+    },
+    "APEUSDT": {
+      "total_return": 0.006718628540846927,
+      "win_rate": 0.3983739837398374,
+      "profit_factor": 1.1873703791568144,
+      "trade_count": 123,
+      "periods": 39,
+      "profitable_periods": 18
+    },
+    "API3USDT": {
+      "total_return": -0.03481715828193199,
+      "win_rate": 0.3282442748091603,
+      "profit_factor": 0.6409603198212304,
+      "trade_count": 131,
+      "periods": 40,
+      "profitable_periods": 11
+    },
+    "APTUSDT": {
+      "total_return": -0.02226039821355119,
+      "win_rate": 0.37168141592920356,
+      "profit_factor": 0.7350340034619731,
+      "trade_count": 113,
+      "periods": 32,
+      "profitable_periods": 12
+    },
+    "ARBUSDT": {
+      "total_return": -0.010901813794308324,
+      "win_rate": 0.3870967741935484,
+      "profit_factor": 0.8639074378288245,
+      "trade_count": 93,
+      "periods": 27,
+      "profitable_periods": 11
+    },
+    "ARKMUSDT": {
+      "total_return": -0.010111152207073815,
+      "win_rate": 0.4342105263157895,
+      "profit_factor": 0.9249985673691111,
+      "trade_count": 76,
+      "periods": 23,
+      "profitable_periods": 11
+    },
+    "ARPAUSDT": {
+      "total_return": -0.03565591532483925,
+      "win_rate": 0.33557046979865773,
+      "profit_factor": 0.7029980328032395,
+      "trade_count": 149,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "ARUSDT": {
+      "total_return": -0.0071755526350647525,
+      "win_rate": 0.39568345323741005,
+      "profit_factor": 1.0062814822723543,
+      "trade_count": 139,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "ASTRUSDT": {
+      "total_return": -0.02458323435347698,
+      "win_rate": 0.3655913978494624,
+      "profit_factor": 0.6947199394588993,
+      "trade_count": 93,
+      "periods": 28,
+      "profitable_periods": 10
+    },
+    "ATAUSDT": {
+      "total_return": -0.008579432501692352,
+      "win_rate": 0.39568345323741005,
+      "profit_factor": 0.9528916170398783,
+      "trade_count": 139,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "ATOMUSDT": {
+      "total_return": -0.013157827395447574,
+      "win_rate": 0.39814814814814814,
+      "profit_factor": 0.9553520410947689,
+      "trade_count": 216,
+      "periods": 66,
+      "profitable_periods": 26
+    },
+    "AVAXUSDT": {
+      "total_return": 0.013072851166205934,
+      "win_rate": 0.45977011494252873,
+      "profit_factor": 1.375337354302638,
+      "trade_count": 174,
+      "periods": 58,
+      "profitable_periods": 33
+    },
+    "AXSUSDT": {
+      "total_return": -0.03327908917136113,
+      "win_rate": 0.34,
+      "profit_factor": 0.751730846514403,
+      "trade_count": 150,
+      "periods": 44,
+      "profitable_periods": 17
+    },
+    "BANDUSDT": {
+      "total_return": 0.012947732253074218,
+      "win_rate": 0.4573643410852713,
+      "profit_factor": 1.2832016466305438,
+      "trade_count": 129,
+      "periods": 44,
+      "profitable_periods": 20
+    },
+    "BATUSDT": {
+      "total_return": -0.04167436696294857,
+      "win_rate": 0.35036496350364965,
+      "profit_factor": 0.5350283136680051,
+      "trade_count": 137,
+      "periods": 44,
+      "profitable_periods": 14
+    },
+    "BCHUSDT": {
+      "total_return": -9.45865875153773e-05,
+      "win_rate": 0.38271604938271603,
+      "profit_factor": 1.0418785202197518,
+      "trade_count": 162,
+      "periods": 44,
+      "profitable_periods": 20
+    },
+    "BELUSDT": {
+      "total_return": -0.03583890270477219,
+      "win_rate": 0.3422818791946309,
+      "profit_factor": 0.7443824383671558,
+      "trade_count": 149,
+      "periods": 44,
+      "profitable_periods": 15
+    },
+    "BLURUSDT": {
+      "total_return": 0.0078653896094949,
+      "win_rate": 0.38571428571428573,
+      "profit_factor": 1.2076613538524767,
+      "trade_count": 70,
+      "periods": 26,
+      "profitable_periods": 10
+    },
+    "BNBUSDT": {
+      "total_return": 0.02308857816941745,
+      "win_rate": 0.4267241379310345,
+      "profit_factor": 1.315354574969194,
+      "trade_count": 232,
+      "periods": 66,
+      "profitable_periods": 29
+    },
+    "BNTUSDT": {
+      "total_return": 0.00880600348421856,
+      "win_rate": 0.5,
+      "profit_factor": 1.304344019804008,
+      "trade_count": 68,
+      "periods": 22,
+      "profitable_periods": 13
+    },
+    "BTCDOMUSDT": {
+      "total_return": 0.0026367352232892216,
+      "win_rate": 0.44776119402985076,
+      "profit_factor": 1.1901190355683047,
+      "trade_count": 134,
+      "periods": 44,
+      "profitable_periods": 26
+    },
+    "BTCUSDT": {
+      "total_return": 0.007118284468128122,
+      "win_rate": 0.4139344262295082,
+      "profit_factor": 1.193189147606213,
+      "trade_count": 244,
+      "periods": 67,
+      "profitable_periods": 34
+    },
+    "C98USDT": {
+      "total_return": 0.021285285009844834,
+      "win_rate": 0.4015748031496063,
+      "profit_factor": 1.2820025573035352,
+      "trade_count": 127,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "CELOUSDT": {
+      "total_return": -0.033855955902007184,
+      "win_rate": 0.34814814814814815,
+      "profit_factor": 0.7267017298632747,
+      "trade_count": 135,
+      "periods": 44,
+      "profitable_periods": 13
+    },
+    "CELRUSDT": {
+      "total_return": -0.02578863884373017,
+      "win_rate": 0.3893129770992366,
+      "profit_factor": 0.7572739881311668,
+      "trade_count": 131,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "CFXUSDT": {
+      "total_return": 0.008707797559022623,
+      "win_rate": 0.4,
+      "profit_factor": 1.235648731252282,
+      "trade_count": 95,
+      "periods": 28,
+      "profitable_periods": 13
+    },
+    "CHRUSDT": {
+      "total_return": -0.043781096574965095,
+      "win_rate": 0.3228346456692913,
+      "profit_factor": 0.5589118011419187,
+      "trade_count": 127,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "CHZUSDT": {
+      "total_return": -0.010721269366330999,
+      "win_rate": 0.4421768707482993,
+      "profit_factor": 0.9705942057283573,
+      "trade_count": 147,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "CKBUSDT": {
+      "total_return": 0.00855486385191373,
+      "win_rate": 0.3333333333333333,
+      "profit_factor": 1.1357582564779773,
+      "trade_count": 93,
+      "periods": 28,
+      "profitable_periods": 11
+    },
+    "COMPUSDT": {
+      "total_return": -0.005164591332756485,
+      "win_rate": 0.3900709219858156,
+      "profit_factor": 1.0117364180726094,
+      "trade_count": 141,
+      "periods": 44,
+      "profitable_periods": 20
+    },
+    "COTIUSDT": {
+      "total_return": 0.013808446883401881,
+      "win_rate": 0.40559440559440557,
+      "profit_factor": 1.177193753797407,
+      "trade_count": 143,
+      "periods": 44,
+      "profitable_periods": 17
+    },
+    "CRVUSDT": {
+      "total_return": -0.011655132687170222,
+      "win_rate": 0.39705882352941174,
+      "profit_factor": 0.9125709128263063,
+      "trade_count": 136,
+      "periods": 44,
+      "profitable_periods": 14
+    },
+    "CTSIUSDT": {
+      "total_return": -0.03548357008402858,
+      "win_rate": 0.35,
+      "profit_factor": 0.6682036267596974,
+      "trade_count": 140,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "CYBERUSDT": {
+      "total_return": -0.02056821140677534,
+      "win_rate": 0.3424657534246575,
+      "profit_factor": 0.7803808900157044,
+      "trade_count": 73,
+      "periods": 22,
+      "profitable_periods": 5
+    },
+    "DASHUSDT": {
+      "total_return": 0.03501647300272004,
+      "win_rate": 0.40298507462686567,
+      "profit_factor": 1.5981656987315247,
+      "trade_count": 134,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "DENTUSDT": {
+      "total_return": -5.507757335809771e-05,
+      "win_rate": 0.4,
+      "profit_factor": 1.0206434077851745,
+      "trade_count": 130,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "DODOXUSDT": {
+      "total_return": -0.0064513995169646066,
+      "win_rate": 0.34782608695652173,
+      "profit_factor": 0.8782670160275133,
+      "trade_count": 69,
+      "periods": 22,
+      "profitable_periods": 7
+    },
+    "DOGEUSDT": {
+      "total_return": 0.07695732893710838,
+      "win_rate": 0.3875598086124402,
+      "profit_factor": 1.6840746983906545,
+      "trade_count": 209,
+      "periods": 61,
+      "profitable_periods": 29
+    },
+    "DOTUSDT": {
+      "total_return": -0.03196193407198944,
+      "win_rate": 0.33980582524271846,
+      "profit_factor": 0.8344599157355787,
+      "trade_count": 206,
+      "periods": 60,
+      "profitable_periods": 23
+    },
+    "DUSKUSDT": {
+      "total_return": -0.022120946388031193,
+      "win_rate": 0.41911764705882354,
+      "profit_factor": 0.8977543557815254,
+      "trade_count": 136,
+      "periods": 42,
+      "profitable_periods": 16
+    },
+    "DYDXUSDT": {
+      "total_return": -0.037930050941545446,
+      "win_rate": 0.37410071942446044,
+      "profit_factor": 0.6718683311694466,
+      "trade_count": 139,
+      "periods": 44,
+      "profitable_periods": 15
+    },
+    "EDUUSDT": {
+      "total_return": -0.029494673638703728,
+      "win_rate": 0.3516483516483517,
+      "profit_factor": 0.7314986047224651,
+      "trade_count": 91,
+      "periods": 26,
+      "profitable_periods": 10
+    },
+    "EGLDUSDT": {
+      "total_return": -0.005821105791407599,
+      "win_rate": 0.42028985507246375,
+      "profit_factor": 1.0033464934699847,
+      "trade_count": 138,
+      "periods": 44,
+      "profitable_periods": 19
+    },
+    "ENJUSDT": {
+      "total_return": -0.03704806937804761,
+      "win_rate": 0.3586206896551724,
+      "profit_factor": 0.6292635903193463,
+      "trade_count": 145,
+      "periods": 44,
+      "profitable_periods": 13
+    },
+    "ENSUSDT": {
+      "total_return": -0.036664992137823926,
+      "win_rate": 0.3287671232876712,
+      "profit_factor": 0.7374146399414211,
+      "trade_count": 146,
+      "periods": 43,
+      "profitable_periods": 17
+    },
+    "ETCUSDT": {
+      "total_return": 0.04761443567821311,
+      "win_rate": 0.36936936936936937,
+      "profit_factor": 1.4381609339962171,
+      "trade_count": 222,
+      "periods": 67,
+      "profitable_periods": 27
+    },
+    "ETHUSDT": {
+      "total_return": 0.056237460094772374,
+      "win_rate": 0.47555555555555556,
+      "profit_factor": 1.7712094919531127,
+      "trade_count": 225,
+      "periods": 67,
+      "profitable_periods": 40
+    },
+    "FETUSDT": {
+      "total_return": 0.0018461972694441275,
+      "win_rate": 0.43617021276595747,
+      "profit_factor": 1.1397653444488687,
+      "trade_count": 94,
+      "periods": 29,
+      "profitable_periods": 10
+    },
+    "FILUSDT": {
+      "total_return": 0.001111907336208251,
+      "win_rate": 0.3586206896551724,
+      "profit_factor": 1.0473998142152419,
+      "trade_count": 145,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "FLOWUSDT": {
+      "total_return": -0.003196431129132815,
+      "win_rate": 0.4065040650406504,
+      "profit_factor": 1.0104860154356339,
+      "trade_count": 123,
+      "periods": 40,
+      "profitable_periods": 17
+    },
+    "FTMUSDT": {
+      "total_return": 0.03572770981484785,
+      "win_rate": 0.4236111111111111,
+      "profit_factor": 1.3930269285874477,
+      "trade_count": 144,
+      "periods": 58,
+      "profitable_periods": 25
+    },
+    "FXSUSDT": {
+      "total_return": -0.009724878228831835,
+      "win_rate": 0.38095238095238093,
+      "profit_factor": 0.9227848732743512,
+      "trade_count": 105,
+      "periods": 29,
+      "profitable_periods": 10
+    },
+    "GALAUSDT": {
+      "total_return": -0.033631403890417744,
+      "win_rate": 0.3597122302158273,
+      "profit_factor": 0.73564184415519,
+      "trade_count": 139,
+      "periods": 44,
+      "profitable_periods": 15
+    },
+    "GMTUSDT": {
+      "total_return": 0.036624486083265406,
+      "win_rate": 0.4375,
+      "profit_factor": 1.6479777051406177,
+      "trade_count": 128,
+      "periods": 39,
+      "profitable_periods": 23
+    },
+    "GMXUSDT": {
+      "total_return": 0.0042160884200521664,
+      "win_rate": 0.44565217391304346,
+      "profit_factor": 1.102315169031908,
+      "trade_count": 92,
+      "periods": 28,
+      "profitable_periods": 17
+    },
+    "GRTUSDT": {
+      "total_return": 0.01912499934033285,
+      "win_rate": 0.417910447761194,
+      "profit_factor": 1.2118498104157494,
+      "trade_count": 134,
+      "periods": 44,
+      "profitable_periods": 22
+    },
+    "GTCUSDT": {
+      "total_return": 0.008206598415654742,
+      "win_rate": 0.4017094017094017,
+      "profit_factor": 1.0808869509171766,
+      "trade_count": 117,
+      "periods": 44,
+      "profitable_periods": 22
+    },
+    "HBARUSDT": {
+      "total_return": 0.004205730024067433,
+      "win_rate": 0.39855072463768115,
+      "profit_factor": 1.0700783089595594,
+      "trade_count": 138,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "HFTUSDT": {
+      "total_return": 0.016214941867914723,
+      "win_rate": 0.37777777777777777,
+      "profit_factor": 1.3555200749785914,
+      "trade_count": 90,
+      "periods": 26,
+      "profitable_periods": 14
+    },
+    "HIGHUSDT": {
+      "total_return": -0.016547191712012244,
+      "win_rate": 0.36082474226804123,
+      "profit_factor": 0.8249913176604471,
+      "trade_count": 97,
+      "periods": 28,
+      "profitable_periods": 8
+    },
+    "HOOKUSDT": {
+      "total_return": -0.028111778736678028,
+      "win_rate": 0.40404040404040403,
+      "profit_factor": 0.7180583590346419,
+      "trade_count": 99,
+      "periods": 29,
+      "profitable_periods": 13
+    },
+    "HOTUSDT": {
+      "total_return": -0.026667781720046912,
+      "win_rate": 0.34507042253521125,
+      "profit_factor": 0.7744523958516497,
+      "trade_count": 142,
+      "periods": 44,
+      "profitable_periods": 14
+    },
+    "ICPUSDT": {
+      "total_return": 0.034330809409854446,
+      "win_rate": 0.4772727272727273,
+      "profit_factor": 1.7766246410093693,
+      "trade_count": 88,
+      "periods": 33,
+      "profitable_periods": 19
+    },
+    "ICXUSDT": {
+      "total_return": -0.015377523578601338,
+      "win_rate": 0.38461538461538464,
+      "profit_factor": 0.8605237166607942,
+      "trade_count": 143,
+      "periods": 44,
+      "profitable_periods": 19
+    },
+    "IDUSDT": {
+      "total_return": -0.007665488719588609,
+      "win_rate": 0.35714285714285715,
+      "profit_factor": 0.9057910988856338,
+      "trade_count": 84,
+      "periods": 27,
+      "profitable_periods": 8
+    },
+    "IMXUSDT": {
+      "total_return": -0.017762988841829253,
+      "win_rate": 0.3582089552238806,
+      "profit_factor": 0.8266182427778855,
+      "trade_count": 134,
+      "periods": 40,
+      "profitable_periods": 15
+    },
+    "INJUSDT": {
+      "total_return": 0.027649008598163105,
+      "win_rate": 0.5,
+      "profit_factor": 1.6290304451824285,
+      "trade_count": 100,
+      "periods": 34,
+      "profitable_periods": 20
+    },
+    "IOSTUSDT": {
+      "total_return": -0.041626683655334396,
+      "win_rate": 0.34265734265734266,
+      "profit_factor": 0.5672312158527633,
+      "trade_count": 143,
+      "periods": 44,
+      "profitable_periods": 9
+    },
+    "IOTAUSDT": {
+      "total_return": -0.009998544073961946,
+      "win_rate": 0.40601503759398494,
+      "profit_factor": 0.9554929164054402,
+      "trade_count": 133,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "IOTXUSDT": {
+      "total_return": -0.012162040168093746,
+      "win_rate": 0.36,
+      "profit_factor": 0.863774821545983,
+      "trade_count": 125,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "JASMYUSDT": {
+      "total_return": 0.0014049110269782616,
+      "win_rate": 0.3951612903225806,
+      "profit_factor": 1.1064701403402641,
+      "trade_count": 124,
+      "periods": 38,
+      "profitable_periods": 18
+    },
+    "JOEUSDT": {
+      "total_return": -0.0012246466470144934,
+      "win_rate": 0.4186046511627907,
+      "profit_factor": 1.0096825815463857,
+      "trade_count": 86,
+      "periods": 27,
+      "profitable_periods": 14
+    },
+    "KAVAUSDT": {
+      "total_return": -0.007287433680732813,
+      "win_rate": 0.3671875,
+      "profit_factor": 0.9520457624528602,
+      "trade_count": 128,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "KNCUSDT": {
+      "total_return": -0.015159303231814247,
+      "win_rate": 0.3776223776223776,
+      "profit_factor": 0.8423146401644389,
+      "trade_count": 143,
+      "periods": 44,
+      "profitable_periods": 21
+    },
+    "KSMUSDT": {
+      "total_return": -0.014173478142688989,
+      "win_rate": 0.35766423357664234,
+      "profit_factor": 0.8739779353274298,
+      "trade_count": 137,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "LDOUSDT": {
+      "total_return": -0.013412416372566627,
+      "win_rate": 0.3728813559322034,
+      "profit_factor": 0.9299883260409636,
+      "trade_count": 118,
+      "periods": 33,
+      "profitable_periods": 10
+    },
+    "LINKUSDT": {
+      "total_return": 0.02545903419220874,
+      "win_rate": 0.46116504854368934,
+      "profit_factor": 1.265078686327342,
+      "trade_count": 206,
+      "periods": 67,
+      "profitable_periods": 38
+    },
+    "LPTUSDT": {
+      "total_return": -0.011531127090823379,
+      "win_rate": 0.40397350993377484,
+      "profit_factor": 0.942345459582791,
+      "trade_count": 151,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "LQTYUSDT": {
+      "total_return": -0.0013945770785726008,
+      "win_rate": 0.367816091954023,
+      "profit_factor": 1.0129898463363767,
+      "trade_count": 87,
+      "periods": 27,
+      "profitable_periods": 13
+    },
+    "LRCUSDT": {
+      "total_return": -0.02311831180206847,
+      "win_rate": 0.3880597014925373,
+      "profit_factor": 0.7585283029215718,
+      "trade_count": 134,
+      "periods": 44,
+      "profitable_periods": 22
+    },
+    "LTCUSDT": {
+      "total_return": -0.008414089574041883,
+      "win_rate": 0.37662337662337664,
+      "profit_factor": 1.0265962018682466,
+      "trade_count": 231,
+      "periods": 67,
+      "profitable_periods": 31
+    },
+    "LUNA2USDT": {
+      "total_return": -0.009678788065735633,
+      "win_rate": 0.37735849056603776,
+      "profit_factor": 0.9263748673773033,
+      "trade_count": 106,
+      "periods": 33,
+      "profitable_periods": 12
+    },
+    "MAGICUSDT": {
+      "total_return": 0.038406357684733994,
+      "win_rate": 0.46808510638297873,
+      "profit_factor": 1.7916326872194148,
+      "trade_count": 94,
+      "periods": 29,
+      "profitable_periods": 15
+    },
+    "MANAUSDT": {
+      "total_return": -0.010422531273907243,
+      "win_rate": 0.363013698630137,
+      "profit_factor": 0.902850543336108,
+      "trade_count": 146,
+      "periods": 44,
+      "profitable_periods": 15
+    },
+    "MASKUSDT": {
+      "total_return": -0.01793291880815684,
+      "win_rate": 0.35294117647058826,
+      "profit_factor": 0.8610426256209381,
+      "trade_count": 153,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "MAVUSDT": {
+      "total_return": -0.04068001183931358,
+      "win_rate": 0.2987012987012987,
+      "profit_factor": 0.44586992334522074,
+      "trade_count": 77,
+      "periods": 24,
+      "profitable_periods": 7
+    },
+    "MINAUSDT": {
+      "total_return": 0.0037407773500586217,
+      "win_rate": 0.4166666666666667,
+      "profit_factor": 1.1428619268673794,
+      "trade_count": 84,
+      "periods": 28,
+      "profitable_periods": 11
+    },
+    "MTLUSDT": {
+      "total_return": -0.03619318250588943,
+      "win_rate": 0.36666666666666664,
+      "profit_factor": 0.7169205687138687,
+      "trade_count": 150,
+      "periods": 44,
+      "profitable_periods": 11
+    },
+    "NEARUSDT": {
+      "total_return": 0.005783943835172778,
+      "win_rate": 0.44565217391304346,
+      "profit_factor": 1.1206958249839776,
+      "trade_count": 184,
+      "periods": 58,
+      "profitable_periods": 30
+    },
+    "NEOUSDT": {
+      "total_return": -0.014000480473016164,
+      "win_rate": 0.3673469387755102,
+      "profit_factor": 0.8904956235714804,
+      "trade_count": 147,
+      "periods": 44,
+      "profitable_periods": 17
+    },
+    "NKNUSDT": {
+      "total_return": -0.00239272218591402,
+      "win_rate": 0.358974358974359,
+      "profit_factor": 1.0023835919134583,
+      "trade_count": 156,
+      "periods": 44,
+      "profitable_periods": 15
+    },
+    "NMRUSDT": {
+      "total_return": -0.012250341783955898,
+      "win_rate": 0.3670886075949367,
+      "profit_factor": 0.8435502298390253,
+      "trade_count": 79,
+      "periods": 24,
+      "profitable_periods": 11
+    },
+    "OGNUSDT": {
+      "total_return": -0.044880266374268785,
+      "win_rate": 0.2937062937062937,
+      "profit_factor": 0.6073487344699526,
+      "trade_count": 143,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "ONEUSDT": {
+      "total_return": 0.012794590564631614,
+      "win_rate": 0.48872180451127817,
+      "profit_factor": 1.3138750180623273,
+      "trade_count": 133,
+      "periods": 44,
+      "profitable_periods": 22
+    },
+    "ONTUSDT": {
+      "total_return": -0.025157026338497257,
+      "win_rate": 0.3493150684931507,
+      "profit_factor": 0.7719696112021139,
+      "trade_count": 146,
+      "periods": 44,
+      "profitable_periods": 14
+    },
+    "OPUSDT": {
+      "total_return": 0.006502825576586657,
+      "win_rate": 0.3968253968253968,
+      "profit_factor": 1.0831361122831853,
+      "trade_count": 126,
+      "periods": 37,
+      "profitable_periods": 17
+    },
+    "OXTUSDT": {
+      "total_return": -0.02401974888691949,
+      "win_rate": 0.3333333333333333,
+      "profit_factor": 0.5631506644363087,
+      "trade_count": 63,
+      "periods": 22,
+      "profitable_periods": 7
+    },
+    "PENDLEUSDT": {
+      "total_return": -0.03113700545901965,
+      "win_rate": 0.3384615384615385,
+      "profit_factor": 0.5738347402882805,
+      "trade_count": 65,
+      "periods": 23,
+      "profitable_periods": 7
+    },
+    "PEOPLEUSDT": {
+      "total_return": 0.024364081548744254,
+      "win_rate": 0.38461538461538464,
+      "profit_factor": 1.2121176707087644,
+      "trade_count": 143,
+      "periods": 42,
+      "profitable_periods": 22
+    },
+    "PHBUSDT": {
+      "total_return": 0.007953534162408182,
+      "win_rate": 0.3673469387755102,
+      "profit_factor": 1.1244905763107824,
+      "trade_count": 98,
+      "periods": 28,
+      "profitable_periods": 12
+    },
+    "QNTUSDT": {
+      "total_return": -0.01942067431639971,
+      "win_rate": 0.37777777777777777,
+      "profit_factor": 0.7265988513270694,
+      "trade_count": 90,
+      "periods": 32,
+      "profitable_periods": 11
+    },
+    "QTUMUSDT": {
+      "total_return": -0.02657661671124334,
+      "win_rate": 0.3475177304964539,
+      "profit_factor": 0.6964419861314084,
+      "trade_count": 141,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "RDNTUSDT": {
+      "total_return": -0.049193251740741406,
+      "win_rate": 0.30952380952380953,
+      "profit_factor": 0.43892892043041065,
+      "trade_count": 84,
+      "periods": 27,
+      "profitable_periods": 9
+    },
+    "RLCUSDT": {
+      "total_return": 0.004824319386219411,
+      "win_rate": 0.362962962962963,
+      "profit_factor": 1.063709985969228,
+      "trade_count": 135,
+      "periods": 44,
+      "profitable_periods": 21
+    },
+    "ROSEUSDT": {
+      "total_return": -0.014277682062850405,
+      "win_rate": 0.3695652173913043,
+      "profit_factor": 0.8895846007827757,
+      "trade_count": 138,
+      "periods": 42,
+      "profitable_periods": 17
+    },
+    "RSRUSDT": {
+      "total_return": 0.035438399195924175,
+      "win_rate": 0.4084507042253521,
+      "profit_factor": 1.3753965290278225,
+      "trade_count": 142,
+      "periods": 44,
+      "profitable_periods": 24
+    },
+    "RUNEUSDT": {
+      "total_return": 0.03175498408292743,
+      "win_rate": 0.4755244755244755,
+      "profit_factor": 1.5031834610401693,
+      "trade_count": 143,
+      "periods": 44,
+      "profitable_periods": 27
+    },
+    "RVNUSDT": {
+      "total_return": -0.0339578777076861,
+      "win_rate": 0.3706293706293706,
+      "profit_factor": 0.7769689845002477,
+      "trade_count": 143,
+      "periods": 44,
+      "profitable_periods": 17
+    },
+    "SANDUSDT": {
+      "total_return": 0.023414235469441325,
+      "win_rate": 0.3717277486910995,
+      "profit_factor": 1.2599644900869102,
+      "trade_count": 191,
+      "periods": 54,
+      "profitable_periods": 22
+    },
+    "SEIUSDT": {
+      "total_return": 0.005050360646940533,
+      "win_rate": 0.4305555555555556,
+      "profit_factor": 1.251902206185956,
+      "trade_count": 72,
+      "periods": 22,
+      "profitable_periods": 10
+    },
+    "SFPUSDT": {
+      "total_return": -0.035934719752724886,
+      "win_rate": 0.319672131147541,
+      "profit_factor": 0.606003299829453,
+      "trade_count": 122,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "SKLUSDT": {
+      "total_return": 0.0008371465660967914,
+      "win_rate": 0.34965034965034963,
+      "profit_factor": 1.0142583549322852,
+      "trade_count": 143,
+      "periods": 44,
+      "profitable_periods": 17
+    },
+    "SNXUSDT": {
+      "total_return": -0.0032718425216378133,
+      "win_rate": 0.4507042253521127,
+      "profit_factor": 1.0359964625464093,
+      "trade_count": 142,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "SOLUSDT": {
+      "total_return": 0.027565335415356662,
+      "win_rate": 0.4421052631578947,
+      "profit_factor": 1.3037059481345925,
+      "trade_count": 190,
+      "periods": 59,
+      "profitable_periods": 28
+    },
+    "SPELLUSDT": {
+      "total_return": -0.018790385194940584,
+      "win_rate": 0.37168141592920356,
+      "profit_factor": 0.7665527368637824,
+      "trade_count": 113,
+      "periods": 34,
+      "profitable_periods": 16
+    },
+    "SSVUSDT": {
+      "total_return": 0.014641346012045364,
+      "win_rate": 0.5180722891566265,
+      "profit_factor": 1.4534441936624456,
+      "trade_count": 83,
+      "periods": 28,
+      "profitable_periods": 16
+    },
+    "STGUSDT": {
+      "total_return": -0.009306650986870224,
+      "win_rate": 0.42276422764227645,
+      "profit_factor": 0.8752943297346418,
+      "trade_count": 123,
+      "periods": 34,
+      "profitable_periods": 13
+    },
+    "STORJUSDT": {
+      "total_return": -0.022229746807907902,
+      "win_rate": 0.358974358974359,
+      "profit_factor": 0.849974868816125,
+      "trade_count": 156,
+      "periods": 44,
+      "profitable_periods": 18
+    },
+    "STXUSDT": {
+      "total_return": -0.008517465094336929,
+      "win_rate": 0.38235294117647056,
+      "profit_factor": 0.9162428722885494,
+      "trade_count": 102,
+      "periods": 28,
+      "profitable_periods": 13
+    },
+    "SUIUSDT": {
+      "total_return": -0.012046971783056915,
+      "win_rate": 0.39361702127659576,
+      "profit_factor": 0.8673972680342237,
+      "trade_count": 94,
+      "periods": 26,
+      "profitable_periods": 9
+    },
+    "SUSHIUSDT": {
+      "total_return": -0.0012381897353460625,
+      "win_rate": 0.44776119402985076,
+      "profit_factor": 1.2552695270571554,
+      "trade_count": 134,
+      "periods": 44,
+      "profitable_periods": 19
+    },
+    "THETAUSDT": {
+      "total_return": -0.013941160518396889,
+      "win_rate": 0.3897058823529412,
+      "profit_factor": 0.8662355252273695,
+      "trade_count": 136,
+      "periods": 44,
+      "profitable_periods": 16
+    },
+    "TLMUSDT": {
+      "total_return": -0.01574699557183956,
+      "win_rate": 0.4117647058823529,
+      "profit_factor": 0.7655543801584346,
+      "trade_count": 85,
+      "periods": 27,
+      "profitable_periods": 10
+    },
+    "TRBUSDT": {
+      "total_return": 0.00516976949557546,
+      "win_rate": 0.348993288590604,
+      "profit_factor": 1.1142090809678264,
+      "trade_count": 149,
+      "periods": 44,
+      "profitable_periods": 19
+    },
+    "TRUUSDT": {
+      "total_return": -0.02301778191768089,
+      "win_rate": 0.32142857142857145,
+      "profit_factor": 0.6751821550290974,
+      "trade_count": 84,
+      "periods": 27,
+      "profitable_periods": 10
+    },
+    "TRXUSDT": {
+      "total_return": -0.004762818388401091,
+      "win_rate": 0.3525641025641026,
+      "profit_factor": 0.9555922144853191,
+      "trade_count": 156,
+      "periods": 44,
+      "profitable_periods": 17
+    },
+    "TUSDT": {
+      "total_return": -0.013362400802134689,
+      "win_rate": 0.375,
+      "profit_factor": 0.8611573226598556,
+      "trade_count": 88,
+      "periods": 29,
+      "profitable_periods": 13
+    },
+    "UMAUSDT": {
+      "total_return": -0.010263374269958048,
+      "win_rate": 0.3918918918918919,
+      "profit_factor": 0.8662418656637425,
+      "trade_count": 74,
+      "periods": 25,
+      "profitable_periods": 8
+    },
+    "UNIUSDT": {
+      "total_return": -0.02006672745604232,
+      "win_rate": 0.3958333333333333,
+      "profit_factor": 0.8809487744371685,
+      "trade_count": 192,
+      "periods": 59,
+      "profitable_periods": 27
+    },
+    "USDCUSDT": {
+      "total_return": -0.005814524211539163,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "trade_count": 182,
+      "periods": 27,
+      "profitable_periods": 0
+    },
+    "VETUSDT": {
+      "total_return": 0.008393692689804944,
+      "win_rate": 0.4573643410852713,
+      "profit_factor": 1.179581402940708,
+      "trade_count": 129,
+      "periods": 44,
+      "profitable_periods": 21
+    },
+    "WLDUSDT": {
+      "total_return": 0.041133784075197966,
+      "win_rate": 0.4520547945205479,
+      "profit_factor": 1.974247257433269,
+      "trade_count": 73,
+      "periods": 23,
+      "profitable_periods": 12
+    },
+    "WOOUSDT": {
+      "total_return": -0.023786176341970222,
+      "win_rate": 0.359375,
+      "profit_factor": 0.7885156672316187,
+      "trade_count": 128,
+      "periods": 39,
+      "profitable_periods": 11
+    },
+    "XLMUSDT": {
+      "total_return": 0.023423673294595604,
+      "win_rate": 0.4386792452830189,
+      "profit_factor": 1.3746158399504431,
+      "trade_count": 212,
+      "periods": 67,
+      "profitable_periods": 33
+    },
+    "XMRUSDT": {
+      "total_return": -0.03644376340876476,
+      "win_rate": 0.24545454545454545,
+      "profit_factor": 0.4798188994436999,
+      "trade_count": 110,
+      "periods": 44,
+      "profitable_periods": 9
+    },
+    "XRPUSDT": {
+      "total_return": 0.01153941386316637,
+      "win_rate": 0.3815789473684211,
+      "profit_factor": 1.152947467034009,
+      "trade_count": 228,
+      "periods": 67,
+      "profitable_periods": 26
+    },
+    "XTZUSDT": {
+      "total_return": -0.0023582053425779126,
+      "win_rate": 0.4076923076923077,
+      "profit_factor": 0.9769229207029885,
+      "trade_count": 130,
+      "periods": 44,
+      "profitable_periods": 19
+    },
+    "XVGUSDT": {
+      "total_return": 0.004912794937615095,
+      "win_rate": 0.34177215189873417,
+      "profit_factor": 1.1071054159005342,
+      "trade_count": 79,
+      "periods": 23,
+      "profitable_periods": 11
+    },
+    "XVSUSDT": {
+      "total_return": -0.02516980519768186,
+      "win_rate": 0.36046511627906974,
+      "profit_factor": 0.6338922865727459,
+      "trade_count": 86,
+      "periods": 26,
+      "profitable_periods": 6
+    },
+    "YFIUSDT": {
+      "total_return": 0.010817354729113493,
+      "win_rate": 0.4411764705882353,
+      "profit_factor": 1.2180947639142286,
+      "trade_count": 136,
+      "periods": 44,
+      "profitable_periods": 19
+    },
+    "YGGUSDT": {
+      "total_return": 0.004397228257341901,
+      "win_rate": 0.43661971830985913,
+      "profit_factor": 1.1933381194337782,
+      "trade_count": 71,
+      "periods": 22,
+      "profitable_periods": 12
+    },
+    "ZECUSDT": {
+      "total_return": -0.004145296254180142,
+      "win_rate": 0.35135135135135137,
+      "profit_factor": 1.0081808858776267,
+      "trade_count": 148,
+      "periods": 44,
+      "profitable_periods": 17
+    },
+    "ZENUSDT": {
+      "total_return": -0.004935725566189597,
+      "win_rate": 0.3875968992248062,
+      "profit_factor": 1.0197875725996755,
+      "trade_count": 129,
+      "periods": 44,
+      "profitable_periods": 21
+    },
+    "ZILUSDT": {
+      "total_return": -0.019419462555887224,
+      "win_rate": 0.3706293706293706,
+      "profit_factor": 0.7835814870757393,
+      "trade_count": 143,
+      "periods": 44,
+      "profitable_periods": 19
+    },
+    "ZRXUSDT": {
+      "total_return": 0.0102694931134244,
+      "win_rate": 0.4105960264900662,
+      "profit_factor": 1.1465679087305993,
+      "trade_count": 151,
+      "periods": 44,
+      "profitable_periods": 19
+    }
+  },
+  "portfolio_results": {
+    "top_10": {
+      "total_return": 0.10217722828316878,
+      "max_drawdown": -0.01908905693080984,
+      "sharpe": 1.5286406719465218,
+      "sortino": 4.07153269828436,
+      "win_rate": 0.4222222222222222,
+      "profit_factor": 1.424438243865147,
+      "trade_count": 405,
+      "periods": 23,
+      "wfa_efficiency": 56.52173913043478,
+      "avg_positions_per_period": 5.0,
+      "symbols_used": 10,
+      "criteria_passed": 4
+    },
+    "top_20": {
+      "total_return": 0.23940416068078996,
+      "max_drawdown": -0.015802211967252056,
+      "sharpe": 2.6657882907284707,
+      "sortino": 12.75230400823543,
+      "win_rate": 0.4699738903394256,
+      "profit_factor": 1.767929472284993,
+      "trade_count": 383,
+      "periods": 23,
+      "wfa_efficiency": 73.91304347826086,
+      "avg_positions_per_period": 5.0,
+      "symbols_used": 20,
+      "criteria_passed": 6
+    },
+    "top_30": {
+      "total_return": 0.30204324444494746,
+      "max_drawdown": -0.01398217795320364,
+      "sharpe": 2.6602535555489557,
+      "sortino": 7.667823912428567,
+      "win_rate": 0.48091603053435117,
+      "profit_factor": 1.898085079158272,
+      "trade_count": 393,
+      "periods": 23,
+      "wfa_efficiency": 78.26086956521739,
+      "avg_positions_per_period": 5.0,
+      "symbols_used": 30,
+      "criteria_passed": 6
+    },
+    "all_tier_a": {
+      "total_return": 0.07477988984961592,
+      "max_drawdown": -0.02444808261879973,
+      "sharpe": 0.8466737992868008,
+      "sortino": 2.104451604098615,
+      "win_rate": 0.28854625550660795,
+      "profit_factor": 1.3834430823633053,
+      "trade_count": 454,
+      "periods": 22,
+      "wfa_efficiency": 50.0,
+      "avg_positions_per_period": 5.0,
+      "symbols_used": 157,
+      "criteria_passed": 2
+    },
+    "profitable_only": {
+      "total_return": 0.2031946743395936,
+      "max_drawdown": -0.015854608929289783,
+      "sharpe": 2.3435155342648835,
+      "sortino": 10.985494253783582,
+      "win_rate": 0.496,
+      "profit_factor": 1.7379659228714779,
+      "trade_count": 375,
+      "periods": 22,
+      "wfa_efficiency": 86.36363636363636,
+      "avg_positions_per_period": 5.0,
+      "symbols_used": 57,
+      "criteria_passed": 6
+    }
+  },
+  "stress_test": {
+    "COVID_crash": {
+      "total_pnl": 0.00881158605687225,
+      "trade_count": 10,
+      "win_rate": 0.8
+    },
+    "May2021_crash": {
+      "total_pnl": 0.06330923242197013,
+      "trade_count": 31,
+      "win_rate": 0.5806451612903226
+    },
+    "FTX_collapse": {
+      "total_pnl": 0.042745190606520586,
+      "trade_count": 64,
+      "win_rate": 0.484375
+    },
+    "ETF_rally_2024": {
+      "total_pnl": 0.0719024213409256,
+      "trade_count": 95,
+      "win_rate": 0.4842105263157895
+    },
+    "Recent_2025": {
+      "total_pnl": 0.06396142319871619,
+      "trade_count": 200,
+      "win_rate": 0.41
+    }
+  },
+  "monte_carlo": {
+    "mean": 0.24065872645556416,
+    "median": 0.23780754520884967,
+    "ci_5": 0.13513051964585085,
+    "ci_95": 0.35559859466648486,
+    "prob_positive": 0.9996
+  },
+  "profitable_symbols": [
+    "1000FLOKIUSDT",
+    "1000PEPEUSDT",
+    "AAVEUSDT",
+    "ADAUSDT",
+    "APEUSDT",
+    "AVAXUSDT",
+    "BANDUSDT",
+    "BLURUSDT",
+    "BNBUSDT",
+    "BNTUSDT",
+    "BTCDOMUSDT",
+    "BTCUSDT",
+    "C98USDT",
+    "CFXUSDT",
+    "CKBUSDT",
+    "COTIUSDT",
+    "DASHUSDT",
+    "DOGEUSDT",
+    "ETCUSDT",
+    "ETHUSDT",
+    "FETUSDT",
+    "FILUSDT",
+    "FTMUSDT",
+    "GMTUSDT",
+    "GMXUSDT",
+    "GRTUSDT",
+    "GTCUSDT",
+    "HBARUSDT",
+    "HFTUSDT",
+    "ICPUSDT",
+    "INJUSDT",
+    "JASMYUSDT",
+    "LINKUSDT",
+    "MAGICUSDT",
+    "MINAUSDT",
+    "NEARUSDT",
+    "ONEUSDT",
+    "OPUSDT",
+    "PEOPLEUSDT",
+    "PHBUSDT",
+    "RLCUSDT",
+    "RSRUSDT",
+    "RUNEUSDT",
+    "SANDUSDT",
+    "SEIUSDT",
+    "SKLUSDT",
+    "SOLUSDT",
+    "SSVUSDT",
+    "TRBUSDT",
+    "VETUSDT",
+    "WLDUSDT",
+    "XLMUSDT",
+    "XRPUSDT",
+    "XVGUSDT",
+    "YFIUSDT",
+    "YGGUSDT",
+    "ZRXUSDT"
+  ],
+  "top_20_symbols": [
+    "DOGEUSDT",
+    "ETHUSDT",
+    "1000PEPEUSDT",
+    "ETCUSDT",
+    "WLDUSDT",
+    "MAGICUSDT",
+    "GMTUSDT",
+    "FTMUSDT",
+    "RSRUSDT",
+    "DASHUSDT",
+    "ICPUSDT",
+    "RUNEUSDT",
+    "INJUSDT",
+    "SOLUSDT",
+    "LINKUSDT",
+    "PEOPLEUSDT",
+    "XLMUSDT",
+    "SANDUSDT",
+    "BNBUSDT",
+    "C98USDT"
+  ]
+}
