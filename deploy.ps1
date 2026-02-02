@@ -37,7 +37,8 @@ $commands = @(
 
 $commandJson = $commands | ConvertTo-Json -Compress
 
-aws ssm send-command `
+$awsCli = "C:\Program Files\Amazon\AWSCLIV2\aws.exe"
+& $awsCli ssm send-command `
     --instance-ids "i-0ef28a2261c9eaa41" `
     --document-name "AWS-RunShellScript" `
     --parameters "commands=$commandJson" `
