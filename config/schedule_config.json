@@ -48,6 +48,22 @@
         "timezone": "UTC",
         "jitter": 30
       }
+    },
+    "binance_futures_v6": {
+      "enabled": false,
+      "strategy": "binance_futures_v6",
+      "symbols": ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT"],
+      "position_size_usdt": 100,
+      "leverage": 5,
+      "max_positions": 5,
+      "config_file": "config/binance_futures_v6.yaml",
+      "schedule": {
+        "hours": [0, 4, 8, 12, 16, 20],
+        "minute": 5,
+        "timezone": "UTC",
+        "jitter": 30
+      },
+      "_comment": "AI Consensus Strategy v6 - Enable after backtest validation"
     }
   },
   "telegram": {
@@ -56,5 +72,5 @@
     "notify_daily_summary": true,
     "notify_errors": true
   },
-  "_comment": "MASP Phase 9 - Binance Spot/Futures added"
+  "_comment": "MASP Phase 9 - Binance Spot/Futures added, v6 AI Consensus Strategy added"
 }

@@ -1,0 +1,1492 @@
+{
+  "generated_at": "2026-01-27T14:32:28.055612",
+  "strategies_tested": 11,
+  "results": {
+    "3.1a_tsmom_42": {
+      "name": "Momentum: TSMOM(42)",
+      "profitable_symbols": 7,
+      "total_symbols": 10,
+      "profitable_pct": 70.0,
+      "avg_return": 0.03628330579708346,
+      "avg_sharpe": 0.22763584839021195,
+      "avg_trades": 950.7
+    },
+    "3.1b_tsmom_84": {
+      "name": "Momentum: TSMOM(84)",
+      "profitable_symbols": 8,
+      "total_symbols": 10,
+      "profitable_pct": 80.0,
+      "avg_return": 0.04863724879811994,
+      "avg_sharpe": 0.33293666300448566,
+      "avg_trades": 710.6
+    },
+    "3.1c_dual_mom": {
+      "name": "Momentum: Dual",
+      "profitable_symbols": 7,
+      "total_symbols": 10,
+      "profitable_pct": 70.0,
+      "avg_return": 0.03628330579708346,
+      "avg_sharpe": 0.22763584839021195,
+      "avg_trades": 950.7
+    },
+    "3.1d_kama_mom": {
+      "name": "Momentum: KAMA",
+      "profitable_symbols": 3,
+      "total_symbols": 10,
+      "profitable_pct": 30.0,
+      "avg_return": -0.015654155929996916,
+      "avg_sharpe": -0.2441763491054781,
+      "avg_trades": 1243.3
+    },
+    "3.2a_bb_rev": {
+      "name": "MeanRev: Bollinger",
+      "profitable_symbols": 0,
+      "total_symbols": 10,
+      "profitable_pct": 0.0,
+      "avg_return": -0.047193864743067526,
+      "avg_sharpe": -0.9573774632948586,
+      "avg_trades": 626.3
+    },
+    "3.2b_rsi_rev": {
+      "name": "MeanRev: RSI",
+      "profitable_symbols": 0,
+      "total_symbols": 10,
+      "profitable_pct": 0.0,
+      "avg_return": -0.04637565417121771,
+      "avg_sharpe": -0.7475167451303314,
+      "avg_trades": 772.1
+    },
+    "3.3a_donchian": {
+      "name": "Breakout: Donchian(25)",
+      "profitable_symbols": 3,
+      "total_symbols": 10,
+      "profitable_pct": 30.0,
+      "avg_return": -0.0050302967613352735,
+      "avg_sharpe": -0.26211707814085916,
+      "avg_trades": 605.1
+    },
+    "3.3b_vol_break": {
+      "name": "Breakout: Volatility",
+      "profitable_symbols": 3,
+      "total_symbols": 10,
+      "profitable_pct": 30.0,
+      "avg_return": 0.0013767409079921578,
+      "avg_sharpe": -0.2495430554185895,
+      "avg_trades": 398.8
+    },
+    "3.7a_multi_factor": {
+      "name": "Hybrid: Multi-Factor",
+      "profitable_symbols": 7,
+      "total_symbols": 10,
+      "profitable_pct": 70.0,
+      "avg_return": 0.029929126647356565,
+      "avg_sharpe": 0.2441541486215825,
+      "avg_trades": 866.3
+    },
+    "3.4a_funding_carry": {
+      "name": "Carry: Funding",
+      "profitable_symbols": 0,
+      "total_symbols": 10,
+      "profitable_pct": 0.0,
+      "avg_return": 0.0,
+      "avg_sharpe": 0.0,
+      "avg_trades": 0.0
+    },
+    "3.5a_funding_rev": {
+      "name": "Sentiment: Funding Reversal",
+      "profitable_symbols": 0,
+      "total_symbols": 10,
+      "profitable_pct": 0.0,
+      "avg_return": 0.0,
+      "avg_sharpe": 0.0,
+      "avg_trades": 0.0
+    }
+  },
+  "detailed_results": {
+    "3.1a_tsmom_42": {
+      "name": "Momentum: TSMOM(42)",
+      "profitable_symbols": 7,
+      "total_symbols": 10,
+      "profitable_pct": 70.0,
+      "avg_return": 0.03628330579708346,
+      "avg_sharpe": 0.22763584839021195,
+      "avg_trades": 950.7,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": -0.017275571565687375,
+          "sharpe": -0.23567984259498842,
+          "max_drawdown": -0.04370676118688712,
+          "win_rate": 0.29850746268656714,
+          "profit_factor": 0.936643444379041,
+          "trade_count": 1005,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "ETHUSDT": {
+          "total_return": -0.0015975773888023959,
+          "sharpe": -0.01155189895220267,
+          "max_drawdown": -0.022630306137929577,
+          "win_rate": 0.31626506024096385,
+          "profit_factor": 0.9971935316427982,
+          "trade_count": 996,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "SOLUSDT": {
+          "total_return": 0.07630308250178275,
+          "sharpe": 0.6017790802031705,
+          "max_drawdown": -0.018874399507820033,
+          "win_rate": 0.33825338253382536,
+          "profit_factor": 1.2141016545845045,
+          "trade_count": 813,
+          "periods": 59,
+          "profitable": "True"
+        },
+        "XRPUSDT": {
+          "total_return": 0.08731082458339867,
+          "sharpe": 0.59468119708695,
+          "max_drawdown": -0.028160389137611912,
+          "win_rate": 0.32642487046632124,
+          "profit_factor": 1.2624778630742275,
+          "trade_count": 965,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "DOGEUSDT": {
+          "total_return": 0.12347383878058715,
+          "sharpe": 0.5037457624134434,
+          "max_drawdown": -0.04282929997828732,
+          "win_rate": 0.33724653148345785,
+          "profit_factor": 1.3238521715974834,
+          "trade_count": 937,
+          "periods": 61,
+          "profitable": "True"
+        },
+        "BNBUSDT": {
+          "total_return": 0.021733356105004376,
+          "sharpe": 0.20839115186385523,
+          "max_drawdown": -0.0273195251795094,
+          "win_rate": 0.31567567567567567,
+          "profit_factor": 1.0816665985577119,
+          "trade_count": 925,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "ADAUSDT": {
+          "total_return": 0.037792384547642666,
+          "sharpe": 0.32002289058994043,
+          "max_drawdown": -0.02126599642168379,
+          "win_rate": 0.32934131736526945,
+          "profit_factor": 1.1077938103628713,
+          "trade_count": 1002,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "LINKUSDT": {
+          "total_return": 0.012604946139396667,
+          "sharpe": 0.15271928350181627,
+          "max_drawdown": -0.019046599171694725,
+          "win_rate": 0.33612565445026177,
+          "profit_factor": 1.0333208583803402,
+          "trade_count": 955,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "AVAXUSDT": {
+          "total_return": 0.052969009701479663,
+          "sharpe": 0.5276430208473291,
+          "max_drawdown": -0.017959149977287665,
+          "win_rate": 0.3581395348837209,
+          "profit_factor": 1.1447973309561452,
+          "trade_count": 860,
+          "periods": 58,
+          "profitable": "True"
+        },
+        "LTCUSDT": {
+          "total_return": -0.030481235433967635,
+          "sharpe": -0.38539216105719404,
+          "max_drawdown": -0.046183715116244195,
+          "win_rate": 0.30028598665395617,
+          "profit_factor": 0.914693525798952,
+          "trade_count": 1049,
+          "periods": 67,
+          "profitable": "False"
+        }
+      }
+    },
+    "3.1b_tsmom_84": {
+      "name": "Momentum: TSMOM(84)",
+      "profitable_symbols": 8,
+      "total_symbols": 10,
+      "profitable_pct": 80.0,
+      "avg_return": 0.04863724879811994,
+      "avg_sharpe": 0.33293666300448566,
+      "avg_trades": 710.6,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": 0.013760929197614402,
+          "sharpe": 0.2084539507761759,
+          "max_drawdown": -0.01737881027806765,
+          "win_rate": 0.342534504391468,
+          "profit_factor": 1.0643605545708532,
+          "trade_count": 797,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "ETHUSDT": {
+          "total_return": 0.04656546832040265,
+          "sharpe": 0.5564047959372359,
+          "max_drawdown": -0.022188941965345915,
+          "win_rate": 0.3584379358437936,
+          "profit_factor": 1.1722946063093103,
+          "trade_count": 717,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "SOLUSDT": {
+          "total_return": 0.08558388507476522,
+          "sharpe": 0.5670265263415285,
+          "max_drawdown": -0.02765033464714827,
+          "win_rate": 0.3763955342902711,
+          "profit_factor": 1.2531331240681973,
+          "trade_count": 627,
+          "periods": 59,
+          "profitable": "True"
+        },
+        "XRPUSDT": {
+          "total_return": 0.09492336987551853,
+          "sharpe": 0.7002959735480401,
+          "max_drawdown": -0.021521708670253627,
+          "win_rate": 0.3635116598079561,
+          "profit_factor": 1.2966741148655057,
+          "trade_count": 729,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "DOGEUSDT": {
+          "total_return": 0.1550111319301961,
+          "sharpe": 0.738869858297037,
+          "max_drawdown": -0.02039092820810792,
+          "win_rate": 0.3889655172413793,
+          "profit_factor": 1.4825841889658609,
+          "trade_count": 725,
+          "periods": 61,
+          "profitable": "True"
+        },
+        "BNBUSDT": {
+          "total_return": 0.02644294707286665,
+          "sharpe": 0.20802376436309475,
+          "max_drawdown": -0.019749523135338523,
+          "win_rate": 0.35526315789473684,
+          "profit_factor": 1.1060327552889815,
+          "trade_count": 760,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "ADAUSDT": {
+          "total_return": 0.055148050430657625,
+          "sharpe": 0.43281283763520606,
+          "max_drawdown": -0.034390916154285134,
+          "win_rate": 0.38857938718662954,
+          "profit_factor": 1.1702309229701922,
+          "trade_count": 718,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "LINKUSDT": {
+          "total_return": -0.017779805352298506,
+          "sharpe": -0.1683083659601249,
+          "max_drawdown": -0.05256199609650121,
+          "win_rate": 0.3641456582633053,
+          "profit_factor": 0.9553649748499735,
+          "trade_count": 714,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "AVAXUSDT": {
+          "total_return": 0.07120590097124357,
+          "sharpe": 0.6829419116407045,
+          "max_drawdown": -0.022606915451809293,
+          "win_rate": 0.3715753424657534,
+          "profit_factor": 1.221504516859937,
+          "trade_count": 584,
+          "periods": 58,
+          "profitable": "True"
+        },
+        "LTCUSDT": {
+          "total_return": -0.04448938953976689,
+          "sharpe": -0.597154622534041,
+          "max_drawdown": -0.06047597027216513,
+          "win_rate": 0.3238095238095238,
+          "profit_factor": 0.8662681183056159,
+          "trade_count": 735,
+          "periods": 67,
+          "profitable": "False"
+        }
+      }
+    },
+    "3.1c_dual_mom": {
+      "name": "Momentum: Dual",
+      "profitable_symbols": 7,
+      "total_symbols": 10,
+      "profitable_pct": 70.0,
+      "avg_return": 0.03628330579708346,
+      "avg_sharpe": 0.22763584839021195,
+      "avg_trades": 950.7,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": -0.017275571565687375,
+          "sharpe": -0.23567984259498842,
+          "max_drawdown": -0.04370676118688712,
+          "win_rate": 0.29850746268656714,
+          "profit_factor": 0.936643444379041,
+          "trade_count": 1005,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "ETHUSDT": {
+          "total_return": -0.0015975773888023959,
+          "sharpe": -0.01155189895220267,
+          "max_drawdown": -0.022630306137929577,
+          "win_rate": 0.31626506024096385,
+          "profit_factor": 0.9971935316427982,
+          "trade_count": 996,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "SOLUSDT": {
+          "total_return": 0.07630308250178275,
+          "sharpe": 0.6017790802031705,
+          "max_drawdown": -0.018874399507820033,
+          "win_rate": 0.33825338253382536,
+          "profit_factor": 1.2141016545845045,
+          "trade_count": 813,
+          "periods": 59,
+          "profitable": "True"
+        },
+        "XRPUSDT": {
+          "total_return": 0.08731082458339867,
+          "sharpe": 0.59468119708695,
+          "max_drawdown": -0.028160389137611912,
+          "win_rate": 0.32642487046632124,
+          "profit_factor": 1.2624778630742275,
+          "trade_count": 965,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "DOGEUSDT": {
+          "total_return": 0.12347383878058715,
+          "sharpe": 0.5037457624134434,
+          "max_drawdown": -0.04282929997828732,
+          "win_rate": 0.33724653148345785,
+          "profit_factor": 1.3238521715974834,
+          "trade_count": 937,
+          "periods": 61,
+          "profitable": "True"
+        },
+        "BNBUSDT": {
+          "total_return": 0.021733356105004376,
+          "sharpe": 0.20839115186385523,
+          "max_drawdown": -0.0273195251795094,
+          "win_rate": 0.31567567567567567,
+          "profit_factor": 1.0816665985577119,
+          "trade_count": 925,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "ADAUSDT": {
+          "total_return": 0.037792384547642666,
+          "sharpe": 0.32002289058994043,
+          "max_drawdown": -0.02126599642168379,
+          "win_rate": 0.32934131736526945,
+          "profit_factor": 1.1077938103628713,
+          "trade_count": 1002,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "LINKUSDT": {
+          "total_return": 0.012604946139396667,
+          "sharpe": 0.15271928350181627,
+          "max_drawdown": -0.019046599171694725,
+          "win_rate": 0.33612565445026177,
+          "profit_factor": 1.0333208583803402,
+          "trade_count": 955,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "AVAXUSDT": {
+          "total_return": 0.052969009701479663,
+          "sharpe": 0.5276430208473291,
+          "max_drawdown": -0.017959149977287665,
+          "win_rate": 0.3581395348837209,
+          "profit_factor": 1.1447973309561452,
+          "trade_count": 860,
+          "periods": 58,
+          "profitable": "True"
+        },
+        "LTCUSDT": {
+          "total_return": -0.030481235433967635,
+          "sharpe": -0.38539216105719404,
+          "max_drawdown": -0.046183715116244195,
+          "win_rate": 0.30028598665395617,
+          "profit_factor": 0.914693525798952,
+          "trade_count": 1049,
+          "periods": 67,
+          "profitable": "False"
+        }
+      }
+    },
+    "3.1d_kama_mom": {
+      "name": "Momentum: KAMA",
+      "profitable_symbols": 3,
+      "total_symbols": 10,
+      "profitable_pct": 30.0,
+      "avg_return": -0.015654155929996916,
+      "avg_sharpe": -0.2441763491054781,
+      "avg_trades": 1243.3,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": -0.048537613732633766,
+          "sharpe": -0.9680804826554764,
+          "max_drawdown": -0.057144985033406426,
+          "win_rate": 0.19724770642201836,
+          "profit_factor": 0.8422001639377732,
+          "trade_count": 1308,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "ETHUSDT": {
+          "total_return": -0.025609786091840614,
+          "sharpe": -0.352418757517461,
+          "max_drawdown": -0.047055308782021375,
+          "win_rate": 0.2119309262166405,
+          "profit_factor": 0.9350758239325071,
+          "trade_count": 1274,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "SOLUSDT": {
+          "total_return": 0.027624813900777756,
+          "sharpe": 0.2823729903214586,
+          "max_drawdown": -0.02934178080836145,
+          "win_rate": 0.2119089316987741,
+          "profit_factor": 1.0665804317861811,
+          "trade_count": 1142,
+          "periods": 59,
+          "profitable": "True"
+        },
+        "XRPUSDT": {
+          "total_return": -0.038713632286717425,
+          "sharpe": -0.25702671328971727,
+          "max_drawdown": -0.11003240537068901,
+          "win_rate": 0.17400881057268722,
+          "profit_factor": 0.9182481542163693,
+          "trade_count": 1362,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "DOGEUSDT": {
+          "total_return": 0.06409773607944502,
+          "sharpe": 0.3285448252314584,
+          "max_drawdown": -0.07990378492401111,
+          "win_rate": 0.20651242502142245,
+          "profit_factor": 1.1441957945676335,
+          "trade_count": 1167,
+          "periods": 61,
+          "profitable": "True"
+        },
+        "BNBUSDT": {
+          "total_return": 0.008689984595074307,
+          "sharpe": 0.0992039163685812,
+          "max_drawdown": -0.031144694042908105,
+          "win_rate": 0.2072072072072072,
+          "profit_factor": 1.0293473766462375,
+          "trade_count": 1221,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "ADAUSDT": {
+          "total_return": -0.04840340007004029,
+          "sharpe": -0.4508967282699185,
+          "max_drawdown": -0.07209140190391758,
+          "win_rate": 0.1948249619482496,
+          "profit_factor": 0.9002027399335029,
+          "trade_count": 1314,
+          "periods": 66,
+          "profitable": "False"
+        },
+        "LINKUSDT": {
+          "total_return": -0.020831376856218164,
+          "sharpe": -0.2260179922093367,
+          "max_drawdown": -0.05279965730441754,
+          "win_rate": 0.23333333333333334,
+          "profit_factor": 0.9565239717721268,
+          "trade_count": 1230,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "AVAXUSDT": {
+          "total_return": -0.006048810088150169,
+          "sharpe": -0.06166055422893692,
+          "max_drawdown": -0.026995080622156227,
+          "win_rate": 0.2403755868544601,
+          "profit_factor": 0.9880103189439448,
+          "trade_count": 1065,
+          "periods": 58,
+          "profitable": "False"
+        },
+        "LTCUSDT": {
+          "total_return": -0.06880947474966581,
+          "sharpe": -0.8357839948054326,
+          "max_drawdown": -0.07032354914865645,
+          "win_rate": 0.1948148148148148,
+          "profit_factor": 0.8400021866344446,
+          "trade_count": 1350,
+          "periods": 67,
+          "profitable": "False"
+        }
+      }
+    },
+    "3.2a_bb_rev": {
+      "name": "MeanRev: Bollinger",
+      "profitable_symbols": 0,
+      "total_symbols": 10,
+      "profitable_pct": 0.0,
+      "avg_return": -0.047193864743067526,
+      "avg_sharpe": -0.9573774632948586,
+      "avg_trades": 626.3,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": -0.04893637138210538,
+          "sharpe": -1.7559327131075788,
+          "max_drawdown": -0.051006002955428675,
+          "win_rate": 0.5161290322580645,
+          "profit_factor": 0.525743059304225,
+          "trade_count": 620,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "ETHUSDT": {
+          "total_return": -0.048972665490538025,
+          "sharpe": -1.6380942947418875,
+          "max_drawdown": -0.05060115208146731,
+          "win_rate": 0.5403726708074534,
+          "profit_factor": 0.6270819958080882,
+          "trade_count": 644,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "SOLUSDT": {
+          "total_return": -0.030969736108886536,
+          "sharpe": -0.5782920652956912,
+          "max_drawdown": -0.04840588181074544,
+          "win_rate": 0.5752961082910322,
+          "profit_factor": 0.803689038119767,
+          "trade_count": 591,
+          "periods": 59,
+          "profitable": "False"
+        },
+        "XRPUSDT": {
+          "total_return": -0.06723566765957212,
+          "sharpe": -1.1606560279219986,
+          "max_drawdown": -0.06933999693804718,
+          "win_rate": 0.6017964071856288,
+          "profit_factor": 0.6240667061514675,
+          "trade_count": 668,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "DOGEUSDT": {
+          "total_return": -0.12588163326712287,
+          "sharpe": -0.7818555002982058,
+          "max_drawdown": -0.12588163326712287,
+          "win_rate": 0.6081081081081081,
+          "profit_factor": 0.5170357590677522,
+          "trade_count": 592,
+          "periods": 61,
+          "profitable": "False"
+        },
+        "BNBUSDT": {
+          "total_return": -0.03578405348243918,
+          "sharpe": -0.7607020066960165,
+          "max_drawdown": -0.03779071147734512,
+          "win_rate": 0.575,
+          "profit_factor": 0.7153554942446138,
+          "trade_count": 640,
+          "periods": 66,
+          "profitable": "False"
+        },
+        "ADAUSDT": {
+          "total_return": -0.045548345950329305,
+          "sharpe": -0.9739434535136078,
+          "max_drawdown": -0.04841172956860719,
+          "win_rate": 0.5826893353941267,
+          "profit_factor": 0.7263124675823166,
+          "trade_count": 647,
+          "periods": 66,
+          "profitable": "False"
+        },
+        "LINKUSDT": {
+          "total_return": -0.006019882806409416,
+          "sharpe": -0.16139442285143246,
+          "max_drawdown": -0.014101024890419398,
+          "win_rate": 0.5978755690440061,
+          "profit_factor": 0.9601407125713786,
+          "trade_count": 659,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "AVAXUSDT": {
+          "total_return": -0.02375540893823258,
+          "sharpe": -0.7035440580447535,
+          "max_drawdown": -0.02921051710006139,
+          "win_rate": 0.5773195876288659,
+          "profit_factor": 0.830076276443527,
+          "trade_count": 582,
+          "periods": 58,
+          "profitable": "False"
+        },
+        "LTCUSDT": {
+          "total_return": -0.038834882345039845,
+          "sharpe": -1.0593600904774139,
+          "max_drawdown": -0.03905516192420009,
+          "win_rate": 0.5967741935483871,
+          "profit_factor": 0.7256537732969812,
+          "trade_count": 620,
+          "periods": 67,
+          "profitable": "False"
+        }
+      }
+    },
+    "3.2b_rsi_rev": {
+      "name": "MeanRev: RSI",
+      "profitable_symbols": 0,
+      "total_symbols": 10,
+      "profitable_pct": 0.0,
+      "avg_return": -0.04637565417121771,
+      "avg_sharpe": -0.7475167451303314,
+      "avg_trades": 772.1,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": -0.04688940694352717,
+          "sharpe": -1.3709498967208138,
+          "max_drawdown": -0.05026914713854455,
+          "win_rate": 0.5708955223880597,
+          "profit_factor": 0.6784388414669478,
+          "trade_count": 804,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "ETHUSDT": {
+          "total_return": -0.06110691106322563,
+          "sharpe": -1.4530190982205191,
+          "max_drawdown": -0.06187701265090262,
+          "win_rate": 0.5555555555555556,
+          "profit_factor": 0.681288797161634,
+          "trade_count": 792,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "SOLUSDT": {
+          "total_return": -0.05451386278607173,
+          "sharpe": -1.15466175756696,
+          "max_drawdown": -0.06598010107851238,
+          "win_rate": 0.5982905982905983,
+          "profit_factor": 0.7466589061053193,
+          "trade_count": 702,
+          "periods": 59,
+          "profitable": "False"
+        },
+        "XRPUSDT": {
+          "total_return": -0.06030326220330717,
+          "sharpe": -0.7970224970091441,
+          "max_drawdown": -0.06202050336408619,
+          "win_rate": 0.6203007518796992,
+          "profit_factor": 0.7244024752076187,
+          "trade_count": 798,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "DOGEUSDT": {
+          "total_return": -0.12751162019691054,
+          "sharpe": -0.732768022331305,
+          "max_drawdown": -0.1307589222622786,
+          "win_rate": 0.6230876216968011,
+          "profit_factor": 0.6031283570131662,
+          "trade_count": 719,
+          "periods": 61,
+          "profitable": "False"
+        },
+        "BNBUSDT": {
+          "total_return": -0.0253098499043245,
+          "sharpe": -0.36253722360887974,
+          "max_drawdown": -0.02888295165695369,
+          "win_rate": 0.5969191270860077,
+          "profit_factor": 0.8412091179144869,
+          "trade_count": 779,
+          "periods": 66,
+          "profitable": "False"
+        },
+        "ADAUSDT": {
+          "total_return": -0.04846441791798717,
+          "sharpe": -0.762397790439979,
+          "max_drawdown": -0.05065073192050319,
+          "win_rate": 0.6163682864450127,
+          "profit_factor": 0.7711645416482809,
+          "trade_count": 782,
+          "periods": 66,
+          "profitable": "False"
+        },
+        "LINKUSDT": {
+          "total_return": -0.008395032692379623,
+          "sharpe": -0.14571293892724105,
+          "max_drawdown": -0.036487146320997796,
+          "win_rate": 0.6209068010075567,
+          "profit_factor": 0.960074441917261,
+          "trade_count": 794,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "AVAXUSDT": {
+          "total_return": -0.0051672928152295405,
+          "sharpe": -0.10505342839143325,
+          "max_drawdown": -0.029042318885554256,
+          "win_rate": 0.6034255599472991,
+          "profit_factor": 0.9752167143286572,
+          "trade_count": 759,
+          "periods": 58,
+          "profitable": "False"
+        },
+        "LTCUSDT": {
+          "total_return": -0.02609488518921399,
+          "sharpe": -0.5910447980870395,
+          "max_drawdown": -0.033770586880743525,
+          "win_rate": 0.61489898989899,
+          "profit_factor": 0.8556242990175956,
+          "trade_count": 792,
+          "periods": 67,
+          "profitable": "False"
+        }
+      }
+    },
+    "3.3a_donchian": {
+      "name": "Breakout: Donchian(25)",
+      "profitable_symbols": 3,
+      "total_symbols": 10,
+      "profitable_pct": 30.0,
+      "avg_return": -0.0050302967613352735,
+      "avg_sharpe": -0.26211707814085916,
+      "avg_trades": 605.1,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": -0.007482913779812139,
+          "sharpe": -0.39353324715158106,
+          "max_drawdown": -0.009156476605291078,
+          "win_rate": 0.36553945249597425,
+          "profit_factor": 0.8970933537288039,
+          "trade_count": 621,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "ETHUSDT": {
+          "total_return": -0.01685958980294122,
+          "sharpe": -0.7036248530324597,
+          "max_drawdown": -0.022353500553927878,
+          "win_rate": 0.40644171779141103,
+          "profit_factor": 0.8310140547375401,
+          "trade_count": 652,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "SOLUSDT": {
+          "total_return": -0.014010847542078153,
+          "sharpe": -0.3355207303992567,
+          "max_drawdown": -0.01940946369387646,
+          "win_rate": 0.4065573770491803,
+          "profit_factor": 0.8959241926063279,
+          "trade_count": 610,
+          "periods": 59,
+          "profitable": "False"
+        },
+        "XRPUSDT": {
+          "total_return": 0.022837630644322315,
+          "sharpe": 0.4481579491128857,
+          "max_drawdown": -0.010466638523185225,
+          "win_rate": 0.36044362292051757,
+          "profit_factor": 1.2102236375836015,
+          "trade_count": 541,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "DOGEUSDT": {
+          "total_return": 0.02287746136395641,
+          "sharpe": 0.3044489930528801,
+          "max_drawdown": -0.023103802516233417,
+          "win_rate": 0.3889980353634578,
+          "profit_factor": 1.1945272600371721,
+          "trade_count": 509,
+          "periods": 61,
+          "profitable": "True"
+        },
+        "BNBUSDT": {
+          "total_return": -0.0050380981826173565,
+          "sharpe": -0.10207014069958517,
+          "max_drawdown": -0.01957191336183304,
+          "win_rate": 0.36490683229813664,
+          "profit_factor": 0.951416573688619,
+          "trade_count": 644,
+          "periods": 66,
+          "profitable": "False"
+        },
+        "ADAUSDT": {
+          "total_return": 0.016265786427711815,
+          "sharpe": 0.35365680970621494,
+          "max_drawdown": -0.010447322661027872,
+          "win_rate": 0.3891625615763547,
+          "profit_factor": 1.1399958898373683,
+          "trade_count": 609,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "LINKUSDT": {
+          "total_return": -0.03732085905749394,
+          "sharpe": -1.0812840681467326,
+          "max_drawdown": -0.03827075480228458,
+          "win_rate": 0.35703703703703704,
+          "profit_factor": 0.743623644192812,
+          "trade_count": 675,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "AVAXUSDT": {
+          "total_return": -0.012602126748931797,
+          "sharpe": -0.40930294116342414,
+          "max_drawdown": -0.018305311268240088,
+          "win_rate": 0.3996655518394649,
+          "profit_factor": 0.8971075800967294,
+          "trade_count": 598,
+          "periods": 58,
+          "profitable": "False"
+        },
+        "LTCUSDT": {
+          "total_return": -0.018969410935468667,
+          "sharpe": -0.7020985526875329,
+          "max_drawdown": -0.022811007508627745,
+          "win_rate": 0.3733108108108108,
+          "profit_factor": 0.8276740226801966,
+          "trade_count": 592,
+          "periods": 67,
+          "profitable": "False"
+        }
+      }
+    },
+    "3.3b_vol_break": {
+      "name": "Breakout: Volatility",
+      "profitable_symbols": 3,
+      "total_symbols": 10,
+      "profitable_pct": 30.0,
+      "avg_return": 0.0013767409079921578,
+      "avg_sharpe": -0.2495430554185895,
+      "avg_trades": 398.8,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": -0.0073962981367796665,
+          "sharpe": -0.4439115448523727,
+          "max_drawdown": -0.013611369095648558,
+          "win_rate": 0.43313373253493015,
+          "profit_factor": 0.8541897826701548,
+          "trade_count": 501,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "ETHUSDT": {
+          "total_return": -0.0073283608740961625,
+          "sharpe": -0.3206709013512545,
+          "max_drawdown": -0.009047832013068212,
+          "win_rate": 0.45879732739420936,
+          "profit_factor": 0.8887512766082868,
+          "trade_count": 449,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "SOLUSDT": {
+          "total_return": -0.01846600191391712,
+          "sharpe": -0.578807152267193,
+          "max_drawdown": -0.021955850613912364,
+          "win_rate": 0.4394366197183099,
+          "profit_factor": 0.7775975387257396,
+          "trade_count": 355,
+          "periods": 59,
+          "profitable": "False"
+        },
+        "XRPUSDT": {
+          "total_return": -0.00577504625137093,
+          "sharpe": -0.19618975240557382,
+          "max_drawdown": -0.015203187491096155,
+          "win_rate": 0.3853904282115869,
+          "profit_factor": 0.9335382937185432,
+          "trade_count": 397,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "DOGEUSDT": {
+          "total_return": 0.08433152530500698,
+          "sharpe": 0.34412852350791356,
+          "max_drawdown": -0.030272029641854648,
+          "win_rate": 0.40860215053763443,
+          "profit_factor": 1.9074058905372637,
+          "trade_count": 372,
+          "periods": 61,
+          "profitable": "True"
+        },
+        "BNBUSDT": {
+          "total_return": -0.01616934912771628,
+          "sharpe": -0.6111512340587624,
+          "max_drawdown": -0.02272174869888257,
+          "win_rate": 0.42790697674418604,
+          "profit_factor": 0.7587352469370907,
+          "trade_count": 430,
+          "periods": 66,
+          "profitable": "False"
+        },
+        "ADAUSDT": {
+          "total_return": 0.0013139148317864446,
+          "sharpe": 0.05191121911949889,
+          "max_drawdown": -0.011007638611570997,
+          "win_rate": 0.45544554455445546,
+          "profit_factor": 1.0190032976653567,
+          "trade_count": 404,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "LINKUSDT": {
+          "total_return": 0.005899821199532029,
+          "sharpe": 0.21546924704427575,
+          "max_drawdown": -0.007763423211007921,
+          "win_rate": 0.49056603773584906,
+          "profit_factor": 1.086133029861345,
+          "trade_count": 371,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "AVAXUSDT": {
+          "total_return": -0.012129795987856462,
+          "sharpe": -0.5051252937587252,
+          "max_drawdown": -0.01283645802252753,
+          "win_rate": 0.4430769230769231,
+          "profit_factor": 0.8222908840030704,
+          "trade_count": 325,
+          "periods": 58,
+          "profitable": "False"
+        },
+        "LTCUSDT": {
+          "total_return": -0.010512999964667258,
+          "sharpe": -0.45108366516370146,
+          "max_drawdown": -0.013982770488871253,
+          "win_rate": 0.4375,
+          "profit_factor": 0.8463638253484095,
+          "trade_count": 384,
+          "periods": 67,
+          "profitable": "False"
+        }
+      }
+    },
+    "3.7a_multi_factor": {
+      "name": "Hybrid: Multi-Factor",
+      "profitable_symbols": 7,
+      "total_symbols": 10,
+      "profitable_pct": 70.0,
+      "avg_return": 0.029929126647356565,
+      "avg_sharpe": 0.2441541486215825,
+      "avg_trades": 866.3,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": -0.015965929091823816,
+          "sharpe": -0.39168837950644764,
+          "max_drawdown": -0.022764851973149616,
+          "win_rate": 0.30513918629550324,
+          "profit_factor": 0.9131942834776074,
+          "trade_count": 934,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "ETHUSDT": {
+          "total_return": 0.04392860307135393,
+          "sharpe": 0.7438153896055019,
+          "max_drawdown": -0.012115950569720044,
+          "win_rate": 0.3435655253837072,
+          "profit_factor": 1.2209244232966212,
+          "trade_count": 847,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "SOLUSDT": {
+          "total_return": 0.04809609324279829,
+          "sharpe": 0.64715550733565,
+          "max_drawdown": -0.016809379140176696,
+          "win_rate": 0.360450563204005,
+          "profit_factor": 1.2029459281922632,
+          "trade_count": 799,
+          "periods": 59,
+          "profitable": "True"
+        },
+        "XRPUSDT": {
+          "total_return": 0.07967775775323527,
+          "sharpe": 0.6526026335266422,
+          "max_drawdown": -0.01389908575467534,
+          "win_rate": 0.31971995332555425,
+          "profit_factor": 1.3540734213304286,
+          "trade_count": 857,
+          "periods": 67,
+          "profitable": "True"
+        },
+        "DOGEUSDT": {
+          "total_return": 0.10583472720571208,
+          "sharpe": 0.5294710018156016,
+          "max_drawdown": -0.035840306439689655,
+          "win_rate": 0.3337453646477132,
+          "profit_factor": 1.3886916318325024,
+          "trade_count": 809,
+          "periods": 61,
+          "profitable": "True"
+        },
+        "BNBUSDT": {
+          "total_return": 0.02372964292139379,
+          "sharpe": 0.27048724875606983,
+          "max_drawdown": -0.025484022719311626,
+          "win_rate": 0.3217097862767154,
+          "profit_factor": 1.125511366746035,
+          "trade_count": 889,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "ADAUSDT": {
+          "total_return": 0.04747491355317046,
+          "sharpe": 0.5450795997785631,
+          "max_drawdown": -0.01557878647151697,
+          "win_rate": 0.36966292134831463,
+          "profit_factor": 1.1942886105510604,
+          "trade_count": 890,
+          "periods": 66,
+          "profitable": "True"
+        },
+        "LINKUSDT": {
+          "total_return": -0.012391068621307566,
+          "sharpe": -0.1898164909004875,
+          "max_drawdown": -0.035277044146342,
+          "win_rate": 0.32349841938883034,
+          "profit_factor": 0.9576164096071543,
+          "trade_count": 949,
+          "periods": 67,
+          "profitable": "False"
+        },
+        "AVAXUSDT": {
+          "total_return": 0.010160522284606621,
+          "sharpe": 0.20429644666499744,
+          "max_drawdown": -0.014545663196137074,
+          "win_rate": 0.3619167717528373,
+          "profit_factor": 1.0398545798565473,
+          "trade_count": 793,
+          "periods": 58,
+          "profitable": "True"
+        },
+        "LTCUSDT": {
+          "total_return": -0.031253995845573423,
+          "sharpe": -0.569861470860266,
+          "max_drawdown": -0.03679028528385898,
+          "win_rate": 0.32142857142857145,
+          "profit_factor": 0.8705521820440226,
+          "trade_count": 896,
+          "periods": 67,
+          "profitable": "False"
+        }
+      }
+    },
+    "3.4a_funding_carry": {
+      "name": "Carry: Funding",
+      "profitable_symbols": 0,
+      "total_symbols": 10,
+      "profitable_pct": 0.0,
+      "avg_return": 0.0,
+      "avg_sharpe": 0.0,
+      "avg_trades": 0.0,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 67,
+          "profitable": false
+        },
+        "ETHUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 67,
+          "profitable": false
+        },
+        "SOLUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 59,
+          "profitable": false
+        },
+        "XRPUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 67,
+          "profitable": false
+        },
+        "DOGEUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 61,
+          "profitable": false
+        },
+        "BNBUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 66,
+          "profitable": false
+        },
+        "ADAUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 66,
+          "profitable": false
+        },
+        "LINKUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 67,
+          "profitable": false
+        },
+        "AVAXUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 58,
+          "profitable": false
+        },
+        "LTCUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 67,
+          "profitable": false
+        }
+      }
+    },
+    "3.5a_funding_rev": {
+      "name": "Sentiment: Funding Reversal",
+      "profitable_symbols": 0,
+      "total_symbols": 10,
+      "profitable_pct": 0.0,
+      "avg_return": 0.0,
+      "avg_sharpe": 0.0,
+      "avg_trades": 0.0,
+      "symbol_results": {
+        "BTCUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 67,
+          "profitable": false
+        },
+        "ETHUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 67,
+          "profitable": false
+        },
+        "SOLUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 59,
+          "profitable": false
+        },
+        "XRPUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 67,
+          "profitable": false
+        },
+        "DOGEUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 61,
+          "profitable": false
+        },
+        "BNBUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 66,
+          "profitable": false
+        },
+        "ADAUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 66,
+          "profitable": false
+        },
+        "LINKUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 67,
+          "profitable": false
+        },
+        "AVAXUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 58,
+          "profitable": false
+        },
+        "LTCUSDT": {
+          "total_return": 0.0,
+          "sharpe": 0.0,
+          "max_drawdown": 0.0,
+          "win_rate": 0,
+          "profit_factor": 0.0,
+          "trade_count": 0,
+          "periods": 67,
+          "profitable": false
+        }
+      }
+    }
+  },
+  "ranking": [
+    {
+      "rank": 1,
+      "strategy": "3.1b_tsmom_84",
+      "name": "Momentum: TSMOM(84)",
+      "profitable_pct": 80.0,
+      "avg_return": 0.04863724879811994,
+      "avg_sharpe": 0.33293666300448566
+    },
+    {
+      "rank": 2,
+      "strategy": "3.1a_tsmom_42",
+      "name": "Momentum: TSMOM(42)",
+      "profitable_pct": 70.0,
+      "avg_return": 0.03628330579708346,
+      "avg_sharpe": 0.22763584839021195
+    },
+    {
+      "rank": 3,
+      "strategy": "3.1c_dual_mom",
+      "name": "Momentum: Dual",
+      "profitable_pct": 70.0,
+      "avg_return": 0.03628330579708346,
+      "avg_sharpe": 0.22763584839021195
+    },
+    {
+      "rank": 4,
+      "strategy": "3.7a_multi_factor",
+      "name": "Hybrid: Multi-Factor",
+      "profitable_pct": 70.0,
+      "avg_return": 0.029929126647356565,
+      "avg_sharpe": 0.2441541486215825
+    },
+    {
+      "rank": 5,
+      "strategy": "3.1d_kama_mom",
+      "name": "Momentum: KAMA",
+      "profitable_pct": 30.0,
+      "avg_return": -0.015654155929996916,
+      "avg_sharpe": -0.2441763491054781
+    },
+    {
+      "rank": 6,
+      "strategy": "3.3a_donchian",
+      "name": "Breakout: Donchian(25)",
+      "profitable_pct": 30.0,
+      "avg_return": -0.0050302967613352735,
+      "avg_sharpe": -0.26211707814085916
+    },
+    {
+      "rank": 7,
+      "strategy": "3.3b_vol_break",
+      "name": "Breakout: Volatility",
+      "profitable_pct": 30.0,
+      "avg_return": 0.0013767409079921578,
+      "avg_sharpe": -0.2495430554185895
+    },
+    {
+      "rank": 8,
+      "strategy": "3.2a_bb_rev",
+      "name": "MeanRev: Bollinger",
+      "profitable_pct": 0.0,
+      "avg_return": -0.047193864743067526,
+      "avg_sharpe": -0.9573774632948586
+    },
+    {
+      "rank": 9,
+      "strategy": "3.2b_rsi_rev",
+      "name": "MeanRev: RSI",
+      "profitable_pct": 0.0,
+      "avg_return": -0.04637565417121771,
+      "avg_sharpe": -0.7475167451303314
+    },
+    {
+      "rank": 10,
+      "strategy": "3.4a_funding_carry",
+      "name": "Carry: Funding",
+      "profitable_pct": 0.0,
+      "avg_return": 0.0,
+      "avg_sharpe": 0.0
+    },
+    {
+      "rank": 11,
+      "strategy": "3.5a_funding_rev",
+      "name": "Sentiment: Funding Reversal",
+      "profitable_pct": 0.0,
+      "avg_return": 0.0,
+      "avg_sharpe": 0.0
+    }
+  ],
+  "promising": [
+    {
+      "strategy": "3.1b_tsmom_84",
+      "name": "Momentum: TSMOM(84)",
+      "profitable_pct": 80.0,
+      "avg_return": 0.04863724879811994,
+      "avg_sharpe": 0.33293666300448566
+    },
+    {
+      "strategy": "3.1a_tsmom_42",
+      "name": "Momentum: TSMOM(42)",
+      "profitable_pct": 70.0,
+      "avg_return": 0.03628330579708346,
+      "avg_sharpe": 0.22763584839021195
+    },
+    {
+      "strategy": "3.1c_dual_mom",
+      "name": "Momentum: Dual",
+      "profitable_pct": 70.0,
+      "avg_return": 0.03628330579708346,
+      "avg_sharpe": 0.22763584839021195
+    },
+    {
+      "strategy": "3.7a_multi_factor",
+      "name": "Hybrid: Multi-Factor",
+      "profitable_pct": 70.0,
+      "avg_return": 0.029929126647356565,
+      "avg_sharpe": 0.2441541486215825
+    }
+  ],
+  "failed": [
+    {
+      "strategy": "3.1d_kama_mom",
+      "name": "Momentum: KAMA",
+      "profitable_pct": 30.0,
+      "avg_return": -0.015654155929996916
+    },
+    {
+      "strategy": "3.3a_donchian",
+      "name": "Breakout: Donchian(25)",
+      "profitable_pct": 30.0,
+      "avg_return": -0.0050302967613352735
+    },
+    {
+      "strategy": "3.3b_vol_break",
+      "name": "Breakout: Volatility",
+      "profitable_pct": 30.0,
+      "avg_return": 0.0013767409079921578
+    },
+    {
+      "strategy": "3.2a_bb_rev",
+      "name": "MeanRev: Bollinger",
+      "profitable_pct": 0.0,
+      "avg_return": -0.047193864743067526
+    },
+    {
+      "strategy": "3.2b_rsi_rev",
+      "name": "MeanRev: RSI",
+      "profitable_pct": 0.0,
+      "avg_return": -0.04637565417121771
+    },
+    {
+      "strategy": "3.4a_funding_carry",
+      "name": "Carry: Funding",
+      "profitable_pct": 0.0,
+      "avg_return": 0.0
+    },
+    {
+      "strategy": "3.5a_funding_rev",
+      "name": "Sentiment: Funding Reversal",
+      "profitable_pct": 0.0,
+      "avg_return": 0.0
+    }
+  ]
+}

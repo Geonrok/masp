@@ -1,0 +1,69 @@
+{
+  "timestamp": "2026-01-27T19:51:24.123175",
+  "strategy": "Dual MA Breakout (Long-Only)",
+  "config": {
+    "lookback": 48,
+    "ema_fast": 50,
+    "ema_slow": 200,
+    "atr_expansion": 1.0,
+    "max_positions": 10,
+    "rebalance_bars": 720,
+    "exit": {
+      "max_bars": 72,
+      "atr_stop": 3.0,
+      "profit_target_atr": 8.0
+    }
+  },
+  "true_oos_result": {
+    "total_return": 0.029255320520567007,
+    "max_drawdown": -0.007253735079882538,
+    "sharpe": 2.393840949480045,
+    "win_rate": 0.46078431372549017,
+    "profit_factor": 1.8252512974760262,
+    "trade_count": 102,
+    "periods": 3,
+    "wfa_efficiency": 66.66666666666666
+  },
+  "verdicts": {
+    "test1_6_of_6": "True",
+    "test2_slippage_robust": true,
+    "test3_no_bear_catastrophe": true,
+    "test4_monte_carlo_positive": true,
+    "test5_param_robust": true,
+    "test6_capacity_ok": true
+  },
+  "all_pass": true,
+  "slippage_results": {
+    "0.02%": {
+      "passed": "6",
+      "sharpe": 2.5543249006463595
+    },
+    "0.03%": {
+      "passed": "6",
+      "sharpe": 2.393840949480045
+    },
+    "0.05%": {
+      "passed": "5",
+      "sharpe": 2.28723069120711
+    },
+    "0.08%": {
+      "passed": "5",
+      "sharpe": 2.227899768791176
+    },
+    "0.10%": {
+      "passed": "5",
+      "sharpe": 2.1440387865847854
+    }
+  },
+  "param_robustness": {
+    "base": "6",
+    "lookback_38": "4",
+    "lookback_58": "5",
+    "ema_fast_40": "6",
+    "ema_fast_60": "6",
+    "ema_slow_160": "6",
+    "ema_slow_240": "6",
+    "atr_exp_0.8": "5",
+    "atr_exp_1.2": "5"
+  }
+}

@@ -9,6 +9,13 @@ Veto System (v2.0):
 2. Market Structure - ADX, Choppiness Index
 3. On-Chain - Exchange inflow analysis
 4. Derivatives - Funding rate analysis
+
+Stop Loss Manager:
+Position-level exit logic:
+- Fixed percentage stop loss / take profit
+- Trailing stop
+- ATR-based dynamic stop
+- Time-based stop (maximum holding period)
 """
 
 from libs.risk.position_sizer import (
@@ -17,7 +24,7 @@ from libs.risk.position_sizer import (
     KellyCriterionSizer,
     VolatilityBasedSizer,
 )
-from libs.risk.drawdown_guard import DrawdownGuard
+from libs.risk.drawdown_guard import DrawdownGuard, RiskStatus, RiskState
 from libs.risk.veto_manager import (
     VetoManager,
     VetoConfig,
@@ -27,6 +34,18 @@ from libs.risk.veto_manager import (
     calculate_choppiness_index,
     calculate_funding_rate_signal,
 )
+from libs.risk.stop_loss_manager import (
+    StopLossStrategy,
+    FixedPercentageStop,
+    TrailingStop,
+    ATRBasedStop,
+    TimeBasedStop,
+    CompositeStopManager,
+    ExitSignal,
+    ExitReason,
+    Position,
+    create_default_stop_manager,
+)
 
 __all__ = [
     # Position Sizing
@@ -34,7 +53,10 @@ __all__ = [
     "FixedFractionalSizer",
     "KellyCriterionSizer",
     "VolatilityBasedSizer",
+    # Drawdown Guard
     "DrawdownGuard",
+    "RiskStatus",
+    "RiskState",
     # Veto System (v2.0)
     "VetoManager",
     "VetoConfig",
@@ -43,4 +65,15 @@ __all__ = [
     "calculate_adx",
     "calculate_choppiness_index",
     "calculate_funding_rate_signal",
+    # Stop Loss Manager
+    "StopLossStrategy",
+    "FixedPercentageStop",
+    "TrailingStop",
+    "ATRBasedStop",
+    "TimeBasedStop",
+    "CompositeStopManager",
+    "ExitSignal",
+    "ExitReason",
+    "Position",
+    "create_default_stop_manager",
 ]

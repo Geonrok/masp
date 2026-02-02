@@ -28,6 +28,13 @@ from libs.analytics.daily_report import DailyReportGenerator
 from libs.strategies.base import Signal as StrategySignal
 from libs.strategies.loader import get_strategy
 from libs.notifications.telegram import TelegramNotifier, format_trade_message, format_daily_summary
+from libs.risk.stop_loss_manager import (
+    CompositeStopManager,
+    TrailingStop,
+    FixedPercentageStop,
+    TimeBasedStop,
+    ExitReason,
+)
 
 logger = logging.getLogger(__name__)
 MIN_ORDER_KRW = 5000
@@ -59,7 +66,12 @@ class StrategyRunner:
         config: Config = None,
         strategy=None,
         market_data=None,
-        execution=None
+        execution=None,
+        enable_stop_loss: bool = False,
+        stop_loss_pct: float = 0.05,
+        take_profit_pct: float = 0.10,
+        trailing_stop_pct: float = 0.03,
+        max_holding_hours: float = 120.0,
     ):
         self.strategy_name = strategy_name
         self.exchange = exchange
@@ -157,6 +169,38 @@ class StrategyRunner:
         # 포지션 상태
         self._positions: Dict[str, float] = {}  # symbol -> quantity
         self._last_signals: Dict[str, str] = {}  # symbol -> signal
+
+        # Stop Loss Manager (선택적 활성화)
+        self._enable_stop_loss = enable_stop_loss
+        self._stop_loss_manager: Optional[CompositeStopManager] = None
+        if enable_stop_loss:
+            self._stop_loss_manager = CompositeStopManager()
+            # Trailing stop with activation threshold
+            self._stop_loss_manager.add_strategy(
+                TrailingStop(
+                    trail_pct=trailing_stop_pct,
+                    activation_pct=trailing_stop_pct * 0.7,  # Activate at 70% of trail
+                    initial_stop_pct=stop_loss_pct,
+                )
+            )
+            # Fixed take profit
+            self._stop_loss_manager.add_strategy(
+                FixedPercentageStop(
+                    stop_loss_pct=stop_loss_pct * 2,  # Wider emergency stop
+                    take_profit_pct=take_profit_pct,
+                )
+            )
+            # Time-based exit
+            self._stop_loss_manager.add_strategy(
+                TimeBasedStop(
+                    max_holding_hours=max_holding_hours,
+                    fallback_stop_pct=stop_loss_pct,
+                )
+            )
+            logger.info(
+                "[StrategyRunner] StopLossManager enabled: SL=%.1f%%, TP=%.1f%%, Trail=%.1f%%",
+                stop_loss_pct * 100, take_profit_pct * 100, trailing_stop_pct * 100
+            )
 
         # Telegram 알림 (best-effort, 설정 없으면 비활성화)
         self._notifier = TelegramNotifier()
@@ -337,7 +381,22 @@ class StrategyRunner:
             total, balance_label, max_buy
         )
 
+        # Check stop loss conditions for existing positions (before processing new signals)
+        if self._enable_stop_loss and self._stop_loss_manager:
+            stop_loss_results = self._check_stop_loss_conditions()
+            for sl_symbol, sl_result in stop_loss_results.items():
+                if sl_result.get("action") == "SELL":
+                    results[sl_symbol] = sl_result
+                    logger.info(
+                        "[StopLoss] %s triggered for %s: %s",
+                        sl_result.get("reason", "unknown"), sl_symbol, sl_result
+                    )
+
         for i, symbol in enumerate(self.symbols):
+            # Skip symbols already handled by stop loss
+            if symbol in results:
+                continue
+
             elapsed = time.time() - start_time
             if elapsed > max_execution_time:
                 logger.warning(
@@ -479,6 +538,11 @@ class StrategyRunner:
                 order_type="MARKET",
                 amount_krw=self._position_size,
             )
+            # Register position for stop loss tracking
+            if self._enable_stop_loss and current_price > 0:
+                quantity = self._position_size / current_price
+                self._register_position_for_stop_loss(symbol, "long", current_price, quantity)
+
             # Telegram 알림 (best-effort)
             self._send_trade_notification(symbol, "BUY", self._position_size, current_price, "FILLED")
             return {"action": "BUY", "order_id": order.order_id or order.symbol}
@@ -493,6 +557,9 @@ class StrategyRunner:
                     "[%s] Dust Skip: %.2f %s < %.2f",
                     symbol, estimated_value, self._quote_currency, min_order
                 )
+                # Remove from stop loss tracker if exists
+                if self._stop_loss_manager:
+                    self._stop_loss_manager.close_position(symbol)
                 return {"action": "SKIP", "reason": f"Dust ({estimated_value:.2f} {self._quote_currency})"}
 
             order = self.execution.place_order(
@@ -501,6 +568,10 @@ class StrategyRunner:
                 order_type="MARKET",
                 units=balance,
             )
+            # Remove from stop loss tracker
+            if self._stop_loss_manager:
+                self._stop_loss_manager.close_position(symbol)
+
             # Telegram 알림 (best-effort)
             self._send_trade_notification(symbol, "SELL", balance, current_price, "FILLED")
             return {"action": "SELL", "order_id": order.order_id or order.symbol}
@@ -522,6 +593,106 @@ class StrategyRunner:
         if "-" in symbol:
             return symbol.split("-")[1]
         return symbol
+
+    def _check_stop_loss_conditions(self) -> Dict[str, Dict]:
+        """
+        Check stop loss conditions for all tracked positions.
+
+        Returns:
+            Dict of symbol -> result with executed SELL orders
+        """
+        results = {}
+        if not self._stop_loss_manager:
+            return results
+
+        # Get current prices for all positions
+        prices = {}
+        for symbol in self._stop_loss_manager.positions:
+            try:
+                quote = self.market_data.get_quote(symbol)
+                if quote:
+                    prices[symbol] = self._extract_price(quote)
+            except Exception as exc:
+                logger.warning("[StopLoss] Failed to get price for %s: %s", symbol, exc)
+
+        # Check all positions
+        exit_signals = self._stop_loss_manager.check_all_positions(prices)
+
+        for symbol, signal in exit_signals.items():
+            if not signal.should_exit:
+                continue
+
+            # Execute SELL order
+            try:
+                base_asset = self._base_asset(symbol)
+                balance = self.execution.get_balance(base_asset) or 0
+                current_price = prices.get(symbol, 0)
+
+                if balance <= 0:
+                    logger.warning("[StopLoss] No balance for %s, removing from tracker", symbol)
+                    self._stop_loss_manager.close_position(symbol)
+                    continue
+
+                min_order = 5 if self._is_usdt_based else MIN_ORDER_KRW
+                estimated_value = balance * current_price
+
+                if estimated_value < min_order:
+                    logger.info("[StopLoss] Dust skip for %s: %.2f", symbol, estimated_value)
+                    self._stop_loss_manager.close_position(symbol)
+                    continue
+
+                order = self.execution.place_order(
+                    symbol,
+                    "SELL",
+                    order_type="MARKET",
+                    units=balance,
+                )
+
+                # Remove from stop loss tracker
+                self._stop_loss_manager.close_position(symbol)
+
+                # Telegram notification
+                reason_str = signal.reason.value if signal.reason else "stop_loss"
+                self._send_trade_notification(
+                    symbol, "SELL", balance, current_price,
+                    f"STOP_LOSS ({reason_str})"
+                )
+
+                results[symbol] = {
+                    "action": "SELL",
+                    "reason": f"StopLoss: {reason_str}",
+                    "pnl_percent": signal.pnl_percent,
+                    "order_id": order.order_id or order.symbol,
+                }
+
+                logger.info(
+                    "[StopLoss] Executed SELL for %s: reason=%s, pnl=%.2f%%",
+                    symbol, reason_str, (signal.pnl_percent or 0) * 100
+                )
+
+            except Exception as exc:
+                logger.error("[StopLoss] Failed to execute SELL for %s: %s", symbol, exc)
+                results[symbol] = {"action": "ERROR", "reason": str(exc)}
+
+        return results
+
+    def _register_position_for_stop_loss(
+        self, symbol: str, side: str, entry_price: float, quantity: float
+    ) -> None:
+        """Register a new position with the stop loss manager."""
+        if not self._stop_loss_manager:
+            return
+
+        self._stop_loss_manager.open_position(
+            symbol=symbol,
+            side=side,
+            entry_price=entry_price,
+            quantity=quantity,
+        )
+        logger.info(
+            "[StopLoss] Registered position: %s %s @ %.2f x %.6f",
+            side, symbol, entry_price, quantity
+        )
 
     def run_loop(self, interval_seconds: int = 60, max_iterations: int = None):
         iteration = 0

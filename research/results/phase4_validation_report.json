@@ -1,0 +1,2375 @@
+{
+  "generated_at": "2026-01-27T14:35:35.679088",
+  "strategies_validated": 3,
+  "best_strategy": "tsmom_84",
+  "results": {
+    "tsmom_84": {
+      "name": "TSMOM(84)",
+      "oos_profitable_pct": 40.0,
+      "avg_wfa_efficiency": 51.15234714336055,
+      "avg_wfa_sharpe": 0.2781275394521419,
+      "significant_count": 0,
+      "criteria_passed": 3,
+      "criteria_total": 6,
+      "criteria": {
+        "oos_sharpe_gt_1": "False",
+        "max_dd_lt_25": true,
+        "win_rate_gt_45": "False",
+        "profit_factor_gt_1_5": "False",
+        "wfa_efficiency_gt_50": "True",
+        "trade_count_gt_100": true
+      }
+    },
+    "tsmom_42": {
+      "name": "TSMOM(42)",
+      "oos_profitable_pct": 50.0,
+      "avg_wfa_efficiency": 48.23057189253652,
+      "avg_wfa_sharpe": 0.15340621096991008,
+      "significant_count": 0,
+      "criteria_passed": 2,
+      "criteria_total": 6,
+      "criteria": {
+        "oos_sharpe_gt_1": "False",
+        "max_dd_lt_25": true,
+        "win_rate_gt_45": "False",
+        "profit_factor_gt_1_5": "False",
+        "wfa_efficiency_gt_50": "False",
+        "trade_count_gt_100": true
+      }
+    },
+    "multi_factor": {
+      "name": "Multi-Factor",
+      "oos_profitable_pct": 80.0,
+      "avg_wfa_efficiency": 46.603834953989264,
+      "avg_wfa_sharpe": 0.14320374027869448,
+      "significant_count": 0,
+      "criteria_passed": 2,
+      "criteria_total": 6,
+      "criteria": {
+        "oos_sharpe_gt_1": "False",
+        "max_dd_lt_25": true,
+        "win_rate_gt_45": "False",
+        "profit_factor_gt_1_5": "False",
+        "wfa_efficiency_gt_50": "False",
+        "trade_count_gt_100": true
+      }
+    }
+  },
+  "detailed_results": {
+    "tsmom_84": {
+      "name": "TSMOM(84)",
+      "oos_profitable_pct": 40.0,
+      "avg_wfa_efficiency": 51.15234714336055,
+      "avg_wfa_sharpe": 0.2781275394521419,
+      "significant_count": 0,
+      "criteria_passed": 3,
+      "criteria_total": 6,
+      "criteria": {
+        "oos_sharpe_gt_1": "False",
+        "max_dd_lt_25": true,
+        "win_rate_gt_45": "False",
+        "profit_factor_gt_1_5": "False",
+        "wfa_efficiency_gt_50": "True",
+        "trade_count_gt_100": true
+      },
+      "details": {
+        "is": {
+          "BTCUSDT": {
+            "total_return": 0.01433377772118627,
+            "max_drawdown": -0.01893368379457723,
+            "win_rate": 0.32150313152400833,
+            "profit_factor": 1.1191908704428204,
+            "trade_count": 479,
+            "period": "IS",
+            "name": "TSMOM(84)"
+          },
+          "ETHUSDT": {
+            "total_return": 0.031129437376278712,
+            "max_drawdown": -0.02145573173337121,
+            "win_rate": 0.34966592427616927,
+            "profit_factor": 1.18411914788813,
+            "trade_count": 449,
+            "period": "IS",
+            "name": "TSMOM(84)"
+          },
+          "SOLUSDT": {
+            "total_return": 0.09509055703709546,
+            "max_drawdown": -0.03014908053937168,
+            "win_rate": 0.37566137566137564,
+            "profit_factor": 1.3766945933287855,
+            "trade_count": 378,
+            "period": "IS",
+            "name": "TSMOM(84)"
+          },
+          "XRPUSDT": {
+            "total_return": 0.08114823659391246,
+            "max_drawdown": -0.026841441084083605,
+            "win_rate": 0.3790523690773067,
+            "profit_factor": 1.451381949588881,
+            "trade_count": 401,
+            "period": "IS",
+            "name": "TSMOM(84)"
+          },
+          "DOGEUSDT": {
+            "total_return": 0.14446169280746957,
+            "max_drawdown": -0.018659649056982277,
+            "win_rate": 0.3619631901840491,
+            "profit_factor": 1.7329769013820062,
+            "trade_count": 489,
+            "period": "IS",
+            "name": "TSMOM(84)"
+          },
+          "BNBUSDT": {
+            "total_return": 0.028285344893467013,
+            "max_drawdown": -0.023797261992978946,
+            "win_rate": 0.3442622950819672,
+            "profit_factor": 1.16728342590669,
+            "trade_count": 427,
+            "period": "IS",
+            "name": "TSMOM(84)"
+          },
+          "ADAUSDT": {
+            "total_return": 0.03459786311660418,
+            "max_drawdown": -0.0367466556901512,
+            "win_rate": 0.3638392857142857,
+            "profit_factor": 1.1734570607314063,
+            "trade_count": 448,
+            "period": "IS",
+            "name": "TSMOM(84)"
+          },
+          "LINKUSDT": {
+            "total_return": -0.020834612627305904,
+            "max_drawdown": -0.05315204630573153,
+            "win_rate": 0.35578947368421054,
+            "profit_factor": 0.9387415465144615,
+            "trade_count": 475,
+            "period": "IS",
+            "name": "TSMOM(84)"
+          },
+          "AVAXUSDT": {
+            "total_return": 0.09646774226936494,
+            "max_drawdown": -0.022408645147405214,
+            "win_rate": 0.3816155988857939,
+            "profit_factor": 1.4304516739083486,
+            "trade_count": 359,
+            "period": "IS",
+            "name": "TSMOM(84)"
+          },
+          "LTCUSDT": {
+            "total_return": -0.01567795826419982,
+            "max_drawdown": -0.03855277862242797,
+            "win_rate": 0.334916864608076,
+            "profit_factor": 0.9461680229400673,
+            "trade_count": 421,
+            "period": "IS",
+            "name": "TSMOM(84)"
+          }
+        },
+        "oos": {
+          "BTCUSDT": {
+            "total_return": -0.004041657525291509,
+            "max_drawdown": -0.013099432731256374,
+            "win_rate": 0.31875,
+            "profit_factor": 0.936303123941388,
+            "trade_count": 160,
+            "period": "OOS",
+            "name": "TSMOM(84)"
+          },
+          "ETHUSDT": {
+            "total_return": -0.003874019913667537,
+            "max_drawdown": -0.008845023622681579,
+            "win_rate": 0.3141025641025641,
+            "profit_factor": 0.9470656425048593,
+            "trade_count": 156,
+            "period": "OOS",
+            "name": "TSMOM(84)"
+          },
+          "SOLUSDT": {
+            "total_return": 0.0027039768506775808,
+            "max_drawdown": -0.01982390175773603,
+            "win_rate": 0.3082191780821918,
+            "profit_factor": 1.0537854743103736,
+            "trade_count": 146,
+            "period": "OOS",
+            "name": "TSMOM(84)"
+          },
+          "XRPUSDT": {
+            "total_return": -0.014067206972824708,
+            "max_drawdown": -0.014712990853287231,
+            "win_rate": 0.33879781420765026,
+            "profit_factor": 0.7687432464125352,
+            "trade_count": 183,
+            "period": "OOS",
+            "name": "TSMOM(84)"
+          },
+          "DOGEUSDT": {
+            "total_return": 0.03700924027487207,
+            "max_drawdown": -0.00838018958355963,
+            "win_rate": 0.38271604938271603,
+            "profit_factor": 1.6280592902476236,
+            "trade_count": 162,
+            "period": "OOS",
+            "name": "TSMOM(84)"
+          },
+          "BNBUSDT": {
+            "total_return": -0.0010038676441377348,
+            "max_drawdown": -0.013052094589897435,
+            "win_rate": 0.3352601156069364,
+            "profit_factor": 1.0088704977447498,
+            "trade_count": 173,
+            "period": "OOS",
+            "name": "TSMOM(84)"
+          },
+          "ADAUSDT": {
+            "total_return": 0.026267489118775078,
+            "max_drawdown": -0.012179324315029888,
+            "win_rate": 0.38562091503267976,
+            "profit_factor": 1.594839950720518,
+            "trade_count": 153,
+            "period": "OOS",
+            "name": "TSMOM(84)"
+          },
+          "LINKUSDT": {
+            "total_return": -0.008097649051266975,
+            "max_drawdown": -0.028423927220696445,
+            "win_rate": 0.32298136645962733,
+            "profit_factor": 0.9080653158360945,
+            "trade_count": 161,
+            "period": "OOS",
+            "name": "TSMOM(84)"
+          },
+          "AVAXUSDT": {
+            "total_return": 0.022521705881046294,
+            "max_drawdown": -0.0150119653359984,
+            "win_rate": 0.3559322033898305,
+            "profit_factor": 1.354436702892503,
+            "trade_count": 118,
+            "period": "OOS",
+            "name": "TSMOM(84)"
+          },
+          "LTCUSDT": {
+            "total_return": -0.026746450520064746,
+            "max_drawdown": -0.028574057663245434,
+            "win_rate": 0.27976190476190477,
+            "profit_factor": 0.576596103813513,
+            "trade_count": 168,
+            "period": "OOS",
+            "name": "TSMOM(84)"
+          }
+        },
+        "wfa": {
+          "BTCUSDT": {
+            "wfa_efficiency": 50.74626865671642,
+            "periods": 67,
+            "profitable_periods": 34,
+            "avg_period_return": 0.00011493307096318423,
+            "sharpe": 0.1132688648334354,
+            "name": "TSMOM(84)"
+          },
+          "ETHUSDT": {
+            "wfa_efficiency": 50.74626865671642,
+            "periods": 67,
+            "profitable_periods": 34,
+            "avg_period_return": 0.0006031044623132194,
+            "sharpe": 0.4852648243560189,
+            "name": "TSMOM(84)"
+          },
+          "SOLUSDT": {
+            "wfa_efficiency": 54.23728813559322,
+            "periods": 59,
+            "profitable_periods": 32,
+            "avg_period_return": 0.001345566337581533,
+            "sharpe": 0.5322561416099014,
+            "name": "TSMOM(84)"
+          },
+          "XRPUSDT": {
+            "wfa_efficiency": 49.25373134328358,
+            "periods": 67,
+            "profitable_periods": 33,
+            "avg_period_return": 0.0012902924364140082,
+            "sharpe": 0.6543221046366285,
+            "name": "TSMOM(84)"
+          },
+          "DOGEUSDT": {
+            "wfa_efficiency": 54.09836065573771,
+            "periods": 61,
+            "profitable_periods": 33,
+            "avg_period_return": 0.0023330792468910008,
+            "sharpe": 0.7093647709581402,
+            "name": "TSMOM(84)"
+          },
+          "BNBUSDT": {
+            "wfa_efficiency": 43.93939393939394,
+            "periods": 66,
+            "profitable_periods": 29,
+            "avg_period_return": 0.00032717683799010633,
+            "sharpe": 0.16196689511082796,
+            "name": "TSMOM(84)"
+          },
+          "ADAUSDT": {
+            "wfa_efficiency": 57.57575757575758,
+            "periods": 66,
+            "profitable_periods": 38,
+            "avg_period_return": 0.0007489147839320955,
+            "sharpe": 0.38643925212910063,
+            "name": "TSMOM(84)"
+          },
+          "LINKUSDT": {
+            "wfa_efficiency": 53.73134328358209,
+            "periods": 67,
+            "profitable_periods": 36,
+            "avg_period_return": -0.00033929965208423507,
+            "sharpe": -0.2242262891697601,
+            "name": "TSMOM(84)"
+          },
+          "AVAXUSDT": {
+            "wfa_efficiency": 56.896551724137936,
+            "periods": 58,
+            "profitable_periods": 33,
+            "avg_period_return": 0.0011247537923638675,
+            "sharpe": 0.6358453931802925,
+            "name": "TSMOM(84)"
+          },
+          "LTCUSDT": {
+            "wfa_efficiency": 40.298507462686565,
+            "periods": 67,
+            "profitable_periods": 27,
+            "avg_period_return": -0.0007591889297569971,
+            "sharpe": -0.6732265631231665,
+            "name": "TSMOM(84)"
+          }
+        },
+        "stress": {
+          "BTCUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.0032765224089004175,
+                "max_dd": -0.005312375959504599,
+                "trades": 9,
+                "win_rate": 0.4444444444444444
+              },
+              "May2021_crash": {
+                "return": -0.0016923373928071639,
+                "max_dd": -0.005080907694754122,
+                "trades": 37,
+                "win_rate": 0.2972972972972973
+              },
+              "FTX_collapse": {
+                "return": 0.001438677437995306,
+                "max_dd": -0.0019252138267712975,
+                "trades": 24,
+                "win_rate": 0.375
+              },
+              "ETF_rally_2024": {
+                "return": 0.0005193471083790868,
+                "max_dd": -0.005519903881622586,
+                "trades": 40,
+                "win_rate": 0.325
+              },
+              "Recent_2025": {
+                "return": -0.01116074438823611,
+                "max_dd": -0.011771184484766604,
+                "trades": 97,
+                "win_rate": 0.30927835051546393
+              }
+            },
+            "name": "TSMOM(84)"
+          },
+          "ETHUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.007885190358068561,
+                "max_dd": -0.00337398214846953,
+                "trades": 12,
+                "win_rate": 0.5
+              },
+              "May2021_crash": {
+                "return": 0.0005823320588709269,
+                "max_dd": -0.008815001218109622,
+                "trades": 29,
+                "win_rate": 0.3448275862068966
+              },
+              "FTX_collapse": {
+                "return": -0.00025279613908002485,
+                "max_dd": -0.003823153164847394,
+                "trades": 18,
+                "win_rate": 0.4444444444444444
+              },
+              "ETF_rally_2024": {
+                "return": 0.004078864333213472,
+                "max_dd": -0.004511203917469565,
+                "trades": 20,
+                "win_rate": 0.45
+              },
+              "Recent_2025": {
+                "return": 0.004514848037048713,
+                "max_dd": -0.009169182479928005,
+                "trades": 71,
+                "win_rate": 0.36619718309859156
+              }
+            },
+            "name": "TSMOM(84)"
+          },
+          "SOLUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "skipped": true,
+                "reason": "insufficient_data"
+              },
+              "May2021_crash": {
+                "return": -0.020319846461741897,
+                "max_dd": -0.02840327614224922,
+                "trades": 33,
+                "win_rate": 0.21212121212121213
+              },
+              "FTX_collapse": {
+                "return": 0.011990270095542321,
+                "max_dd": -0.005825276252104855,
+                "trades": 23,
+                "win_rate": 0.4782608695652174
+              },
+              "ETF_rally_2024": {
+                "return": -1.8217334283865405e-05,
+                "max_dd": -0.01065198693795355,
+                "trades": 28,
+                "win_rate": 0.32142857142857145
+              },
+              "Recent_2025": {
+                "return": -0.005236753107521808,
+                "max_dd": -0.008432555218640999,
+                "trades": 77,
+                "win_rate": 0.38961038961038963
+              }
+            },
+            "name": "TSMOM(84)"
+          },
+          "XRPUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.006116461269776385,
+                "max_dd": -0.00557707881436742,
+                "trades": 16,
+                "win_rate": 0.5
+              },
+              "May2021_crash": {
+                "return": -0.02377296005114604,
+                "max_dd": -0.03158144273088159,
+                "trades": 26,
+                "win_rate": 0.34615384615384615
+              },
+              "FTX_collapse": {
+                "return": 0.0031131095281549115,
+                "max_dd": -0.002274379166521623,
+                "trades": 19,
+                "win_rate": 0.47368421052631576
+              },
+              "ETF_rally_2024": {
+                "return": -0.00030335233007861007,
+                "max_dd": -0.004438766025002555,
+                "trades": 32,
+                "win_rate": 0.40625
+              },
+              "Recent_2025": {
+                "return": -0.006578291764673061,
+                "max_dd": -0.015816871907879542,
+                "trades": 80,
+                "win_rate": 0.3
+              }
+            },
+            "name": "TSMOM(84)"
+          },
+          "DOGEUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "skipped": true,
+                "reason": "insufficient_data"
+              },
+              "May2021_crash": {
+                "return": 0.026014714886427814,
+                "max_dd": -0.007595989350292458,
+                "trades": 28,
+                "win_rate": 0.42857142857142855
+              },
+              "FTX_collapse": {
+                "return": 0.023229176769035575,
+                "max_dd": -0.010109590092120755,
+                "trades": 20,
+                "win_rate": 0.55
+              },
+              "ETF_rally_2024": {
+                "return": 0.007453085542308724,
+                "max_dd": -0.008384070061848542,
+                "trades": 36,
+                "win_rate": 0.3333333333333333
+              },
+              "Recent_2025": {
+                "return": 0.0013954582040296426,
+                "max_dd": -0.017453040674375885,
+                "trades": 63,
+                "win_rate": 0.49206349206349204
+              }
+            },
+            "name": "TSMOM(84)"
+          },
+          "BNBUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.0151004374851067,
+                "max_dd": -0.0022669809280328034,
+                "trades": 7,
+                "win_rate": 0.8571428571428571
+              },
+              "May2021_crash": {
+                "return": -0.011545030915094845,
+                "max_dd": -0.01877161492665559,
+                "trades": 33,
+                "win_rate": 0.24242424242424243
+              },
+              "FTX_collapse": {
+                "return": -0.0025377611807871903,
+                "max_dd": -0.008284846818321302,
+                "trades": 18,
+                "win_rate": 0.3888888888888889
+              },
+              "ETF_rally_2024": {
+                "return": 0.010685966424619942,
+                "max_dd": -0.003762476209174026,
+                "trades": 29,
+                "win_rate": 0.5517241379310345
+              },
+              "Recent_2025": {
+                "return": 0.0059636153087068156,
+                "max_dd": -0.004673638625484945,
+                "trades": 73,
+                "win_rate": 0.4246575342465753
+              }
+            },
+            "name": "TSMOM(84)"
+          },
+          "ADAUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.009138801608155056,
+                "max_dd": -0.0051258664314484115,
+                "trades": 12,
+                "win_rate": 0.4166666666666667
+              },
+              "May2021_crash": {
+                "return": -0.026117383367445512,
+                "max_dd": -0.02773854621468641,
+                "trades": 37,
+                "win_rate": 0.1891891891891892
+              },
+              "FTX_collapse": {
+                "return": -0.00039379762754787606,
+                "max_dd": -0.005313022279441805,
+                "trades": 23,
+                "win_rate": 0.43478260869565216
+              },
+              "ETF_rally_2024": {
+                "return": 0.010035778178417276,
+                "max_dd": -0.002814129247659934,
+                "trades": 19,
+                "win_rate": 0.5789473684210527
+              },
+              "Recent_2025": {
+                "return": 0.010500831763252005,
+                "max_dd": -0.008614716361553278,
+                "trades": 54,
+                "win_rate": 0.48148148148148145
+              }
+            },
+            "name": "TSMOM(84)"
+          },
+          "LINKUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.0007295478840829706,
+                "max_dd": -0.017402901877887955,
+                "trades": 34,
+                "win_rate": 0.35294117647058826
+              },
+              "May2021_crash": {
+                "return": -0.01673772289011366,
+                "max_dd": -0.020221336672937018,
+                "trades": 27,
+                "win_rate": 0.2962962962962963
+              },
+              "FTX_collapse": {
+                "return": -0.0010619580126272066,
+                "max_dd": -0.007882009921449124,
+                "trades": 28,
+                "win_rate": 0.39285714285714285
+              },
+              "ETF_rally_2024": {
+                "return": -0.011967735692728687,
+                "max_dd": -0.012023002013623274,
+                "trades": 34,
+                "win_rate": 0.20588235294117646
+              },
+              "Recent_2025": {
+                "return": 0.003220624565506869,
+                "max_dd": -0.008649675569165986,
+                "trades": 56,
+                "win_rate": 0.375
+              }
+            },
+            "name": "TSMOM(84)"
+          },
+          "AVAXUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "skipped": true,
+                "reason": "insufficient_data"
+              },
+              "May2021_crash": {
+                "return": -0.003515381041518939,
+                "max_dd": -0.018085334584711177,
+                "trades": 18,
+                "win_rate": 0.4444444444444444
+              },
+              "FTX_collapse": {
+                "return": 0.001676324682650332,
+                "max_dd": -0.003599003526596614,
+                "trades": 22,
+                "win_rate": 0.4090909090909091
+              },
+              "ETF_rally_2024": {
+                "return": -0.003273043126514996,
+                "max_dd": -0.011947749460281359,
+                "trades": 33,
+                "win_rate": 0.30303030303030304
+              },
+              "Recent_2025": {
+                "return": 0.0071892973475091715,
+                "max_dd": -0.008188886771675655,
+                "trades": 70,
+                "win_rate": 0.3142857142857143
+              }
+            },
+            "name": "TSMOM(84)"
+          },
+          "LTCUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": -0.0003205742790738375,
+                "max_dd": -0.010268030679077,
+                "trades": 21,
+                "win_rate": 0.2857142857142857
+              },
+              "May2021_crash": {
+                "return": -0.004301712075026498,
+                "max_dd": -0.013563277290796871,
+                "trades": 34,
+                "win_rate": 0.4117647058823529
+              },
+              "FTX_collapse": {
+                "return": -0.007894238766164463,
+                "max_dd": -0.009628101791855026,
+                "trades": 34,
+                "win_rate": 0.20588235294117646
+              },
+              "ETF_rally_2024": {
+                "return": -0.009728427740989809,
+                "max_dd": -0.011412141389579356,
+                "trades": 37,
+                "win_rate": 0.21621621621621623
+              },
+              "Recent_2025": {
+                "return": -0.01871153216160748,
+                "max_dd": -0.019695912780206458,
+                "trades": 82,
+                "win_rate": 0.25609756097560976
+              }
+            },
+            "name": "TSMOM(84)"
+          }
+        },
+        "stats": {
+          "BTCUSDT": {
+            "name": "TSMOM(84)",
+            "mean_return": 0.00011493307096318423,
+            "t_stat": 0.2656390419133304,
+            "p_value": 0.39567261168170864,
+            "bootstrap_ci_95": [
+              -0.0007004667271592107,
+              0.0009922491206876532
+            ],
+            "mc_p_value": 0.3918,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "ETHUSDT": {
+            "name": "TSMOM(84)",
+            "mean_return": 0.0006031044623132194,
+            "t_stat": 1.1380469163572793,
+            "p_value": 0.12960764791769375,
+            "bootstrap_ci_95": [
+              -0.00043220726667853276,
+              0.001639273051416454
+            ],
+            "mc_p_value": 0.129,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "SOLUSDT": {
+            "name": "TSMOM(84)",
+            "mean_return": 0.001345566337581533,
+            "t_stat": 1.1701567983101582,
+            "p_value": 0.12336186185034936,
+            "bootstrap_ci_95": [
+              -0.0007156017146101986,
+              0.0037242665966333594
+            ],
+            "mc_p_value": 0.1376,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "XRPUSDT": {
+            "name": "TSMOM(84)",
+            "mean_return": 0.0012902924364140082,
+            "t_stat": 1.5345213782581701,
+            "p_value": 0.064840783364568,
+            "bootstrap_ci_95": [
+              -0.00022947834067159258,
+              0.0031182130464661377
+            ],
+            "mc_p_value": 0.0634,
+            "significant_5pct": "False",
+            "significant_10pct": "True"
+          },
+          "DOGEUSDT": {
+            "name": "TSMOM(84)",
+            "mean_return": 0.0023330792468910008,
+            "t_stat": 1.5861878626280501,
+            "p_value": 0.05897671154227502,
+            "bootstrap_ci_95": [
+              -0.00022855800160583378,
+              0.00553277404996286
+            ],
+            "mc_p_value": 0.0624,
+            "significant_5pct": "False",
+            "significant_10pct": "True"
+          },
+          "BNBUSDT": {
+            "name": "TSMOM(84)",
+            "mean_return": 0.00032717683799010633,
+            "t_stat": 0.37695743913223845,
+            "p_value": 0.35371655434981464,
+            "bootstrap_ci_95": [
+              -0.0010733591319904848,
+              0.0022249588369815873
+            ],
+            "mc_p_value": 0.4226,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "ADAUSDT": {
+            "name": "TSMOM(84)",
+            "mean_return": 0.0007489147839320955,
+            "t_stat": 0.8993884265744881,
+            "p_value": 0.18588284896134388,
+            "bootstrap_ci_95": [
+              -0.0008234189763199755,
+              0.0023705646975357513
+            ],
+            "mc_p_value": 0.1862,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "LINKUSDT": {
+            "name": "TSMOM(84)",
+            "mean_return": -0.00033929965208423507,
+            "t_stat": -0.5258572702761191,
+            "p_value": 0.699625057224361,
+            "bootstrap_ci_95": [
+              -0.0015617904408342625,
+              0.0009709360378212418
+            ],
+            "mc_p_value": 0.6882,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "AVAXUSDT": {
+            "name": "TSMOM(84)",
+            "mean_return": 0.0011247537923638675,
+            "t_stat": 1.3857929289096609,
+            "p_value": 0.08560419924681573,
+            "bootstrap_ci_95": [
+              -0.0004396527378051522,
+              0.002739362537306937
+            ],
+            "mc_p_value": 0.0918,
+            "significant_5pct": "False",
+            "significant_10pct": "True"
+          },
+          "LTCUSDT": {
+            "name": "TSMOM(84)",
+            "mean_return": -0.0007591889297569971,
+            "t_stat": -1.5788562812192646,
+            "p_value": 0.9404248745683778,
+            "bootstrap_ci_95": [
+              -0.0016730235654758222,
+              0.00020813410552970293
+            ],
+            "mc_p_value": 0.9382,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          }
+        }
+      }
+    },
+    "tsmom_42": {
+      "name": "TSMOM(42)",
+      "oos_profitable_pct": 50.0,
+      "avg_wfa_efficiency": 48.23057189253652,
+      "avg_wfa_sharpe": 0.15340621096991008,
+      "significant_count": 0,
+      "criteria_passed": 2,
+      "criteria_total": 6,
+      "criteria": {
+        "oos_sharpe_gt_1": "False",
+        "max_dd_lt_25": true,
+        "win_rate_gt_45": "False",
+        "profit_factor_gt_1_5": "False",
+        "wfa_efficiency_gt_50": "False",
+        "trade_count_gt_100": true
+      },
+      "details": {
+        "is": {
+          "BTCUSDT": {
+            "total_return": -0.0051741885145367705,
+            "max_drawdown": -0.04020141893115852,
+            "win_rate": 0.2980769230769231,
+            "profit_factor": 0.9990233546027184,
+            "trade_count": 624,
+            "period": "IS",
+            "name": "TSMOM(42)"
+          },
+          "ETHUSDT": {
+            "total_return": 0.009008011823585571,
+            "max_drawdown": -0.022873900037944952,
+            "win_rate": 0.31960461285008235,
+            "profit_factor": 1.0570345322106622,
+            "trade_count": 607,
+            "period": "IS",
+            "name": "TSMOM(42)"
+          },
+          "SOLUSDT": {
+            "total_return": 0.08519874774080116,
+            "max_drawdown": -0.02239423113411808,
+            "win_rate": 0.3530571992110454,
+            "profit_factor": 1.3199195101011192,
+            "trade_count": 507,
+            "period": "IS",
+            "name": "TSMOM(42)"
+          },
+          "XRPUSDT": {
+            "total_return": 0.08657495330431475,
+            "max_drawdown": -0.023683540273190654,
+            "win_rate": 0.34285714285714286,
+            "profit_factor": 1.4275591715101257,
+            "trade_count": 630,
+            "period": "IS",
+            "name": "TSMOM(42)"
+          },
+          "DOGEUSDT": {
+            "total_return": 0.15572568383432306,
+            "max_drawdown": -0.042232663113297896,
+            "win_rate": 0.3333333333333333,
+            "profit_factor": 1.667248408885087,
+            "trade_count": 591,
+            "period": "IS",
+            "name": "TSMOM(42)"
+          },
+          "BNBUSDT": {
+            "total_return": 0.0395726647307959,
+            "max_drawdown": -0.02830599462286747,
+            "win_rate": 0.33762057877813506,
+            "profit_factor": 1.2234830578541882,
+            "trade_count": 622,
+            "period": "IS",
+            "name": "TSMOM(42)"
+          },
+          "ADAUSDT": {
+            "total_return": 0.04092725701865341,
+            "max_drawdown": -0.02862818521854424,
+            "win_rate": 0.32680722891566266,
+            "profit_factor": 1.1915885362445027,
+            "trade_count": 664,
+            "period": "IS",
+            "name": "TSMOM(42)"
+          },
+          "LINKUSDT": {
+            "total_return": 0.04112851506923798,
+            "max_drawdown": -0.02228357862075021,
+            "win_rate": 0.3487261146496815,
+            "profit_factor": 1.1731376606357746,
+            "trade_count": 628,
+            "period": "IS",
+            "name": "TSMOM(42)"
+          },
+          "AVAXUSDT": {
+            "total_return": 0.10004644746642066,
+            "max_drawdown": -0.021029312705081925,
+            "win_rate": 0.3471223021582734,
+            "profit_factor": 1.4146758948441096,
+            "trade_count": 556,
+            "period": "IS",
+            "name": "TSMOM(42)"
+          },
+          "LTCUSDT": {
+            "total_return": -0.00255829586602363,
+            "max_drawdown": -0.028988252661076016,
+            "win_rate": 0.3048048048048048,
+            "profit_factor": 1.0108441240326567,
+            "trade_count": 666,
+            "period": "IS",
+            "name": "TSMOM(42)"
+          }
+        },
+        "oos": {
+          "BTCUSDT": {
+            "total_return": -0.006517093870547441,
+            "max_drawdown": -0.01424145681123405,
+            "win_rate": 0.27807486631016043,
+            "profit_factor": 0.8986450615850653,
+            "trade_count": 187,
+            "period": "OOS",
+            "name": "TSMOM(42)"
+          },
+          "ETHUSDT": {
+            "total_return": 0.003520488163349933,
+            "max_drawdown": -0.011283894765375592,
+            "win_rate": 0.3096446700507614,
+            "profit_factor": 1.1057136880094203,
+            "trade_count": 197,
+            "period": "OOS",
+            "name": "TSMOM(42)"
+          },
+          "SOLUSDT": {
+            "total_return": 0.00043999105620895484,
+            "max_drawdown": -0.015843998209704217,
+            "win_rate": 0.2824858757062147,
+            "profit_factor": 1.0260744933827854,
+            "trade_count": 177,
+            "period": "OOS",
+            "name": "TSMOM(42)"
+          },
+          "XRPUSDT": {
+            "total_return": -0.014708535557052094,
+            "max_drawdown": -0.023151430254368936,
+            "win_rate": 0.2751322751322751,
+            "profit_factor": 0.7198940912290402,
+            "trade_count": 189,
+            "period": "OOS",
+            "name": "TSMOM(42)"
+          },
+          "DOGEUSDT": {
+            "total_return": 0.006699638731005653,
+            "max_drawdown": -0.014200556014069887,
+            "win_rate": 0.31862745098039214,
+            "profit_factor": 1.1105889230495392,
+            "trade_count": 204,
+            "period": "OOS",
+            "name": "TSMOM(42)"
+          },
+          "BNBUSDT": {
+            "total_return": -0.0015996186442124305,
+            "max_drawdown": -0.013249726432515154,
+            "win_rate": 0.2602739726027397,
+            "profit_factor": 0.9903951548136934,
+            "trade_count": 146,
+            "period": "OOS",
+            "name": "TSMOM(42)"
+          },
+          "ADAUSDT": {
+            "total_return": 0.0006391868089243857,
+            "max_drawdown": -0.01954854417550512,
+            "win_rate": 0.28095238095238095,
+            "profit_factor": 1.034748874613372,
+            "trade_count": 210,
+            "period": "OOS",
+            "name": "TSMOM(42)"
+          },
+          "LINKUSDT": {
+            "total_return": -0.00046729319313199014,
+            "max_drawdown": -0.018829548542179903,
+            "win_rate": 0.33,
+            "profit_factor": 1.0147363819937112,
+            "trade_count": 200,
+            "period": "OOS",
+            "name": "TSMOM(42)"
+          },
+          "AVAXUSDT": {
+            "total_return": 0.014024117611594278,
+            "max_drawdown": -0.018436696047118888,
+            "win_rate": 0.3409090909090909,
+            "profit_factor": 1.2125318938482659,
+            "trade_count": 176,
+            "period": "OOS",
+            "name": "TSMOM(42)"
+          },
+          "LTCUSDT": {
+            "total_return": -0.011812781707133513,
+            "max_drawdown": -0.015416645120279144,
+            "win_rate": 0.3010204081632653,
+            "profit_factor": 0.7886886861842742,
+            "trade_count": 196,
+            "period": "OOS",
+            "name": "TSMOM(42)"
+          }
+        },
+        "wfa": {
+          "BTCUSDT": {
+            "wfa_efficiency": 47.76119402985074,
+            "periods": 67,
+            "profitable_periods": 32,
+            "avg_period_return": -0.00037313474058172996,
+            "sharpe": -0.34520651511392514,
+            "name": "TSMOM(42)"
+          },
+          "ETHUSDT": {
+            "wfa_efficiency": 47.76119402985074,
+            "periods": 67,
+            "profitable_periods": 32,
+            "avg_period_return": -0.00013339006180854607,
+            "sharpe": -0.10598330105837213,
+            "name": "TSMOM(42)"
+          },
+          "SOLUSDT": {
+            "wfa_efficiency": 55.932203389830505,
+            "periods": 59,
+            "profitable_periods": 33,
+            "avg_period_return": 0.0011634757963414847,
+            "sharpe": 0.5482354849976618,
+            "name": "TSMOM(42)"
+          },
+          "XRPUSDT": {
+            "wfa_efficiency": 47.76119402985074,
+            "periods": 67,
+            "profitable_periods": 32,
+            "avg_period_return": 0.0011621928628347553,
+            "sharpe": 0.5401657294225465,
+            "name": "TSMOM(42)"
+          },
+          "DOGEUSDT": {
+            "wfa_efficiency": 49.18032786885246,
+            "periods": 61,
+            "profitable_periods": 30,
+            "avg_period_return": 0.001878507871195238,
+            "sharpe": 0.4724434652070504,
+            "name": "TSMOM(42)"
+          },
+          "BNBUSDT": {
+            "wfa_efficiency": 42.42424242424242,
+            "periods": 66,
+            "profitable_periods": 28,
+            "avg_period_return": 0.00022956236499844357,
+            "sharpe": 0.13980913147459317,
+            "name": "TSMOM(42)"
+          },
+          "ADAUSDT": {
+            "wfa_efficiency": 48.484848484848484,
+            "periods": 66,
+            "profitable_periods": 32,
+            "avg_period_return": 0.0004604193394479695,
+            "sharpe": 0.2527410266371238,
+            "name": "TSMOM(42)"
+          },
+          "LINKUSDT": {
+            "wfa_efficiency": 50.74626865671642,
+            "periods": 67,
+            "profitable_periods": 34,
+            "avg_period_return": 8.29025391468167e-05,
+            "sharpe": 0.06397306518306091,
+            "name": "TSMOM(42)"
+          },
+          "AVAXUSDT": {
+            "wfa_efficiency": 53.44827586206896,
+            "periods": 58,
+            "profitable_periods": 31,
+            "avg_period_return": 0.000789399952166764,
+            "sharpe": 0.4575396622813912,
+            "name": "TSMOM(42)"
+          },
+          "LTCUSDT": {
+            "wfa_efficiency": 38.80597014925373,
+            "periods": 67,
+            "profitable_periods": 26,
+            "avg_period_return": -0.0005788645071763041,
+            "sharpe": -0.4896556393320295,
+            "name": "TSMOM(42)"
+          }
+        },
+        "stress": {
+          "BTCUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.0006201792111240056,
+                "max_dd": -0.005587184551525801,
+                "trades": 30,
+                "win_rate": 0.3333333333333333
+              },
+              "May2021_crash": {
+                "return": -0.011580384641939334,
+                "max_dd": -0.012376168982125884,
+                "trades": 55,
+                "win_rate": 0.2909090909090909
+              },
+              "FTX_collapse": {
+                "return": 0.0007697153855041883,
+                "max_dd": -0.0020937199013793227,
+                "trades": 35,
+                "win_rate": 0.2857142857142857
+              },
+              "ETF_rally_2024": {
+                "return": 0.005285723339817139,
+                "max_dd": -0.0030817559211839605,
+                "trades": 35,
+                "win_rate": 0.3142857142857143
+              },
+              "Recent_2025": {
+                "return": -0.0031031602138560377,
+                "max_dd": -0.006141951888085193,
+                "trades": 106,
+                "win_rate": 0.2830188679245283
+              }
+            },
+            "name": "TSMOM(42)"
+          },
+          "ETHUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.002740137739576376,
+                "max_dd": -0.00672590886158325,
+                "trades": 29,
+                "win_rate": 0.3793103448275862
+              },
+              "May2021_crash": {
+                "return": -0.003318050109111459,
+                "max_dd": -0.015177659577466692,
+                "trades": 45,
+                "win_rate": 0.35555555555555557
+              },
+              "FTX_collapse": {
+                "return": 0.005468785470172044,
+                "max_dd": -0.0024260087646042405,
+                "trades": 40,
+                "win_rate": 0.35
+              },
+              "ETF_rally_2024": {
+                "return": 0.00794714818569453,
+                "max_dd": -0.002907403495827075,
+                "trades": 24,
+                "win_rate": 0.2916666666666667
+              },
+              "Recent_2025": {
+                "return": -0.009016101769422025,
+                "max_dd": -0.01500561819216825,
+                "trades": 111,
+                "win_rate": 0.2882882882882883
+              }
+            },
+            "name": "TSMOM(42)"
+          },
+          "SOLUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "skipped": true,
+                "reason": "insufficient_data"
+              },
+              "May2021_crash": {
+                "return": -0.011640077058473586,
+                "max_dd": -0.02297987026639905,
+                "trades": 55,
+                "win_rate": 0.2727272727272727
+              },
+              "FTX_collapse": {
+                "return": 0.009428134231138863,
+                "max_dd": -0.00791319372823833,
+                "trades": 29,
+                "win_rate": 0.3103448275862069
+              },
+              "ETF_rally_2024": {
+                "return": 0.001570421961780255,
+                "max_dd": -0.006597273650541857,
+                "trades": 46,
+                "win_rate": 0.34782608695652173
+              },
+              "Recent_2025": {
+                "return": -0.0020568154564536423,
+                "max_dd": -0.009141115746549924,
+                "trades": 104,
+                "win_rate": 0.36538461538461536
+              }
+            },
+            "name": "TSMOM(42)"
+          },
+          "XRPUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.005113537843830063,
+                "max_dd": -0.007794548267452322,
+                "trades": 26,
+                "win_rate": 0.4230769230769231
+              },
+              "May2021_crash": {
+                "return": -0.0013849101077758608,
+                "max_dd": -0.014944211328885793,
+                "trades": 41,
+                "win_rate": 0.36585365853658536
+              },
+              "FTX_collapse": {
+                "return": -0.0012635447322116855,
+                "max_dd": -0.0031632453186275335,
+                "trades": 43,
+                "win_rate": 0.32558139534883723
+              },
+              "ETF_rally_2024": {
+                "return": -0.00941974122732303,
+                "max_dd": -0.010743222886139884,
+                "trades": 36,
+                "win_rate": 0.2222222222222222
+              },
+              "Recent_2025": {
+                "return": -0.003652290967214311,
+                "max_dd": -0.008453838521518568,
+                "trades": 94,
+                "win_rate": 0.3191489361702128
+              }
+            },
+            "name": "TSMOM(42)"
+          },
+          "DOGEUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "skipped": true,
+                "reason": "insufficient_data"
+              },
+              "May2021_crash": {
+                "return": 0.008186745675889284,
+                "max_dd": -0.0127357855954139,
+                "trades": 31,
+                "win_rate": 0.3548387096774194
+              },
+              "FTX_collapse": {
+                "return": 0.03135399004976547,
+                "max_dd": -0.0033415130349908253,
+                "trades": 46,
+                "win_rate": 0.41304347826086957
+              },
+              "ETF_rally_2024": {
+                "return": 0.011319503438973033,
+                "max_dd": -0.007196490964441801,
+                "trades": 54,
+                "win_rate": 0.25925925925925924
+              },
+              "Recent_2025": {
+                "return": -0.0018756433562781005,
+                "max_dd": -0.012896751885991263,
+                "trades": 96,
+                "win_rate": 0.3229166666666667
+              }
+            },
+            "name": "TSMOM(42)"
+          },
+          "BNBUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": -0.0009979114472685735,
+                "max_dd": -0.011916500957404676,
+                "trades": 35,
+                "win_rate": 0.34285714285714286
+              },
+              "May2021_crash": {
+                "return": -0.0058947824646972125,
+                "max_dd": -0.016078700321356054,
+                "trades": 44,
+                "win_rate": 0.45454545454545453
+              },
+              "FTX_collapse": {
+                "return": 0.000891288136011692,
+                "max_dd": -0.003504647029312067,
+                "trades": 40,
+                "win_rate": 0.25
+              },
+              "ETF_rally_2024": {
+                "return": 0.0025643087037321433,
+                "max_dd": -0.005601799164829312,
+                "trades": 32,
+                "win_rate": 0.3125
+              },
+              "Recent_2025": {
+                "return": -0.011877796237001914,
+                "max_dd": -0.013791005083008623,
+                "trades": 107,
+                "win_rate": 0.2616822429906542
+              }
+            },
+            "name": "TSMOM(42)"
+          },
+          "ADAUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": -0.000700530781986064,
+                "max_dd": -0.008922580170302556,
+                "trades": 33,
+                "win_rate": 0.3939393939393939
+              },
+              "May2021_crash": {
+                "return": -0.010426578312681012,
+                "max_dd": -0.012856777492721405,
+                "trades": 37,
+                "win_rate": 0.2972972972972973
+              },
+              "FTX_collapse": {
+                "return": 0.0025703318437551026,
+                "max_dd": -0.0031921280397496847,
+                "trades": 40,
+                "win_rate": 0.35
+              },
+              "ETF_rally_2024": {
+                "return": -0.0032807947040599528,
+                "max_dd": -0.006728548384650035,
+                "trades": 43,
+                "win_rate": 0.23255813953488372
+              },
+              "Recent_2025": {
+                "return": 0.005787071994043602,
+                "max_dd": -0.0075193834004948406,
+                "trades": 88,
+                "win_rate": 0.3409090909090909
+              }
+            },
+            "name": "TSMOM(42)"
+          },
+          "LINKUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.013755815876969724,
+                "max_dd": -0.004900132997690868,
+                "trades": 27,
+                "win_rate": 0.37037037037037035
+              },
+              "May2021_crash": {
+                "return": 0.0033562720227604537,
+                "max_dd": -0.008048109726917581,
+                "trades": 40,
+                "win_rate": 0.375
+              },
+              "FTX_collapse": {
+                "return": 0.0028989894319402243,
+                "max_dd": -0.005993732724056566,
+                "trades": 32,
+                "win_rate": 0.375
+              },
+              "ETF_rally_2024": {
+                "return": -0.005415428587541848,
+                "max_dd": -0.01012627272737867,
+                "trades": 41,
+                "win_rate": 0.2926829268292683
+              },
+              "Recent_2025": {
+                "return": -0.004981095468344687,
+                "max_dd": -0.011964751850841383,
+                "trades": 110,
+                "win_rate": 0.2818181818181818
+              }
+            },
+            "name": "TSMOM(42)"
+          },
+          "AVAXUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "skipped": true,
+                "reason": "insufficient_data"
+              },
+              "May2021_crash": {
+                "return": -0.007616377050013945,
+                "max_dd": -0.015452038294172299,
+                "trades": 55,
+                "win_rate": 0.32727272727272727
+              },
+              "FTX_collapse": {
+                "return": 0.003265490323974829,
+                "max_dd": -0.006218173015976068,
+                "trades": 46,
+                "win_rate": 0.3695652173913043
+              },
+              "ETF_rally_2024": {
+                "return": -0.009679384096987542,
+                "max_dd": -0.013274638814415042,
+                "trades": 59,
+                "win_rate": 0.288135593220339
+              },
+              "Recent_2025": {
+                "return": 0.006638293400590856,
+                "max_dd": -0.007307168243740527,
+                "trades": 94,
+                "win_rate": 0.40425531914893614
+              }
+            },
+            "name": "TSMOM(42)"
+          },
+          "LTCUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": -0.00021019450499348835,
+                "max_dd": -0.006729971927712963,
+                "trades": 41,
+                "win_rate": 0.3170731707317073
+              },
+              "May2021_crash": {
+                "return": 0.005437694737119747,
+                "max_dd": -0.012568465034255571,
+                "trades": 54,
+                "win_rate": 0.4074074074074074
+              },
+              "FTX_collapse": {
+                "return": -0.00019851897386446993,
+                "max_dd": -0.0043278157244956,
+                "trades": 41,
+                "win_rate": 0.3170731707317073
+              },
+              "ETF_rally_2024": {
+                "return": 0.003989588836204483,
+                "max_dd": -0.0034074386814997282,
+                "trades": 38,
+                "win_rate": 0.2631578947368421
+              },
+              "Recent_2025": {
+                "return": -0.018084842701325377,
+                "max_dd": -0.01810016242923751,
+                "trades": 127,
+                "win_rate": 0.25196850393700787
+              }
+            },
+            "name": "TSMOM(42)"
+          }
+        },
+        "stats": {
+          "BTCUSDT": {
+            "name": "TSMOM(42)",
+            "mean_return": -0.00037313474058172996,
+            "t_stat": -0.8095810610634,
+            "p_value": 0.789454899146772,
+            "bootstrap_ci_95": [
+              -0.0013131587431034501,
+              0.0005522244803160301
+            ],
+            "mc_p_value": 0.7928,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "ETHUSDT": {
+            "name": "TSMOM(42)",
+            "mean_return": -0.00013339006180854607,
+            "t_stat": -0.2485528784820331,
+            "p_value": 0.5977607757685761,
+            "bootstrap_ci_95": [
+              -0.0011609414258017118,
+              0.0009215950021314388
+            ],
+            "mc_p_value": 0.591,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "SOLUSDT": {
+            "name": "TSMOM(42)",
+            "mean_return": 0.0011634757963414847,
+            "t_stat": 1.2052871373269844,
+            "p_value": 0.11649351672115671,
+            "bootstrap_ci_95": [
+              -0.0005846683123224816,
+              0.0031539879521923437
+            ],
+            "mc_p_value": 0.1218,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "XRPUSDT": {
+            "name": "TSMOM(42)",
+            "mean_return": 0.0011621928628347553,
+            "t_stat": 1.2668009420967927,
+            "p_value": 0.10483937469114035,
+            "bootstrap_ci_95": [
+              -0.00045791751003136904,
+              0.0031030096510804577
+            ],
+            "mc_p_value": 0.1138,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "DOGEUSDT": {
+            "name": "TSMOM(42)",
+            "mean_return": 0.001878507871195238,
+            "t_stat": 1.0564157113982688,
+            "p_value": 0.1475067151598355,
+            "bootstrap_ci_95": [
+              -0.0010970577667209873,
+              0.005756554112594211
+            ],
+            "mc_p_value": 0.1848,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "BNBUSDT": {
+            "name": "TSMOM(42)",
+            "mean_return": 0.00022956236499844357,
+            "t_stat": 0.325388051091001,
+            "p_value": 0.3729662530348521,
+            "bootstrap_ci_95": [
+              -0.000940645774728135,
+              0.001733575643975673
+            ],
+            "mc_p_value": 0.4052,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "ADAUSDT": {
+            "name": "TSMOM(42)",
+            "mean_return": 0.0004604193394479695,
+            "t_stat": 0.5882227367994659,
+            "p_value": 0.27921058171826374,
+            "bootstrap_ci_95": [
+              -0.0009521041386734594,
+              0.002021088675564917
+            ],
+            "mc_p_value": 0.2786,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "LINKUSDT": {
+            "name": "TSMOM(42)",
+            "mean_return": 8.29025391468167e-05,
+            "t_stat": 0.15003013991150313,
+            "p_value": 0.4405991951184163,
+            "bootstrap_ci_95": [
+              -0.0009800543515467094,
+              0.001175907337279013
+            ],
+            "mc_p_value": 0.443,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "AVAXUSDT": {
+            "name": "TSMOM(42)",
+            "mean_return": 0.000789399952166764,
+            "t_stat": 0.9971845919577865,
+            "p_value": 0.16144473223838052,
+            "bootstrap_ci_95": [
+              -0.000765050883874561,
+              0.0022990711086817344
+            ],
+            "mc_p_value": 0.1604,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "LTCUSDT": {
+            "name": "TSMOM(42)",
+            "mean_return": -0.0005788645071763041,
+            "t_stat": -1.1483442918458024,
+            "p_value": 0.8725142218476403,
+            "bootstrap_ci_95": [
+              -0.0015839922447773796,
+              0.0004121926602690139
+            ],
+            "mc_p_value": 0.879,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          }
+        }
+      }
+    },
+    "multi_factor": {
+      "name": "Multi-Factor",
+      "oos_profitable_pct": 80.0,
+      "avg_wfa_efficiency": 46.603834953989264,
+      "avg_wfa_sharpe": 0.14320374027869448,
+      "significant_count": 0,
+      "criteria_passed": 2,
+      "criteria_total": 6,
+      "criteria": {
+        "oos_sharpe_gt_1": "False",
+        "max_dd_lt_25": true,
+        "win_rate_gt_45": "False",
+        "profit_factor_gt_1_5": "False",
+        "wfa_efficiency_gt_50": "False",
+        "trade_count_gt_100": true
+      },
+      "details": {
+        "is": {
+          "BTCUSDT": {
+            "total_return": -0.016509700435320296,
+            "max_drawdown": -0.026115570865683908,
+            "win_rate": 0.28885135135135137,
+            "profit_factor": 0.9131898996046894,
+            "trade_count": 592,
+            "period": "IS",
+            "name": "Multi-Factor"
+          },
+          "ETHUSDT": {
+            "total_return": 0.03375650205966663,
+            "max_drawdown": -0.013916481941086805,
+            "win_rate": 0.3291139240506329,
+            "profit_factor": 1.275724214731208,
+            "trade_count": 553,
+            "period": "IS",
+            "name": "Multi-Factor"
+          },
+          "SOLUSDT": {
+            "total_return": 0.04240703007517643,
+            "max_drawdown": -0.023714101430868842,
+            "win_rate": 0.3641509433962264,
+            "profit_factor": 1.254988085937925,
+            "trade_count": 530,
+            "period": "IS",
+            "name": "Multi-Factor"
+          },
+          "XRPUSDT": {
+            "total_return": 0.05960143721442246,
+            "max_drawdown": -0.012289176171140467,
+            "win_rate": 0.30303030303030304,
+            "profit_factor": 1.426532302403646,
+            "trade_count": 561,
+            "period": "IS",
+            "name": "Multi-Factor"
+          },
+          "DOGEUSDT": {
+            "total_return": 0.09174378609818468,
+            "max_drawdown": -0.03381412033098653,
+            "win_rate": 0.3236434108527132,
+            "profit_factor": 1.5268167622762794,
+            "trade_count": 516,
+            "period": "IS",
+            "name": "Multi-Factor"
+          },
+          "BNBUSDT": {
+            "total_return": 0.020191391280218074,
+            "max_drawdown": -0.024839852456548094,
+            "win_rate": 0.310580204778157,
+            "profit_factor": 1.1725851504427138,
+            "trade_count": 586,
+            "period": "IS",
+            "name": "Multi-Factor"
+          },
+          "ADAUSDT": {
+            "total_return": 0.04187704547729654,
+            "max_drawdown": -0.017006081339048518,
+            "win_rate": 0.36607142857142855,
+            "profit_factor": 1.2939774940891382,
+            "trade_count": 560,
+            "period": "IS",
+            "name": "Multi-Factor"
+          },
+          "LINKUSDT": {
+            "total_return": -0.0035929918337817,
+            "max_drawdown": -0.0411175486018228,
+            "win_rate": 0.3155339805825243,
+            "profit_factor": 1.006689721840323,
+            "trade_count": 618,
+            "period": "IS",
+            "name": "Multi-Factor"
+          },
+          "AVAXUSDT": {
+            "total_return": 0.07128069616305077,
+            "max_drawdown": -0.016548977355151928,
+            "win_rate": 0.3384321223709369,
+            "profit_factor": 1.4110609540428178,
+            "trade_count": 523,
+            "period": "IS",
+            "name": "Multi-Factor"
+          },
+          "LTCUSDT": {
+            "total_return": -0.020324365761246632,
+            "max_drawdown": -0.030697784926185055,
+            "win_rate": 0.31103074141048825,
+            "profit_factor": 0.9090052449527483,
+            "trade_count": 553,
+            "period": "IS",
+            "name": "Multi-Factor"
+          }
+        },
+        "oos": {
+          "BTCUSDT": {
+            "total_return": 0.0007184380338960406,
+            "max_drawdown": -0.004832435904841215,
+            "win_rate": 0.3282828282828283,
+            "profit_factor": 1.077045559000447,
+            "trade_count": 198,
+            "period": "OOS",
+            "name": "Multi-Factor"
+          },
+          "ETHUSDT": {
+            "total_return": 0.004113892251446982,
+            "max_drawdown": -0.006099213352871652,
+            "win_rate": 0.3742690058479532,
+            "profit_factor": 1.1833243984041186,
+            "trade_count": 171,
+            "period": "OOS",
+            "name": "Multi-Factor"
+          },
+          "SOLUSDT": {
+            "total_return": 0.0007571584765577732,
+            "max_drawdown": -0.010764040224415615,
+            "win_rate": 0.32934131736526945,
+            "profit_factor": 1.0434066499083063,
+            "trade_count": 167,
+            "period": "OOS",
+            "name": "Multi-Factor"
+          },
+          "XRPUSDT": {
+            "total_return": -0.005101150256662468,
+            "max_drawdown": -0.013047678757925368,
+            "win_rate": 0.3016759776536313,
+            "profit_factor": 0.8903659793958602,
+            "trade_count": 179,
+            "period": "OOS",
+            "name": "Multi-Factor"
+          },
+          "DOGEUSDT": {
+            "total_return": 0.02019579208371658,
+            "max_drawdown": -0.01087111918704986,
+            "win_rate": 0.3111111111111111,
+            "profit_factor": 1.432688725031433,
+            "trade_count": 180,
+            "period": "OOS",
+            "name": "Multi-Factor"
+          },
+          "BNBUSDT": {
+            "total_return": 0.005698383968595566,
+            "max_drawdown": -0.0058297448833308264,
+            "win_rate": 0.3626373626373626,
+            "profit_factor": 1.2333856947932922,
+            "trade_count": 182,
+            "period": "OOS",
+            "name": "Multi-Factor"
+          },
+          "ADAUSDT": {
+            "total_return": 0.009807722488427428,
+            "max_drawdown": -0.011731367301594148,
+            "win_rate": 0.3386243386243386,
+            "profit_factor": 1.2395246698658005,
+            "trade_count": 189,
+            "period": "OOS",
+            "name": "Multi-Factor"
+          },
+          "LINKUSDT": {
+            "total_return": 0.0067273510450907015,
+            "max_drawdown": -0.01393226414240897,
+            "win_rate": 0.35978835978835977,
+            "profit_factor": 1.1896154226586202,
+            "trade_count": 189,
+            "period": "OOS",
+            "name": "Multi-Factor"
+          },
+          "AVAXUSDT": {
+            "total_return": 0.007813414264420615,
+            "max_drawdown": -0.009731193468999911,
+            "win_rate": 0.3878787878787879,
+            "profit_factor": 1.1801173283328363,
+            "trade_count": 165,
+            "period": "OOS",
+            "name": "Multi-Factor"
+          },
+          "LTCUSDT": {
+            "total_return": -0.011068482494142828,
+            "max_drawdown": -0.011937445214630804,
+            "win_rate": 0.31840796019900497,
+            "profit_factor": 0.740629775227625,
+            "trade_count": 201,
+            "period": "OOS",
+            "name": "Multi-Factor"
+          }
+        },
+        "wfa": {
+          "BTCUSDT": {
+            "wfa_efficiency": 43.28358208955223,
+            "periods": 67,
+            "profitable_periods": 29,
+            "avg_period_return": -0.00034949862240247234,
+            "sharpe": -0.5721394414727485,
+            "name": "Multi-Factor"
+          },
+          "ETHUSDT": {
+            "wfa_efficiency": 49.25373134328358,
+            "periods": 67,
+            "profitable_periods": 33,
+            "avg_period_return": 0.0005452478660178909,
+            "sharpe": 0.6265123462022607,
+            "name": "Multi-Factor"
+          },
+          "SOLUSDT": {
+            "wfa_efficiency": 59.32203389830508,
+            "periods": 59,
+            "profitable_periods": 35,
+            "avg_period_return": 0.0006974265888356704,
+            "sharpe": 0.559292639513268,
+            "name": "Multi-Factor"
+          },
+          "XRPUSDT": {
+            "wfa_efficiency": 44.776119402985074,
+            "periods": 67,
+            "profitable_periods": 30,
+            "avg_period_return": 0.0010613476577184032,
+            "sharpe": 0.5940400894655284,
+            "name": "Multi-Factor"
+          },
+          "DOGEUSDT": {
+            "wfa_efficiency": 49.18032786885246,
+            "periods": 61,
+            "profitable_periods": 30,
+            "avg_period_return": 0.0016046276810341477,
+            "sharpe": 0.49618900114869513,
+            "name": "Multi-Factor"
+          },
+          "BNBUSDT": {
+            "wfa_efficiency": 39.39393939393939,
+            "periods": 66,
+            "profitable_periods": 26,
+            "avg_period_return": 0.00025847231039040645,
+            "sharpe": 0.190827892677359,
+            "name": "Multi-Factor"
+          },
+          "ADAUSDT": {
+            "wfa_efficiency": 50.0,
+            "periods": 66,
+            "profitable_periods": 33,
+            "avg_period_return": 0.0006053330724670198,
+            "sharpe": 0.46191717436220436,
+            "name": "Multi-Factor"
+          },
+          "LINKUSDT": {
+            "wfa_efficiency": 41.7910447761194,
+            "periods": 67,
+            "profitable_periods": 28,
+            "avg_period_return": -0.0002939656689333669,
+            "sharpe": -0.30783989537496337,
+            "name": "Multi-Factor"
+          },
+          "AVAXUSDT": {
+            "wfa_efficiency": 51.724137931034484,
+            "periods": 58,
+            "profitable_periods": 30,
+            "avg_period_return": 6.953311641163031e-05,
+            "sharpe": 0.07911183917304086,
+            "name": "Multi-Factor"
+          },
+          "LTCUSDT": {
+            "wfa_efficiency": 37.3134328358209,
+            "periods": 67,
+            "profitable_periods": 25,
+            "avg_period_return": -0.0005767180008140471,
+            "sharpe": -0.6958742429077001,
+            "name": "Multi-Factor"
+          }
+        },
+        "stress": {
+          "BTCUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.00048221777291646006,
+                "max_dd": -0.005855050216610964,
+                "trades": 24,
+                "win_rate": 0.3333333333333333
+              },
+              "May2021_crash": {
+                "return": -0.0031341827799208355,
+                "max_dd": -0.005069539281855416,
+                "trades": 41,
+                "win_rate": 0.2682926829268293
+              },
+              "FTX_collapse": {
+                "return": -0.0003491368546615359,
+                "max_dd": -0.002702884931418125,
+                "trades": 33,
+                "win_rate": 0.24242424242424243
+              },
+              "ETF_rally_2024": {
+                "return": 0.0029807355509587907,
+                "max_dd": -0.0018168447802042271,
+                "trades": 33,
+                "win_rate": 0.3333333333333333
+              },
+              "Recent_2025": {
+                "return": -0.004145524332553441,
+                "max_dd": -0.004462285578553297,
+                "trades": 92,
+                "win_rate": 0.3695652173913043
+              }
+            },
+            "name": "Multi-Factor"
+          },
+          "ETHUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.004973283574489784,
+                "max_dd": -0.003758832921591293,
+                "trades": 20,
+                "win_rate": 0.25
+              },
+              "May2021_crash": {
+                "return": 0.005821275268459658,
+                "max_dd": -0.004960699247183978,
+                "trades": 38,
+                "win_rate": 0.47368421052631576
+              },
+              "FTX_collapse": {
+                "return": 0.0009912049111333587,
+                "max_dd": -0.0025612792438220004,
+                "trades": 28,
+                "win_rate": 0.2857142857142857
+              },
+              "ETF_rally_2024": {
+                "return": 0.004095903691972325,
+                "max_dd": -0.001701529408479674,
+                "trades": 35,
+                "win_rate": 0.4
+              },
+              "Recent_2025": {
+                "return": 0.0027317013079259933,
+                "max_dd": -0.005550622708253124,
+                "trades": 79,
+                "win_rate": 0.3291139240506329
+              }
+            },
+            "name": "Multi-Factor"
+          },
+          "SOLUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "skipped": true,
+                "reason": "insufficient_data"
+              },
+              "May2021_crash": {
+                "return": -0.014794038946373655,
+                "max_dd": -0.018285725135356645,
+                "trades": 40,
+                "win_rate": 0.3
+              },
+              "FTX_collapse": {
+                "return": 0.006870573618826592,
+                "max_dd": -0.0038073416973894874,
+                "trades": 35,
+                "win_rate": 0.2857142857142857
+              },
+              "ETF_rally_2024": {
+                "return": -0.0005259187554846889,
+                "max_dd": -0.006083581957738948,
+                "trades": 42,
+                "win_rate": 0.30952380952380953
+              },
+              "Recent_2025": {
+                "return": -0.00203357897191081,
+                "max_dd": -0.0055762874606142075,
+                "trades": 89,
+                "win_rate": 0.34831460674157305
+              }
+            },
+            "name": "Multi-Factor"
+          },
+          "XRPUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.0014379424047574751,
+                "max_dd": -0.0036641310870375986,
+                "trades": 23,
+                "win_rate": 0.2608695652173913
+              },
+              "May2021_crash": {
+                "return": -0.008020654618548506,
+                "max_dd": -0.009818621494321889,
+                "trades": 36,
+                "win_rate": 0.2222222222222222
+              },
+              "FTX_collapse": {
+                "return": -0.002474809479779183,
+                "max_dd": -0.0061262571286705165,
+                "trades": 29,
+                "win_rate": 0.27586206896551724
+              },
+              "ETF_rally_2024": {
+                "return": -0.0039097855967461514,
+                "max_dd": -0.005282883448207489,
+                "trades": 37,
+                "win_rate": 0.43243243243243246
+              },
+              "Recent_2025": {
+                "return": -0.005956730452075121,
+                "max_dd": -0.00645047023048587,
+                "trades": 86,
+                "win_rate": 0.36046511627906974
+              }
+            },
+            "name": "Multi-Factor"
+          },
+          "DOGEUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "skipped": true,
+                "reason": "insufficient_data"
+              },
+              "May2021_crash": {
+                "return": 0.024650444680423877,
+                "max_dd": -0.013817442910409873,
+                "trades": 32,
+                "win_rate": 0.375
+              },
+              "FTX_collapse": {
+                "return": 0.02534451070622956,
+                "max_dd": -0.002388117024324073,
+                "trades": 27,
+                "win_rate": 0.48148148148148145
+              },
+              "ETF_rally_2024": {
+                "return": 0.003364224680074246,
+                "max_dd": -0.0058555783606807355,
+                "trades": 46,
+                "win_rate": 0.2608695652173913
+              },
+              "Recent_2025": {
+                "return": -0.0006987747693293356,
+                "max_dd": -0.0067214182067049655,
+                "trades": 97,
+                "win_rate": 0.31958762886597936
+              }
+            },
+            "name": "Multi-Factor"
+          },
+          "BNBUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.009726025204419564,
+                "max_dd": -0.003993715674695225,
+                "trades": 22,
+                "win_rate": 0.5
+              },
+              "May2021_crash": {
+                "return": 3.1137270248837723e-06,
+                "max_dd": -0.005705441793286914,
+                "trades": 34,
+                "win_rate": 0.38235294117647056
+              },
+              "FTX_collapse": {
+                "return": 0.0007555675968735631,
+                "max_dd": -0.0031693429628304698,
+                "trades": 35,
+                "win_rate": 0.34285714285714286
+              },
+              "ETF_rally_2024": {
+                "return": 0.0032860861988275314,
+                "max_dd": -0.0022685641714100813,
+                "trades": 39,
+                "win_rate": 0.38461538461538464
+              },
+              "Recent_2025": {
+                "return": -0.00344148625506413,
+                "max_dd": -0.005978379103891969,
+                "trades": 92,
+                "win_rate": 0.31521739130434784
+              }
+            },
+            "name": "Multi-Factor"
+          },
+          "ADAUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.003217760358993127,
+                "max_dd": -0.0058922792517438595,
+                "trades": 28,
+                "win_rate": 0.2857142857142857
+              },
+              "May2021_crash": {
+                "return": -0.012973294038678751,
+                "max_dd": -0.014491968927540556,
+                "trades": 41,
+                "win_rate": 0.4146341463414634
+              },
+              "FTX_collapse": {
+                "return": -0.0010936921619539852,
+                "max_dd": -0.0037646890636105932,
+                "trades": 31,
+                "win_rate": 0.3548387096774194
+              },
+              "ETF_rally_2024": {
+                "return": -0.004315253331671154,
+                "max_dd": -0.006906467999776089,
+                "trades": 38,
+                "win_rate": 0.3157894736842105
+              },
+              "Recent_2025": {
+                "return": 0.00025053340283220926,
+                "max_dd": -0.005813676679381801,
+                "trades": 101,
+                "win_rate": 0.37623762376237624
+              }
+            },
+            "name": "Multi-Factor"
+          },
+          "LINKUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": 0.007832501257678759,
+                "max_dd": -0.0027014520965737707,
+                "trades": 22,
+                "win_rate": 0.4090909090909091
+              },
+              "May2021_crash": {
+                "return": -0.0075772878723737724,
+                "max_dd": -0.012764399631440944,
+                "trades": 40,
+                "win_rate": 0.275
+              },
+              "FTX_collapse": {
+                "return": 0.001789186059561576,
+                "max_dd": -0.0016190453606991795,
+                "trades": 27,
+                "win_rate": 0.48148148148148145
+              },
+              "ETF_rally_2024": {
+                "return": -0.006618991264252583,
+                "max_dd": -0.007142942035628463,
+                "trades": 34,
+                "win_rate": 0.23529411764705882
+              },
+              "Recent_2025": {
+                "return": -0.010278782064980896,
+                "max_dd": -0.013777792864064055,
+                "trades": 98,
+                "win_rate": 0.29591836734693877
+              }
+            },
+            "name": "Multi-Factor"
+          },
+          "AVAXUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "skipped": true,
+                "reason": "insufficient_data"
+              },
+              "May2021_crash": {
+                "return": -0.006613344077597505,
+                "max_dd": -0.011482886510762347,
+                "trades": 33,
+                "win_rate": 0.36363636363636365
+              },
+              "FTX_collapse": {
+                "return": -0.00259641114628395,
+                "max_dd": -0.006101667708153258,
+                "trades": 38,
+                "win_rate": 0.2894736842105263
+              },
+              "ETF_rally_2024": {
+                "return": -0.0057747659563734954,
+                "max_dd": -0.0057747659563734954,
+                "trades": 45,
+                "win_rate": 0.37777777777777777
+              },
+              "Recent_2025": {
+                "return": -0.004162865190587506,
+                "max_dd": -0.007207019073184,
+                "trades": 91,
+                "win_rate": 0.34065934065934067
+              }
+            },
+            "name": "Multi-Factor"
+          },
+          "LTCUSDT": {
+            "stress_results": {
+              "COVID_crash": {
+                "return": -0.00032836018755133534,
+                "max_dd": -0.00596644727040041,
+                "trades": 30,
+                "win_rate": 0.26666666666666666
+              },
+              "May2021_crash": {
+                "return": -0.0019929387465702497,
+                "max_dd": -0.007658641196394552,
+                "trades": 37,
+                "win_rate": 0.2702702702702703
+              },
+              "FTX_collapse": {
+                "return": 0.0028172664061694164,
+                "max_dd": -0.0030162908732338594,
+                "trades": 23,
+                "win_rate": 0.391304347826087
+              },
+              "ETF_rally_2024": {
+                "return": 0.00047905654079682947,
+                "max_dd": -0.002661656648844768,
+                "trades": 46,
+                "win_rate": 0.30434782608695654
+              },
+              "Recent_2025": {
+                "return": -0.017336473019094245,
+                "max_dd": -0.017336473019094245,
+                "trades": 105,
+                "win_rate": 0.3238095238095238
+              }
+            },
+            "name": "Multi-Factor"
+          }
+        },
+        "stats": {
+          "BTCUSDT": {
+            "name": "Multi-Factor",
+            "mean_return": -0.00034949862240247234,
+            "t_stat": -1.3417859899589064,
+            "p_value": 0.9078681553828674,
+            "bootstrap_ci_95": [
+              -0.0008501579257589059,
+              0.0001737820660279298
+            ],
+            "mc_p_value": 0.9066,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "ETHUSDT": {
+            "name": "Multi-Factor",
+            "mean_return": 0.0005452478660178909,
+            "t_stat": 1.4693017399122086,
+            "p_value": 0.07325085796410258,
+            "bootstrap_ci_95": [
+              -0.00017079326126310732,
+              0.0012918181204238498
+            ],
+            "mc_p_value": 0.0716,
+            "significant_5pct": "False",
+            "significant_10pct": "True"
+          },
+          "SOLUSDT": {
+            "name": "Multi-Factor",
+            "mean_return": 0.0006974265888356704,
+            "t_stat": 1.2295961302940432,
+            "p_value": 0.1119065346509669,
+            "bootstrap_ci_95": [
+              -0.00034215293439684855,
+              0.0018601030575144683
+            ],
+            "mc_p_value": 0.1202,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "XRPUSDT": {
+            "name": "Multi-Factor",
+            "mean_return": 0.0010613476577184032,
+            "t_stat": 1.3931475213074511,
+            "p_value": 0.08412490013836016,
+            "bootstrap_ci_95": [
+              -0.00026648005912538204,
+              0.0027359182058536817
+            ],
+            "mc_p_value": 0.089,
+            "significant_5pct": "False",
+            "significant_10pct": "True"
+          },
+          "DOGEUSDT": {
+            "name": "Multi-Factor",
+            "mean_return": 0.0016046276810341477,
+            "t_stat": 1.1095123461602887,
+            "p_value": 0.13581821126915972,
+            "bootstrap_ci_95": [
+              -0.0007243053494445788,
+              0.004822280924298492
+            ],
+            "mc_p_value": 0.165,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "BNBUSDT": {
+            "name": "Multi-Factor",
+            "mean_return": 0.00025847231039040645,
+            "t_stat": 0.4441277595310706,
+            "p_value": 0.3292126690312258,
+            "bootstrap_ci_95": [
+              -0.0006769988195228054,
+              0.0015209333166438634
+            ],
+            "mc_p_value": 0.3966,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "ADAUSDT": {
+            "name": "Multi-Factor",
+            "mean_return": 0.0006053330724670198,
+            "t_stat": 1.075053740870385,
+            "p_value": 0.14316256245285752,
+            "bootstrap_ci_95": [
+              -0.0004169583897984804,
+              0.001781463342668996
+            ],
+            "mc_p_value": 0.1424,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "LINKUSDT": {
+            "name": "Multi-Factor",
+            "mean_return": -0.0002939656689333669,
+            "t_stat": -0.7219485702090431,
+            "p_value": 0.7635618798583244,
+            "bootstrap_ci_95": [
+              -0.0010701290275045828,
+              0.0005262720300872566
+            ],
+            "mc_p_value": 0.7544,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "AVAXUSDT": {
+            "name": "Multi-Factor",
+            "mean_return": 6.953311641163031e-05,
+            "t_stat": 0.17242026175947556,
+            "p_value": 0.4318589494000564,
+            "bootstrap_ci_95": [
+              -0.000703526089091473,
+              0.0008607612208920046
+            ],
+            "mc_p_value": 0.4346,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          },
+          "LTCUSDT": {
+            "name": "Multi-Factor",
+            "mean_return": -0.0005767180008140471,
+            "t_stat": -1.6319698147392767,
+            "p_value": 0.9462757104697387,
+            "bootstrap_ci_95": [
+              -0.0012774531533585492,
+              9.034715388827565e-05
+            ],
+            "mc_p_value": 0.9454,
+            "significant_5pct": "False",
+            "significant_10pct": "False"
+          }
+        }
+      }
+    }
+  },
+  "best_performers": [
+    {
+      "symbol": "SOLUSDT",
+      "strategy": "TSMOM(84)",
+      "oos_return": 0.0027039768506775808,
+      "win_rate": 0.3082191780821918
+    },
+    {
+      "symbol": "DOGEUSDT",
+      "strategy": "TSMOM(84)",
+      "oos_return": 0.03700924027487207,
+      "win_rate": 0.38271604938271603
+    },
+    {
+      "symbol": "ADAUSDT",
+      "strategy": "TSMOM(84)",
+      "oos_return": 0.026267489118775078,
+      "win_rate": 0.38562091503267976
+    },
+    {
+      "symbol": "AVAXUSDT",
+      "strategy": "TSMOM(84)",
+      "oos_return": 0.022521705881046294,
+      "win_rate": 0.3559322033898305
+    }
+  ]
+}

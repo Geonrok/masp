@@ -1,0 +1,116 @@
+{
+  "strategy_name": "KOSDAQ_Spot_Multi_TF_Foreign",
+  "version": "1.0.0",
+  "created": "2026-01-30",
+  "validated": true,
+
+  "description": "코스닥 현물 외국인 멀티 타임프레임 전략 - 시총 상위 1/8 대상",
+
+  "performance": {
+    "full_period": {
+      "start": "2018-01-01",
+      "end": "2026-01-30",
+      "in_sample_profitable_pct": 48.8,
+      "out_of_sample_profitable_pct": 78.6,
+      "avg_return_pct": 42.7
+    },
+    "out_of_sample": {
+      "start": "2024-01-01",
+      "end": "2026-01-30",
+      "profitable_pct": 78.6,
+      "avg_return_pct": 42.7,
+      "loss_probability_pct": 21.4
+    }
+  },
+
+  "universe": {
+    "market": "KOSDAQ",
+    "filter": {
+      "liquidity": "top_50_percent",
+      "market_cap": "top_1_8_within_liquid",
+      "foreign_data": "200_days_minimum"
+    },
+    "expected_stocks": 84,
+    "rebalance_frequency": "semi_annual"
+  },
+
+  "strategy": {
+    "name": "Multi_TF_Short",
+    "type": "foreign_momentum",
+    "parameters": {
+      "wght_short_period": 5,
+      "wght_long_period_1": 20,
+      "wght_short_period_2": 10,
+      "wght_long_period_2": 40,
+      "price_ma_period": 50
+    },
+    "entry_conditions": [
+      "외국인 비중 5일 MA > 20일 MA (단기 상승)",
+      "외국인 비중 10일 MA > 40일 MA (중기 상승)",
+      "현재가 > 50일 MA (가격 상승 추세)"
+    ],
+    "exit_conditions": [
+      "진입 조건 중 하나라도 불만족"
+    ]
+  },
+
+  "trading_rules": {
+    "entry": {
+      "condition": "3개 조건 모두 만족",
+      "timing": "신호 발생 다음날 시초가",
+      "position_size_per_stock": 0.10
+    },
+    "exit": {
+      "condition": "진입 조건 불만족",
+      "timing": "신호 해제 다음날 시초가"
+    },
+    "costs": {
+      "commission": 0.0015,
+      "slippage": 0.001,
+      "tax_on_sell": 0.0018
+    }
+  },
+
+  "risk_management": {
+    "max_stocks": 10,
+    "max_position_per_stock": 0.10,
+    "max_portfolio_loss": 0.15,
+    "optional_stop_loss": 0.10
+  },
+
+  "alternative_strategies": [
+    {
+      "name": "Param_5_25_10_50_60",
+      "oos_profitable_pct": 77.4,
+      "parameters": {
+        "wght_short_period": 5,
+        "wght_long_period_1": 25,
+        "wght_short_period_2": 10,
+        "wght_long_period_2": 50,
+        "price_ma_period": 60
+      }
+    },
+    {
+      "name": "Param_3_20_10_40_50",
+      "oos_profitable_pct": 76.2,
+      "parameters": {
+        "wght_short_period": 3,
+        "wght_long_period_1": 20,
+        "wght_short_period_2": 10,
+        "wght_long_period_2": 40,
+        "price_ma_period": 50
+      }
+    }
+  ],
+
+  "data_sources": {
+    "ohlcv": "E:/투자/data/kr_stock/kosdaq_ohlcv",
+    "foreign": "E:/투자/data/kosdaq_foreign"
+  },
+
+  "notes": [
+    "대형주(시총 1/8)에서 가장 효과적",
+    "외국인 수급이 핵심 알파",
+    "기본 신호 청산이 최적 (손절/트레일링 불필요)"
+  ]
+}

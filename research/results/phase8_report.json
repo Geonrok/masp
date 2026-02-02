@@ -1,0 +1,118 @@
+{
+  "timestamp": "2026-01-27T19:14:03.115762",
+  "total_configs_tested": 32,
+  "best_config": "dual_ma_default",
+  "best_score": 5,
+  "top_10": [
+    {
+      "config": "relaxed_atr_wide_stop",
+      "passed": 5,
+      "universe": "top_30",
+      "sharpe": 4.026383280015358,
+      "return": 0.05329194244665314,
+      "max_dd": 0.0,
+      "win_rate": 0.4727272727272727,
+      "pf": 2.1716629060047956,
+      "trades": 55
+    },
+    {
+      "config": "dual_ma_wide_stop",
+      "passed": 5,
+      "universe": "top_30",
+      "sharpe": 3.022034338628321,
+      "return": 0.037277845801123366,
+      "max_dd": -0.00714476157778865,
+      "win_rate": 0.45714285714285713,
+      "pf": 2.1121560514686335,
+      "trades": 35
+    },
+    {
+      "config": "relaxed_atr_no_pt",
+      "passed": 5,
+      "universe": "all",
+      "sharpe": 2.4698770212946775,
+      "return": 0.040448067518918274,
+      "max_dd": -0.007705570536729691,
+      "win_rate": 0.45098039215686275,
+      "pf": 3.0679180894367506,
+      "trades": 51
+    },
+    {
+      "config": "dual_ma_no_pt",
+      "passed": 5,
+      "universe": "all",
+      "sharpe": 2.163323839420749,
+      "return": 0.026051410457686774,
+      "max_dd": -0.005746764636441144,
+      "win_rate": 0.4666666666666667,
+      "pf": 2.708185212332567,
+      "trades": 30
+    },
+    {
+      "config": "dual_ma_default",
+      "passed": 5,
+      "universe": "all",
+      "sharpe": 2.1492509647915488,
+      "return": 0.024875823063100988,
+      "max_dd": -0.0057467646364410515,
+      "win_rate": 0.46875,
+      "pf": 2.411583174032298,
+      "trades": 32
+    },
+    {
+      "config": "dual_ma_tight_stop",
+      "passed": 5,
+      "universe": "top_50",
+      "sharpe": 1.9097021724120462,
+      "return": 0.02511325419889965,
+      "max_dd": -0.007989232366954369,
+      "win_rate": 0.45714285714285713,
+      "pf": 1.9733917107598091,
+      "trades": 35
+    },
+    {
+      "config": "regime_v2_wide_stop",
+      "passed": 4,
+      "universe": "top_30",
+      "sharpe": 2.463227810426744,
+      "return": 0.030329392417334455,
+      "max_dd": -0.009494684130374575,
+      "win_rate": 0.43243243243243246,
+      "pf": 1.7678642950727774,
+      "trades": 37
+    },
+    {
+      "config": "relaxed_atr_default",
+      "passed": 4,
+      "universe": "all",
+      "sharpe": 2.4474242498587837,
+      "return": 0.04097211846681548,
+      "max_dd": -0.007705570536729673,
+      "win_rate": 0.42105263157894735,
+      "pf": 2.3361064231169038,
+      "trades": 57
+    },
+    {
+      "config": "volume_confirm_wide_stop",
+      "passed": 4,
+      "universe": "top_30",
+      "sharpe": 2.3421349150516377,
+      "return": 0.02269709861124558,
+      "max_dd": -0.007714872427922459,
+      "win_rate": 0.38235294117647056,
+      "pf": 1.658653628601167,
+      "trades": 34
+    },
+    {
+      "config": "relaxed_atr_tight_stop",
+      "passed": 4,
+      "universe": "all",
+      "sharpe": 2.3074104313529733,
+      "return": 0.03095109538492813,
+      "max_dd": -0.008457714579095853,
+      "win_rate": 0.391304347826087,
+      "pf": 2.040423594017301,
+      "trades": 69
+    }
+  ]
+}
