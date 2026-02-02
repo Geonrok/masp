@@ -1,0 +1,97 @@
+{
+  "strategy_name": "KOSDAQ150_EqualWeight_Portfolio",
+  "version": "1.0.0",
+  "created": "2026-01-30",
+  "validated": true,
+
+  "description": "KOSDAQ 150 선물 균등가중 포트폴리오 - 3개 역추세 전략 조합",
+
+  "performance": {
+    "full_period": {
+      "start": "2010-01-04",
+      "end": "2026-01-27",
+      "sharpe": 0.674,
+      "cagr": 0.117,
+      "mdd": -0.391,
+      "total_return": 4.646,
+      "win_rate": 0.536
+    },
+    "out_of_sample": {
+      "start": "2021-01-01",
+      "end": "2026-01-27",
+      "sharpe": 0.884,
+      "cagr": 0.167,
+      "mdd": -0.207,
+      "total_return": 1.140,
+      "win_rate": 0.548
+    }
+  },
+
+  "strategies": [
+    {
+      "name": "TripleV5_14_38_14_78_20",
+      "weight": 0.333,
+      "type": "mean_reversion",
+      "parameters": {
+        "cmo_period": 14,
+        "cmo_threshold": 38,
+        "wr_period": 14,
+        "wr_threshold": 78,
+        "bb_period": 20
+      }
+    },
+    {
+      "name": "TripleV5_14_33_14_73_20",
+      "weight": 0.333,
+      "type": "mean_reversion",
+      "parameters": {
+        "cmo_period": 14,
+        "cmo_threshold": 33,
+        "wr_period": 14,
+        "wr_threshold": 73,
+        "bb_period": 20
+      }
+    },
+    {
+      "name": "TripleVol_14_38_78_0.8",
+      "weight": 0.334,
+      "type": "mean_reversion_volume",
+      "parameters": {
+        "period": 14,
+        "cmo_threshold": 38,
+        "wr_threshold": 78,
+        "volume_multiplier": 0.8
+      }
+    }
+  ],
+
+  "trading_rules": {
+    "entry": {
+      "condition": "2개 이상 지표 크로스오버",
+      "timing": "신호 발생 다음날 시초가",
+      "position_size": 0.30
+    },
+    "exit": {
+      "condition": "반대 방향 신호 발생",
+      "stop_loss": 0.07
+    },
+    "costs": {
+      "commission": 0.0001,
+      "slippage": 0.001
+    }
+  },
+
+  "risk_management": {
+    "max_portfolio_mdd": 0.40,
+    "max_position_loss": 0.07,
+    "max_consecutive_losses": 5
+  },
+
+  "market_characteristics": {
+    "bull_sharpe": 0.183,
+    "bear_sharpe": 1.076,
+    "sideways_sharpe": 0.140,
+    "best_regime": "bear",
+    "note": "하락장에서 가장 강함, 횡보장에서 약함"
+  }
+}

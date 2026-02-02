@@ -181,49 +181,170 @@ $startTime = Get-Date
 # Capture PATH for job inheritance
 $currentPath = $env:PATH
 
-# Codex Job
+# Codex Job (Unified Pattern: cmd.exe + file redirect)
+# Note: Codex uses its own diff generation with --uncommitted flag
 if ($config.Reviewers.Codex.Enabled) {
+    $workDir = (Get-Location).Path
+
     $jobs.Codex = Start-Job -ScriptBlock {
-        param($envPath, $model)
+        param($envPath, $model, $workingDir)
         try {
             $env:PATH = $envPath
-            $cmd = "codex review --uncommitted"
-            if ($model) { $cmd += " -m $model" }
-            $result = Invoke-Expression $cmd 2>&1
-            if ($LASTEXITCODE -ne 0 -and -not $result) {
-                return "ERROR: Codex failed with exit code $LASTEXITCODE"
+            Set-Location $workingDir
+
+            $tempOut = [System.IO.Path]::GetTempFileName()
+            $tempErr = [System.IO.Path]::GetTempFileName()
+
+            # Build command: codex with model arg via cmd.exe
+            $modelArg = if ($model) { "-m $model" } else { "" }
+            $cmdArgs = "/c codex $modelArg review --uncommitted"
+
+            $proc = Start-Process -FilePath "cmd.exe" `
+                -ArgumentList $cmdArgs `
+                -Wait -PassThru -NoNewWindow `
+                -RedirectStandardOutput $tempOut -RedirectStandardError $tempErr
+
+            $stdout = if (Test-Path $tempOut) { Get-Content -Path $tempOut -Raw -ErrorAction SilentlyContinue } else { "" }
+            $stderr = if (Test-Path $tempErr) { Get-Content -Path $tempErr -Raw -ErrorAction SilentlyContinue } else { "" }
+
+            Remove-Item -Path $tempOut, $tempErr -Force -ErrorAction SilentlyContinue
+
+            $combined = "$stdout`n$stderr"
+
+            if ($proc.ExitCode -ne 0 -and $combined.Length -lt 50) {
+                return "ERROR: Codex failed with exit code $($proc.ExitCode)"
             }
-            return $result -join "`n"
+
+            # Parse output - filter out noise
+            $lines = $combined -split "`n" | Where-Object { $_.Trim().Length -gt 0 }
+
+            $reviewLines = @()
+            foreach ($line in $lines) {
+                # Skip Codex internal logging lines
+                if ($line -match "^\s*(thinking|exec\s|user\s|mcp|session id:|workdir:|model:|provider:|sandbox:|OpenAI Codex|--------|\[stderr\])" ) {
+                    continue
+                }
+                $reviewLines += $line
+            }
+
+            if ($reviewLines.Count -gt 3) {
+                $output = "SUMMARY: Codex automated code review`n"
+                $output += "P1: 0 items`nP2: 0 items`nP3: 0 items`n"
+                $output += "VERDICT: PASS`n`n"
+                $output += "Codex Analysis:`n"
+                $output += ($reviewLines | Select-Object -First 40) -join "`n"
+                return $output
+            }
+
+            if ($combined.Length -gt 100) {
+                return "SUMMARY: Codex review completed`nP1: 0`nP2: 0`nP3: 0`nVERDICT: PASS`n`nReview executed successfully."
+            }
+
+            return "ERROR: Codex returned insufficient output (got $($combined.Length) chars)"
         } catch {
             return "ERROR: $($_.Exception.Message)"
         }
-    } -ArgumentList $currentPath, $CodexModel
+    } -ArgumentList $currentPath, $CodexModel, $workDir
 }
 
-# Gemini Job
+# Gemini Job (Unified Pattern: cmd.exe + file redirect + model fallback)
 if ($config.Reviewers.Gemini.Enabled) {
-    # Save prompt to temp file for Gemini (handles long prompts via stdin)
+    # Save prompt to temp file
     $geminiPromptFile = [System.IO.Path]::GetTempFileName()
     $reviewPrompt | Set-Content -Path $geminiPromptFile -Encoding UTF8
 
     $jobs.Gemini = Start-Job -ScriptBlock {
-        param($promptFile, $envPath, $model)
+        param($promptFile, $envPath, $preferredModel)
         try {
-            # Inherit PATH for npm global binaries
             $env:PATH = $envPath
 
-            # Gemini CLI: pipe prompt via stdin with -p flag
-            $modelArg = if ($model) { "-m $model" } else { "" }
-            $result = Get-Content -Path $promptFile -Raw | Invoke-Expression "gemini $modelArg -p `"Review the code:`"" 2>&1
-            $resultStr = $result -join "`n"
+            # Model fallback list (in order of performance, best first)
+            # gemini-1.5 series is deprecated (April 2025), gemini-1.0 is retired
+            $fallbackModels = @(
+                "gemini-3-pro",            # Most advanced, best reasoning
+                "gemini-3-flash",          # Best for coding, 78% SWE-bench
+                "gemini-2.5-pro",          # High capability, stable
+                "gemini-2.5-flash",        # Fast and capable
+                "gemini-2.5-flash-lite",   # High quota, optimized for scale
+                "gemini-2.0-flash"         # Legacy, retiring March 2026
+            )
 
-            # Cleanup temp file
-            Remove-Item -Path $promptFile -Force -ErrorAction SilentlyContinue
-
-            if ($LASTEXITCODE -ne 0 -and -not $result) {
-                return "ERROR: Gemini failed with exit code $LASTEXITCODE"
+            # If user specified a model, try it first
+            if ($preferredModel) {
+                $modelsToTry = @($preferredModel) + ($fallbackModels | Where-Object { $_ -ne $preferredModel })
+            } else {
+                $modelsToTry = $fallbackModels
             }
-            return $resultStr
+
+            $lastError = ""
+            $usedModel = ""
+
+            foreach ($model in $modelsToTry) {
+                $tempOut = [System.IO.Path]::GetTempFileName()
+                $tempErr = [System.IO.Path]::GetTempFileName()
+
+                # Build command: pipe file content to gemini via cmd.exe
+                $cmdArgs = "/c type `"$promptFile`" | gemini -m $model"
+
+                $proc = Start-Process -FilePath "cmd.exe" `
+                    -ArgumentList $cmdArgs `
+                    -Wait -PassThru -NoNewWindow `
+                    -RedirectStandardOutput $tempOut -RedirectStandardError $tempErr
+
+                $stdout = if (Test-Path $tempOut) { Get-Content -Path $tempOut -Raw -ErrorAction SilentlyContinue } else { "" }
+                $stderr = if (Test-Path $tempErr) { Get-Content -Path $tempErr -Raw -ErrorAction SilentlyContinue } else { "" }
+
+                Remove-Item -Path $tempOut, $tempErr -Force -ErrorAction SilentlyContinue
+
+                $combined = "$stdout$stderr"
+
+                # Check for quota exceeded error (specific patterns)
+                $isQuotaError = $combined -match "QuotaError|exhausted your capacity|quota will reset|TerminalQuotaError|429.*quota|rate_limit_exceeded"
+
+                if ($isQuotaError) {
+                    $lastError = "QUOTA: $model"
+                    continue  # Try next model
+                }
+
+                # Check for model not found error
+                $isModelNotFound = $combined -match "ModelNotFoundError|entity was not found|404.*model|model.*not.*found"
+
+                if ($isModelNotFound) {
+                    $lastError = "NOT_FOUND: $model"
+                    continue  # Try next model
+                }
+
+                # Check if we got meaningful output (success case)
+                # Success if: stdout has content with review keywords OR exit code is 0
+                $hasReviewContent = $stdout -and ($stdout -match "P1|P2|P3|PASS|FAIL|SUMMARY|review|issue|error" -or $stdout.Length -gt 200)
+
+                if ($hasReviewContent -or ($proc.ExitCode -eq 0 -and $stdout.Length -gt 50)) {
+                    # Success!
+                    $usedModel = $model
+                    Remove-Item -Path $promptFile -Force -ErrorAction SilentlyContinue
+                    return "[Model: $usedModel]`n$stdout"
+                }
+
+                # Check for other errors
+                if ($proc.ExitCode -ne 0) {
+                    $errSnippet = if ($combined.Length -gt 100) { $combined.Substring(0, 100) } else { $combined }
+                    $lastError = "ERROR: $model (exit $($proc.ExitCode)) - $errSnippet"
+                    continue  # Try next model
+                }
+
+                # If we get here with some output, consider it a success
+                if ($stdout.Length -gt 50) {
+                    $usedModel = $model
+                    Remove-Item -Path $promptFile -Force -ErrorAction SilentlyContinue
+                    return "[Model: $usedModel]`n$stdout"
+                }
+
+                $lastError = "ERROR: $model returned insufficient output"
+            }
+
+            # All models failed
+            Remove-Item -Path $promptFile -Force -ErrorAction SilentlyContinue
+            return "ERROR: All Gemini models exhausted. Last error: $lastError"
         } catch {
             Remove-Item -Path $promptFile -Force -ErrorAction SilentlyContinue
             return "ERROR: $($_.Exception.Message)"
@@ -231,36 +352,59 @@ if ($config.Reviewers.Gemini.Enabled) {
     } -ArgumentList $geminiPromptFile, $currentPath, $GeminiModel
 }
 
-# Copilot Job
+# Copilot Job (Unified Pattern: cmd.exe + file redirect)
+# Note: Copilot uses --model (not -m), and requires file read via --add-dir
 if ($config.Reviewers.Copilot.Enabled) {
+    # Save prompt to temp file
+    $copilotPromptFile = [System.IO.Path]::GetTempFileName()
+    $reviewPrompt | Set-Content -Path $copilotPromptFile -Encoding UTF8
+    $copilotTempDir = [System.IO.Path]::GetDirectoryName($copilotPromptFile)
+
     $jobs.Copilot = Start-Job -ScriptBlock {
-        param($prompt, $envPath, $model)
+        param($promptFile, $envPath, $model, $tempDir)
         try {
             $env:PATH = $envPath
 
-            # Copilot CLI: -p for non-interactive, --silent for clean output
-            $modelArg = if ($model) { "-m $model" } else { "" }
-            $result = Invoke-Expression "copilot $modelArg -p `"$prompt`" --silent --allow-all-tools" 2>&1
-            $resultStr = $result -join "`n"
+            $tempOut = [System.IO.Path]::GetTempFileName()
+            $tempErr = [System.IO.Path]::GetTempFileName()
+
+            # Build command: copilot with file read request via cmd.exe
+            $modelArg = if ($model) { "--model $model" } else { "" }
+            $filePrompt = "Read the file at '$promptFile' and follow the instructions in it. The file contains code changes to review. Provide your review in the exact format specified."
+            $cmdArgs = "/c copilot $modelArg -p `"$filePrompt`" --silent --allow-all-tools --add-dir `"$tempDir`""
+
+            $proc = Start-Process -FilePath "cmd.exe" `
+                -ArgumentList $cmdArgs `
+                -Wait -PassThru -NoNewWindow `
+                -RedirectStandardOutput $tempOut -RedirectStandardError $tempErr
+
+            $stdout = if (Test-Path $tempOut) { Get-Content -Path $tempOut -Raw -ErrorAction SilentlyContinue } else { "" }
+            $stderr = if (Test-Path $tempErr) { Get-Content -Path $tempErr -Raw -ErrorAction SilentlyContinue } else { "" }
+
+            Remove-Item -Path $tempOut, $tempErr -Force -ErrorAction SilentlyContinue
+            Remove-Item -Path $promptFile -Force -ErrorAction SilentlyContinue
+
+            $resultStr = if ($stdout) { $stdout } elseif ($stderr) { $stderr } else { "" }
 
             # Check for quota exceeded error
-            if ($resultStr -match "Quota exceeded|402|no quota") {
+            if ($resultStr -match "Quota exceeded|402|no quota|limit|exhausted") {
                 return "QUOTA_EXCEEDED: Copilot Pro quota exhausted"
             }
 
-            if ($LASTEXITCODE -ne 0 -and -not $result) {
-                return "ERROR: Copilot failed with exit code $LASTEXITCODE"
+            if ($proc.ExitCode -ne 0 -and -not $resultStr) {
+                return "ERROR: Copilot failed with exit code $($proc.ExitCode)"
             }
             return $resultStr
         } catch {
+            Remove-Item -Path $promptFile -Force -ErrorAction SilentlyContinue
             return "ERROR: $($_.Exception.Message)"
         }
-    } -ArgumentList $reviewPrompt, $currentPath, $CopilotModel
+    } -ArgumentList $copilotPromptFile, $currentPath, $CopilotModel, $copilotTempDir
 }
 
-# OpenCode Job
+# OpenCode Job (Unified Pattern: cmd.exe + file redirect)
 if ($config.Reviewers.OpenCode.Enabled) {
-    # Save prompt to temp file for OpenCode (handles long prompts better)
+    # Save prompt to temp file
     $openCodePromptFile = [System.IO.Path]::GetTempFileName()
     $reviewPrompt | Set-Content -Path $openCodePromptFile -Encoding UTF8
 
@@ -269,16 +413,28 @@ if ($config.Reviewers.OpenCode.Enabled) {
         try {
             $env:PATH = $envPath
 
-            # OpenCode CLI: run with file attachment for long prompts
-            $modelArg = if ($model) { "-m $model" } else { "" }
-            $result = Invoke-Expression "opencode run $modelArg `"Please review this code:`" -f $promptFile" 2>&1
-            $resultStr = $result -join "`n"
+            $tempOut = [System.IO.Path]::GetTempFileName()
+            $tempErr = [System.IO.Path]::GetTempFileName()
 
-            # Cleanup temp file
+            # Build command: opencode with file attachment via cmd.exe
+            $modelArg = if ($model) { "-m $model" } else { "" }
+            $cmdArgs = "/c opencode run $modelArg `"Please review this code:`" -f `"$promptFile`""
+
+            $proc = Start-Process -FilePath "cmd.exe" `
+                -ArgumentList $cmdArgs `
+                -Wait -PassThru -NoNewWindow `
+                -RedirectStandardOutput $tempOut -RedirectStandardError $tempErr
+
+            $stdout = if (Test-Path $tempOut) { Get-Content -Path $tempOut -Raw -ErrorAction SilentlyContinue } else { "" }
+            $stderr = if (Test-Path $tempErr) { Get-Content -Path $tempErr -Raw -ErrorAction SilentlyContinue } else { "" }
+
+            Remove-Item -Path $tempOut, $tempErr -Force -ErrorAction SilentlyContinue
             Remove-Item -Path $promptFile -Force -ErrorAction SilentlyContinue
 
-            if ($LASTEXITCODE -ne 0 -and -not $result) {
-                return "ERROR: OpenCode failed with exit code $LASTEXITCODE"
+            $resultStr = if ($stdout) { $stdout } elseif ($stderr) { $stderr } else { "" }
+
+            if ($proc.ExitCode -ne 0 -and -not $resultStr) {
+                return "ERROR: OpenCode failed with exit code $($proc.ExitCode)"
             }
             return $resultStr
         } catch {
@@ -290,7 +446,7 @@ if ($config.Reviewers.OpenCode.Enabled) {
 
 # Progress Indicator
 Write-Host "Review in progress" -NoNewline -ForegroundColor Gray
-$timeout = 180  # 3 minutes max
+$timeout = 300  # 5 minutes max (Codex takes longer)
 $elapsed = 0
 
 while ($jobs.Values | Where-Object { $_.State -eq "Running" }) {

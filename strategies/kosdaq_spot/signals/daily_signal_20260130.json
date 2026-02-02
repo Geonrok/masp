@@ -1,0 +1,477 @@
+{
+  "generated": "2026-01-30T18:04:18.118735",
+  "strategy": "Multi_TF_Short",
+  "params": {
+    "wght_short1": 5,
+    "wght_long1": 20,
+    "wght_short2": 10,
+    "wght_long2": 40,
+    "price_ma": 50
+  },
+  "summary": {
+    "scan_date": "2026-01-30T18:04:17.165976",
+    "total_scanned": 91,
+    "buy_signals": 38,
+    "strong_buys": 38,
+    "weak_buys": 0,
+    "buy_rate": 41.75824175824176
+  },
+  "buy_signals": [
+    {
+      "ticker": "247540",
+      "strength": 1.0,
+      "price": "246000",
+      "foreign_wght": 13.81,
+      "reason": "단기 외국인↑ (13.45>12.64), 중기 외국인↑ (12.99>12.54), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "277810",
+      "strength": 1.0,
+      "price": "760000",
+      "foreign_wght": 9.03,
+      "reason": "단기 외국인↑ (9.09>8.43), 중기 외국인↑ (8.90>8.02), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "028300",
+      "strength": 1.0,
+      "price": "65300",
+      "foreign_wght": 18.96,
+      "reason": "단기 외국인↑ (19.32>19.25), 중기 외국인↑ (19.30>18.99), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "950160",
+      "strength": 1.0,
+      "price": "104300",
+      "foreign_wght": 5.36,
+      "reason": "단기 외국인↑ (5.28>5.17), 중기 외국인↑ (5.23>5.15), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "140410",
+      "strength": 1.0,
+      "price": "172700",
+      "foreign_wght": 23.26,
+      "reason": "단기 외국인↑ (23.48>22.89), 중기 외국인↑ (23.09>22.55), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "310210",
+      "strength": 1.0,
+      "price": "229000",
+      "foreign_wght": 5.32,
+      "reason": "단기 외국인↑ (5.48>5.39), 중기 외국인↑ (5.57>5.07), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "403870",
+      "strength": 1.0,
+      "price": "44350",
+      "foreign_wght": 25.59,
+      "reason": "단기 외국인↑ (25.57>25.46), 중기 외국인↑ (25.53>23.40), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "257720",
+      "strength": 1.0,
+      "price": "54200",
+      "foreign_wght": 9.88,
+      "reason": "단기 외국인↑ (9.95>8.58), 중기 외국인↑ (9.43>7.85), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "068760",
+      "strength": 1.0,
+      "price": "74100",
+      "foreign_wght": 5.43,
+      "reason": "단기 외국인↑ (5.26>4.56), 중기 외국인↑ (4.83>4.34), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "095340",
+      "strength": 1.0,
+      "price": "138700",
+      "foreign_wght": 20.55,
+      "reason": "단기 외국인↑ (20.69>20.21), 중기 외국인↑ (20.78>20.23), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "005290",
+      "strength": 1.0,
+      "price": "51400",
+      "foreign_wght": 11.9,
+      "reason": "단기 외국인↑ (12.14>11.83), 중기 외국인↑ (11.99>11.78), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "160190",
+      "strength": 1.0,
+      "price": "85400",
+      "foreign_wght": 1.33,
+      "reason": "단기 외국인↑ (1.31>1.13), 중기 외국인↑ (1.31>1.11), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "084370",
+      "strength": 1.0,
+      "price": "107500",
+      "foreign_wght": 31.0,
+      "reason": "단기 외국인↑ (31.10>30.75), 중기 외국인↑ (30.88>30.34), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "083650",
+      "strength": 1.0,
+      "price": "79000",
+      "foreign_wght": 20.14,
+      "reason": "단기 외국인↑ (18.64>18.61), 중기 외국인↑ (18.04>17.14), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "475830",
+      "strength": 1.0,
+      "price": "113500",
+      "foreign_wght": 4.34,
+      "reason": "단기 외국인↑ (4.10>4.09), 중기 외국인↑ (4.25>4.24), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "323280",
+      "strength": 1.0,
+      "price": "71600",
+      "foreign_wght": 5.87,
+      "reason": "단기 외국인↑ (4.12>3.87), 중기 외국인↑ (3.67>3.65), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "178320",
+      "strength": 1.0,
+      "price": "38200",
+      "foreign_wght": 8.17,
+      "reason": "단기 외국인↑ (7.79>7.65), 중기 외국인↑ (7.75>7.55), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "222800",
+      "strength": 1.0,
+      "price": "56300",
+      "foreign_wght": 11.76,
+      "reason": "단기 외국인↑ (13.52>11.88), 중기 외국인↑ (13.25>11.04), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "458870",
+      "strength": 1.0,
+      "price": "160500",
+      "foreign_wght": 8.7,
+      "reason": "단기 외국인↑ (8.23>8.11), 중기 외국인↑ (8.31>7.70), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "099320",
+      "strength": 1.0,
+      "price": "178100",
+      "foreign_wght": 9.49,
+      "reason": "단기 외국인↑ (8.61>7.86), 중기 외국인↑ (8.57>6.59), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "348370",
+      "strength": 1.0,
+      "price": "89200",
+      "foreign_wght": 4.28,
+      "reason": "단기 외국인↑ (4.18>3.76), 중기 외국인↑ (3.94>3.74), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "290650",
+      "strength": 1.0,
+      "price": "78000",
+      "foreign_wght": 10.87,
+      "reason": "단기 외국인↑ (8.09>5.50), 중기 외국인↑ (6.62>4.50), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "388720",
+      "strength": 1.0,
+      "price": "150700",
+      "foreign_wght": 16.18,
+      "reason": "단기 외국인↑ (16.67>15.41), 중기 외국인↑ (16.46>15.61), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "007390",
+      "strength": 1.0,
+      "price": "25400",
+      "foreign_wght": 8.54,
+      "reason": "단기 외국인↑ (8.40>8.16), 중기 외국인↑ (8.35>8.03), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "293490",
+      "strength": 1.0,
+      "price": "17740",
+      "foreign_wght": 10.18,
+      "reason": "단기 외국인↑ (9.98>9.70), 중기 외국인↑ (9.82>9.75), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "319660",
+      "strength": 1.0,
+      "price": "54600",
+      "foreign_wght": 24.89,
+      "reason": "단기 외국인↑ (25.05>24.82), 중기 외국인↑ (25.37>24.58), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "232140",
+      "strength": 1.0,
+      "price": "18640",
+      "foreign_wght": 2.96,
+      "reason": "단기 외국인↑ (2.44>2.14), 중기 외국인↑ (2.15>1.97), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "032820",
+      "strength": 1.0,
+      "price": "9010",
+      "foreign_wght": 6.63,
+      "reason": "단기 외국인↑ (6.63>5.83), 중기 외국인↑ (7.44>5.32), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "096530",
+      "strength": 1.0,
+      "price": "27900",
+      "foreign_wght": 16.02,
+      "reason": "단기 외국인↑ (16.33>16.12), 중기 외국인↑ (16.33>16.06), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "328130",
+      "strength": 1.0,
+      "price": "49050",
+      "foreign_wght": 10.34,
+      "reason": "단기 외국인↑ (9.68>8.84), 중기 외국인↑ (9.19>8.57), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "003380",
+      "strength": 1.0,
+      "price": "12560",
+      "foreign_wght": 7.38,
+      "reason": "단기 외국인↑ (7.30>7.06), 중기 외국인↑ (7.36>7.24), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "397030",
+      "strength": 1.0,
+      "price": "57800",
+      "foreign_wght": 5.61,
+      "reason": "단기 외국인↑ (5.13>4.55), 중기 외국인↑ (5.05>3.62), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "115180",
+      "strength": 1.0,
+      "price": "35700",
+      "foreign_wght": 3.73,
+      "reason": "단기 외국인↑ (3.67>3.21), 중기 외국인↑ (3.46>2.64), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "131970",
+      "strength": 1.0,
+      "price": "68400",
+      "foreign_wght": 7.49,
+      "reason": "단기 외국인↑ (7.44>6.93), 중기 외국인↑ (7.20>6.04), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "218410",
+      "strength": 1.0,
+      "price": "49350",
+      "foreign_wght": 21.17,
+      "reason": "단기 외국인↑ (20.39>19.17), 중기 외국인↑ (19.93>18.04), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "056190",
+      "strength": 1.0,
+      "price": "35600",
+      "foreign_wght": 11.56,
+      "reason": "단기 외국인↑ (10.91>10.26), 중기 외국인↑ (10.63>10.08), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "056080",
+      "strength": 1.0,
+      "price": "34050",
+      "foreign_wght": 14.37,
+      "reason": "단기 외국인↑ (14.72>14.46), 중기 외국인↑ (14.87>14.62), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    },
+    {
+      "ticker": "161580",
+      "strength": 1.0,
+      "price": "53600",
+      "foreign_wght": 1.83,
+      "reason": "단기 외국인↑ (1.39>0.54), 중기 외국인↑ (0.82>0.61), 가격>MA50",
+      "conditions": {
+        "wght_5>20": "True",
+        "wght_10>40": "True",
+        "price>ma50": "True"
+      }
+    }
+  ]
+}

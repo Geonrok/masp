@@ -1,0 +1,148 @@
+{
+  "timestamp": "2026-01-28T12:15:53.364030",
+  "total_tested": 14,
+  "six_six_count": 0,
+  "results": [
+    {
+      "name": "D_fwd12_thr003",
+      "passed": 2,
+      "sharpe": 2.449489709844509,
+      "return": 0.015775234683622852,
+      "max_dd": 0.0,
+      "win_rate": 0.2727272727272727,
+      "pf": 1.126572144251376,
+      "trades": 33
+    },
+    {
+      "name": "C_xgb_p045",
+      "passed": 1,
+      "sharpe": 0.0,
+      "return": 0.0,
+      "max_dd": 0.0,
+      "win_rate": 0.0,
+      "pf": 0.0,
+      "trades": 0
+    },
+    {
+      "name": "C_xgb_p050",
+      "passed": 1,
+      "sharpe": 0.0,
+      "return": 0.0,
+      "max_dd": 0.0,
+      "win_rate": 0.0,
+      "pf": 0.0,
+      "trades": 0
+    },
+    {
+      "name": "C_xgb_p055",
+      "passed": 1,
+      "sharpe": 0.0,
+      "return": 0.0,
+      "max_dd": 0.0,
+      "win_rate": 0.0,
+      "pf": 0.0,
+      "trades": 0
+    },
+    {
+      "name": "C_lgb_p050",
+      "passed": 1,
+      "sharpe": 0.0,
+      "return": 0.0,
+      "max_dd": 0.0,
+      "win_rate": 0.0,
+      "pf": 0.0,
+      "trades": 0
+    },
+    {
+      "name": "C_lgb_p055",
+      "passed": 1,
+      "sharpe": 0.0,
+      "return": 0.0,
+      "max_dd": 0.0,
+      "win_rate": 0.0,
+      "pf": 0.0,
+      "trades": 0
+    },
+    {
+      "name": "C_rf_p045",
+      "passed": 1,
+      "sharpe": 0.0,
+      "return": 0.0,
+      "max_dd": 0.0,
+      "win_rate": 0.0,
+      "pf": 0.0,
+      "trades": 0
+    },
+    {
+      "name": "C_rf_p050",
+      "passed": 1,
+      "sharpe": 0.0,
+      "return": 0.0,
+      "max_dd": 0.0,
+      "win_rate": 0.0,
+      "pf": 0.0,
+      "trades": 0
+    },
+    {
+      "name": "E_xgb_filt_fwd48",
+      "passed": 1,
+      "sharpe": -2.449489562502608,
+      "return": -0.0028822584981653687,
+      "max_dd": -0.0028822584981653687,
+      "win_rate": 0.0,
+      "pf": 0.0,
+      "trades": 1
+    },
+    {
+      "name": "D_fwd24_thr010",
+      "passed": 1,
+      "sharpe": -2.449489667962728,
+      "return": -0.0069448289265604535,
+      "max_dd": -0.0069448289265604535,
+      "win_rate": 0.27586206896551724,
+      "pf": 0.9824625814899615,
+      "trades": 29
+    },
+    {
+      "name": "C_lgb_p045",
+      "passed": 1,
+      "sharpe": -2.4494896963471118,
+      "return": -0.011189906380587256,
+      "max_dd": -0.011189906380587256,
+      "win_rate": 0.0,
+      "pf": 0.0,
+      "trades": 1
+    },
+    {
+      "name": "E_xgb_filt_fwd12",
+      "passed": 1,
+      "sharpe": -2.4494896963471118,
+      "return": -0.011189906380587256,
+      "max_dd": -0.011189906380587256,
+      "win_rate": 0.0,
+      "pf": 0.0,
+      "trades": 1
+    },
+    {
+      "name": "D_fwd48_thr010",
+      "passed": 1,
+      "sharpe": -2.4494897288954403,
+      "return": -0.037415399601560595,
+      "max_dd": -0.037415399601560595,
+      "win_rate": 0.3333333333333333,
+      "pf": 0.7110908098250532,
+      "trades": 30
+    },
+    {
+      "name": "D_fwd24_thr002",
+      "passed": 1,
+      "sharpe": -2.449489729943687,
+      "return": -0.04047008175770761,
+      "max_dd": -0.04047008175770761,
+      "win_rate": 0.2777777777777778,
+      "pf": 0.7640493046914962,
+      "trades": 36
+    }
+  ],
+  "phase16a_summary": "All pure ML failed (1-3/6). XGB/LGB/RF/LR/Ensemble tested."
+}

@@ -1,0 +1,78 @@
+{
+  "timestamp": "2026-01-27T20:47:44.052453",
+  "strategies_tested": 8,
+  "results": {
+    "1_funding_mr": {
+      "best_config": "z1.5_lb90",
+      "criteria_passed": 3,
+      "sharpe": -0.611060804771325,
+      "total_return": -0.019667629692471378,
+      "win_rate": 0.45081967213114754,
+      "profit_factor": 0.8859434758242685,
+      "trade_count": 122
+    },
+    "2_fear_greed": {
+      "best_config": "fear20_greed80_smooth7",
+      "criteria_passed": 3,
+      "sharpe": 1.826470484353808,
+      "total_return": -0.002872799846921681,
+      "win_rate": 0.6,
+      "profit_factor": 0.6854603361359952,
+      "trade_count": 5
+    },
+    "3_macro_regime": {
+      "best_config": "long_only_dxy100_vix25",
+      "criteria_passed": 5,
+      "sharpe": 1.4505629980309867,
+      "total_return": 0.010988996035799614,
+      "win_rate": 0.47058823529411764,
+      "profit_factor": 1.7155380249980745,
+      "trade_count": 17
+    },
+    "4_altcoin_rotation": {
+      "best_config": "mom30_top5",
+      "criteria_passed": 4,
+      "sharpe": 0.5504170445828048,
+      "total_return": 0.049832733775544646,
+      "win_rate": 0.472,
+      "profit_factor": 1.4505595135127034,
+      "trade_count": 125
+    },
+    "5_tvl_regime": {
+      "best_config": "tvl_roc14",
+      "criteria_passed": 3,
+      "sharpe": 0.7933762669098346,
+      "total_return": 0.031798824273985504,
+      "win_rate": 0.5,
+      "profit_factor": 1.9057008043628734,
+      "trade_count": 16
+    },
+    "6_kimchi_premium": {
+      "best_config": "premium_lb30_z1.5",
+      "criteria_passed": 1,
+      "sharpe": -0.5136283421320842,
+      "total_return": -0.0073176506503200844,
+      "win_rate": 0.4444444444444444,
+      "profit_factor": 0.8967025075961039,
+      "trade_count": 36
+    },
+    "7_grid": {
+      "best_config": "grid2.0pct_adx20",
+      "criteria_passed": 4,
+      "sharpe": 1.0803405570392806,
+      "total_return": 0.002027580128194151,
+      "win_rate": 0.5370370370370371,
+      "profit_factor": 1.5665219079261727,
+      "trade_count": 54
+    },
+    "8_composite_sentiment": {
+      "best_config": "composite_fear20",
+      "criteria_passed": 2,
+      "sharpe": -1.3093073074707138,
+      "total_return": -0.0083431421309621,
+      "win_rate": 0.5,
+      "profit_factor": 0.2879966772029811,
+      "trade_count": 2
+    }
+  }
+}
