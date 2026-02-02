@@ -7,6 +7,12 @@ Bias-Free Backtester (v2.0):
 - Signal at Day T close -> Execute at Day T+1 open
 - No look-ahead bias
 - Includes slippage and commission
+
+Monte Carlo Simulation:
+- Return distribution simulation
+- Confidence intervals
+- Maximum drawdown estimation
+- Probability of ruin calculation
 """
 
 from libs.backtest.engine import BacktestEngine, BacktestResult
@@ -33,6 +39,16 @@ from libs.backtest.validation import (
     DeflatedSharpeRatio,
     DSRResult,
     validate_strategy,
+)
+from libs.backtest.monte_carlo import (
+    MonteCarloSimulator,
+    MonteCarloConfig,
+    MonteCarloResult,
+    ReturnDistribution,
+    DrawdownDistribution,
+    RuinProbability,
+    ConfidenceInterval,
+    format_monte_carlo_report,
 )
 
 __all__ = [
@@ -61,4 +77,13 @@ __all__ = [
     "DeflatedSharpeRatio",
     "DSRResult",
     "validate_strategy",
+    # Monte Carlo
+    "MonteCarloSimulator",
+    "MonteCarloConfig",
+    "MonteCarloResult",
+    "ReturnDistribution",
+    "DrawdownDistribution",
+    "RuinProbability",
+    "ConfidenceInterval",
+    "format_monte_carlo_report",
 ]

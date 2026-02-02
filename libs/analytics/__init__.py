@@ -2,6 +2,11 @@
 Analytics Module
 
 Provides comprehensive performance analytics and metrics for trading strategies.
+
+Includes:
+- Performance metrics (Sharpe, Sortino, Calmar, etc.)
+- Advanced risk metrics (VaR, CVaR, Omega ratio, etc.)
+- Execution analysis (slippage, fill rate, timing, costs)
 """
 
 from libs.analytics.performance import (
@@ -31,6 +36,16 @@ from libs.analytics.advanced_metrics import (
     calculate_advanced_metrics,
     generate_performance_report,
 )
+from libs.analytics.execution_analysis import (
+    ExecutionRecord,
+    ExecutionAnalyzer,
+    ExecutionReport,
+    SlippageStats,
+    FillRateStats,
+    ExecutionTimeStats,
+    CostAnalysis,
+    format_execution_report,
+)
 
 __all__ = [
     # Basic performance
@@ -58,4 +73,13 @@ __all__ = [
     "calculate_payoff_ratio",
     "calculate_advanced_metrics",
     "generate_performance_report",
+    # Execution analysis
+    "ExecutionRecord",
+    "ExecutionAnalyzer",
+    "ExecutionReport",
+    "SlippageStats",
+    "FillRateStats",
+    "ExecutionTimeStats",
+    "CostAnalysis",
+    "format_execution_report",
 ]
