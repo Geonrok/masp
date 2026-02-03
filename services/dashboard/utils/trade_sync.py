@@ -18,6 +18,19 @@ def _is_live_trading_enabled() -> bool:
     return os.getenv("MASP_ENABLE_LIVE_TRADING") == "1"
 
 
+def _is_trade_sync_enabled() -> bool:
+    """Check if trade sync is enabled (allowed even in paper trading mode).
+
+    Trade sync only fetches historical orders from exchanges,
+    it doesn't execute any new trades.
+    """
+    # Allow sync if either live trading is enabled OR API keys are configured
+    if _is_live_trading_enabled():
+        return True
+    # Check if API keys are available for read-only operations
+    return bool(os.getenv("UPBIT_ACCESS_KEY") or os.getenv("BITHUMB_API_KEY"))
+
+
 def _get_trade_logger():
     """Get TradeLogger instance."""
     try:
@@ -142,8 +155,8 @@ def sync_upbit_trades(limit: int = 100) -> Tuple[int, int, str]:
     Returns:
         Tuple of (synced_count, skipped_count, message)
     """
-    if not _is_live_trading_enabled():
-        return 0, 0, "Live trading is not enabled (MASP_ENABLE_LIVE_TRADING=1)"
+    if not _is_trade_sync_enabled():
+        return 0, 0, "API keys not configured (set UPBIT_ACCESS_KEY/UPBIT_SECRET_KEY)"
 
     trade_logger = _get_trade_logger()
     if not trade_logger:
@@ -190,8 +203,8 @@ def sync_bithumb_trades(limit: int = 100) -> Tuple[int, int, str]:
     Returns:
         Tuple of (synced_count, skipped_count, message)
     """
-    if not _is_live_trading_enabled():
-        return 0, 0, "Live trading is not enabled (MASP_ENABLE_LIVE_TRADING=1)"
+    if not _is_trade_sync_enabled():
+        return 0, 0, "API keys not configured (set BITHUMB_API_KEY/BITHUMB_SECRET_KEY)"
 
     trade_logger = _get_trade_logger()
     if not trade_logger:

@@ -188,48 +188,40 @@ class PerformanceReportService:
 
         실제 포트폴리오 데이터가 없으면 BTC 데이터로 시뮬레이션
         """
-        portfolio_path = Path(
-            "E:/투자/Multi-Asset Strategy Platform/data/portfolio_history.csv"
-        )
+        # 환경변수 또는 기본 경로에서 포트폴리오 기록 찾기
+        portfolio_paths = [
+            Path(os.environ.get("PORTFOLIO_HISTORY_PATH", "")),
+            Path("/app/data/portfolio_history.csv"),  # Docker
+            Path("data/portfolio_history.csv"),  # Local relative
+        ]
 
-        if portfolio_path.exists():
-            try:
-                df = pd.read_csv(portfolio_path)
-                df["date"] = pd.to_datetime(df["date"])
-                df = df.set_index("date").sort_index()
-                return df
-            except Exception as e:
-                logger.warning(
-                    f"[PerformanceReport] Failed to load portfolio history: {e}"
-                )
+        for portfolio_path in portfolio_paths:
+            if portfolio_path.exists():
+                try:
+                    df = pd.read_csv(portfolio_path)
+                    df["date"] = pd.to_datetime(df["date"])
+                    df = df.set_index("date").sort_index()
+                    return df
+                except Exception as e:
+                    logger.warning(
+                        f"[PerformanceReport] Failed to load portfolio history from {portfolio_path}: {e}"
+                    )
 
         # Fallback: 백테스트 결과 기반 시뮬레이션
         return self._simulate_portfolio_from_backtest(days)
 
     def _simulate_portfolio_from_backtest(self, days: int = 365) -> pd.DataFrame:
         """백테스트 결과 기반 포트폴리오 시뮬레이션"""
-        # BTC 데이터 로드
-        folder = DATA_ROOT / f"{self.exchange}_1d"
-        btc_file = None
+        # API 우선, 로컬 파일 폴백
+        df = self._load_btc_data_from_api(days)
+        if df is None or df.empty:
+            df = self._load_btc_data_from_file(days)
 
-        for f in folder.glob("*.csv"):
-            if "BTC" in f.stem.upper() and "DOWN" not in f.stem.upper():
-                btc_file = f
-                break
-
-        if btc_file is None:
+        if df is None or df.empty:
             logger.error("[PerformanceReport] BTC data not found for simulation")
             return pd.DataFrame()
 
         try:
-            df = pd.read_csv(btc_file)
-            date_col = [
-                c for c in df.columns if "date" in c.lower() or "time" in c.lower()
-            ]
-            df["date"] = pd.to_datetime(df[date_col[0]]).dt.normalize()
-            df = df.set_index("date").sort_index()
-            df = df.tail(days)
-
             # 간단한 시뮬레이션 (전략 수익률 = BTC 수익률 * 0.7 + 알파)
             df["btc_return"] = df["close"].pct_change()
             df["strategy_return"] = df["btc_return"] * 0.7  # 전략 수익률 시뮬레이션
@@ -252,6 +244,69 @@ class PerformanceReportService:
         except Exception as e:
             logger.error(f"[PerformanceReport] Simulation failed: {e}")
             return pd.DataFrame()
+
+    def _load_btc_data_from_api(self, days: int = 365) -> Optional[pd.DataFrame]:
+        """Upbit API에서 BTC 일봉 데이터 로드"""
+        try:
+            import pyupbit
+
+            ticker = "KRW-BTC"
+            df = pyupbit.get_ohlcv(ticker, interval="day", count=min(days + 10, 200))
+
+            if df is None or df.empty:
+                return None
+
+            # 컬럼 정규화
+            df = df.reset_index()
+            df.columns = [c.lower() for c in df.columns]
+
+            # date 컬럼 처리
+            if "index" in df.columns:
+                df = df.rename(columns={"index": "date"})
+
+            df["date"] = pd.to_datetime(df["date"]).dt.normalize()
+            df = df.set_index("date").sort_index()
+            df = df.tail(days)
+
+            logger.info(f"[PerformanceReport] Loaded {len(df)} days BTC data from API")
+            return df
+
+        except Exception as e:
+            logger.warning(f"[PerformanceReport] API load failed: {e}")
+            return None
+
+    def _load_btc_data_from_file(self, days: int = 365) -> Optional[pd.DataFrame]:
+        """로컬 파일에서 BTC 데이터 로드 (폴백)"""
+        folder = DATA_ROOT / f"{self.exchange}_1d"
+        btc_file = None
+
+        if folder.exists():
+            for f in folder.glob("*.csv"):
+                if "BTC" in f.stem.upper() and "DOWN" not in f.stem.upper():
+                    btc_file = f
+                    break
+
+        if btc_file is None:
+            return None
+
+        try:
+            df = pd.read_csv(btc_file)
+            date_col = [
+                c for c in df.columns if "date" in c.lower() or "time" in c.lower()
+            ]
+            if not date_col:
+                return None
+
+            df["date"] = pd.to_datetime(df[date_col[0]]).dt.normalize()
+            df = df.set_index("date").sort_index()
+            df = df.tail(days)
+
+            logger.info(f"[PerformanceReport] Loaded {len(df)} days BTC data from file")
+            return df
+
+        except Exception as e:
+            logger.warning(f"[PerformanceReport] File load failed: {e}")
+            return None
 
     def calculate_metrics(
         self,
@@ -523,7 +578,9 @@ class PerformanceReportService:
     ) -> Path:
         """리포트를 파일로 저장"""
         if output_dir is None:
-            output_dir = Path("E:/투자/Multi-Asset Strategy Platform/outputs/reports")
+            output_dir = Path(
+                os.environ.get("REPORT_OUTPUT_DIR", "/app/data/reports")
+            )
 
         output_dir.mkdir(parents=True, exist_ok=True)
 

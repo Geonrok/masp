@@ -49,6 +49,7 @@ services:
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
       - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI:-http://localhost:8501}
       - MASP_API_BASE_URL=http://config-api:8000
+      - TRADE_LOG_DIR=/app/logs/trades
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
@@ -68,6 +69,7 @@ services:
       - UPBIT_API_SECRET=${UPBIT_API_SECRET}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - TRADE_LOG_DIR=/app/logs/trades
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs

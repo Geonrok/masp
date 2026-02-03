@@ -9,6 +9,7 @@
 
 import csv
 import logging
+import os
 import threading
 from datetime import date, datetime
 from pathlib import Path
@@ -22,6 +23,7 @@ class TradeLogger:
     거래 로거
 
     저장 경로: logs/trades/YYYY-MM/trades_YYYY-MM-DD.csv
+    환경변수 TRADE_LOG_DIR로 경로 지정 가능
 
     Methods:
         log_trade(trade): 거래 기록 (Thread Safe)
@@ -29,7 +31,7 @@ class TradeLogger:
         get_daily_summary(date): 일일 요약
     """
 
-    DEFAULT_LOG_DIR = "logs/trades"
+    DEFAULT_LOG_DIR = os.environ.get("TRADE_LOG_DIR", "logs/trades")
 
     CSV_HEADERS = [
         "timestamp",
