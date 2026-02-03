@@ -27,3 +27,4 @@ scikit-learn>=1.3.0
 tzdata>=2024.1  # Windows ZoneInfo
 backports.zoneinfo>=0.2.1;python_version<"3.9"  # ZoneInfo for Python 3.8
 google-auth-oauthlib>=1.0.0  # Google OAuth for Firebase login
+google-api-python-client>=2.0.0  # Google API client
