@@ -121,9 +121,9 @@ class TestEnvConfigSource:
         ):
             source = EnvConfigSource(prefix="APP_")
             loaded = source.load()
-            assert "A" in loaded
-            assert "B" in loaded
-            assert "OTHER_C" not in loaded
+            assert "a" in loaded  # Keys are lowercased
+            assert "b" in loaded
+            assert "other_c" not in loaded
 
 
 class TestFileConfigSource:
