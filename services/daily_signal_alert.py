@@ -105,10 +105,74 @@ class DailySignalAlertService:
         return signal
 
     def load_ohlcv(self, min_days: int = 100) -> Dict[str, pd.DataFrame]:
-        """OHLCV 데이터 로드"""
+        """OHLCV 데이터 로드 (API 우선, 로컬 파일 폴백)"""
+        # 1. API에서 데이터 가져오기 시도
+        data = self._load_from_api(min_days)
+        if data:
+            logger.info(f"[DailySignalAlert] Loaded {len(data)} symbols from API")
+            return data
+
+        # 2. 로컬 파일에서 로드 시도
+        data = self._load_from_file(min_days)
+        if data:
+            logger.info(f"[DailySignalAlert] Loaded {len(data)} symbols from local files")
+            return data
+
+        logger.warning("[DailySignalAlert] No data loaded")
+        return {}
+
+    def _load_from_api(self, min_days: int = 100) -> Dict[str, pd.DataFrame]:
+        """Upbit API에서 OHLCV 데이터 로드"""
+        try:
+            import pyupbit
+
+            # KRW 마켓 티커 목록 가져오기
+            tickers = pyupbit.get_tickers(fiat="KRW")
+            if not tickers:
+                logger.warning("[DailySignalAlert] No tickers from API")
+                return {}
+
+            data = {}
+            # 상위 30개 종목만 로드 (API 속도 제한)
+            for ticker in tickers[:30]:
+                try:
+                    df = pyupbit.get_ohlcv(ticker, interval="day", count=min_days + 10)
+                    if df is None or df.empty or len(df) < min_days:
+                        continue
+
+                    # 컬럼명 표준화
+                    df = df.rename(columns={
+                        "open": "open",
+                        "high": "high",
+                        "low": "low",
+                        "close": "close",
+                        "volume": "volume",
+                    })
+
+                    required = ["open", "high", "low", "close", "volume"]
+                    if all(c in df.columns for c in required):
+                        df = df[required].dropna()
+                        if len(df) >= min_days:
+                            data[ticker] = df
+
+                except Exception as e:
+                    logger.debug(f"[DailySignalAlert] Failed to load {ticker}: {e}")
+                    continue
+
+            return data
+
+        except ImportError:
+            logger.warning("[DailySignalAlert] pyupbit not installed")
+            return {}
+        except Exception as e:
+            logger.warning(f"[DailySignalAlert] API load failed: {e}")
+            return {}
+
+    def _load_from_file(self, min_days: int = 100) -> Dict[str, pd.DataFrame]:
+        """로컬 CSV 파일에서 OHLCV 데이터 로드"""
         folder = DATA_ROOT / f"{self.exchange}_1d"
         if not folder.exists():
-            logger.warning(f"[DailySignalAlert] Data folder not found: {folder}")
+            logger.debug(f"[DailySignalAlert] Data folder not found: {folder}")
             return {}
 
         data = {}

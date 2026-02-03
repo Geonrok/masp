@@ -224,10 +224,69 @@ class MarketRegimeDetector:
         return percentile
 
     def load_btc_data(self) -> Optional[pd.DataFrame]:
-        """BTC 데이터 로드"""
+        """BTC 데이터 로드 (API 우선, 로컬 파일 폴백)"""
+        # 1. API에서 데이터 가져오기 시도
+        df = self._load_from_api()
+        if df is not None and len(df) >= self.long_ma + 10:
+            logger.info("[MarketRegime] Loaded BTC data from API")
+            return df
+
+        # 2. 로컬 파일에서 로드 시도
+        df = self._load_from_file()
+        if df is not None:
+            logger.info("[MarketRegime] Loaded BTC data from local file")
+            return df
+
+        logger.warning("[MarketRegime] Failed to load BTC data from both API and file")
+        return None
+
+    def _load_from_api(self) -> Optional[pd.DataFrame]:
+        """Upbit API에서 BTC 일봉 데이터 로드"""
+        try:
+            import pyupbit
+
+            # 250일치 일봉 데이터 가져오기 (MA200 + 여유분)
+            ticker = "KRW-BTC"
+            df = pyupbit.get_ohlcv(ticker, interval="day", count=300)
+
+            if df is None or df.empty:
+                logger.warning("[MarketRegime] No data from Upbit API")
+                return None
+
+            # 컬럼명 표준화
+            df = df.rename(columns={
+                "open": "open",
+                "high": "high",
+                "low": "low",
+                "close": "close",
+                "volume": "volume",
+            })
+
+            # 필수 컬럼 확인
+            required = ["open", "high", "low", "close", "volume"]
+            if not all(c in df.columns for c in required):
+                logger.warning(f"[MarketRegime] Missing columns: {df.columns.tolist()}")
+                return None
+
+            df = df[required]
+            df = df.dropna()
+            df = df.sort_index()
+
+            logger.info(f"[MarketRegime] API loaded {len(df)} days of BTC data")
+            return df
+
+        except ImportError:
+            logger.warning("[MarketRegime] pyupbit not installed")
+            return None
+        except Exception as e:
+            logger.warning(f"[MarketRegime] API load failed: {e}")
+            return None
+
+    def _load_from_file(self) -> Optional[pd.DataFrame]:
+        """로컬 CSV 파일에서 BTC 데이터 로드"""
         folder = DATA_ROOT / f"{self.exchange}_1d"
         if not folder.exists():
-            logger.warning(f"[MarketRegime] Data folder not found: {folder}")
+            logger.debug(f"[MarketRegime] Data folder not found: {folder}")
             return None
 
         btc_file = None
@@ -237,7 +296,7 @@ class MarketRegimeDetector:
                 break
 
         if btc_file is None:
-            logger.warning("[MarketRegime] BTC data not found")
+            logger.debug("[MarketRegime] BTC file not found")
             return None
 
         try:
@@ -258,7 +317,7 @@ class MarketRegimeDetector:
 
             return df[required]
         except Exception as e:
-            logger.error(f"[MarketRegime] Failed to load BTC data: {e}")
+            logger.error(f"[MarketRegime] Failed to load BTC file: {e}")
             return None
 
     def analyze(self, df: Optional[pd.DataFrame] = None) -> RegimeAnalysis:
