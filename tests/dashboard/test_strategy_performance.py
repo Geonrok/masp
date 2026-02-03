@@ -388,11 +388,11 @@ def test_get_quality_indicator():
         _get_quality_indicator,
     )
 
-    assert _get_quality_indicator(2.5) == "[EXCELLENT]"
-    assert _get_quality_indicator(1.5) == "[GOOD]"
-    assert _get_quality_indicator(0.7) == "[FAIR]"
-    assert _get_quality_indicator(0.2) == "[POOR]"
-    assert _get_quality_indicator(-0.5) == "[NEGATIVE]"
+    assert _get_quality_indicator(2.5) == "[우수]"
+    assert _get_quality_indicator(1.5) == "[양호]"
+    assert _get_quality_indicator(0.7) == "[보통]"
+    assert _get_quality_indicator(0.2) == "[미흡]"
+    assert _get_quality_indicator(-0.5) == "[음수]"
 
 
 def test_get_performance_export_data():

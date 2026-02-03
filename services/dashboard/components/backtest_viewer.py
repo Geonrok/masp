@@ -156,7 +156,8 @@ def _calculate_metrics(
         variance = sum((r - mean_ret) ** 2 for r in safe_returns) / len(safe_returns)
         std_ret = math.sqrt(variance) if variance > 0 else 0.0
 
-        if std_ret > 0:
+        # Use tolerance to handle floating point precision issues
+        if std_ret > 1e-10:
             sharpe = _safe_div(mean_ret, std_ret, 0.0) * math.sqrt(TRADING_DAYS)
             sharpe = _safe_float(sharpe, 0.0)
         else:

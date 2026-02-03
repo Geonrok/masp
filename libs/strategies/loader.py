@@ -688,7 +688,13 @@ AVAILABLE_STRATEGIES.append(
             "top_cagr": "92.3%",
             "avg_sharpe": 1.96,
             "max_drawdown": "-30%",
-            "stocks": ["SK하이닉스", "삼성전자", "포스코홀딩스", "한미반도체", "삼성SDI"],
+            "stocks": [
+                "SK하이닉스",
+                "삼성전자",
+                "포스코홀딩스",
+                "한미반도체",
+                "삼성SDI",
+            ],
         },
         "recommendation": {
             "capital_range": "50만-100만원",

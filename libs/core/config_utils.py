@@ -99,6 +99,7 @@ class EnvConfigSource(ConfigSource):
                 continue
 
             clean_key = key[len(self.prefix) :] if self.prefix else key
+            clean_key = clean_key.lower()  # Convert to lowercase for consistency
             config[clean_key] = self._convert_type(clean_key, value)
 
         self._cache = config
@@ -106,7 +107,7 @@ class EnvConfigSource(ConfigSource):
         return config
 
     def get(self, key: str, default: Any = None) -> Any:
-        env_key = f"{self.prefix}{key}" if self.prefix else key
+        env_key = f"{self.prefix}{key.upper()}" if self.prefix else key.upper()
         value = os.environ.get(env_key)
         if value is None:
             return default
