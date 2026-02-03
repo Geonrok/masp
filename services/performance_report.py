@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -40,8 +41,8 @@ from libs.notifications.telegram import TelegramNotifier
 logger = logging.getLogger(__name__)
 
 # Default paths
-DATA_ROOT = Path("E:/data/crypto_ohlcv")
-TRADE_LOG_PATH = Path("E:/투자/Multi-Asset Strategy Platform/data/trade_log.json")
+DATA_ROOT = Path(os.environ.get("CRYPTO_DATA_ROOT", "/app/data/crypto_ohlcv"))
+TRADE_LOG_PATH = Path(os.environ.get("TRADE_LOG_PATH", "/app/data/trade_log.json"))
 
 
 @dataclass

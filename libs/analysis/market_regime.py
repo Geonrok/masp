@@ -17,6 +17,7 @@ Market Regime Detector
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -28,7 +29,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-DATA_ROOT = Path("E:/data/crypto_ohlcv")
+DATA_ROOT = Path(os.environ.get("CRYPTO_DATA_ROOT", "/app/data/crypto_ohlcv"))
 
 
 class MarketRegime(Enum):

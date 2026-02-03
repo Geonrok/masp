@@ -14,6 +14,7 @@ Daily Signal Alert Service
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -36,7 +37,7 @@ from libs.notifications.telegram import TelegramNotifier
 logger = logging.getLogger(__name__)
 
 # Data paths
-DATA_ROOT = Path("E:/data/crypto_ohlcv")
+DATA_ROOT = Path(os.environ.get("CRYPTO_DATA_ROOT", "/app/data/crypto_ohlcv"))
 
 
 class DailySignalAlertService:
