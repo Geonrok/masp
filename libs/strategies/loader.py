@@ -41,6 +41,12 @@ from libs.strategies.foreign_trend_etf import (
     ForeignTrend2xStrategy,
     ForeignTrendStrategy,
 )
+from libs.strategies.sector_rotation_monthly import (
+    SectorRotationAllStrategy,
+    SectorRotationMonthlyStrategy,
+    SectorRotationTier1Strategy,
+    SectorRotationTier2Strategy,
+)
 from libs.strategies.sept_v3_rsi50_gate import SeptV3Rsi50GateStrategy
 from libs.strategies.tiger200_etf import (
     TIGER200StableStrategy,
@@ -52,12 +58,6 @@ from libs.strategies.vix_sma10_stocks import (
     VIXSMA10StocksStrategy,
     VIXSMA10Tier1Strategy,
     VIXSMA10Tier2Strategy,
-)
-from libs.strategies.sector_rotation_monthly import (
-    SectorRotationAllStrategy,
-    SectorRotationMonthlyStrategy,
-    SectorRotationTier1Strategy,
-    SectorRotationTier2Strategy,
 )
 
 # Strategy registry - maps strategy_id to class
