@@ -13,3 +13,19 @@ include = ["apps*", "libs*", "services*"]
 
 [tool.setuptools.package-data]
 "*" = ["*.html", "*.css", "*.js"]
+
+[tool.isort]
+profile = "black"
+skip = [".venv", ".venv311", "venv", "__pycache__"]
+
+[tool.black]
+line-length = 88
+target-version = ["py310", "py311", "py312"]
+exclude = '''
+/(
+    \.venv
+  | \.venv311
+  | venv
+  | __pycache__
+)/
+'''
