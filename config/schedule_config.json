@@ -64,6 +64,21 @@
         "jitter": 30
       },
       "_comment": "AI Consensus Strategy v6 - Enable after backtest validation"
+    },
+    "kiwoom_spot": {
+      "enabled": false,
+      "strategy": "sector_rotation_m",
+      "symbols": ["000660", "005930", "003670", "042700", "006400"],
+      "position_size_krw": 100000,
+      "use_fractional": true,
+      "schedule": {
+        "day": "last_trading_day",
+        "hour": 15,
+        "minute": 20,
+        "timezone": "Asia/Seoul",
+        "jitter": 0
+      },
+      "_comment": "Monthly Sector Rotation - Rebalance at month end 15:20 KST (closing auction)"
     }
   },
   "telegram": {

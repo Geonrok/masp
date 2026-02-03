@@ -12,7 +12,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Callable, Dict, List, Optional, TypeVar
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 from libs.adapters.bithumb_api_v2 import BithumbAPIV2
 from libs.adapters.trade_logger import TradeLogger

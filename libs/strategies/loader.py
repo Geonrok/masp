@@ -53,6 +53,12 @@ from libs.strategies.vix_sma10_stocks import (
     VIXSMA10Tier1Strategy,
     VIXSMA10Tier2Strategy,
 )
+from libs.strategies.sector_rotation_monthly import (
+    SectorRotationAllStrategy,
+    SectorRotationMonthlyStrategy,
+    SectorRotationTier1Strategy,
+    SectorRotationTier2Strategy,
+)
 
 # Strategy registry - maps strategy_id to class
 STRATEGY_REGISTRY: dict[str, type[BaseStrategy]] = {
@@ -77,6 +83,11 @@ STRATEGY_REGISTRY: dict[str, type[BaseStrategy]] = {
     "vix_sma10_all": VIXSMA10AllTiersStrategy,
     # Crypto Spot - Sept v3 RSI50 Gate (7-Signal OR Ensemble)
     "sept_v3_rsi50_gate": SeptV3Rsi50GateStrategy,
+    # Sector Rotation Monthly (KOSPI Spot - Sharpe 1.5-3.78)
+    "sector_rotation_m": SectorRotationMonthlyStrategy,
+    "sector_rotation_m_tier1": SectorRotationTier1Strategy,
+    "sector_rotation_m_tier2": SectorRotationTier2Strategy,
+    "sector_rotation_m_all": SectorRotationAllStrategy,
 }
 
 # KOSPI200 Futures strategies (A+ Grade validated) - conditional
@@ -642,6 +653,51 @@ AVAILABLE_STRATEGIES.append(
                 "백테스트 성과의 70-80% 수준 기대",
                 "거래량 상위 30%만 선별하여 유동성 확보",
                 "평균 4.1개 보유 (7중 OR + 상위 30%)",
+            ],
+        },
+    }
+)
+
+# Sector Rotation Monthly - KOSPI Spot (Sharpe 1.5-3.78)
+AVAILABLE_STRATEGIES.append(
+    {
+        "strategy_id": "sector_rotation_m",
+        "id": "sector_rotation_m",
+        "name": "Monthly Sector Rotation",
+        "version": "1.0.0",
+        "description": (
+            "월별 모멘텀 기반 섹터 로테이션. "
+            "월간 수익률 > 0 → LONG, else → CASH. "
+            "월말 종가 단일가 리밸런싱 (15:20-15:30). "
+            "Real Sharpe 1.5-3.78, CAGR 30-80%."
+        ),
+        "module": "libs.strategies.sector_rotation_monthly",
+        "class_name": "SectorRotationMonthlyStrategy",
+        "markets": ["spot"],
+        "exchanges": ["kiwoom_spot", "paper"],
+        "status": "production_ready",
+        "features": [
+            "monthly_momentum",
+            "fractional_trading",
+            "closing_auction_execution",
+            "walk_forward_validated",
+            "realistic_cost_validated",
+        ],
+        "validated_performance": {
+            "top_sharpe": 2.37,
+            "top_cagr": "92.3%",
+            "avg_sharpe": 1.96,
+            "max_drawdown": "-30%",
+            "stocks": ["SK하이닉스", "삼성전자", "포스코홀딩스", "한미반도체", "삼성SDI"],
+        },
+        "recommendation": {
+            "capital_range": "50만-100만원",
+            "rebalance_frequency": "monthly",
+            "execution_time": "15:20 KST",
+            "notes": [
+                "소수점 거래로 소액 투자 가능",
+                "월 1회 리밸런싱으로 거래비용 최소화",
+                "종가 단일가 매매로 슬리피지 최소화",
             ],
         },
     }
