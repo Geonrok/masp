@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 
-
-
 def test_alert_priority_values():
     """Test AlertPriority enum values."""
     from libs.notifications.alert_manager import AlertPriority

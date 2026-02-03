@@ -374,9 +374,7 @@ def strategy_e_hedge(data: Dict) -> Tuple[pd.Series, pd.Series]:
     # 헷지 ON: 현물 70% + 인버스 30%
     # 헷지 OFF: 현물 100%
     returns = pd.Series(0.0, index=common_idx)
-    returns[hedge_on] = (
-        0.7 * spot_ret[hedge_on] + 0.3 * inv1x_ret[hedge_on]
-    )
+    returns[hedge_on] = 0.7 * spot_ret[hedge_on] + 0.3 * inv1x_ret[hedge_on]
     returns[not hedge_on] = spot_ret[not hedge_on]
 
     # 포지션 (헷지 여부)

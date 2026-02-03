@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 
-
 def test_import_scheduler_status():
     """Test module imports correctly."""
     from services.dashboard.components import scheduler_status

@@ -2,8 +2,6 @@
 Strategy Health Monitor 테스트
 """
 
-
-
 from libs.analytics.strategy_health import (
     HealthStatus,
     StrategyHealthMonitor,

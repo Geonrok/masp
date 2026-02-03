@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 
-
 def test_import_log_viewer():
     """Test module imports correctly."""
     from services.dashboard.components import log_viewer

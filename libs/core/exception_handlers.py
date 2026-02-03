@@ -273,7 +273,6 @@ def handle_adapter_exceptions(
                     )
                 return None
 
-
         if inspect.iscoroutinefunction(func):
             return async_wrapper  # type: ignore
         return sync_wrapper  # type: ignore

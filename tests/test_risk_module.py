@@ -2,7 +2,6 @@
 Tests for the Risk Management Module.
 """
 
-
 import pytest
 
 from libs.risk.drawdown_guard import DrawdownGuard, RiskStatus

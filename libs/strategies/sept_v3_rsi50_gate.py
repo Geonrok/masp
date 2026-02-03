@@ -37,7 +37,6 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
-
 from libs.adapters.factory import AdapterFactory
 from libs.strategies.base import BaseStrategy, Signal, TradeSignal
 from libs.strategies.indicators import (

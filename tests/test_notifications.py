@@ -4,7 +4,6 @@ Tests for notification services.
 
 from unittest.mock import Mock, patch
 
-
 from libs.notifications.deduplication import (
     AlertAggregator,
     AlertDeduplicator,

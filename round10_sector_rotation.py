@@ -40,7 +40,6 @@ def get_sector_map():
     print("Fetching sector information...")
     date = "20241231"  # Use recent date for classification
 
-
     for market in ["KOSPI", "KOSDAQ"]:
         tickers = stock.get_market_ticker_list(date, market=market)
         for ticker in tqdm(tickers, desc=f"Mapping {market} Sectors"):

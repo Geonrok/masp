@@ -94,10 +94,7 @@ def task_1_1_enumerate_symbols() -> Dict:
 
     # Find all CSV files
     csv_files = list(futures_path.glob("*.csv"))
-    [
-        f.stem.replace("_1h", "").replace("USDT", "").upper() + "USDT"
-        for f in csv_files
-    ]
+    [f.stem.replace("_1h", "").replace("USDT", "").upper() + "USDT" for f in csv_files]
 
     # Normalize symbol names
     symbol_info = {}

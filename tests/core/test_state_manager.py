@@ -2,7 +2,6 @@
 Tests for state manager.
 """
 
-
 from libs.core.state_manager import (
     StateContext,
     get_registered_state,

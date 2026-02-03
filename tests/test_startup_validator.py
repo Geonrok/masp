@@ -6,7 +6,6 @@ import json
 import os
 from unittest.mock import patch
 
-
 from libs.core.startup_validator import (
     EXCHANGE_KEY_CONFIGS,
     _is_placeholder,

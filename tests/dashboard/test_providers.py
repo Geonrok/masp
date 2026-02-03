@@ -110,7 +110,6 @@ def test_get_system_resources_with_psutil():
     """Test system resources returns valid data when psutil is available."""
     import importlib.util
 
-
     from services.dashboard.components.system_status import ResourceUsage
     from services.dashboard.providers.system_provider import get_system_resources
 

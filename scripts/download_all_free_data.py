@@ -47,9 +47,7 @@ def download_binance_funding_rate(symbols: List[str] = None):
     output_dir = DATA_ROOT / "binance_funding_rate"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    ccxt.binance(
-        {"enableRateLimit": True, "options": {"defaultType": "future"}}
-    )
+    ccxt.binance({"enableRateLimit": True, "options": {"defaultType": "future"}})
 
     if symbols is None:
         # 주요 심볼만

@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime
 
 
-
 def test_import_order_panel():
     """Test module imports correctly."""
     from services.dashboard.components import order_panel

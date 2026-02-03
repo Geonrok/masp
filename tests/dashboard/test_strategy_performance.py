@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 
-
 def test_import_strategy_performance():
     """Test module imports correctly."""
     from services.dashboard.components import strategy_performance

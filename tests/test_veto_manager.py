@@ -8,7 +8,6 @@ Tests all veto layers:
 4. Derivatives (Funding Rate)
 """
 
-
 import numpy as np
 import pandas as pd
 

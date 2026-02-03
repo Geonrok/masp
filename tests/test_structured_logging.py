@@ -5,7 +5,6 @@ Tests for structured logging module.
 import json
 import logging
 
-
 from libs.core.structured_logging import (
     AuditLogger,
     JSONFormatter,

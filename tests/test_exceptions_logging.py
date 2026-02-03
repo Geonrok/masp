@@ -5,7 +5,6 @@ Tests for exception hierarchy and structured logging.
 import json
 import logging
 
-
 from libs.core.exceptions import (
     APIError,
     ConfigurationError,
