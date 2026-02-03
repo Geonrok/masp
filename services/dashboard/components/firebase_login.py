@@ -6,6 +6,7 @@ Simple OAuth implementation using google-auth-oauthlib.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import streamlit as st
@@ -82,7 +83,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 
-REDIRECT_URI = "http://localhost:8501"
+REDIRECT_URI = os.environ.get("OAUTH_REDIRECT_URI", "http://localhost:8501")
 
 
 def _get_auth_url() -> str:
