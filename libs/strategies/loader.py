@@ -6,23 +6,23 @@ Loads strategies by ID from registry or import path.
 import importlib
 from typing import Optional, Type
 
-from libs.strategies.base import BaseStrategy
-from libs.strategies.mock_strategy import MockStrategy, TrendFollowingMockStrategy
-from libs.strategies.ma_crossover_strategy import MACrossoverStrategy
 from libs.strategies.atlas_futures import ATLASFuturesStrategy
+from libs.strategies.base import BaseStrategy
 from libs.strategies.binance_futures_v6 import BinanceFuturesV6Strategy
+from libs.strategies.ma_crossover_strategy import MACrossoverStrategy
+from libs.strategies.mock_strategy import MockStrategy, TrendFollowingMockStrategy
 from libs.strategies.vwap_breakout import VwapBreakoutStrategy
 
 # KOSPI200 Futures - optional import (may not exist)
 try:
     from libs.strategies.kospi200_futures import (
+        KOSPI200AggressivePortfolioStrategy,
         KOSPI200FuturesStrategy,
-        VIXBelowSMA20Strategy,
-        VIXDecliningStrategy,
-        SemiconForeignStrategy,
         KOSPI200HourlyStrategy,
         KOSPI200StablePortfolioStrategy,
-        KOSPI200AggressivePortfolioStrategy,
+        SemiconForeignStrategy,
+        VIXBelowSMA20Strategy,
+        VIXDecliningStrategy,
     )
 
     _HAS_KOSPI200_FUTURES = True
@@ -36,23 +36,23 @@ except ImportError:
     KOSPI200StablePortfolioStrategy = None
     KOSPI200AggressivePortfolioStrategy = None
 
-from libs.strategies.tiger200_etf import (
-    TIGER200Strategy,
-    TIGER200StableStrategy,
-    TIGER200VIXOnlyStrategy,
-)
 from libs.strategies.foreign_trend_etf import (
-    ForeignTrendStrategy,
     ForeignTrend1xStrategy,
     ForeignTrend2xStrategy,
+    ForeignTrendStrategy,
+)
+from libs.strategies.sept_v3_rsi50_gate import SeptV3Rsi50GateStrategy
+from libs.strategies.tiger200_etf import (
+    TIGER200StableStrategy,
+    TIGER200Strategy,
+    TIGER200VIXOnlyStrategy,
 )
 from libs.strategies.vix_sma10_stocks import (
+    VIXSMA10AllTiersStrategy,
     VIXSMA10StocksStrategy,
     VIXSMA10Tier1Strategy,
     VIXSMA10Tier2Strategy,
-    VIXSMA10AllTiersStrategy,
 )
-from libs.strategies.sept_v3_rsi50_gate import SeptV3Rsi50GateStrategy
 
 # Strategy registry - maps strategy_id to class
 STRATEGY_REGISTRY: dict[str, type[BaseStrategy]] = {

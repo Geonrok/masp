@@ -8,24 +8,25 @@ Tests cover:
 - Individual sub-strategies
 """
 
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
-import pandas as pd
-import numpy as np
 
+import numpy as np
+import pandas as pd
+import pytest
+
+from libs.strategies.base import Signal
 from libs.strategies.kospi200_futures import (
-    KOSPI200FuturesStrategy,
+    KOSPI200AggressivePortfolioStrategy,
     KOSPI200FuturesConfig,
-    VIXBelowSMA20Strategy,
-    VIXDecliningStrategy,
-    SemiconForeignStrategy,
+    KOSPI200FuturesStrategy,
     KOSPI200HourlyStrategy,
     KOSPI200StablePortfolioStrategy,
-    KOSPI200AggressivePortfolioStrategy,
     KOSPI200SubStrategy,
+    SemiconForeignStrategy,
+    VIXBelowSMA20Strategy,
+    VIXDecliningStrategy,
 )
-from libs.strategies.base import Signal
 
 
 class TestKOSPI200FuturesConfig:

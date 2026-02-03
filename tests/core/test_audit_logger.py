@@ -2,22 +2,23 @@
 Tests for Audit Logger.
 """
 
-import pytest
 import json
 import tempfile
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from libs.core.audit_logger import (
-    AuditLogger,
     AuditEvent,
     AuditEventType,
-    AuditSeverity,
+    AuditLogger,
     AuditLogWriter,
-    get_audit_logger,
-    audit_order_placed,
+    AuditSeverity,
     audit_config_change,
+    audit_order_placed,
+    get_audit_logger,
 )
 
 

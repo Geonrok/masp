@@ -2,8 +2,8 @@
 PaperExecution + TradeLogger 통합 테스트
 """
 
-import sys
 import os
+import sys
 from datetime import date
 from pathlib import Path
 
@@ -20,9 +20,9 @@ def main() -> bool:
 
     # 1. 어댑터 초기화
     print("\n[1] 어댑터 초기화")
-    from libs.adapters.trade_logger import TradeLogger
     from libs.adapters.paper_execution import PaperExecutionAdapter
     from libs.adapters.real_upbit_spot import UpbitSpotMarketData
+    from libs.adapters.trade_logger import TradeLogger
 
     trade_logger = TradeLogger(log_dir=str(test_trades_dir))
     market_data = UpbitSpotMarketData()

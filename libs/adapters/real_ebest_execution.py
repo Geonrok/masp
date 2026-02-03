@@ -12,7 +12,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
 
 from libs.adapters.base import ExecutionAdapter, OrderResult
 

@@ -3,10 +3,11 @@
 Only use the 142 symbols that were traded in the original test
 """
 
-import pandas as pd
-import numpy as np
-from pathlib import Path
 import warnings
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 

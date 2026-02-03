@@ -3,17 +3,18 @@ Tests for resilient HTTP client.
 """
 
 import asyncio
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from libs.adapters.resilient_client import (
-    ResilientHTTPClient,
-    SyncResilientHTTPClient,
     ClientConfig,
     RateLimitState,
+    ResilientHTTPClient,
+    SyncResilientHTTPClient,
 )
-from libs.core.exceptions import NetworkError, RateLimitError, APIError
+from libs.core.exceptions import APIError, NetworkError, RateLimitError
 from libs.core.metrics import MetricsRegistry
 from libs.core.resilience import CircuitBreakerRegistry
 

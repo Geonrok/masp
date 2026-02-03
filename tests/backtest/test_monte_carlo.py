@@ -10,13 +10,13 @@ Validates statistical simulation functionality:
 - Ruin probability
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from libs.backtest.monte_carlo import (
-    MonteCarloSimulator,
     MonteCarloConfig,
     MonteCarloResult,
+    MonteCarloSimulator,
     format_monte_carlo_report,
 )
 

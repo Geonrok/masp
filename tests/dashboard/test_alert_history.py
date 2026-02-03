@@ -20,8 +20,8 @@ def test_import_alert_history():
 def test_filter_alerts_by_type():
     """Test filtering alerts by alert_type."""
     from services.dashboard.components.alert_history import (
-        ALERT_TYPE_TRADE,
         ALERT_TYPE_SIGNAL,
+        ALERT_TYPE_TRADE,
         _filter_alerts,
     )
 
@@ -54,8 +54,8 @@ def test_filter_alerts_by_exchange():
 def test_filter_alerts_by_status():
     """Test filtering alerts by status."""
     from services.dashboard.components.alert_history import (
-        STATUS_SENT,
         STATUS_FAILED,
+        STATUS_SENT,
         _filter_alerts,
     )
 
@@ -195,8 +195,8 @@ def test_get_filter_hash():
 def test_get_status_icon():
     """Test status icon mapping."""
     from services.dashboard.components.alert_history import (
-        STATUS_SENT,
         STATUS_FAILED,
+        STATUS_SENT,
         _get_status_icon,
     )
 
@@ -208,9 +208,9 @@ def test_get_status_icon():
 def test_get_type_label():
     """Test alert type label mapping."""
     from services.dashboard.components.alert_history import (
-        ALERT_TYPE_TRADE,
-        ALERT_TYPE_SIGNAL,
         ALERT_TYPE_ERROR,
+        ALERT_TYPE_SIGNAL,
+        ALERT_TYPE_TRADE,
         _get_type_label,
     )
 
@@ -223,8 +223,8 @@ def test_get_type_label():
 def test_get_alert_type_options():
     """Test alert type options include ALL and all types."""
     from services.dashboard.components.alert_history import (
-        ALERT_TYPE_TRADE,
         ALERT_TYPE_SIGNAL,
+        ALERT_TYPE_TRADE,
         get_alert_type_options,
     )
 
@@ -237,8 +237,8 @@ def test_get_alert_type_options():
 def test_get_status_options():
     """Test status options include ALL and all statuses."""
     from services.dashboard.components.alert_history import (
-        STATUS_SENT,
         STATUS_FAILED,
+        STATUS_SENT,
         get_status_options,
     )
 
@@ -384,7 +384,7 @@ def test_normalize_date_for_hash_with_string():
 
 def test_key_function():
     """Test _key generates namespaced keys."""
-    from services.dashboard.components.alert_history import _key, _KEY_PREFIX
+    from services.dashboard.components.alert_history import _KEY_PREFIX, _key
 
     result = _key("type")
     assert result == f"{_KEY_PREFIX}type"

@@ -2,6 +2,7 @@
 print("주의: place_order 호출 절대 금지\n")
 
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv(override=False)

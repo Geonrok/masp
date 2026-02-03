@@ -9,17 +9,18 @@ Validates position-level exit logic:
 - Composite stop manager
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+
 from libs.risk.stop_loss_manager import (
-    Position,
+    ATRBasedStop,
+    CompositeStopManager,
     ExitReason,
     FixedPercentageStop,
-    TrailingStop,
-    ATRBasedStop,
+    Position,
     TimeBasedStop,
-    CompositeStopManager,
+    TrailingStop,
     create_default_stop_manager,
 )
 

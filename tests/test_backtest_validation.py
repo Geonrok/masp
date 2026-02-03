@@ -4,20 +4,21 @@ Tests for Strategy Validation Module (Backtest)
 Tests WFO, CPCV, and Deflated Sharpe Ratio implementations.
 """
 
+from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
 import pytest
-from datetime import datetime, timedelta
 
 from libs.backtest.validation import (
+    CPCVConfig,
+    CPCVResult,
+    CPCVValidator,
+    DeflatedSharpeRatio,
+    DSRResult,
     WalkForwardOptimizer,
     WFOConfig,
     WFOResult,
-    CPCVValidator,
-    CPCVConfig,
-    CPCVResult,
-    DeflatedSharpeRatio,
-    DSRResult,
     validate_strategy,
 )
 

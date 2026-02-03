@@ -2,20 +2,21 @@
 Tests for the enhanced backtesting framework.
 """
 
-import pytest
-import numpy as np
 from datetime import datetime, timedelta
 
+import numpy as np
+import pytest
+
 from libs.backtest.historical_data import HistoricalDataLoader, OHLCVDataset
-from libs.backtest.portfolio_simulator import (
-    PortfolioSimulator,
-    OrderSide,
-    OrderType,
-)
 from libs.backtest.parameter_optimizer import (
     GridSearchOptimizer,
-    OptimizationResult,
     MonteCarloAnalyzer,
+    OptimizationResult,
+)
+from libs.backtest.portfolio_simulator import (
+    OrderSide,
+    OrderType,
+    PortfolioSimulator,
 )
 
 

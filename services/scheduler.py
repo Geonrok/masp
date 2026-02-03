@@ -15,8 +15,8 @@ from apscheduler.events import EVENT_JOB_MISSED
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from libs.core.startup_validator import validate_api_keys, validate_startup
 from services.strategy_runner import StrategyRunner
-from libs.core.startup_validator import validate_startup, validate_api_keys
 
 logger = logging.getLogger(__name__)
 

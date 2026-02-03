@@ -7,16 +7,17 @@ Validates that:
 3. Slippage and commission applied correctly
 """
 
+from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
 import pytest
-from datetime import datetime, timedelta
 
 from libs.backtest.bias_free_backtester import (
-    BiasFreeBacktester,
     BacktestConfig,
-    ExecutionConfig,
     BacktestMetrics,
+    BiasFreeBacktester,
+    ExecutionConfig,
 )
 
 

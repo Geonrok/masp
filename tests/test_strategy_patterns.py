@@ -2,22 +2,23 @@
 Tests for strategy patterns module.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
-from libs.strategies.base import Action, Decision, StrategyContext, BaseStrategy
+import pytest
+
+from libs.strategies.base import Action, BaseStrategy, Decision, StrategyContext
 from libs.strategies.patterns import (
-    VolumeFilter,
-    PositionFilter,
-    TimeFilter,
     CompositeStrategy,
-    FilteredStrategy,
     CooldownStrategy,
+    FilteredStrategy,
     LoggingStrategy,
+    PositionFilter,
     StrategyStateManager,
-    with_filters,
+    TimeFilter,
+    VolumeFilter,
     with_cooldown,
+    with_filters,
     with_logging,
 )
 

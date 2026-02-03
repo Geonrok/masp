@@ -11,9 +11,9 @@ Phase 6D 수정사항:
 """
 
 import logging
-from typing import Optional, List
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import List, Optional
 
 import requests
 

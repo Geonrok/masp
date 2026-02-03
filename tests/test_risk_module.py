@@ -2,15 +2,16 @@
 Tests for the Risk Management Module.
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+
+from libs.risk.drawdown_guard import DrawdownGuard, RiskStatus
 from libs.risk.position_sizer import (
     FixedFractionalSizer,
     KellyCriterionSizer,
     VolatilityBasedSizer,
 )
-from libs.risk.drawdown_guard import DrawdownGuard, RiskStatus
 
 
 class TestFixedFractionalSizer:

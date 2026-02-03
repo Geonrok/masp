@@ -2,10 +2,11 @@
 Tests for Circuit Breaker.
 """
 
-import pytest
-from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock
 import os
+from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from libs.risk.circuit_breaker import (
     CircuitBreaker,

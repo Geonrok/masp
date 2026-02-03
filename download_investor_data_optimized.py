@@ -4,15 +4,16 @@ Round 13 Data Prep: Investor Data (Optimized)
 Downloads investor data only for top liquid stocks and viable candidates.
 """
 
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from pykrx import stock
-from tqdm import tqdm
 import time
-from datetime import datetime
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from pykrx import stock
+from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 

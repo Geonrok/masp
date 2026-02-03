@@ -9,11 +9,11 @@ Exit:
 
 import logging
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 from libs.adapters.factory import AdapterFactory
 from libs.strategies.base import BaseStrategy, Signal, TradeSignal
-from libs.strategies.indicators import MA, KAMA, TSMOM_signal
+from libs.strategies.indicators import KAMA, MA, TSMOM_signal
 
 logger = logging.getLogger(__name__)
 

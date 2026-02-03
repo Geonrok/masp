@@ -2,19 +2,20 @@
 Tests for notification services.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
-from libs.notifications.slack import SlackNotifier, SlackAttachment
-from libs.notifications.email import EmailNotifier, EmailConfig
+import pytest
+
 from libs.notifications.deduplication import (
-    AlertDeduplicator,
     AlertAggregator,
+    AlertDeduplicator,
     DeduplicationConfig,
     DeduplicationStrategy,
     RateLimitConfig,
 )
+from libs.notifications.email import EmailConfig, EmailNotifier
+from libs.notifications.slack import SlackAttachment, SlackNotifier
 
 
 class TestSlackNotifier:

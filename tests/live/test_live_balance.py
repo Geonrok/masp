@@ -17,9 +17,10 @@ try:
 except ImportError:  # pragma: no cover
     pytest = None
 
+from _live_test_utils import live_test_enabled, require_live_guard
+
 from libs.adapters.factory import AdapterFactory
 from libs.core.config import Config
-from _live_test_utils import live_test_enabled, require_live_guard
 
 MIN_ORDER_KRW = 5000
 

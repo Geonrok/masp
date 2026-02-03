@@ -4,16 +4,17 @@ Tests for structured logging module.
 
 import json
 import logging
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from libs.core.structured_logging import (
-    JSONFormatter,
     AuditLogger,
+    JSONFormatter,
     LogContext,
     configure_logging,
-    get_logger,
     generate_trace_id,
+    get_logger,
     get_trace_id,
     set_trace_id,
 )

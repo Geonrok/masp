@@ -9,15 +9,16 @@ Tests:
 """
 
 import asyncio
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from libs.realtime.websocket_client import (
-    ReconnectingWebSocket,
-    WebSocketConfig,
-    ConnectionState,
-    UpbitWebSocket,
     BinanceWebSocket,
+    ConnectionState,
+    ReconnectingWebSocket,
+    UpbitWebSocket,
+    WebSocketConfig,
 )
 
 

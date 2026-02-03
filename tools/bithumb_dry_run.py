@@ -3,9 +3,10 @@ Bithumb Live Dry Run Script
 - 10,000원 소액 시장가 매수/매도 테스트
 """
 
-from dotenv import load_dotenv
 import os
 import time
+
+from dotenv import load_dotenv
 
 load_dotenv(override=True)
 

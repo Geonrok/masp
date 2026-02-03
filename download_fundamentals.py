@@ -5,15 +5,16 @@ Downloads daily fundamental metrics (PER, PBR, DIV, BPS, etc.) for all KOSPI/KOS
 Source: KRX (via pykrx)
 """
 
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from pykrx import stock
-from tqdm import tqdm
 import time
-from datetime import datetime, timedelta
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from pykrx import stock
+from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 

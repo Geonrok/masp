@@ -12,10 +12,10 @@ import logging
 import sys
 import traceback
 import uuid
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
-from contextvars import ContextVar
 
 # Context variables for request/trace tracking
 _trace_id: ContextVar[Optional[str]] = ContextVar("trace_id", default=None)

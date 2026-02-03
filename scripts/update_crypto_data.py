@@ -8,10 +8,10 @@ Downloads latest OHLCV data from:
 Updates existing CSV files in E:/data/crypto_ohlcv/
 """
 
+import logging
 import os
 import sys
 import time
-import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional

@@ -8,11 +8,11 @@ Security features:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import hmac
 import os
 import time
+from dataclasses import dataclass
 from typing import Optional
 
 import streamlit as st

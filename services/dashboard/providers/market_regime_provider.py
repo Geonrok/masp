@@ -47,13 +47,14 @@ def get_market_regime_analysis():
         return detector.analyze()
     except Exception as e:
         logger.error(f"[MarketRegimeProvider] Analysis failed: {e}")
+        from datetime import datetime
+
         from libs.analysis.market_regime import (
             MarketRegime,
+            MomentumState,
             RegimeAnalysis,
             VolatilityRegime,
-            MomentumState,
         )
-        from datetime import datetime
 
         return RegimeAnalysis(
             regime=MarketRegime.UNKNOWN,

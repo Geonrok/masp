@@ -4,13 +4,14 @@
 """
 
 import asyncio
-from ebest import OpenApi
-import pandas as pd
 import logging
-from datetime import datetime, timedelta
 import os
-from tqdm import tqdm
 import time
+from datetime import datetime, timedelta
+
+import pandas as pd
+from ebest import OpenApi
+from tqdm import tqdm
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

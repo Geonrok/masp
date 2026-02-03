@@ -18,8 +18,8 @@ Automated Risk Management Service
 
 from __future__ import annotations
 
-import logging
 import json
+import logging
 import sys
 import time
 from dataclasses import dataclass, field
@@ -32,15 +32,15 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from libs.notifications.telegram import TelegramNotifier
 from libs.monitoring.alert_manager import (
-    AlertManager,
-    AlertCategory,
-    AlertSeverity,
-    AlertRule,
     Alert,
+    AlertCategory,
+    AlertManager,
+    AlertRule,
+    AlertSeverity,
 )
-from libs.risk.drawdown_guard import DrawdownGuard, RiskStatus, RiskState
+from libs.notifications.telegram import TelegramNotifier
+from libs.risk.drawdown_guard import DrawdownGuard, RiskState, RiskStatus
 
 logger = logging.getLogger(__name__)
 

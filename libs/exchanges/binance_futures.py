@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Optional, Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import ccxt.async_support as ccxt
 

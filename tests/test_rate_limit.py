@@ -7,7 +7,7 @@ from __future__ import annotations
 import asyncio
 import time
 
-from libs.adapters.rate_limit import TokenBucket, AsyncTokenBucket, create_token_bucket
+from libs.adapters.rate_limit import AsyncTokenBucket, TokenBucket, create_token_bucket
 
 
 def _run(coro):

@@ -12,9 +12,10 @@ Design principles:
 
 import logging
 from typing import Optional
+
 from libs.adapters.base import (
-    MarketDataAdapter,
     ExecutionAdapter,
+    MarketDataAdapter,
     MarketQuote,
     OrderResult,
 )

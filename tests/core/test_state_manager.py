@@ -3,12 +3,13 @@ Tests for state manager.
 """
 
 import pytest
+
 from libs.core.state_manager import (
-    register_state_reset,
-    unregister_state_reset,
-    reset_all_state,
-    get_registered_state,
     StateContext,
+    get_registered_state,
+    register_state_reset,
+    reset_all_state,
+    unregister_state_reset,
 )
 
 
@@ -138,8 +139,8 @@ class TestKnownStateComponents:
         """Test adapter factory cache can be cleared."""
         from libs.adapters.factory import (
             AdapterFactory,
-            get_cached_adapters,
             clear_adapter_cache,
+            get_cached_adapters,
         )
 
         # Create an adapter to populate cache

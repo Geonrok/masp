@@ -1,7 +1,8 @@
 """새 API 키 테스트"""
 
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
 
 # 강제 reload
 load_dotenv(override=True)

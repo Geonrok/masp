@@ -6,11 +6,11 @@ from typing import Dict, List, Optional, Tuple
 
 import streamlit as st
 
+from services.dashboard.components.pnl_chart import render_pnl_chart, render_pnl_summary
 from services.dashboard.utils.pnl_calculator import (
     calculate_portfolio_pnl,
     calculate_total_pnl,
 )
-from services.dashboard.components.pnl_chart import render_pnl_chart, render_pnl_summary
 
 
 def _get_demo_data() -> Tuple[List[Dict], Dict[str, float]]:

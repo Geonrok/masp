@@ -17,17 +17,17 @@ from typing import Any, Callable, Dict, Optional, Set, Tuple, Type
 import aiohttp
 import requests
 
+from libs.core.exceptions import (
+    APIError,
+    NetworkError,
+    RateLimitError,
+)
+from libs.core.metrics import MetricsRegistry, get_metrics
 from libs.core.resilience import (
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitBreakerRegistry,
     RetryPolicy,
-)
-from libs.core.metrics import MetricsRegistry, get_metrics
-from libs.core.exceptions import (
-    NetworkError,
-    RateLimitError,
-    APIError,
 )
 
 logger = logging.getLogger(__name__)

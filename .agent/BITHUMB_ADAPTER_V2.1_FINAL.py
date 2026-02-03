@@ -16,9 +16,9 @@ AI 검수 합의:
 import logging
 import os
 import time
-from typing import Optional, Dict
-from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional
 
 try:
     import pybithumb

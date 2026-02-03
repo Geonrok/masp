@@ -10,7 +10,8 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional
-from libs.adapters.base import ExecutionAdapter, OrderResult, MarketDataAdapter
+
+from libs.adapters.base import ExecutionAdapter, MarketDataAdapter, OrderResult
 from libs.analytics.strategy_health import StrategyHealthMonitor
 
 # [Phase 2C-2b] TradeLogger integration

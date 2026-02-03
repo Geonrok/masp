@@ -2,22 +2,23 @@
 Tests for advanced performance metrics.
 """
 
-import pytest
 import numpy as np
+import pytest
+
 from libs.analytics.advanced_metrics import (
-    calculate_omega_ratio,
-    calculate_var,
-    calculate_cvar,
-    calculate_information_ratio,
-    calculate_treynor_ratio,
-    calculate_tail_ratio,
-    calculate_gain_to_pain,
-    calculate_skewness,
-    calculate_kurtosis,
     analyze_drawdowns,
-    calculate_expectancy,
-    calculate_payoff_ratio,
     calculate_advanced_metrics,
+    calculate_cvar,
+    calculate_expectancy,
+    calculate_gain_to_pain,
+    calculate_information_ratio,
+    calculate_kurtosis,
+    calculate_omega_ratio,
+    calculate_payoff_ratio,
+    calculate_skewness,
+    calculate_tail_ratio,
+    calculate_treynor_ratio,
+    calculate_var,
     generate_performance_report,
 )
 

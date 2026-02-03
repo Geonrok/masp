@@ -11,8 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 
-from libs.core.event_store import EventStore
 from libs.core.config import AssetClass
+from libs.core.event_store import EventStore
 from libs.core.paths import find_repo_root
 
 REPO_ROOT = find_repo_root(Path(__file__))

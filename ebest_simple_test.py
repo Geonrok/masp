@@ -3,8 +3,9 @@
 """
 
 import asyncio
-from ebest import OpenApi
 import logging
+
+from ebest import OpenApi
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

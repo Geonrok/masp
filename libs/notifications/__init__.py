@@ -1,33 +1,33 @@
 """Notification services for MASP."""
 
-from libs.notifications.telegram import (
-    TelegramNotifier,
-    format_trade_message,
-    format_daily_summary,
-)
 from libs.notifications.alert_manager import (
+    Alert,
     AlertManager,
     AlertPriority,
-    AlertType,
-    Alert,
     AlertRule,
+    AlertType,
     AnomalyDetector,
     get_alert_manager,
 )
-from libs.notifications.slack import (
-    SlackNotifier,
-    SlackAttachment,
-)
-from libs.notifications.email import (
-    EmailNotifier,
-    EmailConfig,
-)
 from libs.notifications.deduplication import (
-    AlertDeduplicator,
     AlertAggregator,
+    AlertDeduplicator,
     DeduplicationConfig,
     DeduplicationStrategy,
     RateLimitConfig,
+)
+from libs.notifications.email import (
+    EmailConfig,
+    EmailNotifier,
+)
+from libs.notifications.slack import (
+    SlackAttachment,
+    SlackNotifier,
+)
+from libs.notifications.telegram import (
+    TelegramNotifier,
+    format_daily_summary,
+    format_trade_message,
 )
 
 __all__ = [

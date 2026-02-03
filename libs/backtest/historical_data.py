@@ -7,13 +7,13 @@ for backtesting purposes.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
-import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Dict, Optional, Any, Union
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd

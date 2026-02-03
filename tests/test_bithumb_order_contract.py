@@ -2,8 +2,9 @@
 Bithumb order contract tests (API v2).
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from libs.adapters.bithumb_api_v2 import BithumbAPIV2
 
@@ -220,8 +221,9 @@ class TestOHLCVDataSorting:
 
     def test_ohlcv_is_sorted_by_timestamp(self):
         with patch("libs.adapters.real_bithumb_spot.pybithumb") as mock_pybithumb:
-            import pandas as pd
             from datetime import datetime, timedelta
+
+            import pandas as pd
 
             dates = [
                 datetime.now() - timedelta(days=2),
@@ -318,8 +320,9 @@ class TestOrderStatusTracking:
         with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_api.return_value = MagicMock()
 
-            from libs.adapters.real_bithumb_execution import OrderStatus, OrderState
             from datetime import datetime
+
+            from libs.adapters.real_bithumb_execution import OrderState, OrderStatus
 
             # Test pending order
             pending_status = OrderStatus(

@@ -323,7 +323,7 @@ def test_get_demo_dates():
 
 def test_key_function():
     """Test _key generates namespaced keys."""
-    from services.dashboard.components.risk_metrics import _key, _KEY_PREFIX
+    from services.dashboard.components.risk_metrics import _KEY_PREFIX, _key
 
     result = _key("chart")
     assert result == f"{_KEY_PREFIX}chart"

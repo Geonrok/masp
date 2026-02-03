@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import os
 import time
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 import streamlit as st
 

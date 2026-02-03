@@ -18,9 +18,9 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from libs.analysis.market_regime import (
     MarketRegime,
+    MomentumState,
     RegimeAnalysis,
     VolatilityRegime,
-    MomentumState,
 )
 
 

@@ -19,21 +19,21 @@ from fastapi.responses import JSONResponse
 from services.api.config import api_config
 from services.api.models.schemas import (
     BaseResponse,
+    ExchangeStatus,
+    ExchangeStatusResponse,
     KillSwitchRequest,
     KillSwitchResponse,
     SystemStatus,
-    ExchangeStatus,
-    ExchangeStatusResponse,
 )
 from services.api.routes import (
-    strategy,
-    positions,
-    trades,
-    health,
-    settings,
     config,
+    health,
     keys,
     monitoring,
+    positions,
+    settings,
+    strategy,
+    trades,
     users,
 )
 from services.api.websocket.stream import router as ws_router

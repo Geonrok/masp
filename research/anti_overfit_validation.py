@@ -9,12 +9,13 @@ Key techniques:
 4. Monte Carlo Permutation Test
 """
 
+import warnings
+from itertools import combinations
+from typing import List, Tuple
+
 import numpy as np
 import pandas as pd
-from itertools import combinations
 from scipy import stats
-from typing import Tuple, List
-import warnings
 
 warnings.filterwarnings("ignore")
 

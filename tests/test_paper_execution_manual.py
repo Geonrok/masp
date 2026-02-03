@@ -1,7 +1,7 @@
 """Test Paper Execution Adapter"""
 
-from libs.adapters.paper_execution import PaperExecutionAdapter
 from libs.adapters.factory import AdapterFactory
+from libs.adapters.paper_execution import PaperExecutionAdapter
 
 # Create market data adapter
 md = AdapterFactory.create_market_data("upbit_spot")

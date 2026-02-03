@@ -1,5 +1,6 @@
 ﻿print("=== A3: Public API 연결성 테스트 (get_quote 사용) ===")
 import time
+
 from libs.adapters.factory import AdapterFactory
 
 tests = [("upbit_spot", "BTC/KRW"), ("bithumb_spot", "BTC/KRW")]

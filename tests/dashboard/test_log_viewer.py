@@ -92,7 +92,7 @@ def test_log_filter_with_values():
 
 def test_key_function():
     """Test _key generates namespaced keys."""
-    from services.dashboard.components.log_viewer import _key, _KEY_PREFIX
+    from services.dashboard.components.log_viewer import _KEY_PREFIX, _key
 
     result = _key("levels")
     assert result == f"{_KEY_PREFIX}levels"
@@ -101,7 +101,7 @@ def test_key_function():
 
 def test_get_level_indicator():
     """Test _get_level_indicator returns correct indicators."""
-    from services.dashboard.components.log_viewer import _get_level_indicator, LogLevel
+    from services.dashboard.components.log_viewer import LogLevel, _get_level_indicator
 
     assert _get_level_indicator(LogLevel.DEBUG) == "[DBG]"
     assert _get_level_indicator(LogLevel.INFO) == "[INF]"
@@ -112,7 +112,7 @@ def test_get_level_indicator():
 
 def test_get_level_color():
     """Test _get_level_color returns correct colors."""
-    from services.dashboard.components.log_viewer import _get_level_color, LogLevel
+    from services.dashboard.components.log_viewer import LogLevel, _get_level_color
 
     assert _get_level_color(LogLevel.DEBUG) == "gray"
     assert _get_level_color(LogLevel.INFO) == "blue"
@@ -123,7 +123,7 @@ def test_get_level_color():
 
 def test_get_level_priority():
     """Test _get_level_priority returns correct priorities."""
-    from services.dashboard.components.log_viewer import _get_level_priority, LogLevel
+    from services.dashboard.components.log_viewer import LogLevel, _get_level_priority
 
     assert _get_level_priority(LogLevel.DEBUG) == 0
     assert _get_level_priority(LogLevel.INFO) == 1
@@ -160,10 +160,10 @@ def test_get_demo_logs_deterministic():
 def test_filter_logs_by_level():
     """Test _filter_logs filters by level correctly."""
     from services.dashboard.components.log_viewer import (
-        _filter_logs,
         LogEntry,
         LogFilter,
         LogLevel,
+        _filter_logs,
     )
 
     logs = [
@@ -197,10 +197,10 @@ def test_filter_logs_by_level():
 def test_filter_logs_by_source():
     """Test _filter_logs filters by source correctly."""
     from services.dashboard.components.log_viewer import (
-        _filter_logs,
         LogEntry,
         LogFilter,
         LogLevel,
+        _filter_logs,
     )
 
     logs = [
@@ -228,10 +228,10 @@ def test_filter_logs_by_source():
 def test_filter_logs_by_keyword():
     """Test _filter_logs filters by keyword correctly."""
     from services.dashboard.components.log_viewer import (
-        _filter_logs,
         LogEntry,
         LogFilter,
         LogLevel,
+        _filter_logs,
     )
 
     logs = [
@@ -259,10 +259,10 @@ def test_filter_logs_by_keyword():
 def test_filter_logs_by_time_range():
     """Test _filter_logs filters by time range correctly."""
     from services.dashboard.components.log_viewer import (
-        _filter_logs,
         LogEntry,
         LogFilter,
         LogLevel,
+        _filter_logs,
     )
 
     base_time = datetime(2026, 1, 15, 12, 0, 0)
@@ -301,10 +301,10 @@ def test_filter_logs_by_time_range():
 def test_filter_logs_default_filter_returns_all():
     """Test _filter_logs with default filter (all levels) returns all."""
     from services.dashboard.components.log_viewer import (
-        _filter_logs,
         LogEntry,
         LogFilter,
         LogLevel,
+        _filter_logs,
     )
 
     logs = [
@@ -331,10 +331,10 @@ def test_filter_logs_default_filter_returns_all():
 def test_filter_logs_empty_levels_returns_none():
     """Test _filter_logs with empty levels list returns no entries."""
     from services.dashboard.components.log_viewer import (
-        _filter_logs,
         LogEntry,
         LogFilter,
         LogLevel,
+        _filter_logs,
     )
 
     logs = [
@@ -362,9 +362,9 @@ def test_filter_logs_empty_levels_returns_none():
 def test_get_unique_sources():
     """Test _get_unique_sources returns unique sorted sources."""
     from services.dashboard.components.log_viewer import (
-        _get_unique_sources,
         LogEntry,
         LogLevel,
+        _get_unique_sources,
     )
 
     logs = [
@@ -465,9 +465,9 @@ def test_format_relative_time_future():
 def test_count_by_level():
     """Test _count_by_level counts correctly."""
     from services.dashboard.components.log_viewer import (
-        _count_by_level,
         LogEntry,
         LogLevel,
+        _count_by_level,
     )
 
     logs = [
@@ -537,9 +537,9 @@ def test_get_log_export_data_entry_structure():
 def test_get_log_export_data_with_filter():
     """Test get_log_export_data with filter applied."""
     from services.dashboard.components.log_viewer import (
-        get_log_export_data,
         LogFilter,
         LogLevel,
+        get_log_export_data,
     )
 
     log_filter = LogFilter(levels=[LogLevel.ERROR, LogLevel.CRITICAL])
@@ -553,10 +553,10 @@ def test_get_log_export_data_with_filter():
 def test_filter_logs_keyword_in_source():
     """Test _filter_logs finds keyword in source as well as message."""
     from services.dashboard.components.log_viewer import (
-        _filter_logs,
         LogEntry,
         LogFilter,
         LogLevel,
+        _filter_logs,
     )
 
     logs = [
@@ -584,10 +584,10 @@ def test_filter_logs_keyword_in_source():
 def test_filter_logs_case_insensitive():
     """Test _filter_logs is case insensitive."""
     from services.dashboard.components.log_viewer import (
-        _filter_logs,
         LogEntry,
         LogFilter,
         LogLevel,
+        _filter_logs,
     )
 
     logs = [
@@ -608,7 +608,7 @@ def test_filter_logs_case_insensitive():
 
 def test_count_by_level_empty():
     """Test _count_by_level with empty list."""
-    from services.dashboard.components.log_viewer import _count_by_level, LogLevel
+    from services.dashboard.components.log_viewer import LogLevel, _count_by_level
 
     counts = _count_by_level([])
 
@@ -619,6 +619,7 @@ def test_count_by_level_empty():
 def test_format_relative_time_timezone_aware():
     """Test _format_relative_time handles timezone-aware datetimes."""
     from datetime import timezone
+
     from services.dashboard.components.log_viewer import _format_relative_time
 
     # Create timezone-aware datetime
@@ -632,6 +633,7 @@ def test_format_relative_time_timezone_aware():
 def test_format_relative_time_mixed_timezone():
     """Test _format_relative_time handles mixed tz-awareness gracefully."""
     from datetime import timezone
+
     from services.dashboard.components.log_viewer import _format_relative_time
 
     # Naive reference, timezone-aware input - should not crash
@@ -646,6 +648,7 @@ def test_format_relative_time_mixed_timezone():
 def test_safe_datetime_compare():
     """Test _safe_datetime_compare handles various cases."""
     from datetime import timezone
+
     from services.dashboard.components.log_viewer import _safe_datetime_compare
 
     dt1 = datetime(2026, 1, 15, 12, 0, 0)
@@ -659,6 +662,7 @@ def test_safe_datetime_compare():
 def test_safe_datetime_compare_mixed_tz():
     """Test _safe_datetime_compare with mixed timezone-awareness."""
     from datetime import timezone
+
     from services.dashboard.components.log_viewer import _safe_datetime_compare
 
     dt_naive = datetime(2026, 1, 15, 12, 0, 0)
@@ -672,11 +676,12 @@ def test_safe_datetime_compare_mixed_tz():
 def test_filter_logs_timezone_aware_time_range():
     """Test _filter_logs with timezone-aware time range."""
     from datetime import timezone
+
     from services.dashboard.components.log_viewer import (
-        _filter_logs,
         LogEntry,
         LogFilter,
         LogLevel,
+        _filter_logs,
     )
 
     base_time = datetime(2026, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
@@ -710,11 +715,12 @@ def test_filter_logs_timezone_aware_time_range():
 def test_sorting_mixed_timezone_logs():
     """Test that sorting handles mixed naive and tz-aware logs."""
     from datetime import timezone
+
     from services.dashboard.components.log_viewer import (
-        _filter_logs,
         LogEntry,
         LogFilter,
         LogLevel,
+        _filter_logs,
     )
 
     # Mix of naive and tz-aware timestamps
@@ -767,8 +773,9 @@ def test_strip_tzinfo_naive():
 
 def test_strip_tzinfo_aware():
     """Test _strip_tzinfo with aware datetime strips tzinfo."""
-    from services.dashboard.components.log_viewer import _strip_tzinfo
     from zoneinfo import ZoneInfo
+
+    from services.dashboard.components.log_viewer import _strip_tzinfo
 
     tz = ZoneInfo("Asia/Seoul")
     aware = datetime(2026, 1, 15, 12, 0, 0, tzinfo=tz)
@@ -781,8 +788,9 @@ def test_strip_tzinfo_aware():
 
 def test_safe_datetime_compare_aware_aware_correct():
     """Test that two aware datetimes are compared by absolute UTC time."""
-    from services.dashboard.components.log_viewer import _safe_datetime_compare
     from zoneinfo import ZoneInfo
+
+    from services.dashboard.components.log_viewer import _safe_datetime_compare
 
     utc = ZoneInfo("UTC")
     kst = ZoneInfo("Asia/Seoul")  # UTC+9
@@ -798,8 +806,9 @@ def test_safe_datetime_compare_aware_aware_correct():
 
 def test_safe_datetime_compare_aware_different_times():
     """Test aware datetimes with different absolute times."""
-    from services.dashboard.components.log_viewer import _safe_datetime_compare
     from zoneinfo import ZoneInfo
+
+    from services.dashboard.components.log_viewer import _safe_datetime_compare
 
     utc = ZoneInfo("UTC")
     kst = ZoneInfo("Asia/Seoul")  # UTC+9

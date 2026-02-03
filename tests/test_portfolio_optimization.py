@@ -2,19 +2,19 @@
 Tests for portfolio optimization module.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from libs.portfolio.optimization import (
-    PortfolioOptimizer,
-    OptimizationMethod,
     OptimizationConstraints,
+    OptimizationMethod,
     OptimizationResult,
+    PortfolioOptimizer,
     StrategyReturns,
-    mean_variance_optimize,
-    risk_parity_optimize,
     max_sharpe_optimize,
+    mean_variance_optimize,
     min_variance_optimize,
+    risk_parity_optimize,
 )
 
 

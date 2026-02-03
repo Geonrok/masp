@@ -222,9 +222,9 @@ async def get_alerts(
     """
     try:
         from libs.monitoring.alert_manager import (
-            get_alert_manager,
             AlertCategory,
             AlertSeverity,
+            get_alert_manager,
         )
 
         manager = get_alert_manager()

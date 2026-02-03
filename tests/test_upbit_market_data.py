@@ -5,7 +5,8 @@ Phase 2A: Real API integration tests
 """
 
 import pytest
-from libs.adapters.real_upbit_spot import UpbitSpotMarketData, UpbitSpotExecution
+
+from libs.adapters.real_upbit_spot import UpbitSpotExecution, UpbitSpotMarketData
 
 
 class TestUpbitMarketData:

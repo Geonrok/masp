@@ -8,10 +8,11 @@ Original methodology:
 - If signal is EXIT: 0% return for Day N (exit at previous day's close)
 """
 
-import pandas as pd
-import numpy as np
-from pathlib import Path
 import warnings
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 

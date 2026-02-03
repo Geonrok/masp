@@ -17,8 +17,9 @@ try:
 except ImportError:  # pragma: no cover
     pytest = None
 
-from libs.core.config import Config
 from _live_test_utils import live_test_enabled
+
+from libs.core.config import Config
 
 if pytest and not live_test_enabled():
     pytest.skip(

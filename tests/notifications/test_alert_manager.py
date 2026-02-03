@@ -424,8 +424,8 @@ def test_alert_manager_provider_import():
     """Test alert manager provider imports correctly."""
     from services.dashboard.providers.alert_manager_provider import (
         get_alert_rules,
-        get_anomaly_thresholds,
         get_alert_settings_callbacks,
+        get_anomaly_thresholds,
     )
 
     assert callable(get_alert_rules)
@@ -467,10 +467,10 @@ def test_check_system_anomalies():
 def test_alert_settings_component_import():
     """Test alert settings component imports correctly."""
     from services.dashboard.components.alert_settings import (
-        render_alert_settings,
         render_alert_rule_card,
-        render_new_rule_form,
+        render_alert_settings,
         render_anomaly_thresholds,
+        render_new_rule_form,
     )
 
     assert callable(render_alert_settings)

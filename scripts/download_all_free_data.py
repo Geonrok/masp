@@ -10,16 +10,17 @@
 6. 거시경제 데이터 (DXY, VIX 등)
 """
 
+import json
 import os
 import sys
 import time
-import json
-import requests
-import pandas as pd
-import numpy as np
-from pathlib import Path
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional
+from pathlib import Path
+from typing import Dict, List, Optional
+
+import numpy as np
+import pandas as pd
+import requests
 
 # ccxt 사용
 try:

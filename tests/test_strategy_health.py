@@ -2,12 +2,14 @@
 Strategy Health Monitor 테스트
 """
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
+
 from libs.analytics.strategy_health import (
-    StrategyHealthMonitor,
-    HealthStatus,
     HealthCheckResult,
+    HealthStatus,
+    StrategyHealthMonitor,
 )
 
 
@@ -91,8 +93,8 @@ class TestHealthMonitorIntegration:
 
     def test_paper_execution_health_integration(self):
         """PaperExecution과 HealthMonitor 통합"""
-        from libs.adapters.paper_execution import PaperExecutionAdapter
         from libs.adapters.factory import AdapterFactory
+        from libs.adapters.paper_execution import PaperExecutionAdapter
 
         md = AdapterFactory.create_market_data("upbit_spot")
         pe = PaperExecutionAdapter(md, initial_balance=10_000_000)

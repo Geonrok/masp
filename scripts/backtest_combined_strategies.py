@@ -11,10 +11,10 @@ Tests synergies between different signal sources
 from __future__ import annotations
 
 import logging
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple
-import warnings
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd

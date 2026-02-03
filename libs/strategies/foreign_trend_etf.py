@@ -28,8 +28,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Optional
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from libs.strategies.base import BaseStrategy, Signal, TradeSignal
 

@@ -3,8 +3,8 @@ Bithumb 어댑터 테스트 (조회만)
 ⚠️ 실제 주문 테스트는 별도 검증 후 수행
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -72,8 +72,8 @@ def main() -> bool:
 
     # 6. 실주문 어댑터 테스트 (API 키 필요)
     print("\n[6] 실주문 어댑터 초기화")
-    from libs.core.config import Config
     from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+    from libs.core.config import Config
 
     try:
         config = Config(asset_class="crypto_spot", strategy_name="bithumb_test")

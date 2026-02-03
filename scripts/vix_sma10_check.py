@@ -15,10 +15,10 @@ from datetime import datetime
 sys.path.insert(0, str(__file__).replace("\\scripts\\vix_sma10_check.py", ""))
 
 from libs.strategies.vix_sma10_stocks import (
+    VIX_VALID_STOCKS,
+    VIXSMA10AllTiersStrategy,
     VIXSMA10Tier1Strategy,
     VIXSMA10Tier2Strategy,
-    VIXSMA10AllTiersStrategy,
-    VIX_VALID_STOCKS,
 )
 
 

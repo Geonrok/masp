@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from services.strategy_runner import StrategyRunner, MIN_ORDER_KRW
+from services.strategy_runner import MIN_ORDER_KRW, StrategyRunner
 
 
 def _make_runner(**kwargs):

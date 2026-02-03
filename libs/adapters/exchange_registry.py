@@ -352,8 +352,9 @@ class ExchangeRegistry:
             return ExchangeStatus.UNKNOWN
 
         try:
-            from libs.adapters.factory import AdapterFactory
             import time
+
+            from libs.adapters.factory import AdapterFactory
 
             start = time.time()
             adapter = AdapterFactory.create_market_data(name)

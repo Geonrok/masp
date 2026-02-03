@@ -9,7 +9,7 @@ import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 LIVE_GUARD_ENV = {
     "MASP_ENABLE_LIVE_TRADING": "1",

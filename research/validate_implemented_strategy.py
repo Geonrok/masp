@@ -6,10 +6,11 @@ This script compares the two strategies using available backtest data
 and runs overfitting validation tests.
 """
 
-import pandas as pd
-import numpy as np
-from scipy import stats
 import warnings
+
+import numpy as np
+import pandas as pd
+from scipy import stats
 
 warnings.filterwarnings("ignore")
 

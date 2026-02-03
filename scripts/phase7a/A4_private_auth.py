@@ -1,8 +1,8 @@
 ﻿print("=== A4: Private API 인증 테스트 (get_balance만 호출) ===")
 print("주의: place_order 호출 절대 금지\n")
 
-from libs.core.config import Config
 from libs.adapters.factory import AdapterFactory
+from libs.core.config import Config
 
 cfg = Config(asset_class="crypto_spot", strategy_name="kama_tsmom_gate")
 

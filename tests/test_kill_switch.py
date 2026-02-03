@@ -4,11 +4,13 @@ Kill-Switch Integration Tests
 Tests kill-switch detection and order blocking functionality.
 """
 
-import pytest
 import os
 import tempfile
 from pathlib import Path
-from libs.core.config import Config, AssetClass
+
+import pytest
+
+from libs.core.config import AssetClass, Config
 from libs.core.order_validator import OrderValidator
 
 

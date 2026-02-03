@@ -1,4 +1,5 @@
 ﻿import os
+
 from libs.core.config import Config
 
 print("=== A2-1: Kill-Switch 상태 확인 ===")

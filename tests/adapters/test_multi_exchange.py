@@ -181,8 +181,8 @@ def test_exchange_registry_summary():
 
 def test_multi_exchange_quote_dataclass():
     """Test MultiExchangeQuote dataclass."""
-    from libs.adapters.multi_exchange import MultiExchangeQuote
     from libs.adapters.base import MarketQuote
+    from libs.adapters.multi_exchange import MultiExchangeQuote
 
     multi_quote = MultiExchangeQuote(symbol="BTC")
 
@@ -199,8 +199,8 @@ def test_multi_exchange_quote_dataclass():
 
 def test_multi_exchange_quote_arbitrage():
     """Test arbitrage detection."""
-    from libs.adapters.multi_exchange import MultiExchangeQuote
     from libs.adapters.base import MarketQuote
+    from libs.adapters.multi_exchange import MultiExchangeQuote
 
     multi_quote = MultiExchangeQuote(symbol="BTC")
 
@@ -221,8 +221,8 @@ def test_multi_exchange_quote_arbitrage():
 
 def test_multi_exchange_quote_to_dict():
     """Test MultiExchangeQuote to_dict method."""
-    from libs.adapters.multi_exchange import MultiExchangeQuote
     from libs.adapters.base import MarketQuote
+    from libs.adapters.multi_exchange import MultiExchangeQuote
 
     multi_quote = MultiExchangeQuote(symbol="BTC")
     multi_quote.add_quote("ex1", MarketQuote(symbol="BTC", bid=50000, ask=50100))
@@ -261,13 +261,13 @@ def test_create_multi_exchange_coordinator():
 def test_multi_exchange_provider_import():
     """Test multi-exchange provider imports."""
     from services.dashboard.providers.multi_exchange_provider import (
+        find_arbitrage_opportunities,
+        get_best_exchange,
         get_exchange_list,
         get_exchange_status,
         get_price_comparison,
-        find_arbitrage_opportunities,
-        get_best_exchange,
-        perform_health_check,
         get_registry_summary,
+        perform_health_check,
     )
 
     assert callable(get_exchange_list)
@@ -305,10 +305,10 @@ def test_get_registry_summary():
 def test_multi_exchange_view_import():
     """Test multi-exchange view component imports."""
     from services.dashboard.components.multi_exchange_view import (
-        render_multi_exchange_view,
-        render_exchange_list,
-        render_price_comparison,
         render_arbitrage_opportunities,
+        render_exchange_list,
+        render_multi_exchange_view,
+        render_price_comparison,
     )
 
     assert callable(render_multi_exchange_view)

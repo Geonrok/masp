@@ -29,11 +29,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from services.daily_signal_alert import DailySignalAlertService
-from services.performance_report import PerformanceReportService
-from services.risk_management_service import RiskManagementService, RiskConfig
 from libs.analysis.market_regime import MarketRegimeDetector
 from libs.notifications.telegram import TelegramNotifier
+from services.daily_signal_alert import DailySignalAlertService
+from services.performance_report import PerformanceReportService
+from services.risk_management_service import RiskConfig, RiskManagementService
 
 logger = logging.getLogger(__name__)
 

@@ -4,9 +4,10 @@ t1662, t1663 등 과거 데이터 TR 테스트
 """
 
 import asyncio
-from ebest import OpenApi
 import logging
+
 import pandas as pd
+from ebest import OpenApi
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

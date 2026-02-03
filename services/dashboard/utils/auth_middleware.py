@@ -8,9 +8,9 @@ from __future__ import annotations
 import streamlit as st
 
 from services.dashboard.components.firebase_login import (
-    render_firebase_login,
     check_firebase_auth,
     clear_firebase_user,
+    render_firebase_login,
 )
 
 

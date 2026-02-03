@@ -12,8 +12,8 @@ from services.dashboard.components.portfolio_summary import (
     PortfolioSummary,
 )
 from services.dashboard.utils.holdings import (
-    get_holdings_upbit,
     get_holdings_bithumb,
+    get_holdings_upbit,
     is_private_api_enabled,
 )
 

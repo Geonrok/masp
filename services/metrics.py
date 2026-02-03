@@ -36,11 +36,11 @@ def init_metrics() -> bool:
 
     try:
         from prometheus_client import (
+            REGISTRY,
             CollectorRegistry,
             Counter,
             Gauge,
             Histogram,
-            REGISTRY,
         )
 
         if _is_test_environment():

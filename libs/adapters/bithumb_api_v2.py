@@ -4,8 +4,8 @@ import logging
 import os
 import random
 import time
-import uuid
 import urllib.parse
+import uuid
 from typing import Callable, Dict, List, Optional, TypeVar
 
 import jwt

@@ -96,8 +96,8 @@ def test_performance_metrics_with_values():
 def test_strategy_performance_dataclass():
     """Test StrategyPerformance dataclass."""
     from services.dashboard.components.strategy_performance import (
-        StrategyPerformance,
         PerformanceMetrics,
+        StrategyPerformance,
         TradeStats,
     )
 
@@ -117,7 +117,7 @@ def test_strategy_performance_dataclass():
 
 def test_key_function():
     """Test _key generates namespaced keys."""
-    from services.dashboard.components.strategy_performance import _key, _KEY_PREFIX
+    from services.dashboard.components.strategy_performance import _KEY_PREFIX, _key
 
     result = _key("period")
     assert result == f"{_KEY_PREFIX}period"
@@ -264,8 +264,8 @@ def test_format_ratio():
 def test_get_period_days():
     """Test _get_period_days returns correct values."""
     from services.dashboard.components.strategy_performance import (
-        _get_period_days,
         TimePeriod,
+        _get_period_days,
     )
 
     assert _get_period_days(TimePeriod.DAY_1) == 1
@@ -344,8 +344,8 @@ def test_get_demo_strategies_deterministic():
 def test_get_performance_summary():
     """Test _get_performance_summary calculates correctly."""
     from services.dashboard.components.strategy_performance import (
-        _get_performance_summary,
         _get_demo_strategies,
+        _get_performance_summary,
     )
 
     strategies = _get_demo_strategies()
@@ -515,9 +515,9 @@ def test_trade_stats_boundary_values():
 def test_filter_strategies_by_period_all():
     """Test _filter_strategies_by_period with ALL period returns all."""
     from services.dashboard.components.strategy_performance import (
+        TimePeriod,
         _filter_strategies_by_period,
         _get_demo_strategies,
-        TimePeriod,
     )
 
     strategies = _get_demo_strategies()
@@ -530,9 +530,9 @@ def test_filter_strategies_by_period_all():
 def test_filter_strategies_by_period_with_reference_time():
     """Test _filter_strategies_by_period filters by sufficient history."""
     from services.dashboard.components.strategy_performance import (
-        _filter_strategies_by_period,
         StrategyPerformance,
         TimePeriod,
+        _filter_strategies_by_period,
     )
 
     ref_time = datetime(2026, 1, 15, 12, 0, 0)
@@ -587,9 +587,9 @@ def test_filter_strategies_by_period_with_reference_time():
 def test_filter_strategies_by_period_no_start_date():
     """Test _filter_strategies_by_period includes strategies without start_date."""
     from services.dashboard.components.strategy_performance import (
-        _filter_strategies_by_period,
         StrategyPerformance,
         TimePeriod,
+        _filter_strategies_by_period,
     )
 
     strategies = [
@@ -618,9 +618,9 @@ def test_filter_strategies_by_period_no_start_date():
 def test_filter_strategies_by_period_empty_fallback():
     """Test _filter_strategies_by_period returns original with fallback flag if filter empties."""
     from services.dashboard.components.strategy_performance import (
-        _filter_strategies_by_period,
         StrategyPerformance,
         TimePeriod,
+        _filter_strategies_by_period,
     )
 
     # All strategies start in the future (no sufficient history)
@@ -646,9 +646,9 @@ def test_filter_strategies_by_period_empty_fallback():
 def test_filter_strategies_by_period_allow_fallback_false():
     """Test _filter_strategies_by_period returns empty list when allow_fallback=False."""
     from services.dashboard.components.strategy_performance import (
-        _filter_strategies_by_period,
         StrategyPerformance,
         TimePeriod,
+        _filter_strategies_by_period,
     )
 
     # All strategies start in the future (no sufficient history)
@@ -674,9 +674,9 @@ def test_filter_strategies_by_period_allow_fallback_false():
 def test_filter_strategies_by_period_allow_fallback_true_explicit():
     """Test _filter_strategies_by_period with explicit allow_fallback=True."""
     from services.dashboard.components.strategy_performance import (
-        _filter_strategies_by_period,
         StrategyPerformance,
         TimePeriod,
+        _filter_strategies_by_period,
     )
 
     # All strategies start in the future (no sufficient history)

@@ -25,7 +25,7 @@ try:
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
-from apscheduler.events import EVENT_JOB_MISSED, EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
+from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED, EVENT_JOB_MISSED
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 

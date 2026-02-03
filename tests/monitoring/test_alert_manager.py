@@ -2,18 +2,19 @@
 Tests for Alert Manager.
 """
 
-import pytest
 import time
 from datetime import datetime, timedelta
 
+import pytest
+
 from libs.monitoring.alert_manager import (
-    AlertManager,
     Alert,
-    AlertSeverity,
     AlertCategory,
+    AlertManager,
     AlertRule,
-    get_alert_manager,
+    AlertSeverity,
     create_alert,
+    get_alert_manager,
 )
 
 

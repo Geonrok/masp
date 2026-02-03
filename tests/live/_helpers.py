@@ -4,10 +4,10 @@ Fee retrieval and market normalization (v2.2 Final).
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation
-from typing import Dict
 import os
 import sys
+from decimal import Decimal, InvalidOperation
+from typing import Dict
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))

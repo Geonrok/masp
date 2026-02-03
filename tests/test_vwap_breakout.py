@@ -5,8 +5,8 @@ Tests for VwapBreakoutStrategy.
 import numpy as np
 import pytest
 
-from libs.strategies.vwap_breakout import VwapBreakoutStrategy
 from libs.strategies.base import Signal
+from libs.strategies.vwap_breakout import VwapBreakoutStrategy
 
 
 def _make_trending_data(n: int = 300, trend: float = 0.001) -> dict:

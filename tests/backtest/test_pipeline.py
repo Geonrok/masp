@@ -2,24 +2,25 @@
 Tests for Backtest Pipeline.
 """
 
-import pytest
-import tempfile
 import json
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from libs.backtest.engine import BacktestResult
 from libs.backtest.pipeline import (
-    BacktestPipeline,
+    BacktestComparison,
     BacktestJob,
+    BacktestPipeline,
+    BacktestResultStore,
     BacktestSchedule,
     BacktestStatus,
-    BacktestResultStore,
-    BacktestComparison,
     get_backtest_pipeline,
     run_backtest,
 )
-from libs.backtest.engine import BacktestResult
 
 
 @pytest.fixture

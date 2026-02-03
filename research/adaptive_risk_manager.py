@@ -9,11 +9,12 @@ Features:
 4. Correlation-Based Portfolio Risk Limit
 """
 
-import numpy as np
-import pandas as pd
-from typing import Dict, Tuple, Optional
 from dataclasses import dataclass
 from enum import Enum
+from typing import Dict, Optional, Tuple
+
+import numpy as np
+import pandas as pd
 
 
 class MarketRegime(Enum):

@@ -4,16 +4,17 @@ Binance 2025 Holdout Test for KAMA=10, TSMOM=60, Gate=30
 This script fetches Binance spot data for 2025 and runs the holdout test.
 """
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, "E:/투자/Multi-Asset Strategy Platform")
 
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-from typing import List, Dict, Tuple
 import warnings
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple
+
+import numpy as np
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 

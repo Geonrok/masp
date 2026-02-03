@@ -8,6 +8,7 @@ Each strategy returns a signal series:
 """
 
 from typing import Callable, Dict, Tuple
+
 import numpy as np
 import pandas as pd
 

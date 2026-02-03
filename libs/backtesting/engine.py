@@ -2,10 +2,10 @@
 Backtesting engine for KOSPI stocks.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Dict, List, Optional, Tuple
-import logging
 
 import numpy as np
 import pandas as pd

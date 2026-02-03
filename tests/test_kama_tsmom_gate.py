@@ -15,7 +15,7 @@ def main() -> bool:
 
     # 1. Indicator tests
     print("\n[1] Indicator tests")
-    from libs.strategies.indicators import MA, KAMA, KAMA_series, TSMOM, TSMOM_signal
+    from libs.strategies.indicators import KAMA, MA, TSMOM, KAMA_series, TSMOM_signal
 
     prices = [100, 102, 101, 103, 105, 104, 106, 108, 107, 110]
 

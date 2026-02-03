@@ -9,13 +9,13 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Optional, Any, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
-from libs.ml.features import FeatureEngineering, FeatureConfig
-from libs.ml.models import ModelInterface, SklearnModel, ModelMetadata
+from libs.ml.features import FeatureConfig, FeatureEngineering
+from libs.ml.models import ModelInterface, ModelMetadata, SklearnModel
 
 logger = logging.getLogger(__name__)
 
@@ -484,9 +484,9 @@ class MLPipeline:
             # Classification metrics
             from sklearn.metrics import (
                 accuracy_score,
+                f1_score,
                 precision_score,
                 recall_score,
-                f1_score,
             )
 
             return {
@@ -499,8 +499,8 @@ class MLPipeline:
         else:
             # Regression metrics
             from sklearn.metrics import (
-                mean_squared_error,
                 mean_absolute_error,
+                mean_squared_error,
                 r2_score,
             )
 

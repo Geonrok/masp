@@ -6,18 +6,18 @@ Download free data for strategy testing:
 3. Deribit options OHLCV from CryptoDataDownload
 """
 
-import os
 import io
-import zipfile
+import os
 import time
-from pathlib import Path
-from datetime import datetime, timedelta
 import warnings
+import zipfile
+from datetime import datetime, timedelta
+from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 # Use project HTTP wrapper if available, else requests
 try:

@@ -12,10 +12,10 @@ This version uses simulated on-chain metrics derived from price/volume
 from __future__ import annotations
 
 import logging
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Optional
-import warnings
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd

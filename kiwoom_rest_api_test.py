@@ -5,9 +5,10 @@
 - REST API로 투자자 데이터 조회
 """
 
-import requests
 import json
 import logging
+
+import requests
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

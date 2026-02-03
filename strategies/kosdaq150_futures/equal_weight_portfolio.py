@@ -14,16 +14,17 @@ KOSDAQ 150 선물 균등가중 포트폴리오
 - TripleVol_14_38_78_0.8  (33.3%)
 """
 
-import pandas as pd
-import numpy as np
-from typing import List, Dict, Optional
-from datetime import datetime
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Dict, List, Optional
+
+import numpy as np
+import pandas as pd
 
 from .core_strategies import (
+    TradingSignal,
     TripleV5Strategy,
     TripleVolStrategy,
-    TradingSignal,
     create_validated_strategies,
 )
 

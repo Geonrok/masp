@@ -2,24 +2,25 @@
 Tests for resilience patterns.
 """
 
-import pytest
 import asyncio
 import time
 
+import pytest
+
+from libs.core.exceptions import NetworkError
 from libs.core.resilience import (
+    DEFAULT_RETRY_POLICY,
+    Bulkhead,
     CircuitBreaker,
     CircuitBreakerConfig,
     CircuitBreakerRegistry,
     CircuitState,
-    RetryPolicy,
-    with_retry,
-    with_fallback,
-    with_timeout,
-    Bulkhead,
     ResilienceBuilder,
-    DEFAULT_RETRY_POLICY,
+    RetryPolicy,
+    with_fallback,
+    with_retry,
+    with_timeout,
 )
-from libs.core.exceptions import NetworkError
 
 
 class TestRetryPolicy:

@@ -103,10 +103,10 @@ def test_job_execution_with_error():
 def test_scheduled_job_dataclass():
     """Test ScheduledJob dataclass."""
     from services.dashboard.components.scheduler_status import (
-        ScheduledJob,
-        JobType,
-        JobStatus,
         JobSchedule,
+        JobStatus,
+        JobType,
+        ScheduledJob,
     )
 
     job = ScheduledJob(
@@ -127,11 +127,11 @@ def test_scheduled_job_dataclass():
 def test_scheduled_job_with_all_fields():
     """Test ScheduledJob dataclass with all fields."""
     from services.dashboard.components.scheduler_status import (
-        ScheduledJob,
-        JobType,
-        JobStatus,
-        JobSchedule,
         JobExecution,
+        JobSchedule,
+        JobStatus,
+        JobType,
+        ScheduledJob,
     )
 
     job = ScheduledJob(
@@ -157,7 +157,7 @@ def test_scheduled_job_with_all_fields():
 
 def test_key_function():
     """Test _key generates namespaced keys."""
-    from services.dashboard.components.scheduler_status import _key, _KEY_PREFIX
+    from services.dashboard.components.scheduler_status import _KEY_PREFIX, _key
 
     result = _key("job_type")
     assert result == f"{_KEY_PREFIX}job_type"
@@ -167,8 +167,8 @@ def test_key_function():
 def test_get_status_indicator():
     """Test _get_status_indicator returns correct indicators."""
     from services.dashboard.components.scheduler_status import (
-        _get_status_indicator,
         JobStatus,
+        _get_status_indicator,
     )
 
     assert _get_status_indicator(JobStatus.RUNNING) == "[RUN]"
@@ -181,8 +181,8 @@ def test_get_status_indicator():
 def test_get_status_color():
     """Test _get_status_color returns correct colors."""
     from services.dashboard.components.scheduler_status import (
-        _get_status_color,
         JobStatus,
+        _get_status_color,
     )
 
     assert _get_status_color(JobStatus.RUNNING) == "blue"
@@ -195,8 +195,8 @@ def test_get_status_color():
 def test_get_job_type_indicator():
     """Test _get_job_type_indicator returns correct indicators."""
     from services.dashboard.components.scheduler_status import (
-        _get_job_type_indicator,
         JobType,
+        _get_job_type_indicator,
     )
 
     assert _get_job_type_indicator(JobType.STRATEGY) == "[STR]"
@@ -336,9 +336,9 @@ def test_get_demo_jobs_deterministic():
 def test_filter_jobs_by_type():
     """Test _filter_jobs_by_type filters correctly."""
     from services.dashboard.components.scheduler_status import (
-        _filter_jobs_by_type,
-        ScheduledJob,
         JobType,
+        ScheduledJob,
+        _filter_jobs_by_type,
     )
 
     jobs = [
@@ -355,9 +355,9 @@ def test_filter_jobs_by_type():
 def test_filter_jobs_by_type_none():
     """Test _filter_jobs_by_type with None returns all."""
     from services.dashboard.components.scheduler_status import (
-        _filter_jobs_by_type,
-        ScheduledJob,
         JobType,
+        ScheduledJob,
+        _filter_jobs_by_type,
     )
 
     jobs = [
@@ -372,10 +372,10 @@ def test_filter_jobs_by_type_none():
 def test_filter_jobs_by_status():
     """Test _filter_jobs_by_status filters correctly."""
     from services.dashboard.components.scheduler_status import (
-        _filter_jobs_by_status,
-        ScheduledJob,
-        JobType,
         JobStatus,
+        JobType,
+        ScheduledJob,
+        _filter_jobs_by_status,
     )
 
     jobs = [
@@ -406,10 +406,10 @@ def test_filter_jobs_by_status():
 def test_filter_jobs_by_status_empty():
     """Test _filter_jobs_by_status with empty list returns none."""
     from services.dashboard.components.scheduler_status import (
-        _filter_jobs_by_status,
-        ScheduledJob,
-        JobType,
         JobStatus,
+        JobType,
+        ScheduledJob,
+        _filter_jobs_by_status,
     )
 
     jobs = [
@@ -425,10 +425,10 @@ def test_filter_jobs_by_status_empty():
 def test_get_scheduler_summary():
     """Test _get_scheduler_summary calculates correctly."""
     from services.dashboard.components.scheduler_status import (
-        _get_scheduler_summary,
-        ScheduledJob,
-        JobType,
         JobStatus,
+        JobType,
+        ScheduledJob,
+        _get_scheduler_summary,
     )
 
     jobs = [
@@ -503,9 +503,9 @@ def test_get_scheduler_export_data_job_structure():
 def test_scheduled_job_disabled():
     """Test ScheduledJob with is_enabled=False."""
     from services.dashboard.components.scheduler_status import (
-        ScheduledJob,
-        JobType,
         JobStatus,
+        JobType,
+        ScheduledJob,
     )
 
     job = ScheduledJob(

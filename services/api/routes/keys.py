@@ -11,9 +11,9 @@ from pydantic import BaseModel
 
 from libs.core.key_manager import KeyManager
 from libs.core.startup_validator import (
-    validate_api_keys,
     check_exchange_ready,
     get_missing_keys,
+    validate_api_keys,
 )
 from services.api.middleware.auth import verify_admin_token
 

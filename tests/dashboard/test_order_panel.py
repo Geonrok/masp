@@ -100,7 +100,7 @@ def test_order_result_dataclass():
 
 def test_key_function():
     """Test _key generates namespaced keys."""
-    from services.dashboard.components.order_panel import _key, _KEY_PREFIX
+    from services.dashboard.components.order_panel import _KEY_PREFIX, _key
 
     result = _key("symbol")
     assert result == f"{_KEY_PREFIX}symbol"
@@ -659,8 +659,8 @@ def test_validate_order_request_sell_with_quantity_valid():
 def test_fee_rate_constant():
     """Test _FEE_RATE constant is defined and used correctly."""
     from services.dashboard.components.order_panel import (
-        OrderSide,
         _FEE_RATE,
+        OrderSide,
         _calculate_order_estimate,
     )
 

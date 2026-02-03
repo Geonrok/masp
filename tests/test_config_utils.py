@@ -4,26 +4,27 @@ Tests for config utilities module.
 
 import json
 import os
-import pytest
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from libs.core.config_utils import (
+    ConfigChange,
+    ConfigDiff,
+    ConfigHierarchy,
     ConfigPriority,
     ConfigSource,
+    ConfigValidator,
+    ConfigWatcher,
     DefaultConfigSource,
     EnvConfigSource,
     FileConfigSource,
     RuntimeConfigSource,
-    ConfigChange,
-    ConfigHierarchy,
-    ValidationRule,
     ValidationResult,
-    ConfigValidator,
-    ConfigWatcher,
-    ConfigDiff,
+    ValidationRule,
 )
 
 

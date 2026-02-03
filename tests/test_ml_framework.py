@@ -2,23 +2,24 @@
 Tests for ML integration framework.
 """
 
-import pytest
-import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta
 
+import numpy as np
+import pandas as pd
+import pytest
+
 from libs.ml.features import (
-    FeatureEngineering,
     FeatureConfig,
-    create_technical_features,
+    FeatureEngineering,
     create_statistical_features,
+    create_technical_features,
 )
 from libs.ml.models import (
-    ModelInterface,
-    SklearnModel,
     EnsembleModel,
-    ModelRegistry,
+    ModelInterface,
     ModelMetadata,
+    ModelRegistry,
+    SklearnModel,
 )
 from libs.ml.pipeline import (
     MLPipeline,

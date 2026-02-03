@@ -2,10 +2,11 @@
 Futures Long/Short Strategy vs Spot Long-Only Comparison
 """
 
-import pandas as pd
-import numpy as np
-from pathlib import Path
 import warnings
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 

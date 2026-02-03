@@ -2,14 +2,14 @@
 """Test vol_profile with varying max_positions: 10, 30, 50, 100, ALL"""
 
 import json
-from pathlib import Path
-from datetime import datetime
 import warnings
+from datetime import datetime
+from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 COMMISSION = 0.0004

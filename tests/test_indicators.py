@@ -6,18 +6,18 @@ import numpy as np
 import pytest
 
 from libs.strategies.indicators import (
-    MA,
-    KAMA,
-    KAMA_series,
-    TSMOM,
-    TSMOM_signal,
-    RSI,
-    RSI_series,
-    EMA,
-    EMA_series,
-    MACD,
-    MACD_series,
     ATR,
+    EMA,
+    KAMA,
+    MA,
+    MACD,
+    RSI,
+    TSMOM,
+    EMA_series,
+    KAMA_series,
+    MACD_series,
+    RSI_series,
+    TSMOM_signal,
 )
 
 

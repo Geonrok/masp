@@ -10,8 +10,8 @@ import sys
 # 프로젝트 루트 경로 추가
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dotenv import load_dotenv
 import pybithumb
+from dotenv import load_dotenv
 
 
 def test_connection():

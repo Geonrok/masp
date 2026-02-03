@@ -14,12 +14,13 @@ KOSDAQ 150 ETF 균등가중 포트폴리오 전략
 - OOS Sharpe: 0.884
 """
 
-import pandas as pd
-import numpy as np
-from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+import pandas as pd
 
 
 class Position(Enum):

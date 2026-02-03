@@ -14,23 +14,23 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from libs.strategies.base import (
+    Action,
     BaseStrategy,
     Decision,
-    Action,
     Signal,
-    TradeSignal,
     StrategyContext,
+    TradeSignal,
 )
 from libs.strategies.indicators import (
-    RSI,
-    RSI_series,
     MACD,
+    RSI,
     MACD_series,
+    RSI_series,
 )
 
 logger = logging.getLogger(__name__)

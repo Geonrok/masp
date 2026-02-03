@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import time
 from datetime import datetime, timezone
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 
 def _to_aware_utc(dt: datetime) -> datetime:

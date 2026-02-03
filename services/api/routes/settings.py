@@ -23,9 +23,9 @@ from filelock import FileLock
 from pydantic import BaseModel
 
 from services.api.models.schemas import (
+    APIKeyListResponse,
     APIKeyRequest,
     APIKeyResponse,
-    APIKeyListResponse,
     BaseResponse,
     ExchangeType,
 )

@@ -2,14 +2,15 @@
 Tests for Order Validator with enhanced position limits.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 import os
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from libs.core.order_validator import (
     OrderValidator,
-    ValidationResult,
     PositionLimits,
+    ValidationResult,
 )
 
 

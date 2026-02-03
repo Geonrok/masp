@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict
 import jwt
 import pytest
 import requests
+
 import libs.adapters.real_upbit_spot as upbit_module
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

@@ -2,17 +2,18 @@
 Tests for execution algorithms.
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+
 from libs.execution.algorithms import (
+    ExecutionPlan,
+    ExecutionSide,
+    ExecutionSlice,
+    ExecutionStatus,
+    POVAlgorithm,
     TWAPAlgorithm,
     VWAPAlgorithm,
-    POVAlgorithm,
-    ExecutionSide,
-    ExecutionStatus,
-    ExecutionSlice,
-    ExecutionPlan,
     create_execution_plan,
 )
 

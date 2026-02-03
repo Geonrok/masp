@@ -9,8 +9,8 @@ def test_import_providers():
     """Test provider modules import correctly."""
     from services.dashboard.providers import (
         get_portfolio_summary,
-        get_system_resources,
         get_service_health,
+        get_system_resources,
     )
 
     assert callable(get_portfolio_summary)
@@ -34,10 +34,10 @@ def test_portfolio_provider_returns_none_when_disabled():
 
 def test_parse_holdings_to_positions():
     """Test parsing raw holdings to PortfolioPosition objects."""
+    from services.dashboard.components.portfolio_summary import PortfolioPosition
     from services.dashboard.providers.portfolio_provider import (
         _parse_holdings_to_positions,
     )
-    from services.dashboard.components.portfolio_summary import PortfolioPosition
 
     holdings = [
         {"currency": "BTC", "balance": "0.1", "avg_buy_price": "50000000"},
@@ -110,10 +110,11 @@ def test_get_cash_balance_no_krw():
 def test_get_system_resources_with_psutil():
     """Test system resources returns valid data when psutil is available."""
     import importlib.util
+
     import pytest
 
-    from services.dashboard.providers.system_provider import get_system_resources
     from services.dashboard.components.system_status import ResourceUsage
+    from services.dashboard.providers.system_provider import get_system_resources
 
     result = get_system_resources()
 
@@ -138,6 +139,7 @@ def test_get_system_resources_without_psutil():
     with patch.dict("sys.modules", {"psutil": None}):
         # Force reimport to trigger ImportError path
         import importlib
+
         from services.dashboard.providers import system_provider
 
         importlib.reload(system_provider)
@@ -149,8 +151,8 @@ def test_get_system_resources_without_psutil():
 
 def test_get_service_health_returns_list():
     """Test service health returns list of ServiceHealth objects."""
-    from services.dashboard.providers.system_provider import get_service_health
     from services.dashboard.components.system_status import ServiceHealth
+    from services.dashboard.providers.system_provider import get_service_health
 
     result = get_service_health()
 
@@ -176,8 +178,8 @@ def test_service_health_contains_expected_services():
 
 def test_check_telegram_not_configured():
     """Test Telegram check when not configured."""
-    from services.dashboard.providers.system_provider import _check_telegram
     from services.dashboard.components.system_status import ServiceStatus
+    from services.dashboard.providers.system_provider import _check_telegram
 
     with patch.dict("os.environ", {}, clear=True):
         status, latency, message = _check_telegram()
@@ -188,8 +190,8 @@ def test_check_telegram_not_configured():
 
 def test_check_telegram_configured():
     """Test Telegram check when configured."""
-    from services.dashboard.providers.system_provider import _check_telegram
     from services.dashboard.components.system_status import ServiceStatus
+    from services.dashboard.providers.system_provider import _check_telegram
 
     with patch.dict(
         "os.environ",
@@ -210,9 +212,9 @@ def test_check_telegram_configured():
 def test_order_provider_import():
     """Test order provider modules import correctly."""
     from services.dashboard.providers import (
+        get_balance_provider,
         get_execution_adapter,
         get_price_provider,
-        get_balance_provider,
     )
 
     assert callable(get_execution_adapter)
@@ -260,9 +262,10 @@ def test_is_live_trading_enabled():
 
 def test_order_execution_wrapper_place_order():
     """Test OrderExecutionWrapper place_order method."""
-    from services.dashboard.providers.order_provider import OrderExecutionWrapper
     from dataclasses import dataclass
     from datetime import datetime
+
+    from services.dashboard.providers.order_provider import OrderExecutionWrapper
 
     # Mock adapter
     @dataclass
@@ -301,10 +304,11 @@ def test_trade_history_provider_import():
 
 def test_trade_history_api_client_with_mock():
     """Test TradeHistoryApiClient with mock logger."""
+    from datetime import date
+
     from services.dashboard.providers.trade_history_provider import (
         TradeHistoryApiClient,
     )
-    from datetime import date
 
     mock_logger = MagicMock()
     mock_logger.get_trades.return_value = [
@@ -388,8 +392,8 @@ def test_log_provider_returns_list():
 
 def test_parse_log_level():
     """Test log level parsing."""
-    from services.dashboard.providers.log_provider import _parse_log_level
     from services.dashboard.components.log_viewer import LogLevel
+    from services.dashboard.providers.log_provider import _parse_log_level
 
     assert _parse_log_level("DEBUG") == LogLevel.DEBUG
     assert _parse_log_level("INFO") == LogLevel.INFO
@@ -401,8 +405,8 @@ def test_parse_log_level():
 
 def test_parse_log_line():
     """Test log line parsing."""
-    from services.dashboard.providers.log_provider import _parse_log_line
     from services.dashboard.components.log_viewer import LogLevel
+    from services.dashboard.providers.log_provider import _parse_log_line
 
     # Standard Python logging format
     line = "2024-01-01 12:00:00,000 - mymodule - INFO - Test message"
@@ -437,12 +441,12 @@ def test_get_alert_store_returns_none_when_no_alerts():
 
 def test_parse_alert_type():
     """Test alert type parsing."""
-    from services.dashboard.providers.alert_provider import _parse_alert_type
     from services.dashboard.providers.alert_provider import (
-        ALERT_TYPE_TRADE,
-        ALERT_TYPE_SIGNAL,
         ALERT_TYPE_ERROR,
+        ALERT_TYPE_SIGNAL,
         ALERT_TYPE_SYSTEM,
+        ALERT_TYPE_TRADE,
+        _parse_alert_type,
     )
 
     assert _parse_alert_type("TRADE") == ALERT_TYPE_TRADE
@@ -477,8 +481,8 @@ def test_get_scheduler_job_provider_returns_callable():
 
 def test_scheduler_provider_returns_jobs():
     """Test scheduler provider returns list of jobs."""
-    from services.dashboard.providers.scheduler_provider import get_scheduled_jobs
     from services.dashboard.components.scheduler_status import ScheduledJob
+    from services.dashboard.providers.scheduler_provider import get_scheduled_jobs
 
     jobs = get_scheduled_jobs()
 
@@ -491,8 +495,8 @@ def test_scheduler_provider_returns_jobs():
 
 def test_parse_job_type():
     """Test job type parsing."""
-    from services.dashboard.providers.scheduler_provider import _parse_job_type
     from services.dashboard.components.scheduler_status import JobType
+    from services.dashboard.providers.scheduler_provider import _parse_job_type
 
     assert _parse_job_type("BTC Momentum Strategy") == JobType.STRATEGY
     assert _parse_job_type("Market Data Fetch") == JobType.DATA_FETCH
@@ -638,8 +642,8 @@ def test_backtest_provider_import():
     from services.dashboard.providers import (
         get_backtest_data,
         get_backtest_list,
-        get_strategy_names,
         get_backtest_provider,
+        get_strategy_names,
     )
 
     assert callable(get_backtest_data)
@@ -804,8 +808,9 @@ def test_backtest_result_from_dict():
 
 def test_backtest_result_to_viewer_format():
     """Test BacktestResult to_viewer_format method."""
-    from libs.adapters.backtest_store import BacktestResult
     from datetime import date
+
+    from libs.adapters.backtest_store import BacktestResult
 
     result = BacktestResult(
         backtest_id="bt_001",
@@ -839,7 +844,7 @@ def test_backtest_store_initialization(tmp_path):
 
 def test_backtest_store_save_and_load(tmp_path):
     """Test BacktestStore save and load methods."""
-    from libs.adapters.backtest_store import BacktestStore, BacktestResult
+    from libs.adapters.backtest_store import BacktestResult, BacktestStore
 
     store = BacktestStore(store_dir=str(tmp_path))
 
@@ -868,7 +873,7 @@ def test_backtest_store_save_and_load(tmp_path):
 
 def test_backtest_store_list_backtests(tmp_path):
     """Test BacktestStore list_backtests method."""
-    from libs.adapters.backtest_store import BacktestStore, BacktestResult
+    from libs.adapters.backtest_store import BacktestResult, BacktestStore
 
     store = BacktestStore(store_dir=str(tmp_path))
 
@@ -904,7 +909,7 @@ def test_backtest_store_list_backtests(tmp_path):
 
 def test_backtest_store_get_latest(tmp_path):
     """Test BacktestStore get_latest method."""
-    from libs.adapters.backtest_store import BacktestStore, BacktestResult
+    from libs.adapters.backtest_store import BacktestResult, BacktestStore
 
     store = BacktestStore(store_dir=str(tmp_path))
 
@@ -937,7 +942,7 @@ def test_backtest_store_get_latest(tmp_path):
 
 def test_backtest_store_delete(tmp_path):
     """Test BacktestStore delete method."""
-    from libs.adapters.backtest_store import BacktestStore, BacktestResult
+    from libs.adapters.backtest_store import BacktestResult, BacktestStore
 
     store = BacktestStore(store_dir=str(tmp_path))
 
@@ -967,7 +972,7 @@ def test_backtest_store_delete(tmp_path):
 
 def test_backtest_store_get_strategy_names(tmp_path):
     """Test BacktestStore get_strategy_names method."""
-    from libs.adapters.backtest_store import BacktestStore, BacktestResult
+    from libs.adapters.backtest_store import BacktestResult, BacktestStore
 
     store = BacktestStore(store_dir=str(tmp_path))
 

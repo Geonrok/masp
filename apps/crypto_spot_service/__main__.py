@@ -6,8 +6,8 @@ Usage:
     python -m apps.crypto_spot_service --daemon
 """
 
-from libs.core.config import AssetClass
 from apps.service_base import create_service_main
+from libs.core.config import AssetClass
 
 main = create_service_main(AssetClass.CRYPTO_SPOT)
 

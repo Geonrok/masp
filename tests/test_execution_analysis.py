@@ -9,16 +9,17 @@ Validates trade execution quality analysis:
 - Report generation
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+
 from libs.analytics.execution_analysis import (
-    ExecutionRecord,
-    ExecutionAnalyzer,
-    SlippageStats,
-    FillRateStats,
-    ExecutionTimeStats,
     CostAnalysis,
+    ExecutionAnalyzer,
+    ExecutionRecord,
+    ExecutionTimeStats,
+    FillRateStats,
+    SlippageStats,
     format_execution_report,
 )
 

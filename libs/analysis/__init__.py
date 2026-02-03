@@ -8,9 +8,9 @@ Contains market analysis tools:
 from libs.analysis.market_regime import (
     MarketRegime,
     MarketRegimeDetector,
+    MomentumState,
     RegimeAnalysis,
     VolatilityRegime,
-    MomentumState,
 )
 
 __all__ = [

@@ -10,8 +10,8 @@ Upbit 소액 실거래 테스트
 5. 최종 PnL 계산
 """
 
-import sys
 import os
+import sys
 import time
 from datetime import date
 
@@ -43,11 +43,12 @@ def main() -> bool:
 
     # 1. 모듈 임포트
     print("\n[1] 모듈 로드")
-    from libs.core.config import Config
+    from pathlib import Path
+
     from libs.adapters.factory import AdapterFactory
     from libs.adapters.trade_logger import TradeLogger
     from libs.analytics.daily_report import DailyReportGenerator
-    from pathlib import Path
+    from libs.core.config import Config
 
     # 실거래 로그 디렉토리
     live_log_dir = Path("logs/live_trades")

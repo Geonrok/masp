@@ -9,7 +9,7 @@ Phase 3+: Enhanced with advanced features.
 import logging
 import statistics
 from dataclasses import dataclass
-from typing import List, Dict, Optional, Any
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 

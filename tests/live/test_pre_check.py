@@ -18,8 +18,9 @@ try:
 except ImportError:  # pragma: no cover
     pytest = None
 
-from libs.adapters.factory import AdapterFactory
 from _live_test_utils import live_test_enabled
+
+from libs.adapters.factory import AdapterFactory
 
 if pytest and not live_test_enabled():
     pytest.skip(

@@ -11,7 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List, Dict, Optional, Any, Callable
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 import pandas as pd

@@ -7,7 +7,7 @@ from __future__ import annotations
 import random
 import re
 import time
-from typing import Dict, Callable, Any
+from typing import Any, Callable, Dict
 
 
 class RateLimiter:

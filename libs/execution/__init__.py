@@ -10,11 +10,11 @@ Provides advanced order execution algorithms for minimizing market impact:
 
 from libs.execution.algorithms import (
     ExecutionAlgorithm,
-    VWAPAlgorithm,
-    TWAPAlgorithm,
-    POVAlgorithm,
-    ExecutionSlice,
     ExecutionPlan,
+    ExecutionSlice,
+    POVAlgorithm,
+    TWAPAlgorithm,
+    VWAPAlgorithm,
     create_execution_plan,
 )
 

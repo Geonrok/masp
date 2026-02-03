@@ -114,7 +114,7 @@ def test_system_info_dataclass():
 
 def test_key_function():
     """Test _key generates namespaced keys."""
-    from services.dashboard.components.system_status import _key, _KEY_PREFIX
+    from services.dashboard.components.system_status import _KEY_PREFIX, _key
 
     result = _key("resources")
     assert result == f"{_KEY_PREFIX}resources"
@@ -167,8 +167,8 @@ def test_get_demo_resource_usage():
 def test_get_demo_services():
     """Test _get_demo_services returns expected services."""
     from services.dashboard.components.system_status import (
-        _get_demo_services,
         ServiceStatus,
+        _get_demo_services,
     )
 
     services = _get_demo_services()
@@ -262,8 +262,8 @@ def test_format_bytes_gb():
 def test_get_status_color():
     """Test _get_status_color returns correct colors."""
     from services.dashboard.components.system_status import (
-        _get_status_color,
         ServiceStatus,
+        _get_status_color,
     )
 
     assert _get_status_color(ServiceStatus.HEALTHY) == "green"
@@ -275,8 +275,8 @@ def test_get_status_color():
 def test_get_status_indicator():
     """Test _get_status_indicator returns correct text indicators."""
     from services.dashboard.components.system_status import (
-        _get_status_indicator,
         ServiceStatus,
+        _get_status_indicator,
     )
 
     assert _get_status_indicator(ServiceStatus.HEALTHY) == "[OK]"
@@ -288,9 +288,9 @@ def test_get_status_indicator():
 def test_calculate_overall_status_all_healthy():
     """Test _calculate_overall_status with all healthy services."""
     from services.dashboard.components.system_status import (
-        _calculate_overall_status,
         ServiceHealth,
         ServiceStatus,
+        _calculate_overall_status,
     )
 
     services = [
@@ -306,9 +306,9 @@ def test_calculate_overall_status_all_healthy():
 def test_calculate_overall_status_one_unhealthy():
     """Test _calculate_overall_status with one unhealthy service."""
     from services.dashboard.components.system_status import (
-        _calculate_overall_status,
         ServiceHealth,
         ServiceStatus,
+        _calculate_overall_status,
     )
 
     services = [
@@ -324,9 +324,9 @@ def test_calculate_overall_status_one_unhealthy():
 def test_calculate_overall_status_one_degraded():
     """Test _calculate_overall_status with one degraded service."""
     from services.dashboard.components.system_status import (
-        _calculate_overall_status,
         ServiceHealth,
         ServiceStatus,
+        _calculate_overall_status,
     )
 
     services = [
@@ -342,8 +342,8 @@ def test_calculate_overall_status_one_degraded():
 def test_calculate_overall_status_empty():
     """Test _calculate_overall_status with empty list."""
     from services.dashboard.components.system_status import (
-        _calculate_overall_status,
         ServiceStatus,
+        _calculate_overall_status,
     )
 
     result = _calculate_overall_status([])
@@ -353,9 +353,9 @@ def test_calculate_overall_status_empty():
 def test_calculate_overall_status_all_unknown():
     """Test _calculate_overall_status with all unknown services."""
     from services.dashboard.components.system_status import (
-        _calculate_overall_status,
         ServiceHealth,
         ServiceStatus,
+        _calculate_overall_status,
     )
 
     services = [

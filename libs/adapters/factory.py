@@ -10,7 +10,8 @@ import logging
 import os
 import warnings
 from typing import Literal, Optional, Type
-from libs.adapters.base import MarketDataAdapter, ExecutionAdapter
+
+from libs.adapters.base import ExecutionAdapter, MarketDataAdapter
 
 logger = logging.getLogger(__name__)
 

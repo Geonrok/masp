@@ -6,11 +6,12 @@
 결론 도출: 어느 ETF가 실전에 적합한가?
 """
 
-import pandas as pd
-import numpy as np
-from datetime import datetime
 import json
 import warnings
+from datetime import datetime
+
+import numpy as np
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 

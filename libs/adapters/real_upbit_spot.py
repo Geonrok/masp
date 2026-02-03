@@ -11,24 +11,25 @@ import logging
 import os
 import random
 import re
-import ccxt
 import threading
 import time
 import uuid
-from typing import List, Optional, Dict, Any, Mapping
-from urllib.parse import urlencode, unquote
+from typing import Any, Dict, List, Mapping, Optional
+from urllib.parse import unquote, urlencode
 
-import requests
+import ccxt
 import jwt
+import requests
+
 from libs.adapters.base import (
-    MarketDataAdapter,
     ExecutionAdapter,
+    MarketDataAdapter,
     MarketQuote,
     OrderResult,
 )
 from libs.adapters.rate_limit import TokenBucket
-from libs.core.market_cache import MarketCache
 from libs.adapters.trade_logger import TradeLogger
+from libs.core.market_cache import MarketCache
 
 logger = logging.getLogger(__name__)
 

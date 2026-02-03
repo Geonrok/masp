@@ -28,7 +28,7 @@ from typing import Any, Optional
 import pandas as pd
 
 from libs.strategies.base import BaseStrategy, Signal, TradeSignal
-from libs.strategies.indicators import MA, EMA
+from libs.strategies.indicators import EMA, MA
 
 logger = logging.getLogger(__name__)
 

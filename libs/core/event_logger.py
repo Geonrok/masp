@@ -3,13 +3,13 @@ Event Logger - SSOT for all strategy events.
 Provides standardized event types and helper methods.
 """
 
+import uuid
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
-import uuid
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
 import pytz
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 
 class EventType(str, Enum):

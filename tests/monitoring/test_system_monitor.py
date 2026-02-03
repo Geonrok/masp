@@ -2,14 +2,15 @@
 Tests for System Monitor.
 """
 
-import pytest
 import time
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from libs.monitoring.system_monitor import (
-    SystemMonitor,
-    SystemMetrics,
     ResourceThresholds,
+    SystemMetrics,
+    SystemMonitor,
     get_system_monitor,
     get_system_status,
 )

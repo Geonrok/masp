@@ -5,11 +5,12 @@
 """
 
 import asyncio
-from ebest import OpenApi
-import pandas as pd
 import logging
-from datetime import datetime, timedelta
 import os
+from datetime import datetime, timedelta
+
+import pandas as pd
+from ebest import OpenApi
 from tqdm import tqdm
 
 logging.basicConfig(

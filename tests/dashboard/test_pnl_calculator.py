@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from services.dashboard.utils.pnl_calculator import (
     PositionPnL,
+    _safe_float,
     calculate_portfolio_pnl,
     calculate_total_pnl,
-    _safe_float,
 )
 
 

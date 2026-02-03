@@ -2,10 +2,11 @@
 Tests for API routes.
 """
 
-import pytest
 from datetime import datetime
+from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
 
 from services.api.main import app
 from services.api.routes.strategy import StrategyManager

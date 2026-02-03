@@ -9,10 +9,11 @@ Tests:
 4. Final Comparison
 """
 
-import pandas as pd
-import numpy as np
-from scipy import stats
 import warnings
+
+import numpy as np
+import pandas as pd
+from scipy import stats
 
 warnings.filterwarnings("ignore")
 

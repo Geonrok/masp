@@ -7,16 +7,16 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 from libs.strategies.atlas_futures import (  # noqa: E402
-    ATLASFuturesStrategy,
     ATLASFuturesConfig,
+    ATLASFuturesStrategy,
     SignalType,
 )
 
@@ -146,6 +146,7 @@ def test_position_to_dict_serialization(strategy):
     """Position.to_dict() JSON serialization."""
     import json
     from datetime import datetime
+
     from libs.strategies.atlas_futures import Position
 
     pos = Position(
@@ -178,6 +179,7 @@ def test_get_state_json_serializable(strategy):
 def test_link_concentration_blocking(strategy):
     """LINK concentration > threshold should block."""
     from datetime import datetime
+
     from libs.strategies.atlas_futures import Position
 
     strategy.positions["LINKUSDT"] = Position(

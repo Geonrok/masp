@@ -10,6 +10,7 @@ import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
+
 import pandas as pd
 from pykrx import stock
 from tqdm import tqdm

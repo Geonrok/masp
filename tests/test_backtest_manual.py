@@ -1,7 +1,7 @@
 """Test Backtest Engine and Performance Analytics"""
 
+from libs.analytics.performance import calculate_max_drawdown, calculate_sharpe
 from libs.backtest.engine import BacktestEngine
-from libs.analytics.performance import calculate_sharpe, calculate_max_drawdown
 
 print("=== Backtest Engine Test ===\n")
 

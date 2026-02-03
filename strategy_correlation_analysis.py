@@ -7,13 +7,14 @@
 4. 검증 방법론 점검
 """
 
-import pandas as pd
-import numpy as np
-from typing import List, Dict, Any
-from datetime import datetime
 import json
-from collections import defaultdict
 import warnings
+from collections import defaultdict
+from datetime import datetime
+from typing import Any, Dict, List
+
+import numpy as np
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 

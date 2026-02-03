@@ -8,9 +8,9 @@ WebSocket client with:
 """
 
 from libs.realtime.websocket_client import (
+    ConnectionState,
     ReconnectingWebSocket,
     WebSocketConfig,
-    ConnectionState,
 )
 
 __all__ = [

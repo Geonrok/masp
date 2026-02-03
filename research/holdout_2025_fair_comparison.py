@@ -7,11 +7,12 @@ Testing on all 3 markets: Binance, Upbit, Bithumb
 """
 
 import os
-import pandas as pd
-import numpy as np
+import warnings
 from datetime import datetime
 from pathlib import Path
-import warnings
+
+import numpy as np
+import pandas as pd
 
 warnings.filterwarnings("ignore")
 

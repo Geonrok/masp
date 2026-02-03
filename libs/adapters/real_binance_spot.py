@@ -13,10 +13,10 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from libs.adapters.base import (
+    OHLCV,
     ExecutionAdapter,
     MarketDataAdapter,
     MarketQuote,
-    OHLCV,
     OrderResult,
 )
 from libs.adapters.binance_api import BinanceAPI, BinanceMarket

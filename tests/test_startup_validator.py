@@ -4,20 +4,21 @@ Tests for startup API key validation.
 
 import json
 import os
-import pytest
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from libs.core.startup_validator import (
-    validate_api_keys,
-    validate_startup,
-    check_exchange_ready,
-    get_missing_keys,
-    get_enabled_exchanges,
+    EXCHANGE_KEY_CONFIGS,
     _is_placeholder,
     _mask_key,
     _validate_key,
-    EXCHANGE_KEY_CONFIGS,
+    check_exchange_ready,
+    get_enabled_exchanges,
+    get_missing_keys,
+    validate_api_keys,
+    validate_startup,
 )
 
 

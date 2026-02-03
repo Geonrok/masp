@@ -2,9 +2,10 @@
 FinanceDataReader 투자자 데이터 테스트
 """
 
+import logging
+
 import FinanceDataReader as fdr
 import pandas as pd
-import logging
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

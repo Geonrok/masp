@@ -5,9 +5,10 @@
 과적합 여부를 판단
 """
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 

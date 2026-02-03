@@ -4,12 +4,13 @@ Tests for EventStore module.
 
 import os
 import tempfile
-import pytest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from libs.core.event_store import EventStore
+import pytest
+
 from libs.core.event_logger import Event, EventType, Severity
+from libs.core.event_store import EventStore
 
 
 class TestEventStore:

@@ -35,19 +35,19 @@ OOS Performance (v3):
 
 import logging
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 
 from libs.adapters.factory import AdapterFactory
 from libs.strategies.base import BaseStrategy, Signal, TradeSignal
 from libs.strategies.indicators import (
-    MA,
-    KAMA,
-    KAMA_series,
     EMA,
-    EMA_series,
+    KAMA,
+    MA,
     RSI,
+    EMA_series,
+    KAMA_series,
     TSMOM_signal,
 )
 

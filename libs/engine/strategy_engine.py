@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 import pandas as pd
 
-from libs.strategies.atlas_futures import ATLASFuturesStrategy, Signal, SignalType
 from libs.exchanges.binance_futures import BinanceFuturesAdapter
+from libs.strategies.atlas_futures import ATLASFuturesStrategy, Signal, SignalType
 
 logger = logging.getLogger(__name__)
 

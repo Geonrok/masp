@@ -3,21 +3,22 @@ Tests for metrics collection and observability module.
 """
 
 import asyncio
-import pytest
 import time
 
+import pytest
+
 from libs.core.metrics import (
-    MetricsRegistry,
-    MetricType,
-    HistogramBuckets,
-    TimerContext,
+    ComponentHealth,
     HealthChecker,
     HealthStatus,
-    ComponentHealth,
-    timed,
+    HistogramBuckets,
+    MetricsRegistry,
+    MetricType,
+    TimerContext,
     counted,
-    get_metrics,
     get_health_checker,
+    get_metrics,
+    timed,
 )
 
 

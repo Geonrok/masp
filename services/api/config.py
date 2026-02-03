@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
-import logging
 from pathlib import Path
 from typing import List, Optional
 

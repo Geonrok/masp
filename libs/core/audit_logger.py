@@ -12,17 +12,17 @@ Audit logs are stored in JSON format for easy parsing and analysis.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
 import threading
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
-import hashlib
 
 logger = logging.getLogger(__name__)
 

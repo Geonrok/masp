@@ -13,78 +13,78 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from services.dashboard.components.alert_history import render_alert_history_panel
+from services.dashboard.components.alert_settings import render_alert_settings
+
 # Existing components
 from services.dashboard.components.api_key_status import render_api_key_status_panel
+from services.dashboard.components.backtest_viewer import render_backtest_viewer
 from services.dashboard.components.exchange_control import render_exchange_controls
 from services.dashboard.components.exchange_status import ExchangeStatusPanel
-from services.dashboard.components.positions_panel import render_positions_panel
-from services.dashboard.components.signal_preview import render_signal_preview_panel
-from services.dashboard.components.strategy_config import StrategyConfigPanel
-from services.dashboard.components.strategy_indicators import render_strategy_indicators
-from services.dashboard.components.telegram_settings import render_telegram_settings
-
-# Phase 7C-4 components
-from services.dashboard.components.system_status import render_system_status
-from services.dashboard.components.portfolio_summary import render_portfolio_summary
-from services.dashboard.components.order_panel import render_order_panel
-
-# Phase 7C-6: Data providers
-from services.dashboard.providers.portfolio_provider import get_portfolio_summary
-from services.dashboard.providers.system_provider import (
-    get_system_resources,
-    get_service_health,
-)
-from services.dashboard.providers.order_provider import (
-    get_execution_adapter,
-    get_price_provider,
-    get_balance_provider,
-)
-from services.dashboard.providers.trade_history_provider import get_trade_history_client
-from services.dashboard.providers.log_provider import get_log_provider
-from services.dashboard.providers.alert_provider import get_alert_store
-from services.dashboard.providers.scheduler_provider import get_scheduler_job_provider
-from services.dashboard.providers.strategy_performance_provider import (
-    get_strategy_performance_provider,
-)
-from services.dashboard.providers.positions_provider import get_positions_data
-from services.dashboard.providers.risk_metrics_provider import get_risk_metrics_data
-from services.dashboard.providers.backtest_provider import get_backtest_data
-from services.dashboard.providers.alert_manager_provider import (
-    get_alert_rules,
-    get_anomaly_thresholds,
-    get_alert_settings_callbacks,
-)
-from services.dashboard.components.alert_settings import render_alert_settings
-from services.dashboard.providers.multi_exchange_provider import (
-    get_exchange_list,
-    get_price_comparison,
-    find_arbitrage_opportunities,
-    perform_health_check,
-)
-from services.dashboard.components.multi_exchange_view import render_multi_exchange_view
-from services.dashboard.components.trade_history import render_trade_history_panel
-from services.dashboard.components.strategy_performance import (
-    render_strategy_performance,
-)
-from services.dashboard.components.backtest_viewer import render_backtest_viewer
-from services.dashboard.components.risk_metrics import render_risk_metrics_panel
 from services.dashboard.components.log_viewer import render_log_viewer
-from services.dashboard.components.alert_history import render_alert_history_panel
-from services.dashboard.components.scheduler_status import render_scheduler_status
 
 # Phase 7E: Market Regime & Signal components
 from services.dashboard.components.market_regime_panel import (
     render_market_regime_panel,
     render_signal_status_panel,
 )
-from services.dashboard.providers.market_regime_provider import (
-    get_market_regime_analysis,
-    get_daily_signal_summary,
-    get_trading_recommendation,
+from services.dashboard.components.multi_exchange_view import render_multi_exchange_view
+from services.dashboard.components.order_panel import render_order_panel
+from services.dashboard.components.portfolio_summary import render_portfolio_summary
+from services.dashboard.components.positions_panel import render_positions_panel
+from services.dashboard.components.risk_metrics import render_risk_metrics_panel
+from services.dashboard.components.scheduler_status import render_scheduler_status
+from services.dashboard.components.signal_preview import render_signal_preview_panel
+from services.dashboard.components.strategy_config import StrategyConfigPanel
+from services.dashboard.components.strategy_indicators import render_strategy_indicators
+from services.dashboard.components.strategy_performance import (
+    render_strategy_performance,
 )
 
-from services.dashboard.utils.auth_middleware import enforce_auth, logout
+# Phase 7C-4 components
+from services.dashboard.components.system_status import render_system_status
+from services.dashboard.components.telegram_settings import render_telegram_settings
+from services.dashboard.components.trade_history import render_trade_history_panel
+from services.dashboard.providers.alert_manager_provider import (
+    get_alert_rules,
+    get_alert_settings_callbacks,
+    get_anomaly_thresholds,
+)
+from services.dashboard.providers.alert_provider import get_alert_store
+from services.dashboard.providers.backtest_provider import get_backtest_data
+from services.dashboard.providers.log_provider import get_log_provider
+from services.dashboard.providers.market_regime_provider import (
+    get_daily_signal_summary,
+    get_market_regime_analysis,
+    get_trading_recommendation,
+)
+from services.dashboard.providers.multi_exchange_provider import (
+    find_arbitrage_opportunities,
+    get_exchange_list,
+    get_price_comparison,
+    perform_health_check,
+)
+from services.dashboard.providers.order_provider import (
+    get_balance_provider,
+    get_execution_adapter,
+    get_price_provider,
+)
+
+# Phase 7C-6: Data providers
+from services.dashboard.providers.portfolio_provider import get_portfolio_summary
+from services.dashboard.providers.positions_provider import get_positions_data
+from services.dashboard.providers.risk_metrics_provider import get_risk_metrics_data
+from services.dashboard.providers.scheduler_provider import get_scheduler_job_provider
+from services.dashboard.providers.strategy_performance_provider import (
+    get_strategy_performance_provider,
+)
+from services.dashboard.providers.system_provider import (
+    get_service_health,
+    get_system_resources,
+)
+from services.dashboard.providers.trade_history_provider import get_trade_history_client
 from services.dashboard.utils.api_client import ConfigApiClient
+from services.dashboard.utils.auth_middleware import enforce_auth, logout
 
 load_dotenv()
 

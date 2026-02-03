@@ -17,12 +17,13 @@ Parameters:
 - Moving Average Filter: Trade only if Open > MA(3, 5, 10)
 """
 
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from tqdm import tqdm
 import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 

@@ -2,14 +2,15 @@
 Tests for Trading Metrics Aggregator.
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+
 from libs.monitoring.trading_metrics import (
-    TradingMetricsAggregator,
-    OrderMetrics,
     LatencyMetrics,
+    OrderMetrics,
     OrderStatus,
+    TradingMetricsAggregator,
     get_trading_metrics,
     record_order,
 )
