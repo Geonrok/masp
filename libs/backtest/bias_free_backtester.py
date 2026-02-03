@@ -290,14 +290,18 @@ class BiasFreeBacktester:
         - Apply slippage only on new trades
         """
         # Get all trading dates
-        all_dates = sorted(set().union(*[df.index.tolist() for df in signal_data.values()]))
+        all_dates = sorted(
+            set().union(*[df.index.tolist() for df in signal_data.values()])
+        )
 
         cash = self.config.initial_capital
         self.portfolio_values = [cash]
         self.daily_returns = []
         # positions: symbol -> (shares, avg_cost)
         positions: Dict[str, tuple] = {}
-        prev_prices: Dict[str, float] = {}  # Track yesterday's prices for held positions
+        prev_prices: Dict[str, float] = (
+            {}
+        )  # Track yesterday's prices for held positions
 
         entry_count = 0
         exit_count = 0
@@ -334,7 +338,9 @@ class BiasFreeBacktester:
 
             # Calculate daily return
             if i > 0 and prev_portfolio_value > 0:
-                daily_ret = (portfolio_value - prev_portfolio_value) / prev_portfolio_value
+                daily_ret = (
+                    portfolio_value - prev_portfolio_value
+                ) / prev_portfolio_value
                 self.daily_returns.append(daily_ret)
                 if positions:
                     invested_days += 1
@@ -352,7 +358,9 @@ class BiasFreeBacktester:
 
             # Sort by volume and select top N
             active_sorted = sorted(active, key=lambda x: x[1], reverse=True)
-            target_symbols = set(s for s, v in active_sorted[:self.config.execution.max_positions])
+            target_symbols = set(
+                s for s, v in active_sorted[: self.config.execution.max_positions]
+            )
 
             # Identify new entries and exits
             current_symbols = set(positions.keys())
@@ -367,7 +375,9 @@ class BiasFreeBacktester:
             for sym in exits:
                 if sym in positions and sym in prices_today:
                     shares, avg_cost = positions[sym]
-                    sell_price = prices_today[sym] * (1 - self.config.execution.slippage_pct)
+                    sell_price = prices_today[sym] * (
+                        1 - self.config.execution.slippage_pct
+                    )
                     proceeds = shares * sell_price
                     commission = proceeds * self.config.execution.commission_pct
                     cash += proceeds - commission
@@ -400,28 +410,34 @@ class BiasFreeBacktester:
                         new_positions[sym] = (shares, avg_cost)
                     else:
                         # New entry
-                        buy_price = current_price * (1 + self.config.execution.slippage_pct)
-                        shares_to_buy = (target_value_per_position / buy_price)
+                        buy_price = current_price * (
+                            1 + self.config.execution.slippage_pct
+                        )
+                        shares_to_buy = target_value_per_position / buy_price
                         cost = shares_to_buy * buy_price
                         commission = cost * self.config.execution.commission_pct
 
                         if cost + commission <= cash:
-                            cash -= (cost + commission)
+                            cash -= cost + commission
                             new_positions[sym] = (shares_to_buy, buy_price)
 
                 positions = new_positions
 
-                self.positions_log.append({
-                    "date": date,
-                    "symbols": list(target_symbols),
-                    "new_entries": list(new_entries),
-                    "exits": list(exits),
-                })
+                self.positions_log.append(
+                    {
+                        "date": date,
+                        "symbols": list(target_symbols),
+                        "new_entries": list(new_entries),
+                        "exits": list(exits),
+                    }
+                )
             else:
                 positions = {}
 
             # Update previous prices for next iteration
-            prev_prices = {sym: prices_today[sym] for sym in positions if sym in prices_today}
+            prev_prices = {
+                sym: prices_today[sym] for sym in positions if sym in prices_today
+            }
 
         # Calculate metrics
         return self._calculate_metrics(
@@ -443,11 +459,15 @@ class BiasFreeBacktester:
         portfolio_vals = np.array(self.portfolio_values)
 
         # Total return
-        total_return = (portfolio_vals[-1] - self.config.initial_capital) / self.config.initial_capital
+        total_return = (
+            portfolio_vals[-1] - self.config.initial_capital
+        ) / self.config.initial_capital
 
         # Annualized return
         n_years = total_days / 252 if total_days > 0 else 1
-        annualized_return = (1 + total_return) ** (1 / n_years) - 1 if n_years > 0 else 0
+        annualized_return = (
+            (1 + total_return) ** (1 / n_years) - 1 if n_years > 0 else 0
+        )
 
         # Sharpe ratio (assuming 0% risk-free rate)
         if len(daily_rets) > 1 and np.std(daily_rets) > 0:
@@ -473,12 +493,18 @@ class BiasFreeBacktester:
         # Win rate
         winning_days = np.sum(daily_rets > 0)
         losing_days = np.sum(daily_rets < 0)
-        win_rate = winning_days / (winning_days + losing_days) if (winning_days + losing_days) > 0 else 0
+        win_rate = (
+            winning_days / (winning_days + losing_days)
+            if (winning_days + losing_days) > 0
+            else 0
+        )
 
         # Profit factor
         gross_profits = np.sum(daily_rets[daily_rets > 0])
         gross_losses = abs(np.sum(daily_rets[daily_rets < 0]))
-        profit_factor = gross_profits / gross_losses if gross_losses > 0 else float("inf")
+        profit_factor = (
+            gross_profits / gross_losses if gross_losses > 0 else float("inf")
+        )
 
         return BacktestMetrics(
             total_return=total_return,
@@ -523,7 +549,9 @@ class BiasFreeBacktester:
 
         for i in range(period, n):
             change = abs(prices[i] - prices[i - period])
-            volatility = sum(abs(prices[j] - prices[j - 1]) for j in range(i - period + 1, i + 1))
+            volatility = sum(
+                abs(prices[j] - prices[j - 1]) for j in range(i - period + 1, i + 1)
+            )
             er = change / volatility if volatility > 0 else 0
             sc = (er * (fast - slow) + slow) ** 2
             kama[i] = kama[i - 1] + sc * (prices[i] - kama[i - 1])
@@ -535,7 +563,7 @@ class BiasFreeBacktester:
         """Calculate simple moving average."""
         result = np.full(len(prices), np.nan)
         for i in range(period - 1, len(prices)):
-            result[i] = np.mean(prices[i - period + 1:i + 1])
+            result[i] = np.mean(prices[i - period + 1 : i + 1])
         return result
 
     def get_equity_curve(self) -> pd.Series:

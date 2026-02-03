@@ -1,4 +1,5 @@
 """Alert manager provider - connects AlertManager to dashboard components."""
+
 from __future__ import annotations
 
 import logging
@@ -144,9 +145,7 @@ def create_rule(rule_data: Dict[str, Any]) -> bool:
         rule = AlertRule(
             name=rule_data.get("name", ""),
             enabled=rule_data.get("enabled", True),
-            alert_types=[
-                AlertType(t) for t in rule_data.get("alert_types", [])
-            ],
+            alert_types=[AlertType(t) for t in rule_data.get("alert_types", [])],
             min_priority=AlertPriority[rule_data.get("min_priority", "NORMAL")],
             exchanges=rule_data.get("exchanges", []),
             symbols=rule_data.get("symbols", []),

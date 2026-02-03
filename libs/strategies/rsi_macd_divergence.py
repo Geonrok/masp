@@ -42,7 +42,9 @@ class DivergenceType(Enum):
     BULLISH_REGULAR = "bullish_regular"  # Price lower low, RSI higher low
     BEARISH_REGULAR = "bearish_regular"  # Price higher high, RSI lower high
     BULLISH_HIDDEN = "bullish_hidden"  # Price higher low, RSI lower low (continuation)
-    BEARISH_HIDDEN = "bearish_hidden"  # Price lower high, RSI higher high (continuation)
+    BEARISH_HIDDEN = (
+        "bearish_hidden"  # Price lower high, RSI higher high (continuation)
+    )
     NONE = "none"
 
 
@@ -272,7 +274,14 @@ class RSIMACDDivergenceStrategy(BaseStrategy):
 
                 if p2_price < p1_price and p2_macd > p1_macd:
                     if p2_macd < 0:  # MACD below zero line
-                        strength = min(1.0, abs(p2_macd - p1_macd) / abs(p1_macd) if p1_macd != 0 else 0.5)
+                        strength = min(
+                            1.0,
+                            (
+                                abs(p2_macd - p1_macd) / abs(p1_macd)
+                                if p1_macd != 0
+                                else 0.5
+                            ),
+                        )
                         return DivergenceSignal(
                             type=DivergenceType.BULLISH_REGULAR,
                             price_pivot1=p1_price,
@@ -292,7 +301,14 @@ class RSIMACDDivergenceStrategy(BaseStrategy):
 
                 if p2_price > p1_price and p2_macd < p1_macd:
                     if p2_macd > 0:  # MACD above zero line
-                        strength = min(1.0, abs(p1_macd - p2_macd) / abs(p1_macd) if p1_macd != 0 else 0.5)
+                        strength = min(
+                            1.0,
+                            (
+                                abs(p1_macd - p2_macd) / abs(p1_macd)
+                                if p1_macd != 0
+                                else 0.5
+                            ),
+                        )
                         return DivergenceSignal(
                             type=DivergenceType.BEARISH_REGULAR,
                             price_pivot1=p1_price,
@@ -380,14 +396,18 @@ class RSIMACDDivergenceStrategy(BaseStrategy):
                     ):
                         signal = Signal.BUY
                         strength = (rsi_div.strength + macd_div.strength) / 2
-                        reason = f"Bullish divergence (RSI + MACD), strength={strength:.2f}"
+                        reason = (
+                            f"Bullish divergence (RSI + MACD), strength={strength:.2f}"
+                        )
                     elif (
                         rsi_div.type == DivergenceType.BEARISH_REGULAR
                         and macd_div.type == DivergenceType.BEARISH_REGULAR
                     ):
                         signal = Signal.SELL
                         strength = (rsi_div.strength + macd_div.strength) / 2
-                        reason = f"Bearish divergence (RSI + MACD), strength={strength:.2f}"
+                        reason = (
+                            f"Bearish divergence (RSI + MACD), strength={strength:.2f}"
+                        )
             else:
                 # Either RSI or MACD divergence is enough
                 if rsi_div:

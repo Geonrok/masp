@@ -1,4 +1,5 @@
 """Manual order panel component for Paper trading mode."""
+
 from __future__ import annotations
 
 import math
@@ -37,7 +38,9 @@ class OrderRequest:
     symbol: str
     side: OrderSide
     order_type: OrderType
-    quantity: Optional[float] = None  # Required for SELL, optional for BUY with amount_krw
+    quantity: Optional[float] = (
+        None  # Required for SELL, optional for BUY with amount_krw
+    )
     price: Optional[float] = None  # Required for LIMIT orders
     amount_krw: Optional[float] = None  # Alternative to quantity (BUY only)
 
@@ -388,7 +391,11 @@ def render_order_panel(
         if order_type == OrderType.LIMIT.value:
             # Safe default value and step for LIMIT price input
             default_limit_price = current_price if not price_invalid else 0.0
-            price_step = 1000.0 if current_price > 100000 else 10.0 if current_price > 0 else 1000.0
+            price_step = (
+                1000.0
+                if current_price > 100000
+                else 10.0 if current_price > 0 else 1000.0
+            )
             limit_price = st.number_input(
                 "지정가 (KRW)",
                 min_value=0.0,
@@ -405,7 +412,9 @@ def render_order_panel(
     st.markdown("**주문 예상**")
 
     # Normalize order_price
-    raw_order_price = limit_price if order_type == OrderType.LIMIT.value else current_price
+    raw_order_price = (
+        limit_price if order_type == OrderType.LIMIT.value else current_price
+    )
     order_price = _safe_float(raw_order_price, default=0.0)
 
     qty_for_estimate = quantity if quantity > 0 else None
@@ -452,9 +461,8 @@ def render_order_panel(
         # For MARKET orders, current_price must be valid
         # For LIMIT orders, limit_price must be valid (user can still input)
         order_price_invalid = (
-            (order_type == OrderType.MARKET.value and price_invalid)
-            or (order_type == OrderType.LIMIT.value and limit_price <= 0)
-        )
+            order_type == OrderType.MARKET.value and price_invalid
+        ) or (order_type == OrderType.LIMIT.value and limit_price <= 0)
         submit_disabled = estimate["quantity"] <= 0 or order_price_invalid
 
         if st.button(

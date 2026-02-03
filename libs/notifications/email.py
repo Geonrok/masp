@@ -76,9 +76,7 @@ class EmailNotifier:
         if not self._enabled:
             logger.info("[Email] Not configured - disabled")
         else:
-            logger.info(
-                f"[Email] Configured for {len(self.recipients)} recipient(s)"
-            )
+            logger.info(f"[Email] Configured for {len(self.recipients)} recipient(s)")
 
     @property
     def enabled(self) -> bool:
@@ -134,6 +132,7 @@ class EmailNotifier:
         else:
             # Generate plain text from HTML (basic)
             import re
+
             plain = re.sub(r"<[^>]+>", "", body_html)
             plain = plain.replace("&nbsp;", " ").replace("&amp;", "&")
             msg.attach(MIMEText(plain, "plain"))
@@ -149,17 +148,13 @@ class EmailNotifier:
                 ) as server:
                     server.starttls(context=context)
                     server.login(self.config.username, self.config.password)
-                    server.sendmail(
-                        self.config.from_address, to_list, msg.as_string()
-                    )
+                    server.sendmail(self.config.from_address, to_list, msg.as_string())
             else:
                 with smtplib.SMTP_SSL(
                     self.config.smtp_host, self.config.smtp_port
                 ) as server:
                     server.login(self.config.username, self.config.password)
-                    server.sendmail(
-                        self.config.from_address, to_list, msg.as_string()
-                    )
+                    server.sendmail(self.config.from_address, to_list, msg.as_string())
 
             logger.info(f"[Email] Sent to {len(to_list)} recipient(s)")
             return True
@@ -347,7 +342,9 @@ class EmailNotifier:
         </html>
         """
 
-        email_priority = "high" if priority.upper() in ["CRITICAL", "HIGH"] else "normal"
+        email_priority = (
+            "high" if priority.upper() in ["CRITICAL", "HIGH"] else "normal"
+        )
 
         return self.send_email(
             subject=f"[MASP] [{priority.upper()}] {title}",

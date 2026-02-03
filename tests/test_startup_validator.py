@@ -155,10 +155,13 @@ class TestValidateApiKeys:
         assert len(result.warnings) > 0
         assert "Unknown exchange" in result.warnings[0]
 
-    @patch.dict(os.environ, {
-        "UPBIT_ACCESS_KEY": "valid_upbit_access_key_123456789012345678",
-        "UPBIT_SECRET_KEY": "valid_upbit_secret_key_123456789012345678",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "UPBIT_ACCESS_KEY": "valid_upbit_access_key_123456789012345678",
+            "UPBIT_SECRET_KEY": "valid_upbit_secret_key_123456789012345678",
+        },
+    )
     def test_validate_upbit_valid_keys(self):
         """Test validation with valid Upbit keys."""
         result = validate_api_keys(exchanges={"upbit"})
@@ -166,10 +169,14 @@ class TestValidateApiKeys:
         assert result.exchanges_valid == 1
         assert result.exchanges_invalid == 0
 
-    @patch.dict(os.environ, {
-        "UPBIT_ACCESS_KEY": "",
-        "UPBIT_SECRET_KEY": "",
-    }, clear=True)
+    @patch.dict(
+        os.environ,
+        {
+            "UPBIT_ACCESS_KEY": "",
+            "UPBIT_SECRET_KEY": "",
+        },
+        clear=True,
+    )
     def test_validate_upbit_missing_keys(self):
         """Test validation with missing Upbit keys."""
         # Clear the env vars
@@ -182,29 +189,38 @@ class TestValidateApiKeys:
             assert result.is_valid is False
             assert result.exchanges_invalid == 1
 
-    @patch.dict(os.environ, {
-        "UPBIT_ACCESS_KEY": "your-upbit-api-key",
-        "UPBIT_SECRET_KEY": "your-upbit-secret",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "UPBIT_ACCESS_KEY": "your-upbit-api-key",
+            "UPBIT_SECRET_KEY": "your-upbit-secret",
+        },
+    )
     def test_validate_upbit_placeholder_keys(self):
         """Test validation rejects placeholder keys."""
         result = validate_api_keys(exchanges={"upbit"})
         assert result.is_valid is False
         assert "placeholder" in str(result.errors).lower()
 
-    @patch.dict(os.environ, {
-        "BINANCE_API_KEY": "valid_binance_api_key_12345678901234567890123456789012345678901234567890123456789012",
-        "BINANCE_API_SECRET": "valid_binance_secret_1234567890123456789012345678901234567890123456789012345678901",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "BINANCE_API_KEY": "valid_binance_api_key_12345678901234567890123456789012345678901234567890123456789012",
+            "BINANCE_API_SECRET": "valid_binance_secret_1234567890123456789012345678901234567890123456789012345678901",
+        },
+    )
     def test_validate_binance_spot_valid_keys(self):
         """Test validation with valid Binance keys."""
         result = validate_api_keys(exchanges={"binance_spot"})
         assert result.is_valid is True
 
-    @patch.dict(os.environ, {
-        "BINANCE_API_KEY": "short_key",
-        "BINANCE_API_SECRET": "short_secret",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "BINANCE_API_KEY": "short_key",
+            "BINANCE_API_SECRET": "short_secret",
+        },
+    )
     def test_validate_binance_short_keys(self):
         """Test validation rejects too short Binance keys."""
         result = validate_api_keys(exchanges={"binance_spot"})
@@ -215,10 +231,13 @@ class TestValidateApiKeys:
 class TestCheckExchangeReady:
     """Tests for check_exchange_ready function."""
 
-    @patch.dict(os.environ, {
-        "UPBIT_ACCESS_KEY": "valid_upbit_access_key_123456789012345678",
-        "UPBIT_SECRET_KEY": "valid_upbit_secret_key_123456789012345678",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "UPBIT_ACCESS_KEY": "valid_upbit_access_key_123456789012345678",
+            "UPBIT_SECRET_KEY": "valid_upbit_secret_key_123456789012345678",
+        },
+    )
     def test_exchange_ready_true(self):
         """Test exchange is ready when keys are valid."""
         assert check_exchange_ready("upbit") is True
@@ -260,10 +279,13 @@ class TestGetMissingKeys:
             assert "UPBIT_ACCESS_KEY" in missing
             assert "UPBIT_SECRET_KEY" in missing
 
-    @patch.dict(os.environ, {
-        "UPBIT_ACCESS_KEY": "valid_upbit_access_key_123456789012345678",
-        "UPBIT_SECRET_KEY": "valid_upbit_secret_key_123456789012345678",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "UPBIT_ACCESS_KEY": "valid_upbit_access_key_123456789012345678",
+            "UPBIT_SECRET_KEY": "valid_upbit_secret_key_123456789012345678",
+        },
+    )
     def test_get_missing_keys_none_missing(self):
         """Test no keys missing."""
         missing = get_missing_keys("upbit")
@@ -285,10 +307,13 @@ class TestValidateStartup:
         )
         assert result is True
 
-    @patch.dict(os.environ, {
-        "UPBIT_ACCESS_KEY": "valid_upbit_access_key_123456789012345678",
-        "UPBIT_SECRET_KEY": "valid_upbit_secret_key_123456789012345678",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "UPBIT_ACCESS_KEY": "valid_upbit_access_key_123456789012345678",
+            "UPBIT_SECRET_KEY": "valid_upbit_secret_key_123456789012345678",
+        },
+    )
     def test_validate_startup_valid_config(self, tmp_path):
         """Test startup validation with valid config."""
         config = {

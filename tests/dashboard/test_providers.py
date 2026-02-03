@@ -1,4 +1,5 @@
 """Tests for dashboard data providers."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -33,7 +34,9 @@ def test_portfolio_provider_returns_none_when_disabled():
 
 def test_parse_holdings_to_positions():
     """Test parsing raw holdings to PortfolioPosition objects."""
-    from services.dashboard.providers.portfolio_provider import _parse_holdings_to_positions
+    from services.dashboard.providers.portfolio_provider import (
+        _parse_holdings_to_positions,
+    )
     from services.dashboard.components.portfolio_summary import PortfolioPosition
 
     holdings = [
@@ -57,7 +60,9 @@ def test_parse_holdings_to_positions():
 
 def test_parse_holdings_skips_zero_balance():
     """Test that zero balance holdings are skipped."""
-    from services.dashboard.providers.portfolio_provider import _parse_holdings_to_positions
+    from services.dashboard.providers.portfolio_provider import (
+        _parse_holdings_to_positions,
+    )
 
     holdings = [
         {"currency": "BTC", "balance": "0", "avg_buy_price": "50000000"},
@@ -134,6 +139,7 @@ def test_get_system_resources_without_psutil():
         # Force reimport to trigger ImportError path
         import importlib
         from services.dashboard.providers import system_provider
+
         importlib.reload(system_provider)
 
         result = system_provider.get_system_resources()
@@ -295,7 +301,9 @@ def test_trade_history_provider_import():
 
 def test_trade_history_api_client_with_mock():
     """Test TradeHistoryApiClient with mock logger."""
-    from services.dashboard.providers.trade_history_provider import TradeHistoryApiClient
+    from services.dashboard.providers.trade_history_provider import (
+        TradeHistoryApiClient,
+    )
     from datetime import date
 
     mock_logger = MagicMock()
@@ -325,7 +333,9 @@ def test_trade_history_api_client_with_mock():
 
 def test_trade_history_api_client_get_daily_summary():
     """Test TradeHistoryApiClient daily summary."""
-    from services.dashboard.providers.trade_history_provider import TradeHistoryApiClient
+    from services.dashboard.providers.trade_history_provider import (
+        TradeHistoryApiClient,
+    )
 
     mock_logger = MagicMock()
     mock_logger.get_daily_summary.return_value = {
@@ -456,7 +466,9 @@ def test_scheduler_provider_import():
 
 def test_get_scheduler_job_provider_returns_callable():
     """Test scheduler job provider returns a callable."""
-    from services.dashboard.providers.scheduler_provider import get_scheduler_job_provider
+    from services.dashboard.providers.scheduler_provider import (
+        get_scheduler_job_provider,
+    )
 
     provider = get_scheduler_job_provider()
 
@@ -502,7 +514,9 @@ def test_strategy_performance_provider_import():
 
 def test_calculate_sharpe_ratio():
     """Test Sharpe ratio calculation."""
-    from services.dashboard.providers.strategy_performance_provider import _calculate_sharpe_ratio
+    from services.dashboard.providers.strategy_performance_provider import (
+        _calculate_sharpe_ratio,
+    )
 
     # Constant returns should give low Sharpe
     returns = [1.0, 1.0, 1.0, 1.0, 1.0]
@@ -517,7 +531,9 @@ def test_calculate_sharpe_ratio():
 
 def test_calculate_max_drawdown():
     """Test max drawdown calculation."""
-    from services.dashboard.providers.strategy_performance_provider import _calculate_max_drawdown
+    from services.dashboard.providers.strategy_performance_provider import (
+        _calculate_max_drawdown,
+    )
 
     # Increasing returns = no drawdown
     returns = [1.0, 1.0, 1.0, 1.0]
@@ -532,7 +548,9 @@ def test_calculate_max_drawdown():
 
 def test_calculate_trade_stats():
     """Test trade statistics calculation."""
-    from services.dashboard.providers.strategy_performance_provider import _calculate_trade_stats
+    from services.dashboard.providers.strategy_performance_provider import (
+        _calculate_trade_stats,
+    )
 
     trades = [
         {"pnl": 100},
@@ -585,7 +603,9 @@ def test_risk_metrics_provider_import():
 
 def test_calculate_equity_curve():
     """Test equity curve calculation."""
-    from services.dashboard.providers.risk_metrics_provider import _calculate_equity_curve
+    from services.dashboard.providers.risk_metrics_provider import (
+        _calculate_equity_curve,
+    )
 
     returns = [1.0, -0.5, 2.0, -1.0]  # percent
     equity = _calculate_equity_curve(returns, initial_capital=100.0)
@@ -598,7 +618,9 @@ def test_calculate_equity_curve():
 
 def test_calculate_daily_returns_empty():
     """Test daily returns calculation with empty trades."""
-    from services.dashboard.providers.risk_metrics_provider import _calculate_daily_returns
+    from services.dashboard.providers.risk_metrics_provider import (
+        _calculate_daily_returns,
+    )
 
     returns, dates = _calculate_daily_returns([])
 

@@ -50,7 +50,7 @@ def temp_config(tmp_path):
 @pytest.fixture
 def scheduler_no_init(temp_config):
     """Create scheduler without running init_exchanges."""
-    with patch.object(MultiExchangeScheduler, '_init_exchanges'):
+    with patch.object(MultiExchangeScheduler, "_init_exchanges"):
         scheduler = MultiExchangeScheduler(config_path=temp_config)
         yield scheduler
 
@@ -60,7 +60,7 @@ class TestMultiExchangeSchedulerConfig:
 
     def test_load_config_json(self, temp_config):
         """Test loading JSON config."""
-        with patch.object(MultiExchangeScheduler, '_init_exchanges'):
+        with patch.object(MultiExchangeScheduler, "_init_exchanges"):
             scheduler = MultiExchangeScheduler(config_path=temp_config)
             assert "exchanges" in scheduler._config
             assert "upbit" in scheduler._config["exchanges"]
@@ -68,7 +68,7 @@ class TestMultiExchangeSchedulerConfig:
     def test_load_config_missing_file(self, tmp_path):
         """Test loading with missing config file."""
         missing_path = tmp_path / "nonexistent.json"
-        with patch.object(MultiExchangeScheduler, '_init_exchanges'):
+        with patch.object(MultiExchangeScheduler, "_init_exchanges"):
             scheduler = MultiExchangeScheduler(config_path=str(missing_path))
             # Should fall back to default config
             assert "exchanges" in scheduler._config
@@ -101,7 +101,7 @@ class TestMultiExchangeSchedulerInit:
 
     def test_enabled_exchanges(self, temp_config):
         """Test detecting enabled exchanges."""
-        with patch.object(MultiExchangeScheduler, '_init_exchanges'):
+        with patch.object(MultiExchangeScheduler, "_init_exchanges"):
             scheduler = MultiExchangeScheduler(config_path=temp_config)
             config = scheduler._config
 
@@ -115,9 +115,7 @@ class TestMultiExchangeSchedulerSymbols:
 
     def test_get_symbols_list(self, scheduler_no_init):
         """Test getting explicit symbol list."""
-        exchange_config = {
-            "symbols": ["BTC/KRW", "ETH/KRW"]
-        }
+        exchange_config = {"symbols": ["BTC/KRW", "ETH/KRW"]}
 
         # This would be in _get_symbols method
         symbols = exchange_config.get("symbols", [])
@@ -126,9 +124,7 @@ class TestMultiExchangeSchedulerSymbols:
 
     def test_get_symbols_all_krw(self, scheduler_no_init):
         """Test ALL_KRW symbol expansion."""
-        exchange_config = {
-            "symbols": "ALL_KRW"
-        }
+        exchange_config = {"symbols": "ALL_KRW"}
 
         symbols_config = exchange_config.get("symbols")
         assert symbols_config == "ALL_KRW"
@@ -201,6 +197,7 @@ class TestMultiExchangeSchedulerMetrics:
     def test_metrics_available(self):
         """Test metrics module is available."""
         from services import metrics
+
         assert hasattr(metrics, "increment_counter") or True  # May not have this method
 
 
@@ -221,7 +218,7 @@ class TestConfigValidation:
         config_path = tmp_path / "invalid.json"
         config_path.write_text("not valid json {{{")
 
-        with patch.object(MultiExchangeScheduler, '_init_exchanges'):
+        with patch.object(MultiExchangeScheduler, "_init_exchanges"):
             scheduler = MultiExchangeScheduler(config_path=str(config_path))
             # Should use default config
             assert "exchanges" in scheduler._config
@@ -231,14 +228,14 @@ class TestConfigValidation:
         config_path = tmp_path / "empty.json"
         config_path.write_text("{}")
 
-        with patch.object(MultiExchangeScheduler, '_init_exchanges'):
+        with patch.object(MultiExchangeScheduler, "_init_exchanges"):
             scheduler = MultiExchangeScheduler(config_path=str(config_path))
             # Should use default or convert
             assert "exchanges" in scheduler._config or True
 
     def test_schedule_parsing(self, temp_config):
         """Test schedule parsing from config."""
-        with patch.object(MultiExchangeScheduler, '_init_exchanges'):
+        with patch.object(MultiExchangeScheduler, "_init_exchanges"):
             scheduler = MultiExchangeScheduler(config_path=temp_config)
 
             upbit_schedule = scheduler._config["exchanges"]["upbit"]["schedule"]
@@ -252,7 +249,7 @@ class TestExchangeRunnerCreation:
 
     def test_runner_config_extraction(self, temp_config):
         """Test extracting runner config from exchange config."""
-        with patch.object(MultiExchangeScheduler, '_init_exchanges'):
+        with patch.object(MultiExchangeScheduler, "_init_exchanges"):
             scheduler = MultiExchangeScheduler(config_path=temp_config)
 
             upbit_config = scheduler._config["exchanges"]["upbit"]
@@ -303,7 +300,7 @@ class TestBinanceConfig:
         config_path = tmp_path / "binance_config.json"
         config_path.write_text(json.dumps(config))
 
-        with patch.object(MultiExchangeScheduler, '_init_exchanges'):
+        with patch.object(MultiExchangeScheduler, "_init_exchanges"):
             scheduler = MultiExchangeScheduler(config_path=str(config_path))
 
             spot_config = scheduler._config["exchanges"]["binance_spot"]

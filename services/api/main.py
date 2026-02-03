@@ -1,6 +1,7 @@
 """
 FastAPI main application (v2).
 """
+
 from __future__ import annotations
 
 import json
@@ -24,7 +25,17 @@ from services.api.models.schemas import (
     ExchangeStatus,
     ExchangeStatusResponse,
 )
-from services.api.routes import strategy, positions, trades, health, settings, config, keys, monitoring, users
+from services.api.routes import (
+    strategy,
+    positions,
+    trades,
+    health,
+    settings,
+    config,
+    keys,
+    monitoring,
+    users,
+)
 from services.api.websocket.stream import router as ws_router
 
 logger = logging.getLogger(__name__)
@@ -102,7 +113,9 @@ app.add_middleware(
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     request_id = getattr(request.state, "request_id", "unknown")
-    logger.warning("[%s] HTTPException: %s - %s", request_id, exc.status_code, exc.detail)
+    logger.warning(
+        "[%s] HTTPException: %s - %s", request_id, exc.status_code, exc.detail
+    )
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -205,25 +218,29 @@ async def get_exchange_status():
         if cfg.get("position_size_usdt"):
             quote_currency = "USDT"
 
-        exchanges_status.append(ExchangeStatus(
-            exchange=exchange_name,
-            enabled=enabled,
-            connected=enabled,  # Simplified: assume connected if enabled
-            quote_currency=quote_currency,
-            schedule=f"{hour:02d}:{minute:02d} {tz_label}",
-            symbols_count=symbols_count,
-        ))
+        exchanges_status.append(
+            ExchangeStatus(
+                exchange=exchange_name,
+                enabled=enabled,
+                connected=enabled,  # Simplified: assume connected if enabled
+                quote_currency=quote_currency,
+                schedule=f"{hour:02d}:{minute:02d} {tz_label}",
+                symbols_count=symbols_count,
+            )
+        )
 
     # Add any missing exchanges from defaults
     configured_exchanges = {ex.exchange for ex in exchanges_status}
     for name, defs in exchange_defs.items():
         if name not in configured_exchanges:
-            exchanges_status.append(ExchangeStatus(
-                exchange=name,
-                enabled=False,
-                connected=False,
-                quote_currency=defs["quote"],
-            ))
+            exchanges_status.append(
+                ExchangeStatus(
+                    exchange=name,
+                    enabled=False,
+                    connected=False,
+                    quote_currency=defs["quote"],
+                )
+            )
 
     return ExchangeStatusResponse(
         success=True,

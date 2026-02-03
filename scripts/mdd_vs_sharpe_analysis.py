@@ -13,7 +13,9 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
+
 
 def simulate_long_term(ann_return, ann_vol, mdd, years=20, simulations=10000):
     """장기 시뮬레이션"""
@@ -33,7 +35,7 @@ def simulate_long_term(ann_return, ann_vol, mdd, years=20, simulations=10000):
         for day in range(252 * years):
             # 일별 수익률 (정규분포 가정)
             ret = np.random.normal(daily_ret, daily_vol)
-            equity *= (1 + ret)
+            equity *= 1 + ret
 
             # Drawdown 체크
             if equity > peak:
@@ -45,23 +47,22 @@ def simulate_long_term(ann_return, ann_vol, mdd, years=20, simulations=10000):
             if equity < 0.2:
                 break
 
-        results.append({
-            'final_equity': equity,
-            'max_dd': max_dd,
-            'bankrupt': equity < 0.2
-        })
+        results.append(
+            {"final_equity": equity, "max_dd": max_dd, "bankrupt": equity < 0.2}
+        )
 
     df = pd.DataFrame(results)
 
     return {
-        'median_return': (df['final_equity'].median() ** (1/years) - 1) * 100,
-        'mean_return': (df['final_equity'].mean() ** (1/years) - 1) * 100,
-        'worst_10pct': df['final_equity'].quantile(0.1),
-        'best_10pct': df['final_equity'].quantile(0.9),
-        'bankrupt_rate': df['bankrupt'].mean() * 100,
-        'median_mdd': df['max_dd'].median() * 100,
-        'worst_mdd': df['max_dd'].min() * 100
+        "median_return": (df["final_equity"].median() ** (1 / years) - 1) * 100,
+        "mean_return": (df["final_equity"].mean() ** (1 / years) - 1) * 100,
+        "worst_10pct": df["final_equity"].quantile(0.1),
+        "best_10pct": df["final_equity"].quantile(0.9),
+        "bankrupt_rate": df["bankrupt"].mean() * 100,
+        "median_mdd": df["max_dd"].median() * 100,
+        "worst_mdd": df["max_dd"].min() * 100,
     }
+
 
 def kelly_criterion(win_rate, win_loss_ratio):
     """켈리 기준 최적 베팅 비율"""
@@ -70,10 +71,12 @@ def kelly_criterion(win_rate, win_loss_ratio):
     kelly = win_rate - (1 - win_rate) / win_loss_ratio
     return max(0, kelly)
 
+
 def geometric_mean_return(arithmetic_mean, volatility):
     """기하평균 수익률 (실제 복리 수익률)"""
     # G ≈ A - V²/2
-    return arithmetic_mean - (volatility ** 2) / 2
+    return arithmetic_mean - (volatility**2) / 2
+
 
 def main():
     print("=" * 80)
@@ -83,24 +86,24 @@ def main():
 
     # 두 전략 비교
     strategies = {
-        'MDD_2.3%_고집': {
-            'ann_return': 0.0123,  # 1.23%
-            'ann_vol': 0.014,      # 추정
-            'sharpe': 0.885,
-            'mdd': -0.0226
+        "MDD_2.3%_고집": {
+            "ann_return": 0.0123,  # 1.23%
+            "ann_vol": 0.014,  # 추정
+            "sharpe": 0.885,
+            "mdd": -0.0226,
         },
-        'Sharpe_최적화': {
-            'ann_return': 0.0419,  # 4.19%
-            'ann_vol': 0.050,      # 추정
-            'sharpe': 0.830,
-            'mdd': -0.0728
+        "Sharpe_최적화": {
+            "ann_return": 0.0419,  # 4.19%
+            "ann_vol": 0.050,  # 추정
+            "sharpe": 0.830,
+            "mdd": -0.0728,
         },
-        'Conservative_중간': {
-            'ann_return': 0.0284,  # 2.84%
-            'ann_vol': 0.032,      # 추정
-            'sharpe': 0.888,
-            'mdd': -0.0425
-        }
+        "Conservative_중간": {
+            "ann_return": 0.0284,  # 2.84%
+            "ann_vol": 0.032,  # 추정
+            "sharpe": 0.888,
+            "mdd": -0.0425,
+        },
     }
 
     print("\n" + "=" * 80)
@@ -110,7 +113,9 @@ def main():
     print(f"\n{'전략':<20} {'CAGR':>8} {'MDD':>8} {'Sharpe':>8}")
     print("-" * 50)
     for name, s in strategies.items():
-        print(f"{name:<20} {s['ann_return']*100:>7.2f}% {s['mdd']*100:>7.2f}% {s['sharpe']:>8.3f}")
+        print(
+            f"{name:<20} {s['ann_return']*100:>7.2f}% {s['mdd']*100:>7.2f}% {s['sharpe']:>8.3f}"
+        )
 
     # 기하평균 수익률 계산
     print("\n" + "=" * 80)
@@ -128,8 +133,8 @@ def main():
 """)
 
     for name, s in strategies.items():
-        geo_return = geometric_mean_return(s['ann_return'], s['ann_vol'])
-        vol_drag = s['ann_return'] - geo_return
+        geo_return = geometric_mean_return(s["ann_return"], s["ann_vol"])
+        vol_drag = s["ann_return"] - geo_return
         print(f"\n[{name}]")
         print(f"  산술평균: {s['ann_return']*100:.2f}%")
         print(f"  기하평균: {geo_return*100:.2f}%")
@@ -142,8 +147,7 @@ def main():
 
     for name, s in strategies.items():
         sim = simulate_long_term(
-            s['ann_return'], s['ann_vol'], s['mdd'],
-            years=20, simulations=10000
+            s["ann_return"], s["ann_vol"], s["mdd"], years=20, simulations=10000
         )
 
         print(f"\n[{name}]")
@@ -192,7 +196,7 @@ Kelly Criterion: 장기 자산 성장 최대화 베팅 비율
     # 각 전략의 최적 배분 비율 계산
     for name, s in strategies.items():
         # 간단한 Kelly 추정: Sharpe² / (수익률 / 변동성)
-        kelly_fraction = (s['sharpe'] ** 2) / 2
+        kelly_fraction = (s["sharpe"] ** 2) / 2
         half_kelly = kelly_fraction / 2
 
         print(f"\n[{name}]")
@@ -283,6 +287,7 @@ Conservative (MDD -4.25%, CAGR 2.84%, Sharpe 0.888)
 """)
 
     return strategies
+
 
 if __name__ == "__main__":
     main()

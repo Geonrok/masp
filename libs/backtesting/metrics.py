@@ -1,13 +1,18 @@
 """
 Performance metrics for backtesting.
 """
+
 from typing import Dict, Optional
 import numpy as np
 import pandas as pd
 
 
-def calculate_metrics(returns: pd.Series, benchmark_returns: Optional[pd.Series] = None,
-                      risk_free_rate: float = 0.03, trading_days: int = 252) -> Dict:
+def calculate_metrics(
+    returns: pd.Series,
+    benchmark_returns: Optional[pd.Series] = None,
+    risk_free_rate: float = 0.03,
+    trading_days: int = 252,
+) -> Dict:
     """
     Calculate comprehensive performance metrics.
 
@@ -71,7 +76,7 @@ def calculate_metrics(returns: pd.Series, benchmark_returns: Optional[pd.Series]
     # Profit factor
     gains = returns[returns > 0].sum()
     losses = abs(returns[returns < 0].sum())
-    profit_factor = gains / losses if losses > 0 else float('inf')
+    profit_factor = gains / losses if losses > 0 else float("inf")
 
     # Average win/loss
     avg_win = returns[returns > 0].mean() if (returns > 0).any() else 0
@@ -104,51 +109,49 @@ def calculate_metrics(returns: pd.Series, benchmark_returns: Optional[pd.Series]
             cov = np.cov(strategy_ret, bench_ret)
             if cov[1, 1] > 0:
                 beta = cov[0, 1] / cov[1, 1]
-                bench_cagr = (1 + bench_ret).prod() ** (trading_days / len(bench_ret)) - 1
+                bench_cagr = (1 + bench_ret).prod() ** (
+                    trading_days / len(bench_ret)
+                ) - 1
                 alpha = cagr - (risk_free_rate + beta * (bench_cagr - risk_free_rate))
 
             # Tracking error and information ratio
             active_returns = strategy_ret - bench_ret
             tracking_error = active_returns.std() * np.sqrt(trading_days)
             if tracking_error > 0:
-                information_ratio = active_returns.mean() * trading_days / tracking_error
+                information_ratio = (
+                    active_returns.mean() * trading_days / tracking_error
+                )
 
     metrics = {
         # Returns
-        'total_return': total_return,
-        'cagr': cagr,
-        'annual_volatility': annual_std,
-
+        "total_return": total_return,
+        "cagr": cagr,
+        "annual_volatility": annual_std,
         # Risk-adjusted
-        'sharpe_ratio': sharpe,
-        'sortino_ratio': sortino,
-        'calmar_ratio': calmar,
-
+        "sharpe_ratio": sharpe,
+        "sortino_ratio": sortino,
+        "calmar_ratio": calmar,
         # Drawdown
-        'max_drawdown': max_drawdown,
-
+        "max_drawdown": max_drawdown,
         # Trading
-        'win_rate': win_rate,
-        'profit_factor': profit_factor,
-        'expectancy': expectancy,
-        'avg_win': avg_win,
-        'avg_loss': avg_loss,
-        'best_day': best_day,
-        'worst_day': worst_day,
-
+        "win_rate": win_rate,
+        "profit_factor": profit_factor,
+        "expectancy": expectancy,
+        "avg_win": avg_win,
+        "avg_loss": avg_loss,
+        "best_day": best_day,
+        "worst_day": worst_day,
         # Distribution
-        'skewness': skewness,
-        'kurtosis': kurtosis,
-
+        "skewness": skewness,
+        "kurtosis": kurtosis,
         # Benchmark comparison
-        'alpha': alpha,
-        'beta': beta,
-        'information_ratio': information_ratio,
-        'tracking_error': tracking_error,
-
+        "alpha": alpha,
+        "beta": beta,
+        "information_ratio": information_ratio,
+        "tracking_error": tracking_error,
         # Meta
-        'n_trading_days': n_days,
-        'n_years': n_years,
+        "n_trading_days": n_days,
+        "n_years": n_years,
     }
 
     return metrics
@@ -157,28 +160,28 @@ def calculate_metrics(returns: pd.Series, benchmark_returns: Optional[pd.Series]
 def _empty_metrics() -> Dict:
     """Return empty metrics dict."""
     return {
-        'total_return': 0,
-        'cagr': 0,
-        'annual_volatility': 0,
-        'sharpe_ratio': 0,
-        'sortino_ratio': 0,
-        'calmar_ratio': 0,
-        'max_drawdown': 0,
-        'win_rate': 0,
-        'profit_factor': 0,
-        'expectancy': 0,
-        'avg_win': 0,
-        'avg_loss': 0,
-        'best_day': 0,
-        'worst_day': 0,
-        'skewness': 0,
-        'kurtosis': 0,
-        'alpha': 0,
-        'beta': 0,
-        'information_ratio': 0,
-        'tracking_error': 0,
-        'n_trading_days': 0,
-        'n_years': 0,
+        "total_return": 0,
+        "cagr": 0,
+        "annual_volatility": 0,
+        "sharpe_ratio": 0,
+        "sortino_ratio": 0,
+        "calmar_ratio": 0,
+        "max_drawdown": 0,
+        "win_rate": 0,
+        "profit_factor": 0,
+        "expectancy": 0,
+        "avg_win": 0,
+        "avg_loss": 0,
+        "best_day": 0,
+        "worst_day": 0,
+        "skewness": 0,
+        "kurtosis": 0,
+        "alpha": 0,
+        "beta": 0,
+        "information_ratio": 0,
+        "tracking_error": 0,
+        "n_trading_days": 0,
+        "n_years": 0,
     }
 
 

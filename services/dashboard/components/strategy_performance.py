@@ -1,4 +1,5 @@
 """Strategy performance component for displaying trading strategy metrics."""
+
 from __future__ import annotations
 
 import math
@@ -149,7 +150,9 @@ def _calculate_win_rate(winning: int, total: int) -> float:
     return (winning / total) * 100
 
 
-def _calculate_profit_factor(avg_win: float, avg_loss: float, win_count: int, loss_count: int) -> float:
+def _calculate_profit_factor(
+    avg_win: float, avg_loss: float, win_count: int, loss_count: int
+) -> float:
     """Calculate profit factor (gross profit / gross loss)."""
     gross_profit = _safe_float(avg_win, 0.0) * max(win_count, 0)
     gross_loss = abs(_safe_float(avg_loss, 0.0)) * max(loss_count, 0)
@@ -309,7 +312,9 @@ def _get_performance_summary(strategies: List[StrategyPerformance]) -> Dict[str,
         }
 
     total_return = sum(_safe_float(s.metrics.total_return, 0.0) for s in strategies)
-    total_return_krw = sum(_safe_float(s.metrics.total_return_krw, 0.0) for s in strategies)
+    total_return_krw = sum(
+        _safe_float(s.metrics.total_return_krw, 0.0) for s in strategies
+    )
     total_trades = sum(s.trade_stats.total_trades for s in strategies)
     total_wins = sum(s.trade_stats.winning_trades for s in strategies)
 
@@ -381,6 +386,7 @@ def render_strategy_performance(
             strategies = performance_provider()
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).warning("Failed to get performance data: %s", e)
             strategies = None
 
@@ -399,6 +405,7 @@ def render_strategy_performance(
                 with st.spinner("거래소에서 거래 내역을 가져오는 중..."):
                     try:
                         from services.dashboard.utils.trade_sync import sync_all_trades
+
                         result = sync_all_trades(limit_per_exchange=100)
 
                         total = result["total_synced"]
@@ -413,11 +420,13 @@ def render_strategy_performance(
                             st.rerun()
                         else:
                             msgs = []
-                            if result['upbit']['message']:
+                            if result["upbit"]["message"]:
                                 msgs.append(f"Upbit: {result['upbit']['message']}")
-                            if result['bithumb']['message']:
+                            if result["bithumb"]["message"]:
                                 msgs.append(f"Bithumb: {result['bithumb']['message']}")
-                            st.warning("동기화할 거래 내역이 없습니다.\n" + "\n".join(msgs))
+                            st.warning(
+                                "동기화할 거래 내역이 없습니다.\n" + "\n".join(msgs)
+                            )
                     except Exception as e:
                         st.error(f"동기화 실패: {e}")
         with sync_col2:

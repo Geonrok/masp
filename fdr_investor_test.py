@@ -6,7 +6,9 @@ import FinanceDataReader as fdr
 import pandas as pd
 import logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -18,13 +20,13 @@ def test_fdr_investor():
     # 1. StockListing으로 종목 정보 확인
     logger.info("\n1. 코스닥 종목 리스트")
     try:
-        kosdaq = fdr.StockListing('KOSDAQ')
+        kosdaq = fdr.StockListing("KOSDAQ")
         logger.info(f"코스닥 종목 수: {len(kosdaq)}")
         logger.info(f"컬럼: {list(kosdaq.columns)}")
 
         # 에코프로비엠 찾기
-        if 'Name' in kosdaq.columns:
-            eco = kosdaq[kosdaq['Name'].str.contains('에코프로', na=False)]
+        if "Name" in kosdaq.columns:
+            eco = kosdaq[kosdaq["Name"].str.contains("에코프로", na=False)]
             if len(eco) > 0:
                 print(eco.to_string())
     except Exception as e:
@@ -33,7 +35,7 @@ def test_fdr_investor():
     # 2. 개별 종목 데이터 조회
     logger.info("\n2. 에코프로비엠 (247540) OHLCV")
     try:
-        df = fdr.DataReader('247540', '2025-01-01', '2026-01-28')
+        df = fdr.DataReader("247540", "2025-01-01", "2026-01-28")
         logger.info(f"데이터 수: {len(df)}")
         logger.info(f"컬럼: {list(df.columns)}")
         if len(df) > 0:
@@ -50,7 +52,7 @@ def test_fdr_investor():
     # 4. ETF/ETN에서 투자자 데이터 확인
     logger.info("\n4. ETF 리스트")
     try:
-        etf = fdr.StockListing('ETF/KR')
+        etf = fdr.StockListing("ETF/KR")
         logger.info(f"ETF 수: {len(etf)}")
         logger.info(f"컬럼: {list(etf.columns)}")
     except Exception as e:
@@ -59,7 +61,7 @@ def test_fdr_investor():
     # 5. 인덱스 데이터 (코스닥 지수)
     logger.info("\n5. 코스닥 지수")
     try:
-        kosdaq_idx = fdr.DataReader('KQ11', '2025-01-01', '2026-01-28')
+        kosdaq_idx = fdr.DataReader("KQ11", "2025-01-01", "2026-01-28")
         logger.info(f"코스닥 지수 데이터: {len(kosdaq_idx)}")
         logger.info(f"컬럼: {list(kosdaq_idx.columns)}")
         if len(kosdaq_idx) > 0:

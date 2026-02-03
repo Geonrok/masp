@@ -132,23 +132,27 @@ print("\n" + "=" * 80)
 print("[4] STATISTICAL ANALYSIS")
 print("=" * 80)
 
+
 # Calculate minimum track record length
 def min_track_record_length(sharpe, target_sharpe=0.5, confidence=0.95):
     """Bailey & Lopez de Prado (2012)"""
     if sharpe <= target_sharpe:
-        return float('inf')
+        return float("inf")
     z = stats.norm.ppf(confidence)
-    min_trl = 1 + (1 - sharpe * target_sharpe +
-                   sharpe**2 / 4 * (sharpe**2 - 4)) * \
-              (z / (sharpe - target_sharpe))**2
+    min_trl = (
+        1
+        + (1 - sharpe * target_sharpe + sharpe**2 / 4 * (sharpe**2 - 4))
+        * (z / (sharpe - target_sharpe)) ** 2
+    )
     return min_trl / 252  # Convert to years
 
+
 sharpes = {
-    'KAMA5_TSMOM90_Upbit': 2.35,
-    'KAMA5_TSMOM90_Bithumb': 1.81,
-    'KAMA5_TSMOM90_Binance': 2.54,
-    'KAMA10_TSMOM60_Upbit': 3.16,
-    'KAMA10_TSMOM60_Bithumb': 2.58,
+    "KAMA5_TSMOM90_Upbit": 2.35,
+    "KAMA5_TSMOM90_Bithumb": 1.81,
+    "KAMA5_TSMOM90_Binance": 2.54,
+    "KAMA10_TSMOM60_Upbit": 3.16,
+    "KAMA10_TSMOM60_Bithumb": 2.58,
 }
 
 print("\nMinimum Track Record Length (to confirm skill at 95% confidence):")

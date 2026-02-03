@@ -231,7 +231,10 @@ class TradingMetricsAggregator:
 
         # Check cache
         if cache_key in self._cache:
-            if time.time() - self._cache_timestamps.get(cache_key, 0) < self._cache_ttl_seconds:
+            if (
+                time.time() - self._cache_timestamps.get(cache_key, 0)
+                < self._cache_ttl_seconds
+            ):
                 return self._cache[cache_key]
 
         with self._lock:
@@ -308,7 +311,10 @@ class TradingMetricsAggregator:
         with self._lock:
             exchanges = list(self._orders.keys())
 
-        return {exchange: self.get_exchange_stats(exchange, minutes) for exchange in exchanges}
+        return {
+            exchange: self.get_exchange_stats(exchange, minutes)
+            for exchange in exchanges
+        }
 
     def get_latency_percentiles(
         self,
@@ -361,8 +367,12 @@ class TradingMetricsAggregator:
             min_ms=round(sorted_latencies[0], 2),
             max_ms=round(sorted_latencies[-1], 2),
             p50_ms=round(sorted_latencies[n // 2], 2),
-            p95_ms=round(sorted_latencies[int(n * 0.95)] if n >= 20 else sorted_latencies[-1], 2),
-            p99_ms=round(sorted_latencies[int(n * 0.99)] if n >= 100 else sorted_latencies[-1], 2),
+            p95_ms=round(
+                sorted_latencies[int(n * 0.95)] if n >= 20 else sorted_latencies[-1], 2
+            ),
+            p99_ms=round(
+                sorted_latencies[int(n * 0.99)] if n >= 100 else sorted_latencies[-1], 2
+            ),
         )
 
     def get_summary(self) -> Dict[str, Any]:
@@ -380,7 +390,9 @@ class TradingMetricsAggregator:
         return {
             "total_orders": total_orders,
             "total_successful": total_successful,
-            "overall_success_rate": round(total_successful / total_orders, 4) if total_orders > 0 else 0.0,
+            "overall_success_rate": (
+                round(total_successful / total_orders, 4) if total_orders > 0 else 0.0
+            ),
             "exchanges": list(all_stats.keys()),
             "by_exchange": all_stats,
             "timestamp": datetime.now().isoformat(),

@@ -107,21 +107,25 @@ class TestTradingMetricsAggregator:
         """Test success rate calculation."""
         # 3 successful, 1 failed
         for i in range(3):
-            aggregator.record_order(OrderMetrics(
-                order_id=str(i),
+            aggregator.record_order(
+                OrderMetrics(
+                    order_id=str(i),
+                    exchange="binance",
+                    symbol="BTC/USDT",
+                    side="BUY",
+                    status=OrderStatus.SUCCESS,
+                )
+            )
+
+        aggregator.record_order(
+            OrderMetrics(
+                order_id="fail",
                 exchange="binance",
                 symbol="BTC/USDT",
                 side="BUY",
-                status=OrderStatus.SUCCESS,
-            ))
-
-        aggregator.record_order(OrderMetrics(
-            order_id="fail",
-            exchange="binance",
-            symbol="BTC/USDT",
-            side="BUY",
-            status=OrderStatus.ERROR,
-        ))
+                status=OrderStatus.ERROR,
+            )
+        )
 
         stats = aggregator.get_exchange_stats("binance")
         assert stats["total_orders"] == 4
@@ -131,14 +135,16 @@ class TestTradingMetricsAggregator:
         """Test latency percentile calculation."""
         # Add orders with varying latency (start from 10 to avoid 0 being filtered)
         for i in range(50):
-            aggregator.record_order(OrderMetrics(
-                order_id=str(i),
-                exchange="upbit",
-                symbol="BTC/KRW",
-                side="BUY",
-                status=OrderStatus.SUCCESS,
-                total_latency_ms=float((i + 1) * 10),  # 10, 20, 30, ..., 500
-            ))
+            aggregator.record_order(
+                OrderMetrics(
+                    order_id=str(i),
+                    exchange="upbit",
+                    symbol="BTC/KRW",
+                    side="BUY",
+                    status=OrderStatus.SUCCESS,
+                    total_latency_ms=float((i + 1) * 10),  # 10, 20, 30, ..., 500
+                )
+            )
 
         latency = aggregator.get_latency_percentiles("upbit")
         assert latency is not None
@@ -148,20 +154,24 @@ class TestTradingMetricsAggregator:
 
     def test_exchange_stats_by_status(self, aggregator):
         """Test status breakdown in stats."""
-        aggregator.record_order(OrderMetrics(
-            order_id="1",
-            exchange="upbit",
-            symbol="BTC/KRW",
-            side="BUY",
-            status=OrderStatus.SUCCESS,
-        ))
-        aggregator.record_order(OrderMetrics(
-            order_id="2",
-            exchange="upbit",
-            symbol="BTC/KRW",
-            side="BUY",
-            status=OrderStatus.REJECTED,
-        ))
+        aggregator.record_order(
+            OrderMetrics(
+                order_id="1",
+                exchange="upbit",
+                symbol="BTC/KRW",
+                side="BUY",
+                status=OrderStatus.SUCCESS,
+            )
+        )
+        aggregator.record_order(
+            OrderMetrics(
+                order_id="2",
+                exchange="upbit",
+                symbol="BTC/KRW",
+                side="BUY",
+                status=OrderStatus.REJECTED,
+            )
+        )
 
         stats = aggregator.get_exchange_stats("upbit")
         assert stats["by_status"]["success"] == 1
@@ -169,20 +179,24 @@ class TestTradingMetricsAggregator:
 
     def test_exchange_stats_by_symbol(self, aggregator):
         """Test symbol breakdown in stats."""
-        aggregator.record_order(OrderMetrics(
-            order_id="1",
-            exchange="upbit",
-            symbol="BTC/KRW",
-            side="BUY",
-            status=OrderStatus.SUCCESS,
-        ))
-        aggregator.record_order(OrderMetrics(
-            order_id="2",
-            exchange="upbit",
-            symbol="ETH/KRW",
-            side="BUY",
-            status=OrderStatus.SUCCESS,
-        ))
+        aggregator.record_order(
+            OrderMetrics(
+                order_id="1",
+                exchange="upbit",
+                symbol="BTC/KRW",
+                side="BUY",
+                status=OrderStatus.SUCCESS,
+            )
+        )
+        aggregator.record_order(
+            OrderMetrics(
+                order_id="2",
+                exchange="upbit",
+                symbol="ETH/KRW",
+                side="BUY",
+                status=OrderStatus.SUCCESS,
+            )
+        )
 
         stats = aggregator.get_exchange_stats("upbit")
         assert stats["by_symbol"]["BTC/KRW"] == 1

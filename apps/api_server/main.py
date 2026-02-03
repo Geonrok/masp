@@ -60,8 +60,7 @@ async def serve_dashboard():
     if DASHBOARD_INDEX.exists():
         return FileResponse(str(DASHBOARD_INDEX), media_type="text/html")
     return HTMLResponse(
-        content=f"<h1>Dashboard not found</h1><p>{DASHBOARD_INDEX}</p>",
-        status_code=404
+        content=f"<h1>Dashboard not found</h1><p>{DASHBOARD_INDEX}</p>", status_code=404
     )
 
 
@@ -125,7 +124,9 @@ async def list_decisions(
     since: Optional[str] = Query(None),
     limit: int = Query(100, ge=1, le=1000),
 ):
-    decisions = event_store.list_decisions(asset_class=asset_class, since=since, limit=limit)
+    decisions = event_store.list_decisions(
+        asset_class=asset_class, since=since, limit=limit
+    )
     return {"decisions": decisions, "count": len(decisions)}
 
 

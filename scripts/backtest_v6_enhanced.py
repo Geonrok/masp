@@ -9,6 +9,7 @@ Uses local data from E:/data/crypto_ohlcv including:
 - VIX (volatility)
 - Open Interest
 """
+
 from __future__ import annotations
 
 import argparse
@@ -38,6 +39,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BacktestConfig:
     """Backtest configuration."""
+
     initial_capital: float = 10000.0
     start_date: str = "2020-01-01"
     end_date: Optional[str] = None
@@ -55,6 +57,7 @@ class BacktestConfig:
 @dataclass
 class AlternativeData:
     """Alternative data for enhanced signals."""
+
     fear_greed: Optional[pd.DataFrame] = None
     funding_rate: Dict[str, pd.DataFrame] = field(default_factory=dict)
     vix: Optional[pd.DataFrame] = None
@@ -98,7 +101,9 @@ class LocalDataLoader:
 
                 df = df[["open", "high", "low", "close", "volume"]]
                 df = df.sort_index()
-                logger.info(f"Loaded {symbol} {timeframe}: {len(df)} candles from {file_path.name}")
+                logger.info(
+                    f"Loaded {symbol} {timeframe}: {len(df)} candles from {file_path.name}"
+                )
                 return df
 
         logger.warning(f"No data found for {symbol} {timeframe}")
@@ -194,9 +199,12 @@ class EnhancedStrategy:
         close = df["close"].values
 
         # ATR
-        tr = np.maximum(high - low,
-                       np.maximum(np.abs(high - np.roll(close, 1)),
-                                 np.abs(low - np.roll(close, 1))))
+        tr = np.maximum(
+            high - low,
+            np.maximum(
+                np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))
+            ),
+        )
         tr[0] = high[0] - low[0]
         atr = pd.Series(tr).rolling(self.supertrend_period).mean().values
 
@@ -210,17 +218,25 @@ class EnhancedStrategy:
         direction = np.ones(len(close))  # 1 = up, -1 = down
 
         for i in range(1, len(close)):
-            if close[i] > upper_band[i-1]:
+            if close[i] > upper_band[i - 1]:
                 direction[i] = 1
-            elif close[i] < lower_band[i-1]:
+            elif close[i] < lower_band[i - 1]:
                 direction[i] = -1
             else:
-                direction[i] = direction[i-1]
+                direction[i] = direction[i - 1]
 
             if direction[i] == 1:
-                supertrend[i] = max(lower_band[i], supertrend[i-1]) if direction[i-1] == 1 else lower_band[i]
+                supertrend[i] = (
+                    max(lower_band[i], supertrend[i - 1])
+                    if direction[i - 1] == 1
+                    else lower_band[i]
+                )
             else:
-                supertrend[i] = min(upper_band[i], supertrend[i-1]) if direction[i-1] == -1 else upper_band[i]
+                supertrend[i] = (
+                    min(upper_band[i], supertrend[i - 1])
+                    if direction[i - 1] == -1
+                    else upper_band[i]
+                )
 
         return supertrend, direction
 
@@ -231,7 +247,7 @@ class EnhancedStrategy:
         mult = 2 / (period + 1)
 
         for i in range(1, len(data)):
-            ema[i] = (data[i] - ema[i-1]) * mult + ema[i-1]
+            ema[i] = (data[i] - ema[i - 1]) * mult + ema[i - 1]
 
         return ema
 
@@ -241,9 +257,12 @@ class EnhancedStrategy:
         low = df["low"].values
         close = df["close"].values
 
-        tr = np.maximum(high - low,
-                       np.maximum(np.abs(high - np.roll(close, 1)),
-                                 np.abs(low - np.roll(close, 1))))
+        tr = np.maximum(
+            high - low,
+            np.maximum(
+                np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))
+            ),
+        )
         tr[0] = high[0] - low[0]
 
         return pd.Series(tr).rolling(period).mean().values
@@ -258,16 +277,24 @@ class EnhancedStrategy:
         minus_dm = np.zeros(len(high))
 
         for i in range(1, len(high)):
-            up_move = high[i] - high[i-1]
-            down_move = low[i-1] - low[i]
+            up_move = high[i] - high[i - 1]
+            down_move = low[i - 1] - low[i]
 
             plus_dm[i] = up_move if (up_move > down_move and up_move > 0) else 0
             minus_dm[i] = down_move if (down_move > up_move and down_move > 0) else 0
 
         atr = self.calculate_atr(df, period)
 
-        plus_di = 100 * pd.Series(plus_dm).rolling(period).mean().values / np.maximum(atr, 1e-10)
-        minus_di = 100 * pd.Series(minus_dm).rolling(period).mean().values / np.maximum(atr, 1e-10)
+        plus_di = (
+            100
+            * pd.Series(plus_dm).rolling(period).mean().values
+            / np.maximum(atr, 1e-10)
+        )
+        minus_di = (
+            100
+            * pd.Series(minus_dm).rolling(period).mean().values
+            / np.maximum(atr, 1e-10)
+        )
 
         dx = 100 * np.abs(plus_di - minus_di) / np.maximum(plus_di + minus_di, 1e-10)
         adx = pd.Series(dx).rolling(period).mean().values
@@ -348,7 +375,11 @@ class EnhancedStrategy:
             elif fg_signal == "EXTREME_GREED":
                 score -= 3  # Strong sell signal in extreme greed
                 reasons.append(f"FG_GREED({fear_greed:.0f})")
-            elif self.fear_greed_neutral_low <= fear_greed <= self.fear_greed_neutral_high:
+            elif (
+                self.fear_greed_neutral_low
+                <= fear_greed
+                <= self.fear_greed_neutral_high
+            ):
                 fg_neutral_zone = True  # Neutral zone - reduce position
                 reasons.append(f"FG_NEUTRAL({fear_greed:.0f})")
 
@@ -382,10 +413,14 @@ class EnhancedStrategy:
         elif score <= -5 and not risk_off and trend_strong:  # Strong bearish
             signal = "SHORT"
             position_mult = 1.0 if not fg_neutral_zone else 0.5
-        elif score >= 4 and not risk_off and trend_strong and not fg_neutral_zone:  # Moderate bullish
+        elif (
+            score >= 4 and not risk_off and trend_strong and not fg_neutral_zone
+        ):  # Moderate bullish
             signal = "LONG"
             position_mult = 0.7
-        elif score <= -4 and not risk_off and trend_strong and not fg_neutral_zone:  # Moderate bearish
+        elif (
+            score <= -4 and not risk_off and trend_strong and not fg_neutral_zone
+        ):  # Moderate bearish
             signal = "SHORT"
             position_mult = 0.7
 
@@ -478,11 +513,15 @@ class EnhancedBacktester:
         mask = fg.index.date <= date
         if mask.any():
             idx = fg.index[mask][-1]
-            return fg.loc[idx, "value"] if "value" in fg.columns else fg.loc[idx].iloc[0]
+            return (
+                fg.loc[idx, "value"] if "value" in fg.columns else fg.loc[idx].iloc[0]
+            )
 
         return None
 
-    def get_funding_rate_at(self, symbol: str, timestamp: pd.Timestamp) -> Optional[float]:
+    def get_funding_rate_at(
+        self, symbol: str, timestamp: pd.Timestamp
+    ) -> Optional[float]:
         """Get funding rate at timestamp."""
         if symbol not in self.alt_data.funding_rate:
             return None
@@ -518,7 +557,11 @@ class EnhancedBacktester:
 
         # Filter data by date range
         start_dt = pd.Timestamp(self.config.start_date)
-        end_dt = pd.Timestamp(self.config.end_date) if self.config.end_date else pd.Timestamp.now()
+        end_dt = (
+            pd.Timestamp(self.config.end_date)
+            if self.config.end_date
+            else pd.Timestamp.now()
+        )
 
         # Use BTC as reference
         if "BTCUSDT" not in self.data_4h:
@@ -589,7 +632,9 @@ class EnhancedBacktester:
 
                         # Take profit at 3x ATR gain
                         take_profit = pos["entry_price"] + pos["atr"] * 3.0
-                        profit_pct = (current_price - pos["entry_price"]) / pos["entry_price"]
+                        profit_pct = (current_price - pos["entry_price"]) / pos[
+                            "entry_price"
+                        ]
 
                         # Breakeven stop after 1.5x ATR profit
                         if profit_pct > 0.02:  # 2% profit
@@ -607,22 +652,31 @@ class EnhancedBacktester:
 
                         if exit_signal:
                             exit_price = current_price * (1 - self.config.slippage_pct)
-                            pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"] * pos["leverage"]
-                            pnl_usd = pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                            pnl_pct = (
+                                (exit_price - pos["entry_price"])
+                                / pos["entry_price"]
+                                * pos["leverage"]
+                            )
+                            pnl_usd = (
+                                pos["size"] * pnl_pct
+                                - pos["size"] * self.config.commission_pct * 2
+                            )
 
                             capital += pnl_usd
 
-                            self.trade_log.append({
-                                "symbol": symbol,
-                                "side": "LONG",
-                                "entry_time": pos["entry_time"],
-                                "entry_price": pos["entry_price"],
-                                "exit_time": current_time,
-                                "exit_price": exit_price,
-                                "pnl_pct": pnl_pct,
-                                "pnl_usd": pnl_usd,
-                                "exit_reason": exit_reason,
-                            })
+                            self.trade_log.append(
+                                {
+                                    "symbol": symbol,
+                                    "side": "LONG",
+                                    "entry_time": pos["entry_time"],
+                                    "entry_price": pos["entry_price"],
+                                    "exit_time": current_time,
+                                    "exit_price": exit_price,
+                                    "pnl_pct": pnl_pct,
+                                    "pnl_usd": pnl_usd,
+                                    "exit_reason": exit_reason,
+                                }
+                            )
 
                             stats["trades_closed"] += 1
                             if pnl_usd > 0:
@@ -641,7 +695,9 @@ class EnhancedBacktester:
 
                         # Take profit at 3x ATR gain
                         take_profit = pos["entry_price"] - pos["atr"] * 3.0
-                        profit_pct = (pos["entry_price"] - current_price) / pos["entry_price"]
+                        profit_pct = (pos["entry_price"] - current_price) / pos[
+                            "entry_price"
+                        ]
 
                         # Breakeven stop after 2% profit
                         if profit_pct > 0.02:
@@ -659,22 +715,31 @@ class EnhancedBacktester:
 
                         if exit_signal:
                             exit_price = current_price * (1 + self.config.slippage_pct)
-                            pnl_pct = (pos["entry_price"] - exit_price) / pos["entry_price"] * pos["leverage"]
-                            pnl_usd = pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                            pnl_pct = (
+                                (pos["entry_price"] - exit_price)
+                                / pos["entry_price"]
+                                * pos["leverage"]
+                            )
+                            pnl_usd = (
+                                pos["size"] * pnl_pct
+                                - pos["size"] * self.config.commission_pct * 2
+                            )
 
                             capital += pnl_usd
 
-                            self.trade_log.append({
-                                "symbol": symbol,
-                                "side": "SHORT",
-                                "entry_time": pos["entry_time"],
-                                "entry_price": pos["entry_price"],
-                                "exit_time": current_time,
-                                "exit_price": exit_price,
-                                "pnl_pct": pnl_pct,
-                                "pnl_usd": pnl_usd,
-                                "exit_reason": exit_reason,
-                            })
+                            self.trade_log.append(
+                                {
+                                    "symbol": symbol,
+                                    "side": "SHORT",
+                                    "entry_time": pos["entry_time"],
+                                    "entry_price": pos["entry_price"],
+                                    "exit_time": current_time,
+                                    "exit_price": exit_price,
+                                    "pnl_pct": pnl_pct,
+                                    "pnl_usd": pnl_usd,
+                                    "exit_reason": exit_reason,
+                                }
+                            )
 
                             stats["trades_closed"] += 1
                             if pnl_usd > 0:
@@ -686,7 +751,10 @@ class EnhancedBacktester:
                             continue
 
                 # Generate new signal
-                if symbol not in positions and len(positions) < self.config.max_positions:
+                if (
+                    symbol not in positions
+                    and len(positions) < self.config.max_positions
+                ):
                     signal_result = self.strategy.generate_signal(
                         df_4h_current,
                         fear_greed=fear_greed,
@@ -703,8 +771,16 @@ class EnhancedBacktester:
                             stats["short_signals"] += 1
 
                         # Calculate drawdown-adjusted position size
-                        peak_capital = max(self.equity_curve) if self.equity_curve else self.config.initial_capital
-                        current_dd = (capital - peak_capital) / peak_capital if peak_capital > 0 else 0
+                        peak_capital = (
+                            max(self.equity_curve)
+                            if self.equity_curve
+                            else self.config.initial_capital
+                        )
+                        current_dd = (
+                            (capital - peak_capital) / peak_capital
+                            if peak_capital > 0
+                            else 0
+                        )
 
                         # Reduce position size in drawdown
                         dd_mult = 1.0
@@ -718,11 +794,16 @@ class EnhancedBacktester:
                         # Open position
                         entry_price = signal_result["price"]
                         if signal_result["signal"] == "LONG":
-                            entry_price *= (1 + self.config.slippage_pct)
+                            entry_price *= 1 + self.config.slippage_pct
                         else:
-                            entry_price *= (1 - self.config.slippage_pct)
+                            entry_price *= 1 - self.config.slippage_pct
 
-                        position_size = capital * self.config.position_size_pct * signal_result["position_mult"] * dd_mult
+                        position_size = (
+                            capital
+                            * self.config.position_size_pct
+                            * signal_result["position_mult"]
+                            * dd_mult
+                        )
 
                         positions[symbol] = {
                             "side": signal_result["signal"],
@@ -748,14 +829,20 @@ class EnhancedBacktester:
             portfolio_value = capital
             for symbol, pos in positions.items():
                 if symbol in self.data_4h:
-                    current_price = self.data_4h[symbol].loc[
-                        self.data_4h[symbol].index <= current_time
-                    ]["close"].iloc[-1]
+                    current_price = (
+                        self.data_4h[symbol]
+                        .loc[self.data_4h[symbol].index <= current_time]["close"]
+                        .iloc[-1]
+                    )
 
                     if pos["side"] == "LONG":
-                        unrealized = (current_price - pos["entry_price"]) / pos["entry_price"]
+                        unrealized = (current_price - pos["entry_price"]) / pos[
+                            "entry_price"
+                        ]
                     else:
-                        unrealized = (pos["entry_price"] - current_price) / pos["entry_price"]
+                        unrealized = (pos["entry_price"] - current_price) / pos[
+                            "entry_price"
+                        ]
 
                     unrealized *= pos["leverage"]
                     portfolio_value += pos["size"] * unrealized
@@ -768,24 +855,36 @@ class EnhancedBacktester:
                 exit_price = self.data_4h[symbol].iloc[-1]["close"]
 
                 if pos["side"] == "LONG":
-                    pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"] * pos["leverage"]
+                    pnl_pct = (
+                        (exit_price - pos["entry_price"])
+                        / pos["entry_price"]
+                        * pos["leverage"]
+                    )
                 else:
-                    pnl_pct = (pos["entry_price"] - exit_price) / pos["entry_price"] * pos["leverage"]
+                    pnl_pct = (
+                        (pos["entry_price"] - exit_price)
+                        / pos["entry_price"]
+                        * pos["leverage"]
+                    )
 
-                pnl_usd = pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                pnl_usd = (
+                    pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                )
                 capital += pnl_usd
 
-                self.trade_log.append({
-                    "symbol": symbol,
-                    "side": pos["side"],
-                    "entry_time": pos["entry_time"],
-                    "entry_price": pos["entry_price"],
-                    "exit_time": timestamps[-1],
-                    "exit_price": exit_price,
-                    "pnl_pct": pnl_pct,
-                    "pnl_usd": pnl_usd,
-                    "reason": "End of backtest",
-                })
+                self.trade_log.append(
+                    {
+                        "symbol": symbol,
+                        "side": pos["side"],
+                        "entry_time": pos["entry_time"],
+                        "entry_price": pos["entry_price"],
+                        "exit_time": timestamps[-1],
+                        "exit_price": exit_price,
+                        "pnl_pct": pnl_pct,
+                        "pnl_usd": pnl_usd,
+                        "reason": "End of backtest",
+                    }
+                )
 
                 stats["trades_closed"] += 1
                 if pnl_usd > 0:
@@ -804,7 +903,9 @@ class EnhancedBacktester:
             return {"error": "Insufficient data"}
 
         # Returns
-        total_return = (equity[-1] - self.config.initial_capital) / self.config.initial_capital
+        total_return = (
+            equity[-1] - self.config.initial_capital
+        ) / self.config.initial_capital
 
         # Trading days
         n_candles = len(equity) - 1
@@ -813,7 +914,11 @@ class EnhancedBacktester:
 
         # Sharpe
         returns = np.diff(equity) / equity[:-1]
-        sharpe = np.mean(returns) / np.std(returns) * np.sqrt(252 * 6) if np.std(returns) > 0 else 0
+        sharpe = (
+            np.mean(returns) / np.std(returns) * np.sqrt(252 * 6)
+            if np.std(returns) > 0
+            else 0
+        )
 
         # Max Drawdown
         peak = np.maximum.accumulate(equity)
@@ -827,8 +932,12 @@ class EnhancedBacktester:
         # Profit factor
         if self.trade_log:
             gross_profit = sum(t["pnl_usd"] for t in self.trade_log if t["pnl_usd"] > 0)
-            gross_loss = abs(sum(t["pnl_usd"] for t in self.trade_log if t["pnl_usd"] < 0))
-            profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
+            gross_loss = abs(
+                sum(t["pnl_usd"] for t in self.trade_log if t["pnl_usd"] < 0)
+            )
+            profit_factor = (
+                gross_profit / gross_loss if gross_loss > 0 else float("inf")
+            )
         else:
             profit_factor = 0
 
@@ -842,7 +951,9 @@ class EnhancedBacktester:
             "total_trades": total_trades,
             "wins": stats["wins"],
             "losses": stats["losses"],
-            "avg_trade_pnl": np.mean([t["pnl_pct"] for t in self.trade_log]) if self.trade_log else 0,
+            "avg_trade_pnl": (
+                np.mean([t["pnl_pct"] for t in self.trade_log]) if self.trade_log else 0
+            ),
             "long_signals": stats["long_signals"],
             "short_signals": stats["short_signals"],
             "final_capital": equity[-1],
@@ -852,17 +963,18 @@ class EnhancedBacktester:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Enhanced Binance Futures v6 Backtester")
-    parser.add_argument("--symbols", type=str, default="BTCUSDT,ETHUSDT",
-                       help="Comma-separated symbols")
-    parser.add_argument("--start", type=str, default="2020-01-01",
-                       help="Start date")
-    parser.add_argument("--end", type=str, default=None,
-                       help="End date")
-    parser.add_argument("--capital", type=float, default=10000.0,
-                       help="Initial capital")
-    parser.add_argument("--leverage", type=int, default=5,
-                       help="Leverage")
+    parser = argparse.ArgumentParser(
+        description="Enhanced Binance Futures v6 Backtester"
+    )
+    parser.add_argument(
+        "--symbols", type=str, default="BTCUSDT,ETHUSDT", help="Comma-separated symbols"
+    )
+    parser.add_argument("--start", type=str, default="2020-01-01", help="Start date")
+    parser.add_argument("--end", type=str, default=None, help="End date")
+    parser.add_argument(
+        "--capital", type=float, default=10000.0, help="Initial capital"
+    )
+    parser.add_argument("--leverage", type=int, default=5, help="Leverage")
 
     args = parser.parse_args()
 
@@ -908,7 +1020,9 @@ def main():
     logger.info("vs TARGETS")
     logger.info("=" * 60)
     logger.info(f"  Win Rate: {results['win_rate']*100:.1f}% (target: 48-52%)")
-    logger.info(f"  Annual Return: {results['annualized_return']*100:.1f}% (target: 25-45%)")
+    logger.info(
+        f"  Annual Return: {results['annualized_return']*100:.1f}% (target: 25-45%)"
+    )
     logger.info(f"  Max MDD: {results['max_drawdown']*100:.1f}% (target: < 25%)")
 
     return 0

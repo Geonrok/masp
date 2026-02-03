@@ -242,6 +242,7 @@ class TestLoggingStrategy:
         logged = LoggingStrategy(strategy)
 
         import logging
+
         with caplog.at_level(logging.INFO):
             decisions = logged.execute(mock_context)
 

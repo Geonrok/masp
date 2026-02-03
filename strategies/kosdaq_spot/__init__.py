@@ -26,13 +26,10 @@ from .indicators import (
     calc_price_ma,
     calc_rsi,
     calc_macd,
-    check_multi_tf_conditions
+    check_multi_tf_conditions,
 )
 
-from .universe_manager import (
-    UniverseConfig,
-    KOSDAQUniverseManager
-)
+from .universe_manager import UniverseConfig, KOSDAQUniverseManager
 
 from .core_strategies import (
     SignalType,
@@ -40,38 +37,32 @@ from .core_strategies import (
     StrategyParams,
     MultiTFShortStrategy,
     ForeignScoreStrategy,
-    backtest_strategy
+    backtest_strategy,
 )
 
-from .signal_generator import (
-    KOSDAQSpotSignalGenerator
-)
-
+from .signal_generator import KOSDAQSpotSignalGenerator
 
 __all__ = [
     # Indicators
-    'calc_moving_average',
-    'calc_foreign_wght_mas',
-    'calc_price_ma',
-    'calc_rsi',
-    'calc_macd',
-    'check_multi_tf_conditions',
-
+    "calc_moving_average",
+    "calc_foreign_wght_mas",
+    "calc_price_ma",
+    "calc_rsi",
+    "calc_macd",
+    "check_multi_tf_conditions",
     # Universe
-    'UniverseConfig',
-    'KOSDAQUniverseManager',
-
+    "UniverseConfig",
+    "KOSDAQUniverseManager",
     # Strategies
-    'SignalType',
-    'TradingSignal',
-    'StrategyParams',
-    'MultiTFShortStrategy',
-    'ForeignScoreStrategy',
-    'backtest_strategy',
-
+    "SignalType",
+    "TradingSignal",
+    "StrategyParams",
+    "MultiTFShortStrategy",
+    "ForeignScoreStrategy",
+    "backtest_strategy",
     # Signal Generator
-    'KOSDAQSpotSignalGenerator',
+    "KOSDAQSpotSignalGenerator",
 ]
 
-__version__ = '1.0.0'
-__strategy__ = 'Multi_TF_Short'
+__version__ = "1.0.0"
+__strategy__ = "Multi_TF_Short"

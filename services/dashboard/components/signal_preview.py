@@ -1,4 +1,5 @@
 """Signal preview component for MASP Dashboard."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -16,7 +17,10 @@ from services.dashboard.utils.holdings import (
     is_private_api_enabled,
 )
 from services.dashboard.utils.symbols import upbit_to_dashboard
-from services.dashboard.utils.upbit_symbols import get_all_upbit_symbols, get_symbol_count
+from services.dashboard.utils.upbit_symbols import (
+    get_all_upbit_symbols,
+    get_symbol_count,
+)
 
 
 def render_signal_preview_panel() -> None:
@@ -72,7 +76,9 @@ def render_signal_preview_panel() -> None:
             total_count = get_symbol_count()
             st.caption(f"Total available: {total_count} symbols")
 
-            query = st.text_input("Search symbols", value="", key="signal_symbol_search")
+            query = st.text_input(
+                "Search symbols", value="", key="signal_symbol_search"
+            )
             if query:
                 filtered = [
                     symbol for symbol in all_symbols if query.upper() in symbol.upper()
@@ -108,7 +114,9 @@ def render_signal_preview_panel() -> None:
                     st.warning("No symbols available")
                     return
 
-                signals = get_cached_signals(exchange, tuple(symbols), allow_live=can_live)
+                signals = get_cached_signals(
+                    exchange, tuple(symbols), allow_live=can_live
+                )
                 st.session_state["signal_results"] = signals
                 st.session_state["signal_timestamp"] = datetime.now().isoformat()
             except Exception:
@@ -136,9 +144,7 @@ def render_signal_preview_panel() -> None:
 
             filtered_signals.append(signal)
 
-        st.caption(
-            f"Showing {len(filtered_signals)} of {len(signals)} signals"
-        )
+        st.caption(f"Showing {len(filtered_signals)} of {len(signals)} signals")
 
         signals = filtered_signals
 

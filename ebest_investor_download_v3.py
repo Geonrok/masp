@@ -12,7 +12,9 @@ import os
 from tqdm import tqdm
 import time
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 # API 키
@@ -25,36 +27,36 @@ os.makedirs(SAVE_PATH, exist_ok=True)
 
 # 코스닥 주요 종목 (테스트용 30개)
 KOSDAQ_TICKERS = [
-    ('247540', '에코프로비엠'),
-    ('196170', '알테오젠'),
-    ('263750', '펄어비스'),
-    ('091990', '셀트리온헬스케어'),
-    ('293490', '카카오게임즈'),
-    ('068270', '셀트리온제약'),
-    ('028300', 'HLB'),
-    ('042700', '한미반도체'),
-    ('095340', 'ISC'),
-    ('086520', '에코프로'),
-    ('251270', '넷마블'),
-    ('112040', '위메이드'),
-    ('141080', '레고켐바이오'),
-    ('039030', '이오테크닉스'),
-    ('036540', 'SFA반도체'),
-    ('058470', '리노공업'),
-    ('041510', '에스엠'),
-    ('053800', '안랩'),
-    ('214150', '클래시스'),
-    ('145020', '휴젤'),
-    ('060310', '3S'),
-    ('035900', 'JYP Ent'),
-    ('066970', '엘앤에프'),
-    ('053610', '프로텍'),
-    ('034230', '파라다이스'),
-    ('215200', '메가스터디교육'),
-    ('042660', '한화오션'),
-    ('067160', '아프리카TV'),
-    ('064760', '티씨케이'),
-    ('137310', '에스디바이오센서'),
+    ("247540", "에코프로비엠"),
+    ("196170", "알테오젠"),
+    ("263750", "펄어비스"),
+    ("091990", "셀트리온헬스케어"),
+    ("293490", "카카오게임즈"),
+    ("068270", "셀트리온제약"),
+    ("028300", "HLB"),
+    ("042700", "한미반도체"),
+    ("095340", "ISC"),
+    ("086520", "에코프로"),
+    ("251270", "넷마블"),
+    ("112040", "위메이드"),
+    ("141080", "레고켐바이오"),
+    ("039030", "이오테크닉스"),
+    ("036540", "SFA반도체"),
+    ("058470", "리노공업"),
+    ("041510", "에스엠"),
+    ("053800", "안랩"),
+    ("214150", "클래시스"),
+    ("145020", "휴젤"),
+    ("060310", "3S"),
+    ("035900", "JYP Ent"),
+    ("066970", "엘앤에프"),
+    ("053610", "프로텍"),
+    ("034230", "파라다이스"),
+    ("215200", "메가스터디교육"),
+    ("042660", "한화오션"),
+    ("067160", "아프리카TV"),
+    ("064760", "티씨케이"),
+    ("137310", "에스디바이오센서"),
 ]
 
 
@@ -70,15 +72,15 @@ async def get_investor_trend(api, ticker, start_date, end_date):
                 "todt": end_date,
                 "frdt": start_date,
                 "gubun": "0",  # 0:일간
-                "type": "0",   # 0:금액
-            }
+                "type": "0",  # 0:금액
+            },
         )
 
-        if response and hasattr(response, 'body'):
+        if response and hasattr(response, "body"):
             body = response.body
-            if 't1702OutBlock1' in body:
-                data = body['t1702OutBlock1']
-                if data and len(data) > 0 and data[0].get('date', ''):
+            if "t1702OutBlock1" in body:
+                data = body["t1702OutBlock1"]
+                if data and len(data) > 0 and data[0].get("date", ""):
                     df = pd.DataFrame(data)
                     return df
 
@@ -102,13 +104,13 @@ async def get_foreign_trend_t1764(api, ticker, start_date, end_date):
                 "gubun3": "1",  # 1:외국인
                 "fromdt": start_date,
                 "todt": end_date,
-            }
+            },
         )
 
-        if response and hasattr(response, 'body'):
+        if response and hasattr(response, "body"):
             body = response.body
-            if 't1764OutBlock1' in body:
-                data = body['t1764OutBlock1']
+            if "t1764OutBlock1" in body:
+                data = body["t1764OutBlock1"]
                 if data and len(data) > 0:
                     df = pd.DataFrame(data)
                     return df
@@ -155,14 +157,20 @@ async def main():
             logger.info(f"{name}({ticker}): {len(df)}일 데이터")
 
             # 파일 저장
-            df.to_csv(f"{SAVE_PATH}/{ticker}_investor.csv", index=False, encoding='utf-8-sig')
+            df.to_csv(
+                f"{SAVE_PATH}/{ticker}_investor.csv", index=False, encoding="utf-8-sig"
+            )
         else:
             # t1764 시도
             df = await get_foreign_trend_t1764(api, ticker, start_date, end_date)
             if df is not None and len(df) > 0:
                 all_data[ticker] = df
                 success_count += 1
-                df.to_csv(f"{SAVE_PATH}/{ticker}_foreign.csv", index=False, encoding='utf-8-sig')
+                df.to_csv(
+                    f"{SAVE_PATH}/{ticker}_foreign.csv",
+                    index=False,
+                    encoding="utf-8-sig",
+                )
 
         # API 속도 제한
         await asyncio.sleep(0.3)
@@ -184,12 +192,14 @@ async def main():
         # 전체 데이터 합치기
         combined = []
         for ticker, df in all_data.items():
-            df['ticker'] = ticker
+            df["ticker"] = ticker
             combined.append(df)
 
         if combined:
             combined_df = pd.concat(combined, ignore_index=True)
-            combined_df.to_csv(f"{SAVE_PATH}/all_investor_data.csv", index=False, encoding='utf-8-sig')
+            combined_df.to_csv(
+                f"{SAVE_PATH}/all_investor_data.csv", index=False, encoding="utf-8-sig"
+            )
             logger.info(f"\n전체 데이터 저장: {SAVE_PATH}/all_investor_data.csv")
 
     logger.info(f"\n저장 위치: {SAVE_PATH}")

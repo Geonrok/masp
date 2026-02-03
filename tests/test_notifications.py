@@ -25,6 +25,7 @@ class TestSlackNotifier:
         """Test notifier is disabled without webhook URL."""
         # Clear env vars to ensure no fallback
         import os
+
         os.environ.pop("SLACK_WEBHOOK_URL", None)
         notifier = SlackNotifier(webhook_url=None)
         assert not notifier.enabled
@@ -38,6 +39,7 @@ class TestSlackNotifier:
     def test_send_message_when_disabled(self):
         """Test send returns False when disabled."""
         import os
+
         os.environ.pop("SLACK_WEBHOOK_URL", None)
         notifier = SlackNotifier(webhook_url=None)
         result = notifier.send_message("Test message")
@@ -48,7 +50,9 @@ class TestSlackNotifier:
         """Test successful message send."""
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_client.return_value.__enter__.return_value.post.return_value = mock_response
+        mock_client.return_value.__enter__.return_value.post.return_value = (
+            mock_response
+        )
 
         notifier = SlackNotifier(webhook_url="https://hooks.slack.com/test")
         result = notifier.send_message("Test message")
@@ -59,7 +63,9 @@ class TestSlackNotifier:
         """Test trade notification."""
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_client.return_value.__enter__.return_value.post.return_value = mock_response
+        mock_client.return_value.__enter__.return_value.post.return_value = (
+            mock_response
+        )
 
         notifier = SlackNotifier(webhook_url="https://hooks.slack.com/test")
         result = notifier.send_trade_notification(

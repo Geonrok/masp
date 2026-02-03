@@ -1,11 +1,11 @@
 """Tests for performance and cache utilities."""
+
 from __future__ import annotations
 
 import time
 from unittest.mock import MagicMock
 
 import pytest
-
 
 # =============================================================================
 # TTLCache Tests
@@ -211,7 +211,7 @@ def test_lru_cached_decorator():
     def compute(x):
         nonlocal call_count
         call_count += 1
-        return x ** 2
+        return x**2
 
     assert compute(5) == 25
     assert call_count == 1

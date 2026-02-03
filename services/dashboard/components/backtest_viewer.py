@@ -1,4 +1,5 @@
 """Backtest viewer component for equity curve and performance metrics."""
+
 from __future__ import annotations
 
 import math
@@ -8,7 +9,6 @@ from typing import Any, Dict, List
 
 import plotly.graph_objects as go
 import streamlit as st
-
 
 # =============================================================================
 # Safe Math Helpers (GPT 필수보강 #3)
@@ -41,19 +41,19 @@ def _safe_div(num: float, den: float, default: float = 0.0) -> float:
 
 def _get_demo_backtest_data() -> Dict[str, Any]:
     """Generate deterministic demo backtest data.
-    
+
     Uses fixed seed (42) and start date (2025-01-01) for reproducibility.
     """
     rng = random.Random(42)
     start_date = date(2025, 1, 1)
     num_days = 100
-    
+
     # Generate daily returns: mean ~0.1%, std ~2%
     daily_returns = [rng.gauss(0.001, 0.02) for _ in range(num_days)]
-    
+
     # Generate dates
     dates = [start_date + timedelta(days=i) for i in range(num_days)]
-    
+
     return {
         "dates": dates,
         "daily_returns": daily_returns,
@@ -73,35 +73,35 @@ def _calculate_equity_curve(
     """Calculate equity curve from daily returns using cumulative product."""
     if not daily_returns:
         return [initial_capital]
-    
+
     equity = [initial_capital]
     for ret in daily_returns:
         safe_ret = _safe_float(ret, 0.0)
         new_value = equity[-1] * (1 + safe_ret)
         equity.append(_safe_float(new_value, equity[-1]))
-    
+
     return equity[1:]  # Exclude initial capital (return values at end of each day)
 
 
 def _calculate_drawdown(equity_curve: List[float]) -> List[float]:
     """Calculate drawdown series from equity curve.
-    
+
     Drawdown = (current - peak) / peak
     Returns negative values (0 at new peaks).
     """
     if not equity_curve:
         return []
-    
+
     drawdowns = []
     peak = equity_curve[0]
-    
+
     for value in equity_curve:
         safe_value = _safe_float(value, peak)
         if safe_value > peak:
             peak = safe_value
         dd = _safe_div(safe_value - peak, peak, 0.0)
         drawdowns.append(dd)
-    
+
     return drawdowns
 
 
@@ -109,11 +109,11 @@ def _calculate_metrics(
     daily_returns: List[float], equity_curve: List[float], initial_capital: float
 ) -> Dict[str, float]:
     """Calculate backtest performance metrics.
-    
+
     Annualization unified to 252 trading days (GPT 필수보강 #1).
     """
     TRADING_DAYS = 252
-    
+
     # Handle empty/insufficient data (GPT 필수보강 #4)
     if not daily_returns or not equity_curve:
         return {
@@ -123,39 +123,39 @@ def _calculate_metrics(
             "sharpe": 0.0,
             "win_rate": 0.0,
         }
-    
+
     n_days = len(daily_returns)
     final_value = _safe_float(equity_curve[-1], initial_capital)
     initial = _safe_float(initial_capital, 1.0)
-    
+
     # Total Return: (final/initial - 1) * 100
     total_return = _safe_div(final_value, initial, 1.0) - 1.0
     total_return_pct = total_return * 100
-    
+
     # CAGR: ((final/initial) ** (252/days) - 1) * 100
     if n_days > 0 and initial > 0:
         ratio = _safe_div(final_value, initial, 1.0)
         if ratio > 0:
             exponent = _safe_div(TRADING_DAYS, n_days, 1.0)
-            cagr = (ratio ** exponent - 1) * 100
+            cagr = (ratio**exponent - 1) * 100
             cagr = _safe_float(cagr, 0.0)
         else:
             cagr = 0.0
     else:
         cagr = 0.0
-    
+
     # MDD: min(drawdown) * 100
     drawdowns = _calculate_drawdown(equity_curve)
     mdd = min(drawdowns) * 100 if drawdowns else 0.0
     mdd = _safe_float(mdd, 0.0)
-    
+
     # Sharpe: (mean/std) * sqrt(252), std=0 → 0
     safe_returns = [_safe_float(r, 0.0) for r in daily_returns]
     if len(safe_returns) > 1:
         mean_ret = sum(safe_returns) / len(safe_returns)
         variance = sum((r - mean_ret) ** 2 for r in safe_returns) / len(safe_returns)
         std_ret = math.sqrt(variance) if variance > 0 else 0.0
-        
+
         if std_ret > 0:
             sharpe = _safe_div(mean_ret, std_ret, 0.0) * math.sqrt(TRADING_DAYS)
             sharpe = _safe_float(sharpe, 0.0)
@@ -163,14 +163,14 @@ def _calculate_metrics(
             sharpe = 0.0
     else:
         sharpe = 0.0
-    
+
     # Win Rate: count(r>0)/N * 100, N=0 → 0
     if safe_returns:
         wins = sum(1 for r in safe_returns if r > 0)
         win_rate = _safe_div(wins, len(safe_returns), 0.0) * 100
     else:
         win_rate = 0.0
-    
+
     return {
         "total_return": _safe_float(total_return_pct, 0.0),
         "cagr": _safe_float(cagr, 0.0),
@@ -280,7 +280,7 @@ def render_backtest_viewer(backtest_data: Dict[str, Any] | None = None) -> None:
     if len(dates) != len(equity_curve):
         # Adjust dates to match equity curve length
         if len(dates) > len(equity_curve):
-            dates = dates[:len(equity_curve)]
+            dates = dates[: len(equity_curve)]
         else:
             # Generate missing dates
             last_date = dates[-1] if dates else date(2025, 1, 1)

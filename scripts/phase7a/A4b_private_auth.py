@@ -3,10 +3,13 @@ print("주의: place_order 호출 절대 금지\n")
 
 import os
 from dotenv import load_dotenv
+
 load_dotenv(override=False)
+
 
 def mask(s):
     return f"SET(len={len(s)})" if s else "MISSING"
+
 
 # Upbit 인증
 ak = os.getenv("UPBIT_ACCESS_KEY", "")
@@ -14,6 +17,7 @@ sk = os.getenv("UPBIT_SECRET_KEY", "")
 if ak and sk:
     try:
         import pyupbit
+
         upbit = pyupbit.Upbit(ak, sk)
         balances = upbit.get_balances()
         if balances is not None:
@@ -32,6 +36,7 @@ bs = os.getenv("BITHUMB_SECRET_KEY", "")
 if bk and bs:
     try:
         import pybithumb
+
         bithumb = pybithumb.Bithumb(bk, bs)
         balance = bithumb.get_balance("BTC")
         if balance is not None:

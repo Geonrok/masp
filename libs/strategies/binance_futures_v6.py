@@ -18,6 +18,7 @@ Performance Targets (Clova Backtest Validated):
 - Max MDD: 25%
 - Risk per Trade: 1%
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -58,6 +59,7 @@ logger = logging.getLogger(__name__)
 
 class MarketRegime(str, Enum):
     """Market regime states."""
+
     BULL = "BULL"
     NEUTRAL = "NEUTRAL"
     BEAR = "BEAR"
@@ -65,6 +67,7 @@ class MarketRegime(str, Enum):
 
 class SignalType(str, Enum):
     """Signal types."""
+
     LONG = "LONG"
     SHORT = "SHORT"
     EXIT_LONG = "EXIT_LONG"
@@ -79,20 +82,31 @@ class BinanceFuturesV6Config:
 
     All parameters are based on AI consensus from 6 rounds of collaboration.
     """
+
     # Strategy metadata
     strategy_id: str = "binance_futures_v6"
     name: str = "Binance Futures v6 - AI Consensus"
     version: str = "6.0.0"
 
     # Target symbols (default top USDT-M pairs)
-    symbols: List[str] = field(default_factory=lambda: [
-        "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
-        "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT"
-    ])
+    symbols: List[str] = field(
+        default_factory=lambda: [
+            "BTCUSDT",
+            "ETHUSDT",
+            "BNBUSDT",
+            "SOLUSDT",
+            "XRPUSDT",
+            "DOGEUSDT",
+            "ADAUSDT",
+            "AVAXUSDT",
+            "LINKUSDT",
+            "DOTUSDT",
+        ]
+    )
 
     # Timeframes
     higher_timeframe: str = "1d"  # For trend bias
-    lower_timeframe: str = "4h"   # For entry signals
+    lower_timeframe: str = "4h"  # For entry signals
 
     # === Market Regime Detection (Clova Data) ===
     btc_ema_period: int = 200
@@ -171,6 +185,7 @@ class BinanceFuturesV6Config:
 @dataclass
 class Position:
     """Position tracking."""
+
     symbol: str
     side: str  # LONG or SHORT
     entry_price: float
@@ -202,7 +217,9 @@ class Position:
             "stop_loss": self.stop_loss,
             "regime_at_entry": self.regime_at_entry.value,
             "highest_price": self.highest_price,
-            "lowest_price": self.lowest_price if self.lowest_price != float("inf") else None,
+            "lowest_price": (
+                self.lowest_price if self.lowest_price != float("inf") else None
+            ),
             "bars_held": self.bars_held,
             "pnl": self.pnl,
             "pnl_pct": self.pnl_pct,
@@ -212,6 +229,7 @@ class Position:
 @dataclass
 class Signal:
     """Signal output."""
+
     signal_type: SignalType
     symbol: str
     price: float
@@ -250,10 +268,7 @@ class MarketRegimeDetector:
         self.cfg = config
 
     def detect(
-        self,
-        btc_price: float,
-        btc_ema_200: float,
-        btc_52w_high: float
+        self, btc_price: float, btc_ema_200: float, btc_52w_high: float
     ) -> MarketRegime:
         """
         Detect market regime.
@@ -313,7 +328,9 @@ class MTFAnalyzer:
     def __init__(self, config: BinanceFuturesV6Config):
         self.cfg = config
 
-    def calculate_trend_bias(self, df_1d: pd.DataFrame) -> Literal["LONG", "SHORT", "NEUTRAL"]:
+    def calculate_trend_bias(
+        self, df_1d: pd.DataFrame
+    ) -> Literal["LONG", "SHORT", "NEUTRAL"]:
         """
         Calculate 1D trend bias using EMA and MACD.
 
@@ -337,7 +354,7 @@ class MTFAnalyzer:
             close,
             self.cfg.mtf_macd_fast,
             self.cfg.mtf_macd_slow,
-            self.cfg.mtf_macd_signal
+            self.cfg.mtf_macd_signal,
         )
         macd_bullish = macd_line[-1] > signal_line[-1]
 
@@ -350,7 +367,7 @@ class MTFAnalyzer:
     def check_alignment(
         self,
         higher_tf_bias: Literal["LONG", "SHORT", "NEUTRAL"],
-        lower_tf_signal: Literal["LONG", "SHORT", "NEUTRAL"]
+        lower_tf_signal: Literal["LONG", "SHORT", "NEUTRAL"],
     ) -> bool:
         """Check if higher and lower timeframes are aligned."""
         if higher_tf_bias == "NEUTRAL":
@@ -379,14 +396,18 @@ class SignalGenerator:
 
         # Supertrend
         st_value, st_direction = Supertrend(
-            high, low, close,
-            self.cfg.supertrend_atr_period,
-            self.cfg.supertrend_factor
+            high, low, close, self.cfg.supertrend_atr_period, self.cfg.supertrend_factor
         )
 
         # KAMA
-        kama = KAMA_series(close, self.cfg.kama_period, self.cfg.kama_fast_sc, self.cfg.kama_slow_sc)
-        kama_slope = kama[-1] - kama[-self.cfg.kama_slope_period] if len(kama) > self.cfg.kama_slope_period else 0
+        kama = KAMA_series(
+            close, self.cfg.kama_period, self.cfg.kama_fast_sc, self.cfg.kama_slow_sc
+        )
+        kama_slope = (
+            kama[-1] - kama[-self.cfg.kama_slope_period]
+            if len(kama) > self.cfg.kama_slope_period
+            else 0
+        )
 
         # TSMOM Volume-Weighted
         tsmom_vw = TSMOM_volume_weighted(close, volume, self.cfg.tsmom_period)
@@ -404,7 +425,11 @@ class SignalGenerator:
         obv_bullish = OBV_signal(close, volume, self.cfg.obv_ema_period)
 
         # Volume Filter
-        vol_sma = np.mean(volume[-self.cfg.volume_sma_period:]) if len(volume) >= self.cfg.volume_sma_period else np.mean(volume)
+        vol_sma = (
+            np.mean(volume[-self.cfg.volume_sma_period :])
+            if len(volume) >= self.cfg.volume_sma_period
+            else np.mean(volume)
+        )
         volume_pass = volume[-1] > vol_sma * self.cfg.volume_multiplier
 
         return {
@@ -425,7 +450,7 @@ class SignalGenerator:
         self,
         supertrend_signal: Literal["LONG", "SHORT", "NEUTRAL"],
         kama_slope: float,
-        tsmom_vw: float
+        tsmom_vw: float,
     ) -> Literal["LONG", "SHORT", "NEUTRAL"]:
         """
         Resolve signal conflicts (Gemini Protocol).
@@ -448,7 +473,9 @@ class SignalGenerator:
 
         return "NEUTRAL"
 
-    def get_supertrend_signal(self, direction: int) -> Literal["LONG", "SHORT", "NEUTRAL"]:
+    def get_supertrend_signal(
+        self, direction: int
+    ) -> Literal["LONG", "SHORT", "NEUTRAL"]:
         """Convert Supertrend direction to signal."""
         if direction == 1:
             return "LONG"
@@ -472,9 +499,7 @@ class QualityFilter:
         self.cfg = config
 
     def check_all(
-        self,
-        indicators: Dict[str, Any],
-        signal: Literal["LONG", "SHORT"]
+        self, indicators: Dict[str, Any], signal: Literal["LONG", "SHORT"]
     ) -> Dict[str, bool]:
         """Check all quality filters."""
         results = {}
@@ -549,11 +574,7 @@ class BinanceFuturesV6Strategy:
         logger.info("[BFv6] Initialized %s", self.VERSION)
 
     def update_btc_data(
-        self,
-        price: float,
-        ema_200: float,
-        high_52w: float,
-        change_24h: float
+        self, price: float, ema_200: float, high_52w: float, change_24h: float
     ) -> None:
         """Update BTC market data for regime detection and BTC gate."""
         self._btc_price = price
@@ -562,11 +583,13 @@ class BinanceFuturesV6Strategy:
         self._btc_change_24h = change_24h
 
         # Update regime
-        self.current_regime = self.regime_detector.detect(
-            price, ema_200, high_52w
+        self.current_regime = self.regime_detector.detect(price, ema_200, high_52w)
+        logger.debug(
+            "[BFv6] Regime: %s, BTC: %.2f, 24h: %.2f%%",
+            self.current_regime.value,
+            price,
+            change_24h,
         )
-        logger.debug("[BFv6] Regime: %s, BTC: %.2f, 24h: %.2f%%",
-                    self.current_regime.value, price, change_24h)
 
     def check_btc_gate(self, signal: str) -> bool:
         """
@@ -581,22 +604,27 @@ class BinanceFuturesV6Strategy:
     def check_risk_limits(self) -> tuple[bool, str]:
         """Check if trading is allowed based on risk limits."""
         if self.daily_pnl <= self.config.daily_loss_limit:
-            return False, f"Daily loss limit: {self.daily_pnl:.2f}% <= {self.config.daily_loss_limit}%"
+            return (
+                False,
+                f"Daily loss limit: {self.daily_pnl:.2f}% <= {self.config.daily_loss_limit}%",
+            )
 
         if self.weekly_pnl <= self.config.weekly_loss_limit:
-            return False, f"Weekly loss limit: {self.weekly_pnl:.2f}% <= {self.config.weekly_loss_limit}%"
+            return (
+                False,
+                f"Weekly loss limit: {self.weekly_pnl:.2f}% <= {self.config.weekly_loss_limit}%",
+            )
 
         if self.current_drawdown <= self.config.max_mdd_stop:
-            return False, f"Max drawdown: {self.current_drawdown:.2f}% <= {self.config.max_mdd_stop}%"
+            return (
+                False,
+                f"Max drawdown: {self.current_drawdown:.2f}% <= {self.config.max_mdd_stop}%",
+            )
 
         return True, "OK"
 
     def calculate_position_size(
-        self,
-        account_value: float,
-        entry_price: float,
-        atr: float,
-        signal: str
+        self, account_value: float, entry_price: float, atr: float, signal: str
     ) -> Dict[str, float]:
         """
         Calculate position size with regime adjustment.
@@ -649,7 +677,7 @@ class BinanceFuturesV6Strategy:
         symbol: str,
         df_4h: pd.DataFrame,
         df_1d: pd.DataFrame,
-        account_value: float = 10000.0
+        account_value: float = 10000.0,
     ) -> Signal:
         """
         Generate trading signal for a symbol.
@@ -748,9 +776,7 @@ class BinanceFuturesV6Strategy:
 
         # === 8. Signal Conflict Resolution ===
         resolved_signal = self.signal_generator.resolve_signal_conflict(
-            st_signal,
-            indicators["kama_slope"],
-            indicators["tsmom_vw"]
+            st_signal, indicators["kama_slope"], indicators["tsmom_vw"]
         )
 
         if resolved_signal == "NEUTRAL":
@@ -824,12 +850,16 @@ class BinanceFuturesV6Strategy:
             account_value,
             indicators["current_price"],
             indicators["atr"],
-            resolved_signal
+            resolved_signal,
         )
 
         # === 13. Generate Entry Signal ===
         signal_type = SignalType.LONG if resolved_signal == "LONG" else SignalType.SHORT
-        stop_loss = position_info["stop_loss_long"] if resolved_signal == "LONG" else position_info["stop_loss_short"]
+        stop_loss = (
+            position_info["stop_loss_long"]
+            if resolved_signal == "LONG"
+            else position_info["stop_loss_short"]
+        )
 
         reason = (
             f"{resolved_signal}: ST={indicators['supertrend_direction']}, "
@@ -852,9 +882,13 @@ class BinanceFuturesV6Strategy:
         )
 
         self.last_signal = signal
-        logger.info("[BFv6] Signal: %s %s @ %.2f (Regime: %s)",
-                   signal_type.value, symbol, indicators["current_price"],
-                   self.current_regime.value)
+        logger.info(
+            "[BFv6] Signal: %s %s @ %.2f (Regime: %s)",
+            signal_type.value,
+            symbol,
+            indicators["current_price"],
+            self.current_regime.value,
+        )
 
         return signal
 
@@ -872,12 +906,14 @@ class BinanceFuturesV6Strategy:
             df["high"].values,
             df["low"].values,
             df["close"].values,
-            self.config.supertrend_atr_period
+            self.config.supertrend_atr_period,
         )
 
         if position.side == "LONG":
             # Trailing stop for long
-            trailing_stop = position.highest_price - (atr * self.config.atr_stop_multiplier)
+            trailing_stop = position.highest_price - (
+                atr * self.config.atr_stop_multiplier
+            )
 
             if current_price < trailing_stop or current_price < position.stop_loss:
                 return Signal(
@@ -890,7 +926,9 @@ class BinanceFuturesV6Strategy:
                 )
         else:  # SHORT
             # Trailing stop for short
-            trailing_stop = position.lowest_price + (atr * self.config.atr_stop_multiplier)
+            trailing_stop = position.lowest_price + (
+                atr * self.config.atr_stop_multiplier
+            )
 
             if current_price > trailing_stop or current_price > position.stop_loss:
                 return Signal(
@@ -918,10 +956,18 @@ class BinanceFuturesV6Strategy:
 
         if pos.side == "LONG":
             pos.highest_price = max(pos.highest_price, current_high)
-            pos.pnl_pct = ((current_price - pos.entry_price) / pos.entry_price) * 100 * pos.leverage
+            pos.pnl_pct = (
+                ((current_price - pos.entry_price) / pos.entry_price)
+                * 100
+                * pos.leverage
+            )
         else:
             pos.lowest_price = min(pos.lowest_price, current_low)
-            pos.pnl_pct = ((pos.entry_price - current_price) / pos.entry_price) * 100 * pos.leverage
+            pos.pnl_pct = (
+                ((pos.entry_price - current_price) / pos.entry_price)
+                * 100
+                * pos.leverage
+            )
 
     def open_position(self, symbol: str, signal: Signal) -> None:
         """Open a new position."""
@@ -940,8 +986,13 @@ class BinanceFuturesV6Strategy:
             lowest_price=signal.price,
         )
 
-        logger.info("[BFv6] Opened %s %s @ %.2f (Regime: %s)",
-                   side, symbol, signal.price, self.current_regime.value)
+        logger.info(
+            "[BFv6] Opened %s %s @ %.2f (Regime: %s)",
+            side,
+            symbol,
+            signal.price,
+            self.current_regime.value,
+        )
 
     def close_position(self, symbol: str, signal: Signal) -> float:
         """Close position and return PnL percent."""
@@ -951,9 +1002,17 @@ class BinanceFuturesV6Strategy:
         pos = self.positions[symbol]
 
         if pos.side == "LONG":
-            pnl_pct = ((signal.price - pos.entry_price) / pos.entry_price) * 100 * pos.leverage
+            pnl_pct = (
+                ((signal.price - pos.entry_price) / pos.entry_price)
+                * 100
+                * pos.leverage
+            )
         else:
-            pnl_pct = ((pos.entry_price - signal.price) / pos.entry_price) * 100 * pos.leverage
+            pnl_pct = (
+                ((pos.entry_price - signal.price) / pos.entry_price)
+                * 100
+                * pos.leverage
+            )
 
         # Update risk tracking
         self.daily_pnl += pnl_pct
@@ -966,8 +1025,13 @@ class BinanceFuturesV6Strategy:
 
         del self.positions[symbol]
 
-        logger.info("[BFv6] Closed %s %s @ %.2f, PnL=%.2f%%",
-                   pos.side, symbol, signal.price, pnl_pct)
+        logger.info(
+            "[BFv6] Closed %s %s @ %.2f, PnL=%.2f%%",
+            pos.side,
+            symbol,
+            signal.price,
+            pnl_pct,
+        )
 
         return pnl_pct
 
@@ -977,7 +1041,9 @@ class BinanceFuturesV6Strategy:
             "strategy_id": self.STRATEGY_ID,
             "version": self.VERSION,
             "regime": self.current_regime.value,
-            "expected_win_rate": self.regime_detector.get_expected_win_rate(self.current_regime),
+            "expected_win_rate": self.regime_detector.get_expected_win_rate(
+                self.current_regime
+            ),
             "positions": {k: v.to_dict() for k, v in self.positions.items()},
             "last_signal": self.last_signal.to_dict() if self.last_signal else None,
             "btc_data": {

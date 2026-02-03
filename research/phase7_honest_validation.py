@@ -12,12 +12,14 @@ This phase fixes that with:
 4. Capacity test: can we actually trade this size?
 5. Regime analysis: does it work in all market conditions?
 """
+
 import json
 import os
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
@@ -35,25 +37,26 @@ def load_ohlcv(symbol, timeframe="1h"):
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path)
-    for col in ['datetime', 'timestamp', 'date']:
+    for col in ["datetime", "timestamp", "date"]:
         if col in df.columns:
-            df['datetime'] = pd.to_datetime(df[col])
+            df["datetime"] = pd.to_datetime(df[col])
             break
-    return df.sort_values('datetime').reset_index(drop=True)
+    return df.sort_values("datetime").reset_index(drop=True)
 
 
 def calc_atr(high, low, close, period=14):
-    tr = np.maximum(high - low,
-         np.maximum(np.abs(high - np.roll(close, 1)),
-                    np.abs(low - np.roll(close, 1))))
+    tr = np.maximum(
+        high - low,
+        np.maximum(np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))),
+    )
     tr[0] = high[0] - low[0]
     return pd.Series(tr).rolling(period).mean().values
 
 
 def atr_expansion_breakout(df, lookback=96, ema_period=200, atr_expansion=1.3):
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     upper = high.rolling(lookback).max().shift(1)
     lower = low.rolling(lookback).min().shift(1)
     ema = close.ewm(span=ema_period, adjust=False).mean()
@@ -61,22 +64,32 @@ def atr_expansion_breakout(df, lookback=96, ema_period=200, atr_expansion=1.3):
     atr = pd.Series(atr_vals, index=df.index)
     atr_avg = atr.rolling(lookback).mean()
     expanding = atr > atr_avg * atr_expansion
-    signals = np.where((close > upper) & (close > ema) & expanding, 1,
-              np.where((close < lower) & (close < ema) & expanding, -1, 0))
+    signals = np.where(
+        (close > upper) & (close > ema) & expanding,
+        1,
+        np.where((close < lower) & (close < ema) & expanding, -1, 0),
+    )
     return signals
 
 
-def simulate(df, signals, position_pct=0.02, max_bars=72,
-             atr_stop=3.0, profit_target_atr=8.0, slippage=0.0003):
+def simulate(
+    df,
+    signals,
+    position_pct=0.02,
+    max_bars=72,
+    atr_stop=3.0,
+    profit_target_atr=8.0,
+    slippage=0.0003,
+):
     capital = 1.0
     position = 0
     entry_price = 0
     bars_held = 0
     trades = []
 
-    close = df['close'].values
-    high = df['high'].values
-    low = df['low'].values
+    close = df["close"].values
+    high = df["high"].values
+    low = df["low"].values
     atr_vals = calc_atr(high, low, close, 14)
 
     for i in range(len(df)):
@@ -125,22 +138,22 @@ def simulate(df, signals, position_pct=0.02, max_bars=72,
     gp = sum(t for t in trades if t > 0)
     gl = abs(sum(t for t in trades if t < 0))
     return {
-        'total_return': capital - 1,
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(trades),
-        'trades': trades,
+        "total_return": capital - 1,
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(trades),
+        "trades": trades,
     }
 
 
 def check_criteria(r):
     c = {
-        'sharpe_gt_1': r.get('sharpe', 0) > 1.0,
-        'max_dd_lt_25': r.get('max_drawdown', -1) > -0.25,
-        'win_rate_gt_45': r.get('win_rate', 0) > 0.45,
-        'profit_factor_gt_1_5': r.get('profit_factor', 0) > 1.5,
-        'wfa_efficiency_gt_50': r.get('wfa_efficiency', 0) > 50,
-        'trade_count_gt_100': r.get('trade_count', 0) > 100,
+        "sharpe_gt_1": r.get("sharpe", 0) > 1.0,
+        "max_dd_lt_25": r.get("max_drawdown", -1) > -0.25,
+        "win_rate_gt_45": r.get("win_rate", 0) > 0.45,
+        "profit_factor_gt_1_5": r.get("profit_factor", 0) > 1.5,
+        "wfa_efficiency_gt_50": r.get("wfa_efficiency", 0) > 50,
+        "trade_count_gt_100": r.get("trade_count", 0) > 100,
     }
     return c, sum(v for v in c.values())
 
@@ -188,13 +201,13 @@ def test_1_true_oos():
 
         i = train_bars
         while i + test_bars <= len(selection_df):
-            full = selection_df.iloc[:i + test_bars]
+            full = selection_df.iloc[: i + test_bars]
             sigs = atr_expansion_breakout(full)
-            test_sigs = sigs[i:i + test_bars]
-            test_df = selection_df.iloc[i:i + test_bars].copy().reset_index(drop=True)
+            test_sigs = sigs[i : i + test_bars]
+            test_df = selection_df.iloc[i : i + test_bars].copy().reset_index(drop=True)
             r = simulate(test_df, test_sigs, 0.02, 72, 3.0, 8.0, 0.0003)
-            period_returns.append(r['total_return'])
-            all_trades.extend(r['trades'])
+            period_returns.append(r["total_return"])
+            all_trades.extend(r["trades"])
             i += test_bars
 
         if not all_trades:
@@ -202,17 +215,19 @@ def test_1_true_oos():
 
         total_ret = 1.0
         for pr in period_returns:
-            total_ret *= (1 + pr)
+            total_ret *= 1 + pr
 
         selection_results[symbol] = {
-            'total_return': total_ret - 1,
-            'trade_count': len(all_trades),
+            "total_return": total_ret - 1,
+            "trade_count": len(all_trades),
         }
 
     # Rank by selection period performance
-    ranked = sorted(selection_results.items(), key=lambda x: x[1]['total_return'], reverse=True)
+    ranked = sorted(
+        selection_results.items(), key=lambda x: x[1]["total_return"], reverse=True
+    )
     selected_top30 = [s for s, _ in ranked[:30]]
-    selected_profitable = [s for s, r in ranked if r['total_return'] > 0]
+    selected_profitable = [s for s, r in ranked if r["total_return"] > 0]
 
     print(f"  Selection period: Top 30 selected from {len(selection_results)} symbols")
     print(f"  Selection period: {len(selected_profitable)} profitable symbols")
@@ -220,9 +235,11 @@ def test_1_true_oos():
     # STEP B: TRUE OOS on last 40% of data (NEVER seen during selection)
     print(f"\n  --- TRUE OUT-OF-SAMPLE (last 40% of data) ---")
 
-    for universe_name, universe_symbols in [('top_30_oos', selected_top30),
-                                              ('profitable_oos', selected_profitable[:50]),
-                                              ('all_oos', list(all_data.keys()))]:
+    for universe_name, universe_symbols in [
+        ("top_30_oos", selected_top30),
+        ("profitable_oos", selected_profitable[:50]),
+        ("all_oos", list(all_data.keys())),
+    ]:
         oos_data = {}
         for symbol in universe_symbols:
             if symbol not in all_data:
@@ -254,7 +271,7 @@ def test_1_true_oos():
             for symbol, df in oos_data.items():
                 if len(df) <= i:
                     continue
-                train_ret = df['close'].iloc[:i].pct_change()
+                train_ret = df["close"].iloc[:i].pct_change()
                 vol = train_ret.rolling(168).std().iloc[-1]
                 if np.isnan(vol) or vol == 0:
                     vol = 0.01
@@ -267,17 +284,19 @@ def test_1_true_oos():
                 df = oos_data[symbol]
                 if i + test_bars > len(df):
                     continue
-                full = df.iloc[:i + test_bars]
+                full = df.iloc[: i + test_bars]
                 sigs = atr_expansion_breakout(full)
-                test_sigs = sigs[i:i + test_bars]
-                test_df = df.iloc[i:i + test_bars].copy().reset_index(drop=True)
+                test_sigs = sigs[i : i + test_bars]
+                test_df = df.iloc[i : i + test_bars].copy().reset_index(drop=True)
 
                 ann_vol = vol * np.sqrt(24 * 365)
-                position_pct = min(0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05)
+                position_pct = min(
+                    0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05
+                )
 
                 r = simulate(test_df, test_sigs, position_pct, 72, 3.0, 8.0, 0.0003)
-                period_pnl += r['total_return']
-                all_trades.extend(r['trades'])
+                period_pnl += r["total_return"]
+                all_trades.extend(r["trades"])
 
             period_returns.append(period_pnl)
             equity.append(equity[-1] * (1 + period_pnl))
@@ -295,25 +314,31 @@ def test_1_true_oos():
         losses = sum(1 for t in all_trades if t <= 0)
         gp = sum(t for t in all_trades if t > 0)
         gl = abs(sum(t for t in all_trades if t < 0))
-        sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
+        sharpe = (
+            np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
+        )
 
         result = {
-            'total_return': equity[-1] - 1,
-            'max_drawdown': dd.min(),
-            'sharpe': sharpe,
-            'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-            'profit_factor': gp / (gl + 1e-10),
-            'trade_count': len(all_trades),
-            'periods': len(period_returns),
-            'wfa_efficiency': sum(1 for r in period_returns if r > 0) / len(period_returns) * 100,
+            "total_return": equity[-1] - 1,
+            "max_drawdown": dd.min(),
+            "sharpe": sharpe,
+            "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+            "profit_factor": gp / (gl + 1e-10),
+            "trade_count": len(all_trades),
+            "periods": len(period_returns),
+            "wfa_efficiency": sum(1 for r in period_returns if r > 0)
+            / len(period_returns)
+            * 100,
         }
 
         criteria, passed = check_criteria(result)
 
         print(f"\n  {universe_name} ({len(oos_data)} symbols, OOS period):")
-        print(f"    [{passed}/6] Sharpe={result['sharpe']:.2f}  Ret={result['total_return']*100:+.1f}%  "
-              f"DD={result['max_drawdown']*100:.1f}%  WR={result['win_rate']*100:.0f}%  "
-              f"PF={result['profit_factor']:.2f}  WFA={result['wfa_efficiency']:.0f}%  T={result['trade_count']}")
+        print(
+            f"    [{passed}/6] Sharpe={result['sharpe']:.2f}  Ret={result['total_return']*100:+.1f}%  "
+            f"DD={result['max_drawdown']*100:.1f}%  WR={result['win_rate']*100:.0f}%  "
+            f"PF={result['profit_factor']:.2f}  WFA={result['wfa_efficiency']:.0f}%  T={result['trade_count']}"
+        )
         for c, v in criteria.items():
             print(f"      {c}: {'PASS' if v else 'FAIL'}")
 
@@ -329,15 +354,25 @@ def test_2_slippage_sensitivity():
     print("TEST 2: Slippage Sensitivity")
     print(f"{'='*60}")
 
-    symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT',
-               'BNBUSDT', 'ADAUSDT', 'LINKUSDT', 'AVAXUSDT', 'LTCUSDT']
+    symbols = [
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "DOGEUSDT",
+        "BNBUSDT",
+        "ADAUSDT",
+        "LINKUSDT",
+        "AVAXUSDT",
+        "LTCUSDT",
+    ]
 
     slippage_levels = {
-        'optimistic_0.02%': 0.0002,
-        'base_0.03%': 0.0003,
-        'realistic_0.05%': 0.0005,
-        'conservative_0.08%': 0.0008,
-        'worst_case_0.10%': 0.001,
+        "optimistic_0.02%": 0.0002,
+        "base_0.03%": 0.0003,
+        "realistic_0.05%": 0.0005,
+        "conservative_0.08%": 0.0008,
+        "worst_case_0.10%": 0.001,
     }
 
     for slip_name, slip_val in slippage_levels.items():
@@ -358,24 +393,34 @@ def test_2_slippage_sensitivity():
         i = 4320
         while i + 720 <= min_len:
             period_pnl = 0
-            scored = [(s, all_data[s]['close'].iloc[:i].pct_change().rolling(168).std().iloc[-1])
-                      for s in all_data]
+            scored = [
+                (
+                    s,
+                    all_data[s]["close"]
+                    .iloc[:i]
+                    .pct_change()
+                    .rolling(168)
+                    .std()
+                    .iloc[-1],
+                )
+                for s in all_data
+            ]
             scored = [(s, v if not np.isnan(v) and v > 0 else 0.01) for s, v in scored]
             scored.sort(key=lambda x: x[1])
 
             for symbol, vol in scored[:5]:
                 df = all_data[symbol]
-                full = df.iloc[:i + 720]
+                full = df.iloc[: i + 720]
                 sigs = atr_expansion_breakout(full)
-                test_sigs = sigs[i:i + 720]
-                test_df = df.iloc[i:i + 720].copy().reset_index(drop=True)
+                test_sigs = sigs[i : i + 720]
+                test_df = df.iloc[i : i + 720].copy().reset_index(drop=True)
 
                 ann_vol = vol * np.sqrt(24 * 365)
                 position_pct = min(0.10 / (ann_vol + 1e-10) / 5, 0.05)
 
                 r = simulate(test_df, test_sigs, position_pct, 72, 3.0, 8.0, slip_val)
-                period_pnl += r['total_return']
-                all_trades.extend(r['trades'])
+                period_pnl += r["total_return"]
+                all_trades.extend(r["trades"])
 
             period_returns.append(period_pnl)
             equity.append(equity[-1] * (1 + period_pnl))
@@ -392,13 +437,17 @@ def test_2_slippage_sensitivity():
         losses = sum(1 for t in all_trades if t <= 0)
         gp = sum(t for t in all_trades if t > 0)
         gl = abs(sum(t for t in all_trades if t < 0))
-        sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
+        sharpe = (
+            np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
+        )
 
         wr = wins / (wins + losses) if (wins + losses) > 0 else 0
         pf = gp / (gl + 1e-10)
 
-        print(f"  {slip_name:<25} Sharpe={sharpe:.2f}  Ret={equity_arr[-1]-1:+.1%}  "
-              f"DD={dd.min():.1%}  WR={wr:.0%}  PF={pf:.2f}  T={len(all_trades)}")
+        print(
+            f"  {slip_name:<25} Sharpe={sharpe:.2f}  Ret={equity_arr[-1]-1:+.1%}  "
+            f"DD={dd.min():.1%}  WR={wr:.0%}  PF={pf:.2f}  T={len(all_trades)}"
+        )
 
 
 # =============================================================================
@@ -410,29 +459,30 @@ def test_3_regime_analysis():
     print("TEST 3: Market Regime Analysis")
     print(f"{'='*60}")
 
-    btc = load_ohlcv('BTCUSDT', '1h')
+    btc = load_ohlcv("BTCUSDT", "1h")
     if btc.empty:
         print("  BTC data not available")
         return
 
     # Define regimes by BTC trend
-    btc_close = btc['close']
+    btc_close = btc["close"]
     btc_ret_30d = btc_close.pct_change(720)  # 30 days in 1h
-    btc['regime'] = np.where(btc_ret_30d > 0.10, 'bull',
-                   np.where(btc_ret_30d < -0.10, 'bear', 'sideways'))
+    btc["regime"] = np.where(
+        btc_ret_30d > 0.10, "bull", np.where(btc_ret_30d < -0.10, "bear", "sideways")
+    )
 
     # Count regime bars
-    for regime in ['bull', 'bear', 'sideways']:
-        count = (btc['regime'] == regime).sum()
+    for regime in ["bull", "bear", "sideways"]:
+        count = (btc["regime"] == regime).sum()
         pct = count / len(btc) * 100
         print(f"  {regime}: {count} bars ({pct:.0f}%)")
 
     # Test strategy on each regime
-    symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DOGEUSDT', 'ADAUSDT']
+    symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT", "ADAUSDT"]
 
-    for regime in ['bull', 'bear', 'sideways']:
-        regime_mask = btc['regime'] == regime
-        regime_dates = btc.loc[regime_mask, 'datetime']
+    for regime in ["bull", "bear", "sideways"]:
+        regime_mask = btc["regime"] == regime
+        regime_dates = btc.loc[regime_mask, "datetime"]
 
         if len(regime_dates) < 1000:
             print(f"\n  {regime}: insufficient data")
@@ -440,18 +490,20 @@ def test_3_regime_analysis():
 
         all_trades = []
         for symbol in symbols:
-            df = load_ohlcv(symbol, '1h')
+            df = load_ohlcv(symbol, "1h")
             if df.empty:
                 continue
 
             # Filter to regime periods
-            regime_df = df[df['datetime'].isin(regime_dates)].copy().reset_index(drop=True)
+            regime_df = (
+                df[df["datetime"].isin(regime_dates)].copy().reset_index(drop=True)
+            )
             if len(regime_df) < 500:
                 continue
 
             sigs = atr_expansion_breakout(regime_df)
             r = simulate(regime_df, sigs, 0.02, 72, 3.0, 8.0, 0.0003)
-            all_trades.extend(r['trades'])
+            all_trades.extend(r["trades"])
 
         if all_trades:
             wins = sum(1 for t in all_trades if t > 0)
@@ -460,8 +512,10 @@ def test_3_regime_analysis():
             gl = abs(sum(t for t in all_trades if t < 0))
             wr = wins / (wins + losses) if (wins + losses) > 0 else 0
             pf = gp / (gl + 1e-10)
-            print(f"\n  {regime}: {len(all_trades)} trades  WR={wr:.0%}  PF={pf:.2f}  "
-                  f"Net={sum(all_trades)*100:+.2f}%")
+            print(
+                f"\n  {regime}: {len(all_trades)} trades  WR={wr:.0%}  PF={pf:.2f}  "
+                f"Net={sum(all_trades)*100:+.2f}%"
+            )
 
 
 # =============================================================================
@@ -473,26 +527,40 @@ def test_4_capacity():
     print("TEST 4: Capacity Analysis")
     print(f"{'='*60}")
 
-    symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT',
-               'BNBUSDT', 'ADAUSDT', 'LINKUSDT', 'AVAXUSDT', 'LTCUSDT']
+    symbols = [
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "DOGEUSDT",
+        "BNBUSDT",
+        "ADAUSDT",
+        "LINKUSDT",
+        "AVAXUSDT",
+        "LTCUSDT",
+    ]
 
-    print(f"  Assuming $100K portfolio, 5 positions max, 2% per position = $2K per trade\n")
+    print(
+        f"  Assuming $100K portfolio, 5 positions max, 2% per position = $2K per trade\n"
+    )
 
     for symbol in symbols:
-        df = load_ohlcv(symbol, '1h')
+        df = load_ohlcv(symbol, "1h")
         if df.empty:
             continue
 
         # Last 90 days volume
         recent = df.tail(90 * 24)
-        if 'volume' in recent.columns and 'close' in recent.columns:
-            adv_usd = (recent['volume'] * recent['close']).mean() * 24  # Daily
+        if "volume" in recent.columns and "close" in recent.columns:
+            adv_usd = (recent["volume"] * recent["close"]).mean() * 24  # Daily
             trade_size = 2000  # $2K per trade
             market_impact = trade_size / adv_usd * 100 if adv_usd > 0 else 999
 
-            print(f"  {symbol:<12} ADV=${adv_usd/1e6:.0f}M  "
-                  f"$2K trade = {market_impact:.4f}% of ADV  "
-                  f"{'OK' if market_impact < 0.1 else 'CAUTION' if market_impact < 1 else 'TOO LARGE'}")
+            print(
+                f"  {symbol:<12} ADV=${adv_usd/1e6:.0f}M  "
+                f"$2K trade = {market_impact:.4f}% of ADV  "
+                f"{'OK' if market_impact < 0.1 else 'CAUTION' if market_impact < 1 else 'TOO LARGE'}"
+            )
 
 
 def main():

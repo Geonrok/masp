@@ -1,4 +1,5 @@
 """Tests for PnL calculator."""
+
 from __future__ import annotations
 
 from services.dashboard.utils.pnl_calculator import (

@@ -1,4 +1,5 @@
 """Scheduler status provider - connects APScheduler to scheduler_status component."""
+
 from __future__ import annotations
 
 import logging

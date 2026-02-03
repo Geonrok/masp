@@ -14,12 +14,14 @@ C) Test alternative strategy variants that are more regime-aware
 D) Use full universe (257 symbols) since diversification helps
 E) Relax entry: test multiple ATR expansion thresholds
 """
+
 import json
 import os
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
@@ -37,17 +39,18 @@ def load_ohlcv(symbol, timeframe="1h"):
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path)
-    for col in ['datetime', 'timestamp', 'date']:
+    for col in ["datetime", "timestamp", "date"]:
         if col in df.columns:
-            df['datetime'] = pd.to_datetime(df[col])
+            df["datetime"] = pd.to_datetime(df[col])
             break
-    return df.sort_values('datetime').reset_index(drop=True)
+    return df.sort_values("datetime").reset_index(drop=True)
 
 
 def calc_atr(high, low, close, period=14):
-    tr = np.maximum(high - low,
-         np.maximum(np.abs(high - np.roll(close, 1)),
-                    np.abs(low - np.roll(close, 1))))
+    tr = np.maximum(
+        high - low,
+        np.maximum(np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))),
+    )
     tr[0] = high[0] - low[0]
     return pd.Series(tr).rolling(period).mean().values
 
@@ -56,11 +59,12 @@ def calc_atr(high, low, close, period=14):
 # STRATEGY VARIANTS
 # =============================================================================
 
+
 def strat_base(df, lookback=96, ema_period=200, atr_expansion=1.3):
     """Original ATR Expansion Breakout (Phase 5/6/7 strategy)"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     upper = high.rolling(lookback).max().shift(1)
     lower = low.rolling(lookback).min().shift(1)
     ema = close.ewm(span=ema_period, adjust=False).mean()
@@ -68,16 +72,19 @@ def strat_base(df, lookback=96, ema_period=200, atr_expansion=1.3):
     atr = pd.Series(atr_vals, index=df.index)
     atr_avg = atr.rolling(lookback).mean()
     expanding = atr > atr_avg * atr_expansion
-    signals = np.where((close > upper) & (close > ema) & expanding, 1,
-              np.where((close < lower) & (close < ema) & expanding, -1, 0))
+    signals = np.where(
+        (close > upper) & (close > ema) & expanding,
+        1,
+        np.where((close < lower) & (close < ema) & expanding, -1, 0),
+    )
     return signals
 
 
 def strat_long_only(df, lookback=96, ema_period=200, atr_expansion=1.3):
     """Long-only: eliminate catastrophic bear-market shorts"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     upper = high.rolling(lookback).max().shift(1)
     ema = close.ewm(span=ema_period, adjust=False).mean()
     atr_vals = calc_atr(high.values, low.values, close.values, 14)
@@ -90,9 +97,9 @@ def strat_long_only(df, lookback=96, ema_period=200, atr_expansion=1.3):
 
 def strat_regime_filter(df, lookback=96, ema_period=200, atr_expansion=1.3):
     """Regime-aware: long in bull/sideways, short only in strong bear"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     upper = high.rolling(lookback).max().shift(1)
     lower = low.rolling(lookback).min().shift(1)
     ema = close.ewm(span=ema_period, adjust=False).mean()
@@ -106,16 +113,19 @@ def strat_regime_filter(df, lookback=96, ema_period=200, atr_expansion=1.3):
     bull = ret_30d > 0.05
     bear = ret_30d < -0.15  # Only short in strong bear
 
-    signals = np.where((close > upper) & (close > ema) & expanding & ~bear, 1,
-              np.where((close < lower) & (close < ema) & expanding & bear, -1, 0))
+    signals = np.where(
+        (close > upper) & (close > ema) & expanding & ~bear,
+        1,
+        np.where((close < lower) & (close < ema) & expanding & bear, -1, 0),
+    )
     return signals.astype(int)
 
 
 def strat_regime_v2(df, lookback=96, ema_period=200, atr_expansion=1.3):
     """Regime v2: No shorts at all, use regime for position sizing signal"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     upper = high.rolling(lookback).max().shift(1)
     ema = close.ewm(span=ema_period, adjust=False).mean()
     atr_vals = calc_atr(high.values, low.values, close.values, 14)
@@ -133,9 +143,9 @@ def strat_regime_v2(df, lookback=96, ema_period=200, atr_expansion=1.3):
 
 def strat_dual_ma(df, lookback=96, ema_fast=50, ema_slow=200, atr_expansion=1.3):
     """Dual MA filter: breakout + fast EMA > slow EMA for trend confirmation"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     upper = high.rolling(lookback).max().shift(1)
     ema_f = close.ewm(span=ema_fast, adjust=False).mean()
     ema_s = close.ewm(span=ema_slow, adjust=False).mean()
@@ -151,9 +161,9 @@ def strat_dual_ma(df, lookback=96, ema_fast=50, ema_slow=200, atr_expansion=1.3)
 
 def strat_volume_confirm(df, lookback=96, ema_period=200, atr_expansion=1.3):
     """Volume confirmation: breakout + above-average volume"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     upper = high.rolling(lookback).max().shift(1)
     ema = close.ewm(span=ema_period, adjust=False).mean()
     atr_vals = calc_atr(high.values, low.values, close.values, 14)
@@ -161,7 +171,7 @@ def strat_volume_confirm(df, lookback=96, ema_period=200, atr_expansion=1.3):
     atr_avg = atr.rolling(lookback).mean()
     expanding = atr > atr_avg * atr_expansion
 
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1, index=df.index)
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1, index=df.index)
     vol_avg = vol.rolling(lookback).mean()
     vol_high = vol > vol_avg * 1.5
 
@@ -171,9 +181,9 @@ def strat_volume_confirm(df, lookback=96, ema_period=200, atr_expansion=1.3):
 
 def strat_relaxed_atr(df, lookback=96, ema_period=200, atr_expansion=1.0):
     """Relaxed ATR expansion (1.0x instead of 1.3x) - more trades"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     upper = high.rolling(lookback).max().shift(1)
     ema = close.ewm(span=ema_period, adjust=False).mean()
     atr_vals = calc_atr(high.values, low.values, close.values, 14)
@@ -186,9 +196,9 @@ def strat_relaxed_atr(df, lookback=96, ema_period=200, atr_expansion=1.0):
 
 def strat_momentum_filter(df, lookback=96, ema_period=200, atr_expansion=1.3):
     """Momentum confirmation: breakout + positive momentum (ROC > 0)"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     upper = high.rolling(lookback).max().shift(1)
     ema = close.ewm(span=ema_period, adjust=False).mean()
     atr_vals = calc_atr(high.values, low.values, close.values, 14)
@@ -206,17 +216,24 @@ def strat_momentum_filter(df, lookback=96, ema_period=200, atr_expansion=1.3):
 # =============================================================================
 # SIMULATION
 # =============================================================================
-def simulate(df, signals, position_pct=0.02, max_bars=72,
-             atr_stop=3.0, profit_target_atr=8.0, slippage=0.0003):
+def simulate(
+    df,
+    signals,
+    position_pct=0.02,
+    max_bars=72,
+    atr_stop=3.0,
+    profit_target_atr=8.0,
+    slippage=0.0003,
+):
     capital = 1.0
     position = 0
     entry_price = 0
     bars_held = 0
     trades = []
 
-    close = df['close'].values
-    high = df['high'].values
-    low = df['low'].values
+    close = df["close"].values
+    high = df["high"].values
+    low = df["low"].values
     atr_vals = calc_atr(high, low, close, 14)
 
     for i in range(len(df)):
@@ -265,22 +282,22 @@ def simulate(df, signals, position_pct=0.02, max_bars=72,
     gp = sum(t for t in trades if t > 0)
     gl = abs(sum(t for t in trades if t < 0))
     return {
-        'total_return': capital - 1,
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(trades),
-        'trades': trades,
+        "total_return": capital - 1,
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(trades),
+        "trades": trades,
     }
 
 
 def check_criteria(r):
     c = {
-        'sharpe_gt_1': r.get('sharpe', 0) > 1.0,
-        'max_dd_lt_25': r.get('max_drawdown', -1) > -0.25,
-        'win_rate_gt_45': r.get('win_rate', 0) > 0.45,
-        'profit_factor_gt_1_5': r.get('profit_factor', 0) > 1.5,
-        'wfa_efficiency_gt_50': r.get('wfa_efficiency', 0) > 50,
-        'trade_count_gt_100': r.get('trade_count', 0) > 100,
+        "sharpe_gt_1": r.get("sharpe", 0) > 1.0,
+        "max_dd_lt_25": r.get("max_drawdown", -1) > -0.25,
+        "win_rate_gt_45": r.get("win_rate", 0) > 0.45,
+        "profit_factor_gt_1_5": r.get("profit_factor", 0) > 1.5,
+        "wfa_efficiency_gt_50": r.get("wfa_efficiency", 0) > 50,
+        "trade_count_gt_100": r.get("trade_count", 0) > 100,
     }
     return c, sum(v for v in c.values())
 
@@ -291,7 +308,7 @@ def check_criteria(r):
 def run_true_oos_test(strategy_fn, strategy_name, all_data, exit_params=None):
     """Run true out-of-sample test for a strategy variant."""
     if exit_params is None:
-        exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+        exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     # STEP A: Selection on first 60%
     selection_results = {}
@@ -308,15 +325,21 @@ def run_true_oos_test(strategy_fn, strategy_name, all_data, exit_params=None):
 
         i = train_bars
         while i + test_bars <= len(sel_df):
-            full = sel_df.iloc[:i + test_bars]
+            full = sel_df.iloc[: i + test_bars]
             sigs = strategy_fn(full)
-            test_sigs = sigs[i:i + test_bars]
-            test_df = sel_df.iloc[i:i + test_bars].copy().reset_index(drop=True)
-            r = simulate(test_df, test_sigs, 0.02,
-                        exit_params['max_bars'], exit_params['atr_stop'],
-                        exit_params['profit_target_atr'], 0.0003)
-            period_returns.append(r['total_return'])
-            all_trades.extend(r['trades'])
+            test_sigs = sigs[i : i + test_bars]
+            test_df = sel_df.iloc[i : i + test_bars].copy().reset_index(drop=True)
+            r = simulate(
+                test_df,
+                test_sigs,
+                0.02,
+                exit_params["max_bars"],
+                exit_params["atr_stop"],
+                exit_params["profit_target_atr"],
+                0.0003,
+            )
+            period_returns.append(r["total_return"])
+            all_trades.extend(r["trades"])
             i += test_bars
 
         if not all_trades:
@@ -324,11 +347,11 @@ def run_true_oos_test(strategy_fn, strategy_name, all_data, exit_params=None):
 
         total_ret = 1.0
         for pr in period_returns:
-            total_ret *= (1 + pr)
+            total_ret *= 1 + pr
 
         selection_results[symbol] = {
-            'total_return': total_ret - 1,
-            'trade_count': len(all_trades),
+            "total_return": total_ret - 1,
+            "trade_count": len(all_trades),
         }
 
     if not selection_results:
@@ -339,12 +362,14 @@ def run_true_oos_test(strategy_fn, strategy_name, all_data, exit_params=None):
     universes = {}
 
     # All symbols (best in Phase 7)
-    universes['all'] = list(all_data.keys())
+    universes["all"] = list(all_data.keys())
 
     # Top 30 by selection period
-    ranked = sorted(selection_results.items(), key=lambda x: x[1]['total_return'], reverse=True)
-    universes['top_30'] = [s for s, _ in ranked[:30]]
-    universes['top_50'] = [s for s, _ in ranked[:50]]
+    ranked = sorted(
+        selection_results.items(), key=lambda x: x[1]["total_return"], reverse=True
+    )
+    universes["top_30"] = [s for s, _ in ranked[:30]]
+    universes["top_50"] = [s for s, _ in ranked[:50]]
 
     results = {}
     for univ_name, univ_symbols in universes.items():
@@ -378,7 +403,7 @@ def run_true_oos_test(strategy_fn, strategy_name, all_data, exit_params=None):
             for symbol, df in oos_data.items():
                 if len(df) <= i:
                     continue
-                train_ret = df['close'].iloc[:i].pct_change()
+                train_ret = df["close"].iloc[:i].pct_change()
                 vol = train_ret.rolling(168).std().iloc[-1]
                 if np.isnan(vol) or vol == 0:
                     vol = 0.01
@@ -391,19 +416,27 @@ def run_true_oos_test(strategy_fn, strategy_name, all_data, exit_params=None):
                 df = oos_data[symbol]
                 if i + test_bars > len(df):
                     continue
-                full = df.iloc[:i + test_bars]
+                full = df.iloc[: i + test_bars]
                 sigs = strategy_fn(full)
-                test_sigs = sigs[i:i + test_bars]
-                test_df = df.iloc[i:i + test_bars].copy().reset_index(drop=True)
+                test_sigs = sigs[i : i + test_bars]
+                test_df = df.iloc[i : i + test_bars].copy().reset_index(drop=True)
 
                 ann_vol = vol * np.sqrt(24 * 365)
-                position_pct = min(0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05)
+                position_pct = min(
+                    0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05
+                )
 
-                r = simulate(test_df, test_sigs, position_pct,
-                           exit_params['max_bars'], exit_params['atr_stop'],
-                           exit_params['profit_target_atr'], 0.0003)
-                period_pnl += r['total_return']
-                all_trades.extend(r['trades'])
+                r = simulate(
+                    test_df,
+                    test_sigs,
+                    position_pct,
+                    exit_params["max_bars"],
+                    exit_params["atr_stop"],
+                    exit_params["profit_target_atr"],
+                    0.0003,
+                )
+                period_pnl += r["total_return"]
+                all_trades.extend(r["trades"])
 
             period_returns.append(period_pnl)
             equity.append(equity[-1] * (1 + period_pnl))
@@ -420,49 +453,60 @@ def run_true_oos_test(strategy_fn, strategy_name, all_data, exit_params=None):
         losses = sum(1 for t in all_trades if t <= 0)
         gp = sum(t for t in all_trades if t > 0)
         gl = abs(sum(t for t in all_trades if t < 0))
-        sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
+        sharpe = (
+            np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
+        )
 
         result = {
-            'total_return': float(equity_arr[-1] - 1),
-            'max_drawdown': float(dd.min()),
-            'sharpe': float(sharpe),
-            'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-            'profit_factor': gp / (gl + 1e-10),
-            'trade_count': len(all_trades),
-            'periods': len(period_returns),
-            'wfa_efficiency': sum(1 for r in period_returns if r > 0) / len(period_returns) * 100,
+            "total_return": float(equity_arr[-1] - 1),
+            "max_drawdown": float(dd.min()),
+            "sharpe": float(sharpe),
+            "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+            "profit_factor": gp / (gl + 1e-10),
+            "trade_count": len(all_trades),
+            "periods": len(period_returns),
+            "wfa_efficiency": sum(1 for r in period_returns if r > 0)
+            / len(period_returns)
+            * 100,
         }
 
         criteria, passed = check_criteria(result)
-        results[univ_name] = {**result, 'criteria': criteria, 'criteria_passed': int(passed)}
+        results[univ_name] = {
+            **result,
+            "criteria": criteria,
+            "criteria_passed": int(passed),
+        }
 
     return results
 
 
 def run_regime_test(strategy_fn, strategy_name, btc_data, test_symbols_data):
     """Test strategy in different market regimes."""
-    btc_close = btc_data['close']
+    btc_close = btc_data["close"]
     ret_30d = btc_close.pct_change(720)
     btc_data = btc_data.copy()
-    btc_data['regime'] = np.where(ret_30d > 0.10, 'bull',
-                          np.where(ret_30d < -0.10, 'bear', 'sideways'))
+    btc_data["regime"] = np.where(
+        ret_30d > 0.10, "bull", np.where(ret_30d < -0.10, "bear", "sideways")
+    )
 
     regime_results = {}
-    for regime in ['bull', 'bear', 'sideways']:
-        regime_mask = btc_data['regime'] == regime
-        regime_dates = set(btc_data.loc[regime_mask, 'datetime'])
+    for regime in ["bull", "bear", "sideways"]:
+        regime_mask = btc_data["regime"] == regime
+        regime_dates = set(btc_data.loc[regime_mask, "datetime"])
 
         if len(regime_dates) < 1000:
             continue
 
         all_trades = []
         for symbol, df in test_symbols_data.items():
-            regime_df = df[df['datetime'].isin(regime_dates)].copy().reset_index(drop=True)
+            regime_df = (
+                df[df["datetime"].isin(regime_dates)].copy().reset_index(drop=True)
+            )
             if len(regime_df) < 500:
                 continue
             sigs = strategy_fn(regime_df)
             r = simulate(regime_df, sigs, 0.02, 72, 3.0, 8.0, 0.0003)
-            all_trades.extend(r['trades'])
+            all_trades.extend(r["trades"])
 
         if all_trades:
             wins = sum(1 for t in all_trades if t > 0)
@@ -470,10 +514,10 @@ def run_regime_test(strategy_fn, strategy_name, btc_data, test_symbols_data):
             gp = sum(t for t in all_trades if t > 0)
             gl = abs(sum(t for t in all_trades if t < 0))
             regime_results[regime] = {
-                'trades': len(all_trades),
-                'wr': wins / (wins + losses) if (wins + losses) > 0 else 0,
-                'pf': gp / (gl + 1e-10),
-                'net': sum(all_trades),
+                "trades": len(all_trades),
+                "wr": wins / (wins + losses) if (wins + losses) > 0 else 0,
+                "pf": gp / (gl + 1e-10),
+                "net": sum(all_trades),
             }
 
     return regime_results
@@ -504,22 +548,22 @@ def main():
     print("=" * 60)
 
     strategies = {
-        'base': strat_base,
-        'long_only': strat_long_only,
-        'regime_filter': strat_regime_filter,
-        'regime_v2': strat_regime_v2,
-        'dual_ma': strat_dual_ma,
-        'volume_confirm': strat_volume_confirm,
-        'relaxed_atr': strat_relaxed_atr,
-        'momentum_filter': strat_momentum_filter,
+        "base": strat_base,
+        "long_only": strat_long_only,
+        "regime_filter": strat_regime_filter,
+        "regime_v2": strat_regime_v2,
+        "dual_ma": strat_dual_ma,
+        "volume_confirm": strat_volume_confirm,
+        "relaxed_atr": strat_relaxed_atr,
+        "momentum_filter": strat_momentum_filter,
     }
 
     # Also test different exit parameters
     exit_configs = {
-        'default': {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0},
-        'tight_stop': {'max_bars': 48, 'atr_stop': 2.0, 'profit_target_atr': 6.0},
-        'wide_stop': {'max_bars': 96, 'atr_stop': 4.0, 'profit_target_atr': 10.0},
-        'no_pt': {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 0},
+        "default": {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0},
+        "tight_stop": {"max_bars": 48, "atr_stop": 2.0, "profit_target_atr": 6.0},
+        "wide_stop": {"max_bars": 96, "atr_stop": 4.0, "profit_target_atr": 10.0},
+        "no_pt": {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 0},
     }
 
     all_results = {}
@@ -539,12 +583,16 @@ def main():
             all_results[config_name] = results
 
             # Print best universe result
-            best_univ = max(results.items(), key=lambda x: x[1].get('criteria_passed', 0))
+            best_univ = max(
+                results.items(), key=lambda x: x[1].get("criteria_passed", 0)
+            )
             univ_name, r = best_univ
-            passed = r.get('criteria_passed', 0)
-            print(f"[{passed}/6] best={univ_name} Sharpe={r['sharpe']:.2f} "
-                  f"Ret={r['total_return']*100:+.1f}% DD={r['max_drawdown']*100:.1f}% "
-                  f"WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+            passed = r.get("criteria_passed", 0)
+            print(
+                f"[{passed}/6] best={univ_name} Sharpe={r['sharpe']:.2f} "
+                f"Ret={r['total_return']*100:+.1f}% DD={r['max_drawdown']*100:.1f}% "
+                f"WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+            )
 
             if passed > best_score:
                 best_score = passed
@@ -557,27 +605,35 @@ def main():
     print("PART 2: Regime Analysis for Top Strategies")
     print("=" * 60)
 
-    btc = load_ohlcv('BTCUSDT', '1h')
+    btc = load_ohlcv("BTCUSDT", "1h")
     test_symbols = {}
-    for s in ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DOGEUSDT', 'ADAUSDT']:
-        df = load_ohlcv(s, '1h')
+    for s in ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT", "ADAUSDT"]:
+        df = load_ohlcv(s, "1h")
         if not df.empty:
             test_symbols[s] = df
 
     # Sort strategies by best criteria_passed
     ranked_configs = []
     for config_name, results in all_results.items():
-        best_univ = max(results.items(), key=lambda x: x[1].get('criteria_passed', 0))
-        ranked_configs.append((config_name, best_univ[1].get('criteria_passed', 0),
-                               best_univ[0], best_univ[1]))
-    ranked_configs.sort(key=lambda x: (-x[1], -x[3].get('sharpe', 0)))
+        best_univ = max(results.items(), key=lambda x: x[1].get("criteria_passed", 0))
+        ranked_configs.append(
+            (
+                config_name,
+                best_univ[1].get("criteria_passed", 0),
+                best_univ[0],
+                best_univ[1],
+            )
+        )
+    ranked_configs.sort(key=lambda x: (-x[1], -x[3].get("sharpe", 0)))
 
     print(f"\nTop 10 configs by criteria passed:")
     for i, (config_name, passed, univ, r) in enumerate(ranked_configs[:10]):
-        print(f"  {i+1}. [{passed}/6] {config_name} ({univ}) "
-              f"Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
-        criteria = r.get('criteria', {})
+        print(
+            f"  {i+1}. [{passed}/6] {config_name} ({univ}) "
+            f"Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
+        criteria = r.get("criteria", {})
         fails = [k for k, v in criteria.items() if not v]
         if fails:
             print(f"     FAILS: {', '.join(fails)}")
@@ -585,16 +641,18 @@ def main():
     # Regime test for top 5
     print(f"\nRegime analysis for top 5:")
     for config_name, passed, univ, r in ranked_configs[:5]:
-        strat_name = config_name.rsplit('_', 1)[0]
+        strat_name = config_name.rsplit("_", 1)[0]
         # Find the strategy function
         for sn, sf in strategies.items():
             if config_name.startswith(sn):
                 regime_results = run_regime_test(sf, sn, btc, test_symbols)
                 print(f"\n  {config_name}:")
                 for regime, rr in regime_results.items():
-                    status = "OK" if rr['net'] > 0 else "BAD"
-                    print(f"    {regime}: {rr['trades']} trades  WR={rr['wr']:.0%}  "
-                          f"PF={rr['pf']:.2f}  Net={rr['net']*100:+.2f}%  [{status}]")
+                    status = "OK" if rr["net"] > 0 else "BAD"
+                    print(
+                        f"    {regime}: {rr['trades']} trades  WR={rr['wr']:.0%}  "
+                        f"PF={rr['pf']:.2f}  Net={rr['net']*100:+.2f}%  [{status}]"
+                    )
                 break
 
     # ==========================================================================
@@ -606,19 +664,31 @@ def main():
 
     if best_config:
         best_r = all_results[best_config]
-        best_univ = max(best_r.items(), key=lambda x: x[1].get('criteria_passed', 0))
+        best_univ = max(best_r.items(), key=lambda x: x[1].get("criteria_passed", 0))
         univ_name, r = best_univ
         criteria, passed = check_criteria(r)
 
         print(f"\nBest configuration: {best_config}")
         print(f"Universe: {univ_name}")
         print(f"Criteria passed: {passed}/6")
-        print(f"  Sharpe: {r['sharpe']:.2f}  {'PASS' if criteria['sharpe_gt_1'] else 'FAIL'}")
-        print(f"  Max DD: {r['max_drawdown']*100:.1f}%  {'PASS' if criteria['max_dd_lt_25'] else 'FAIL'}")
-        print(f"  Win Rate: {r['win_rate']*100:.0f}%  {'PASS' if criteria['win_rate_gt_45'] else 'FAIL'}")
-        print(f"  Profit Factor: {r['profit_factor']:.2f}  {'PASS' if criteria['profit_factor_gt_1_5'] else 'FAIL'}")
-        print(f"  WFA Eff: {r['wfa_efficiency']:.0f}%  {'PASS' if criteria['wfa_efficiency_gt_50'] else 'FAIL'}")
-        print(f"  Trade Count: {r['trade_count']}  {'PASS' if criteria['trade_count_gt_100'] else 'FAIL'}")
+        print(
+            f"  Sharpe: {r['sharpe']:.2f}  {'PASS' if criteria['sharpe_gt_1'] else 'FAIL'}"
+        )
+        print(
+            f"  Max DD: {r['max_drawdown']*100:.1f}%  {'PASS' if criteria['max_dd_lt_25'] else 'FAIL'}"
+        )
+        print(
+            f"  Win Rate: {r['win_rate']*100:.0f}%  {'PASS' if criteria['win_rate_gt_45'] else 'FAIL'}"
+        )
+        print(
+            f"  Profit Factor: {r['profit_factor']:.2f}  {'PASS' if criteria['profit_factor_gt_1_5'] else 'FAIL'}"
+        )
+        print(
+            f"  WFA Eff: {r['wfa_efficiency']:.0f}%  {'PASS' if criteria['wfa_efficiency_gt_50'] else 'FAIL'}"
+        )
+        print(
+            f"  Trade Count: {r['trade_count']}  {'PASS' if criteria['trade_count_gt_100'] else 'FAIL'}"
+        )
 
         if passed == 6:
             print(f"\n*** 6/6 PASSED ON TRUE OUT-OF-SAMPLE! ***")
@@ -630,27 +700,27 @@ def main():
 
     # Save results
     save_data = {
-        'timestamp': datetime.now().isoformat(),
-        'total_configs_tested': len(all_results),
-        'best_config': best_config,
-        'best_score': int(best_score),
-        'top_10': [
+        "timestamp": datetime.now().isoformat(),
+        "total_configs_tested": len(all_results),
+        "best_config": best_config,
+        "best_score": int(best_score),
+        "top_10": [
             {
-                'config': c[0],
-                'passed': int(c[1]),
-                'universe': c[2],
-                'sharpe': float(c[3].get('sharpe', 0)),
-                'return': float(c[3].get('total_return', 0)),
-                'max_dd': float(c[3].get('max_drawdown', 0)),
-                'win_rate': float(c[3].get('win_rate', 0)),
-                'pf': float(c[3].get('profit_factor', 0)),
-                'trades': int(c[3].get('trade_count', 0)),
+                "config": c[0],
+                "passed": int(c[1]),
+                "universe": c[2],
+                "sharpe": float(c[3].get("sharpe", 0)),
+                "return": float(c[3].get("total_return", 0)),
+                "max_dd": float(c[3].get("max_drawdown", 0)),
+                "win_rate": float(c[3].get("win_rate", 0)),
+                "pf": float(c[3].get("profit_factor", 0)),
+                "trades": int(c[3].get("trade_count", 0)),
             }
             for c in ranked_configs[:10]
         ],
     }
 
-    with open(RESULTS_PATH / "phase8_report.json", 'w') as f:
+    with open(RESULTS_PATH / "phase8_report.json", "w") as f:
         json.dump(save_data, f, indent=2)
 
     print(f"\nResults saved to {RESULTS_PATH / 'phase8_report.json'}")

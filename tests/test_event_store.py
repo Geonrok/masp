@@ -176,7 +176,11 @@ class TestEventStore:
     def test_list_events_filtering(self, store):
         """Test event filtering."""
         # Create events with different types
-        for event_type in [EventType.SIGNAL_DECISION, EventType.ERROR, EventType.HEARTBEAT]:
+        for event_type in [
+            EventType.SIGNAL_DECISION,
+            EventType.ERROR,
+            EventType.HEARTBEAT,
+        ]:
             event = Event(
                 event_id=f"evt_{event_type.value}",
                 ts_utc=datetime.now(timezone.utc),

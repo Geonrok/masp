@@ -27,7 +27,11 @@ from libs.analytics.strategy_health import StrategyHealthMonitor
 from libs.analytics.daily_report import DailyReportGenerator
 from libs.strategies.base import Signal as StrategySignal
 from libs.strategies.loader import get_strategy
-from libs.notifications.telegram import TelegramNotifier, format_trade_message, format_daily_summary
+from libs.notifications.telegram import (
+    TelegramNotifier,
+    format_trade_message,
+    format_daily_summary,
+)
 from libs.risk.stop_loss_manager import (
     CompositeStopManager,
     TrailingStop,
@@ -82,21 +86,31 @@ class StrategyRunner:
 
         # Determine quote currency based on exchange
         self._is_usdt_based = exchange in {"binance_spot", "binance_futures"}
-        self._is_kr_stock = exchange in {"ebest", "ebest_spot", "ebest_kospi", "ebest_kosdaq"}
+        self._is_kr_stock = exchange in {
+            "ebest",
+            "ebest_spot",
+            "ebest_kospi",
+            "ebest_kosdaq",
+        }
         self._quote_currency = "USDT" if self._is_usdt_based else "KRW"
-        self._position_size = position_size_usdt if self._is_usdt_based else position_size_krw
+        self._position_size = (
+            position_size_usdt if self._is_usdt_based else position_size_krw
+        )
 
         # Config 로드
         self.config = config or Config(
-            asset_class="crypto_spot",
-            strategy_name=strategy_name
+            asset_class="crypto_spot", strategy_name=strategy_name
         )
 
         # --- Phase 6D-Fix: 전략 로딩 canonicalization + fail-fast ---
-        self.strategy, loaded_key = self._load_strategy_with_fallback(strategy, strategy_name)
+        self.strategy, loaded_key = self._load_strategy_with_fallback(
+            strategy, strategy_name
+        )
         logger.info(
             "[StrategyRunner] Strategy loaded: requested=%s loaded=%s type=%s",
-            strategy_name, loaded_key, type(self.strategy).__name__
+            strategy_name,
+            loaded_key,
+            type(self.strategy).__name__,
         )
 
         # 로그 디렉토리
@@ -106,9 +120,7 @@ class StrategyRunner:
         self.trade_logger = TradeLogger(log_dir=str(log_base / "trades"))
         self.health_monitor = StrategyHealthMonitor(self.config)
         self.daily_reporter = DailyReportGenerator(
-            self.trade_logger,
-            self.health_monitor,
-            report_dir=str(log_base / "reports")
+            self.trade_logger, self.health_monitor, report_dir=str(log_base / "reports")
         )
 
         # 실행 어댑터
@@ -159,11 +171,13 @@ class StrategyRunner:
         # MarketData 주입 (duck-typing)
         if hasattr(self.strategy, "set_market_data"):
             self.strategy.set_market_data(self.market_data)
-            logger.info("[StrategyRunner] Injected %s market data into strategy", md_exchange)
+            logger.info(
+                "[StrategyRunner] Injected %s market data into strategy", md_exchange
+            )
         else:
             logger.warning(
                 "[StrategyRunner] Strategy has no set_market_data(): %s",
-                type(self.strategy).__name__
+                type(self.strategy).__name__,
             )
 
         # 포지션 상태
@@ -199,7 +213,9 @@ class StrategyRunner:
             )
             logger.info(
                 "[StrategyRunner] StopLossManager enabled: SL=%.1f%%, TP=%.1f%%, Trail=%.1f%%",
-                stop_loss_pct * 100, take_profit_pct * 100, trailing_stop_pct * 100
+                stop_loss_pct * 100,
+                take_profit_pct * 100,
+                trailing_stop_pct * 100,
             )
 
         # Telegram 알림 (best-effort, 설정 없으면 비활성화)
@@ -220,8 +236,10 @@ class StrategyRunner:
         - Upbit: List[Dict] with {'currency': 'BTC', 'balance': '0.001', 'locked': '0'}
         - Bithumb: Dict[str, float] with {'BTC': 0.001, 'KRW': 1000}
         """
-        if not hasattr(self.execution, 'get_all_balances'):
-            logger.debug("[StrategyRunner] Execution adapter has no get_all_balances method")
+        if not hasattr(self.execution, "get_all_balances"):
+            logger.debug(
+                "[StrategyRunner] Execution adapter has no get_all_balances method"
+            )
             return
 
         try:
@@ -234,7 +252,7 @@ class StrategyRunner:
             # Handle Dict[str, float] format (Bithumb)
             if isinstance(balances, dict):
                 for currency, total in balances.items():
-                    if currency in ('KRW', 'USDT', 'P'):
+                    if currency in ("KRW", "USDT", "P"):
                         continue  # Skip quote currencies and special tokens
 
                     try:
@@ -250,7 +268,7 @@ class StrategyRunner:
                     else:
                         symbol = f"{currency}/KRW"
 
-                    if self.strategy and hasattr(self.strategy, 'update_position'):
+                    if self.strategy and hasattr(self.strategy, "update_position"):
                         self.strategy.update_position(symbol, total)
                         synced += 1
 
@@ -259,13 +277,13 @@ class StrategyRunner:
             # Handle List[Dict] format (Upbit)
             else:
                 for item in balances:
-                    currency = item.get('currency', '')
-                    if currency in ('KRW', 'USDT'):
+                    currency = item.get("currency", "")
+                    if currency in ("KRW", "USDT"):
                         continue
 
                     try:
-                        balance = float(item.get('balance', 0))
-                        locked = float(item.get('locked', 0))
+                        balance = float(item.get("balance", 0))
+                        locked = float(item.get("locked", 0))
                         total = balance + locked
                     except (ValueError, TypeError):
                         continue
@@ -278,14 +296,16 @@ class StrategyRunner:
                     else:
                         symbol = f"{currency}/KRW"
 
-                    if self.strategy and hasattr(self.strategy, 'update_position'):
+                    if self.strategy and hasattr(self.strategy, "update_position"):
                         self.strategy.update_position(symbol, total)
                         synced += 1
 
                     self._positions[symbol] = total
 
             if synced > 0:
-                logger.info("[StrategyRunner] Synced %d positions from exchange", synced)
+                logger.info(
+                    "[StrategyRunner] Synced %d positions from exchange", synced
+                )
 
         except Exception as exc:
             logger.warning("[StrategyRunner] Position sync failed: %s", exc)
@@ -373,12 +393,26 @@ class StrategyRunner:
             )
             available_balance = float("inf")
 
-        balance_label = "unlimited" if available_balance == float("inf") else f"{available_balance:,.2f} {self._quote_currency}"
-        max_buy = "unlimited" if available_balance == float("inf") else int(available_balance // self._position_size) if self._position_size > 0 else 0
+        balance_label = (
+            "unlimited"
+            if available_balance == float("inf")
+            else f"{available_balance:,.2f} {self._quote_currency}"
+        )
+        max_buy = (
+            "unlimited"
+            if available_balance == float("inf")
+            else (
+                int(available_balance // self._position_size)
+                if self._position_size > 0
+                else 0
+            )
+        )
 
         logger.info(
             "[StrategyRunner] Processing %d symbols, Balance: %s, Max BUY: %s",
-            total, balance_label, max_buy
+            total,
+            balance_label,
+            max_buy,
         )
 
         # Check stop loss conditions for existing positions (before processing new signals)
@@ -389,7 +423,9 @@ class StrategyRunner:
                     results[sl_symbol] = sl_result
                     logger.info(
                         "[StopLoss] %s triggered for %s: %s",
-                        sl_result.get("reason", "unknown"), sl_symbol, sl_result
+                        sl_result.get("reason", "unknown"),
+                        sl_symbol,
+                        sl_result,
                     )
 
         for i, symbol in enumerate(self.symbols):
@@ -401,13 +437,17 @@ class StrategyRunner:
             if elapsed > max_execution_time:
                 logger.warning(
                     "[StrategyRunner] Max execution time reached (%ss), processed %d/%d symbols",
-                    max_execution_time, i, total
+                    max_execution_time,
+                    i,
+                    total,
                 )
                 break
 
             if i % 10 == 0 or i == total - 1:
                 progress = (i + 1) / total * 100 if total else 100
-                logger.info("[Progress] %d/%d (%.0f%%) - %s", i + 1, total, progress, symbol)
+                logger.info(
+                    "[Progress] %d/%d (%.0f%%) - %s", i + 1, total, progress, symbol
+                )
 
             try:
                 if i > 0:
@@ -418,7 +458,10 @@ class StrategyRunner:
                 # --- Phase 6D-Fix: signal=None은 HOLD로 숨기지 않는다 ---
                 if signal is None:
                     logger.error("[%s] Strategy returned None signal", symbol)
-                    results[symbol] = {"action": "ERROR", "reason": "Strategy returned None"}
+                    results[symbol] = {
+                        "action": "ERROR",
+                        "reason": "Strategy returned None",
+                    }
                     continue
 
                 action, effective_gate = self._parse_signal(signal, gate_pass)
@@ -434,7 +477,10 @@ class StrategyRunner:
                     and available_balance < self._position_size
                 ):
                     logger.warning("[%s] BUY skipped: insufficient balance", symbol)
-                    results[symbol] = {"action": "SKIP", "reason": "insufficient_balance"}
+                    results[symbol] = {
+                        "action": "SKIP",
+                        "reason": "insufficient_balance",
+                    }
                     continue
 
                 quote = self.market_data.get_quote(symbol)
@@ -453,7 +499,9 @@ class StrategyRunner:
                     available_balance -= self._position_size
                     logger.info(
                         "[StrategyRunner] %s BUY executed, remaining: %.2f %s",
-                        symbol, available_balance, self._quote_currency
+                        symbol,
+                        available_balance,
+                        self._quote_currency,
                     )
 
             except Exception as exc:
@@ -468,7 +516,10 @@ class StrategyRunner:
 
         logger.info(
             "[Summary] Processed %d/%d symbols in %.1fs | Actions: %s",
-            len(results), total, elapsed, actions
+            len(results),
+            total,
+            elapsed,
+            actions,
         )
 
         return results
@@ -541,10 +592,14 @@ class StrategyRunner:
             # Register position for stop loss tracking
             if self._enable_stop_loss and current_price > 0:
                 quantity = self._position_size / current_price
-                self._register_position_for_stop_loss(symbol, "long", current_price, quantity)
+                self._register_position_for_stop_loss(
+                    symbol, "long", current_price, quantity
+                )
 
             # Telegram 알림 (best-effort)
-            self._send_trade_notification(symbol, "BUY", self._position_size, current_price, "FILLED")
+            self._send_trade_notification(
+                symbol, "BUY", self._position_size, current_price, "FILLED"
+            )
             return {"action": "BUY", "order_id": order.order_id or order.symbol}
 
         if action == "SELL":
@@ -555,12 +610,18 @@ class StrategyRunner:
             if estimated_value < min_order:
                 logger.info(
                     "[%s] Dust Skip: %.2f %s < %.2f",
-                    symbol, estimated_value, self._quote_currency, min_order
+                    symbol,
+                    estimated_value,
+                    self._quote_currency,
+                    min_order,
                 )
                 # Remove from stop loss tracker if exists
                 if self._stop_loss_manager:
                     self._stop_loss_manager.close_position(symbol)
-                return {"action": "SKIP", "reason": f"Dust ({estimated_value:.2f} {self._quote_currency})"}
+                return {
+                    "action": "SKIP",
+                    "reason": f"Dust ({estimated_value:.2f} {self._quote_currency})",
+                }
 
             order = self.execution.place_order(
                 symbol,
@@ -573,7 +634,9 @@ class StrategyRunner:
                 self._stop_loss_manager.close_position(symbol)
 
             # Telegram 알림 (best-effort)
-            self._send_trade_notification(symbol, "SELL", balance, current_price, "FILLED")
+            self._send_trade_notification(
+                symbol, "SELL", balance, current_price, "FILLED"
+            )
             return {"action": "SELL", "order_id": order.order_id or order.symbol}
 
         return {"action": "UNKNOWN", "reason": str(action)}
@@ -629,7 +692,9 @@ class StrategyRunner:
                 current_price = prices.get(symbol, 0)
 
                 if balance <= 0:
-                    logger.warning("[StopLoss] No balance for %s, removing from tracker", symbol)
+                    logger.warning(
+                        "[StopLoss] No balance for %s, removing from tracker", symbol
+                    )
                     self._stop_loss_manager.close_position(symbol)
                     continue
 
@@ -637,7 +702,9 @@ class StrategyRunner:
                 estimated_value = balance * current_price
 
                 if estimated_value < min_order:
-                    logger.info("[StopLoss] Dust skip for %s: %.2f", symbol, estimated_value)
+                    logger.info(
+                        "[StopLoss] Dust skip for %s: %.2f", symbol, estimated_value
+                    )
                     self._stop_loss_manager.close_position(symbol)
                     continue
 
@@ -654,8 +721,7 @@ class StrategyRunner:
                 # Telegram notification
                 reason_str = signal.reason.value if signal.reason else "stop_loss"
                 self._send_trade_notification(
-                    symbol, "SELL", balance, current_price,
-                    f"STOP_LOSS ({reason_str})"
+                    symbol, "SELL", balance, current_price, f"STOP_LOSS ({reason_str})"
                 )
 
                 results[symbol] = {
@@ -667,11 +733,15 @@ class StrategyRunner:
 
                 logger.info(
                     "[StopLoss] Executed SELL for %s: reason=%s, pnl=%.2f%%",
-                    symbol, reason_str, (signal.pnl_percent or 0) * 100
+                    symbol,
+                    reason_str,
+                    (signal.pnl_percent or 0) * 100,
                 )
 
             except Exception as exc:
-                logger.error("[StopLoss] Failed to execute SELL for %s: %s", symbol, exc)
+                logger.error(
+                    "[StopLoss] Failed to execute SELL for %s: %s", symbol, exc
+                )
                 results[symbol] = {"action": "ERROR", "reason": str(exc)}
 
         return results
@@ -691,7 +761,10 @@ class StrategyRunner:
         )
         logger.info(
             "[StopLoss] Registered position: %s %s @ %.2f x %.6f",
-            side, symbol, entry_price, quantity
+            side,
+            symbol,
+            entry_price,
+            quantity,
         )
 
     def run_loop(self, interval_seconds: int = 60, max_iterations: int = None):
@@ -724,7 +797,9 @@ class StrategyRunner:
         if not self._notifier.enabled:
             return
         try:
-            msg = format_trade_message(self.exchange, symbol, side, quantity, price, status)
+            msg = format_trade_message(
+                self.exchange, symbol, side, quantity, price, status
+            )
             self._notifier.send_message_sync(msg)
         except Exception as exc:
             logger.debug("[Telegram] Notification failed (swallowed): %s", exc)
@@ -735,7 +810,11 @@ class StrategyRunner:
         if self._notifier.enabled:
             try:
                 trades_today = self.trade_logger.get_trade_count(date.today())
-                pnl = self.trade_logger.get_daily_pnl(date.today()) if hasattr(self.trade_logger, 'get_daily_pnl') else 0
+                pnl = (
+                    self.trade_logger.get_daily_pnl(date.today())
+                    if hasattr(self.trade_logger, "get_daily_pnl")
+                    else 0
+                )
                 msg = format_daily_summary(self.exchange, trades_today, pnl)
                 self._notifier.send_message_sync(msg)
             except Exception as exc:
@@ -749,7 +828,7 @@ class StrategyRunner:
             "symbols": self.symbols,
             "positions": self._positions.copy(),
             "health": self.health_monitor.get_summary(),
-            "trades_today": self.trade_logger.get_trade_count(date.today())
+            "trades_today": self.trade_logger.get_trade_count(date.today()),
         }
 
 
@@ -758,13 +837,31 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Strategy Runner")
     parser.add_argument("--strategy", default="ma_crossover_v1", help="Strategy name")
-    parser.add_argument("--exchange", default="paper",
-                       choices=["paper", "upbit", "bithumb", "binance_spot", "binance_futures",
-                                "ebest", "ebest_spot", "ebest_kospi", "ebest_kosdaq"])
+    parser.add_argument(
+        "--exchange",
+        default="paper",
+        choices=[
+            "paper",
+            "upbit",
+            "bithumb",
+            "binance_spot",
+            "binance_futures",
+            "ebest",
+            "ebest_spot",
+            "ebest_kospi",
+            "ebest_kosdaq",
+        ],
+    )
     parser.add_argument("--symbol", default="BTC/KRW", help="Trading symbol")
-    parser.add_argument("--size", type=float, default=10000, help="Position size (KRW/USDT)")
-    parser.add_argument("--leverage", type=int, default=1, help="Leverage (for futures)")
-    parser.add_argument("--interval", type=int, default=60, help="Loop interval (seconds)")
+    parser.add_argument(
+        "--size", type=float, default=10000, help="Position size (KRW/USDT)"
+    )
+    parser.add_argument(
+        "--leverage", type=int, default=1, help="Leverage (for futures)"
+    )
+    parser.add_argument(
+        "--interval", type=int, default=60, help="Loop interval (seconds)"
+    )
     parser.add_argument("--iterations", type=int, default=None, help="Max iterations")
     parser.add_argument("--once", action="store_true", help="Run once only")
 
@@ -786,7 +883,4 @@ if __name__ == "__main__":
         result = runner.run_once()
         print(f"Result: {result}")
     else:
-        runner.run_loop(
-            interval_seconds=args.interval,
-            max_iterations=args.iterations
-        )
+        runner.run_loop(interval_seconds=args.interval, max_iterations=args.iterations)

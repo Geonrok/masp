@@ -44,6 +44,7 @@ async def main():
         except Exception as e:
             print(f"ka10001 오류: {e}")
             import traceback
+
             traceback.print_exc()
 
         await asyncio.sleep(0.5)
@@ -93,11 +94,10 @@ async def main():
         # 5. 일봉 데이터 (ka10081)
         print("\n=== 삼성전자 일봉 (ka10081) ===")
         try:
-            response = await api.request("ka10081", {
-                "stk_cd": "005930",
-                "base_dt": "00000000",
-                "upd_stkpc_tp": "1"
-            })
+            response = await api.request(
+                "ka10081",
+                {"stk_cd": "005930", "base_dt": "00000000", "upd_stkpc_tp": "1"},
+            )
             print(f"응답 코드: {response.return_code}")
             if response.return_code == 0 and response.body:
                 data = response.body
@@ -105,8 +105,8 @@ async def main():
                     print(f"데이터 수: {len(data)}")
                     print(f"첫 번째: {data[0]}")
                 elif isinstance(data, dict):
-                    if 'output' in data:
-                        output = data['output']
+                    if "output" in data:
+                        output = data["output"]
                         if isinstance(output, list) and len(output) > 0:
                             print(f"데이터 수: {len(output)}")
                             print(f"첫 번째: {output[0]}")
@@ -121,6 +121,7 @@ async def main():
         except Exception as e:
             print(f"ka10081 오류: {e}")
             import traceback
+
             traceback.print_exc()
 
         # 6. 외국인기관 순매수 상위 (ka10131)
@@ -138,11 +139,13 @@ async def main():
     except ImportError as e:
         print(f"Import 오류: {e}")
         import traceback
+
         traceback.print_exc()
 
     except Exception as e:
         print(f"오류: {e}")
         import traceback
+
         traceback.print_exc()
 
     finally:

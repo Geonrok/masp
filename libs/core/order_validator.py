@@ -73,17 +73,29 @@ class PositionLimits:
         """
         return cls(
             max_position_pct=float(os.getenv("MASP_MAX_POSITION_PCT", "0.10")),
-            max_position_value_krw=float(os.getenv("MASP_MAX_POSITION_VALUE_KRW", "10000000")),
-            max_position_value_usdt=float(os.getenv("MASP_MAX_POSITION_VALUE_USDT", "10000")),
+            max_position_value_krw=float(
+                os.getenv("MASP_MAX_POSITION_VALUE_KRW", "10000000")
+            ),
+            max_position_value_usdt=float(
+                os.getenv("MASP_MAX_POSITION_VALUE_USDT", "10000")
+            ),
             min_order_value_krw=float(os.getenv("MASP_MIN_ORDER_VALUE_KRW", "5000")),
             min_order_value_usdt=float(os.getenv("MASP_MIN_ORDER_VALUE_USDT", "5")),
-            max_order_value_krw=float(os.getenv("MASP_MAX_ORDER_VALUE_KRW", "10000000")),
+            max_order_value_krw=float(
+                os.getenv("MASP_MAX_ORDER_VALUE_KRW", "10000000")
+            ),
             max_order_value_usdt=float(os.getenv("MASP_MAX_ORDER_VALUE_USDT", "10000")),
             max_total_positions=int(os.getenv("MASP_MAX_TOTAL_POSITIONS", "20")),
-            max_concentration_pct=float(os.getenv("MASP_MAX_CONCENTRATION_PCT", "0.50")),
+            max_concentration_pct=float(
+                os.getenv("MASP_MAX_CONCENTRATION_PCT", "0.50")
+            ),
             max_daily_orders=int(os.getenv("MASP_MAX_DAILY_ORDERS", "100")),
-            max_daily_volume_krw=float(os.getenv("MASP_MAX_DAILY_VOLUME_KRW", "100000000")),
-            max_daily_volume_usdt=float(os.getenv("MASP_MAX_DAILY_VOLUME_USDT", "100000")),
+            max_daily_volume_krw=float(
+                os.getenv("MASP_MAX_DAILY_VOLUME_KRW", "100000000")
+            ),
+            max_daily_volume_usdt=float(
+                os.getenv("MASP_MAX_DAILY_VOLUME_USDT", "100000")
+            ),
             max_leverage=int(os.getenv("MASP_MAX_LEVERAGE", "10")),
             default_leverage=int(os.getenv("MASP_DEFAULT_LEVERAGE", "1")),
         )
@@ -138,11 +150,14 @@ class OrderValidator:
         logger.info(
             "[OrderValidator] Initialized: max_position=%.1f%%, max_value=%s %s",
             self.limits.max_position_pct * 100,
-            f"{self.limits.max_position_value_krw:,.0f}" if self.quote_currency == "KRW"
-            else f"{self.limits.max_position_value_usdt:,.0f}",
+            (
+                f"{self.limits.max_position_value_krw:,.0f}"
+                if self.quote_currency == "KRW"
+                else f"{self.limits.max_position_value_usdt:,.0f}"
+            ),
             self.quote_currency,
         )
-    
+
     def validate(
         self,
         symbol: str,
@@ -172,17 +187,35 @@ class OrderValidator:
 
         # 1. Kill-Switch check
         if self.config.is_kill_switch_active():
-            return ValidationResult(False, "Kill-Switch is active - all trading blocked")
+            return ValidationResult(
+                False, "Kill-Switch is active - all trading blocked"
+            )
 
         # 2. Order value check
         order_value = quantity * price
 
         # Get appropriate limits based on quote currency
         is_usdt = self.quote_currency == "USDT"
-        min_order = self.limits.min_order_value_usdt if is_usdt else self.limits.min_order_value_krw
-        max_order = self.limits.max_order_value_usdt if is_usdt else self.limits.max_order_value_krw
-        max_position = self.limits.max_position_value_usdt if is_usdt else self.limits.max_position_value_krw
-        max_daily_volume = self.limits.max_daily_volume_usdt if is_usdt else self.limits.max_daily_volume_krw
+        min_order = (
+            self.limits.min_order_value_usdt
+            if is_usdt
+            else self.limits.min_order_value_krw
+        )
+        max_order = (
+            self.limits.max_order_value_usdt
+            if is_usdt
+            else self.limits.max_order_value_krw
+        )
+        max_position = (
+            self.limits.max_position_value_usdt
+            if is_usdt
+            else self.limits.max_position_value_krw
+        )
+        max_daily_volume = (
+            self.limits.max_daily_volume_usdt
+            if is_usdt
+            else self.limits.max_daily_volume_krw
+        )
         currency = self.quote_currency
 
         if order_value < min_order:
@@ -318,18 +351,18 @@ class OrderValidator:
                 "quote_currency": self.quote_currency,
             },
         }
-    
+
     def validate_quick(self, kill_switch_only: bool = False) -> ValidationResult:
         """
         Quick validation (kill-switch check only).
-        
+
         Args:
             kill_switch_only: If True, only check kill-switch
-        
+
         Returns:
             ValidationResult
         """
         if self.config.is_kill_switch_active():
             return ValidationResult(False, "Kill-Switch is active")
-        
+
         return ValidationResult(True)

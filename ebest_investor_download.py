@@ -10,7 +10,9 @@ import logging
 from datetime import datetime, timedelta
 import os
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 # API 키
@@ -51,15 +53,15 @@ async def get_foreign_trend(api, ticker, start_date, end_date):
             "t1702",
             {
                 "shcode": ticker,
-                "todt": end_date.replace('-', ''),
-                "frdt": start_date.replace('-', ''),
+                "todt": end_date.replace("-", ""),
+                "frdt": start_date.replace("-", ""),
                 "gubun": "0",  # 0:일간
-                "type": "0",   # 0:금액
-            }
+                "type": "0",  # 0:금액
+            },
         )
 
-        if response and 't1702OutBlock1' in response:
-            data = response['t1702OutBlock1']
+        if response and "t1702OutBlock1" in response:
+            data = response["t1702OutBlock1"]
             df = pd.DataFrame(data)
             logger.info(f"{ticker}: {len(df)}일 데이터 수신")
             return df
@@ -87,11 +89,11 @@ async def get_investor_ranking(api, market="2", investor="9000"):
                 "todt": datetime.now().strftime("%Y%m%d"),
                 "pression": investor,
                 "cnt": "100",
-            }
+            },
         )
 
-        if response and 't1717OutBlock' in response:
-            data = response['t1717OutBlock']
+        if response and "t1717OutBlock" in response:
+            data = response["t1717OutBlock"]
             df = pd.DataFrame(data)
             logger.info(f"순매매 상위 {len(df)}개 종목")
             return df
@@ -112,14 +114,14 @@ async def get_stock_chart(api, ticker, start_date, end_date):
             {
                 "shcode": ticker,
                 "gubun": "2",  # 2=일봉
-                "sdate": start_date.replace('-', ''),
-                "edate": end_date.replace('-', ''),
+                "sdate": start_date.replace("-", ""),
+                "edate": end_date.replace("-", ""),
                 "comp_yn": "N",
-            }
+            },
         )
 
-        if response and 't8413OutBlock1' in response:
-            data = response['t8413OutBlock1']
+        if response and "t8413OutBlock1" in response:
+            data = response["t8413OutBlock1"]
             df = pd.DataFrame(data)
             return df
 
@@ -141,9 +143,9 @@ async def main():
 
     # 테스트 종목
     test_tickers = [
-        ('005930', '삼성전자'),
-        ('247540', '에코프로비엠'),
-        ('035720', '카카오'),
+        ("005930", "삼성전자"),
+        ("247540", "에코프로비엠"),
+        ("035720", "카카오"),
     ]
 
     # 기간 설정
@@ -157,7 +159,9 @@ async def main():
     foreign_top = await get_investor_ranking(api, market="2", investor="9000")
     if foreign_top is not None:
         print(foreign_top.head(10).to_string())
-        foreign_top.to_csv(f"{SAVE_PATH}/kosdaq_foreign_top.csv", index=False, encoding='utf-8-sig')
+        foreign_top.to_csv(
+            f"{SAVE_PATH}/kosdaq_foreign_top.csv", index=False, encoding="utf-8-sig"
+        )
 
     await asyncio.sleep(1)
 
@@ -166,7 +170,9 @@ async def main():
     inst_top = await get_investor_ranking(api, market="2", investor="9001")
     if inst_top is not None:
         print(inst_top.head(10).to_string())
-        inst_top.to_csv(f"{SAVE_PATH}/kosdaq_inst_top.csv", index=False, encoding='utf-8-sig')
+        inst_top.to_csv(
+            f"{SAVE_PATH}/kosdaq_inst_top.csv", index=False, encoding="utf-8-sig"
+        )
 
     await asyncio.sleep(1)
 
@@ -179,13 +185,15 @@ async def main():
         if df is not None and len(df) > 0:
             print(f"컬럼: {list(df.columns)}")
             print(df.head(5).to_string())
-            df.to_csv(f"{SAVE_PATH}/{ticker}_investor.csv", index=False, encoding='utf-8-sig')
+            df.to_csv(
+                f"{SAVE_PATH}/{ticker}_investor.csv", index=False, encoding="utf-8-sig"
+            )
 
         await asyncio.sleep(0.5)
 
     # 4. 주식 차트 테스트
     logger.info("\n=== 주식 차트 테스트 ===")
-    chart = await get_stock_chart(api, '005930', start_date, end_date)
+    chart = await get_stock_chart(api, "005930", start_date, end_date)
     if chart is not None:
         print(f"차트 컬럼: {list(chart.columns)}")
         print(chart.head(3).to_string())

@@ -2,6 +2,7 @@
 API v1 tests for services.api.
 Phase 3B-v3: verify POST update.
 """
+
 from __future__ import annotations
 
 import os
@@ -24,6 +25,7 @@ os.environ["API_KEY_HMAC_SECRET"] = "test-secret"
 from services.api.main import app  # noqa: E402
 
 client = TestClient(app)
+
 
 def _seed_api_key():
     return client.post(

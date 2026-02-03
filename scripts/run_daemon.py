@@ -7,6 +7,7 @@ Usage:
     python scripts/run_daemon.py --strategy kama_tsmom_gate --exchange paper
     python scripts/run_daemon.py --strategy atlas_futures_p04 --exchange binance_futures
 """
+
 from __future__ import annotations
 
 import argparse
@@ -142,9 +143,11 @@ def main() -> int:
     logger.info("Strategy: %s", args.strategy)
     logger.info("Exchange: %s", args.exchange)
     logger.info("Symbols: %s", symbols)
-    logger.info("Position Size: %s %s",
-                position_size_usdt if is_usdt else position_size_krw,
-                "USDT" if is_usdt else "KRW")
+    logger.info(
+        "Position Size: %s %s",
+        position_size_usdt if is_usdt else position_size_krw,
+        "USDT" if is_usdt else "KRW",
+    )
     logger.info("Leverage: %dx", args.leverage)
     logger.info("Config: %s", args.config)
     logger.info("Live Trading: %s", os.getenv("MASP_ENABLE_LIVE_TRADING", "0"))

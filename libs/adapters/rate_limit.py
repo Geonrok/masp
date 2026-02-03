@@ -1,6 +1,7 @@
 """
 Rate limit utilities.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -28,7 +29,9 @@ class TokenBucket:
             with self._lock:
                 now = time.monotonic()
                 elapsed = now - self._updated_at
-                self._tokens = min(self._capacity, self._tokens + elapsed * self.rate_per_sec)
+                self._tokens = min(
+                    self._capacity, self._tokens + elapsed * self.rate_per_sec
+                )
                 self._updated_at = now
 
                 if self._tokens >= tokens:
@@ -54,7 +57,9 @@ class TokenBucket:
         with self._lock:
             clamped = max(0.0, min(float(remaining), float(self._capacity)))
             self._tokens = clamped
-            logger.debug("[TokenBucket] Synced to %s/%s tokens", clamped, self._capacity)
+            logger.debug(
+                "[TokenBucket] Synced to %s/%s tokens", clamped, self._capacity
+            )
 
     @property
     def available(self) -> int:
@@ -100,7 +105,9 @@ class AsyncTokenBucket:
                 self._ensure_initialized()
                 now = self._get_loop_time()
                 elapsed = now - self._updated_at
-                self._tokens = min(self._capacity, self._tokens + elapsed * self.rate_per_sec)
+                self._tokens = min(
+                    self._capacity, self._tokens + elapsed * self.rate_per_sec
+                )
                 self._updated_at = now
 
                 if self._tokens >= tokens:
@@ -127,7 +134,9 @@ class AsyncTokenBucket:
             self._ensure_initialized()
             clamped = max(0.0, min(float(remaining), float(self._capacity)))
             self._tokens = clamped
-            logger.debug("[AsyncTokenBucket] Synced to %s/%s tokens", clamped, self._capacity)
+            logger.debug(
+                "[AsyncTokenBucket] Synced to %s/%s tokens", clamped, self._capacity
+            )
 
     async def available(self) -> int:
         """Current available tokens."""

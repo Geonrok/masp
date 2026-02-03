@@ -69,9 +69,9 @@ class KOSDAQ150SignalGenerator:
         signals = self.generate_daily_signals()
 
         summary = {
-            'date': str(self.last_update.date()) if self.last_update else None,
-            'signals': {},
-            'recommendation': None
+            "date": str(self.last_update.date()) if self.last_update else None,
+            "signals": {},
+            "recommendation": None,
         }
 
         long_count = 0
@@ -79,29 +79,29 @@ class KOSDAQ150SignalGenerator:
 
         for name, signal in signals.items():
             if signal:
-                summary['signals'][name] = {
-                    'direction': 'LONG' if signal.direction == 1 else 'SHORT',
-                    'strength': signal.strength,
-                    'reason': signal.reason
+                summary["signals"][name] = {
+                    "direction": "LONG" if signal.direction == 1 else "SHORT",
+                    "strength": signal.strength,
+                    "reason": signal.reason,
                 }
                 if signal.direction == 1:
                     long_count += 1
                 elif signal.direction == -1:
                     short_count += 1
             else:
-                summary['signals'][name] = None
+                summary["signals"][name] = None
 
         # 종합 권장
         if long_count >= 2:
-            summary['recommendation'] = 'STRONG LONG'
+            summary["recommendation"] = "STRONG LONG"
         elif long_count == 1:
-            summary['recommendation'] = 'WEAK LONG'
+            summary["recommendation"] = "WEAK LONG"
         elif short_count >= 2:
-            summary['recommendation'] = 'STRONG SHORT'
+            summary["recommendation"] = "STRONG SHORT"
         elif short_count == 1:
-            summary['recommendation'] = 'WEAK SHORT'
+            summary["recommendation"] = "WEAK SHORT"
         else:
-            summary['recommendation'] = 'HOLD'
+            summary["recommendation"] = "HOLD"
 
         return summary
 
@@ -115,11 +115,11 @@ class KOSDAQ150SignalGenerator:
         print("=" * 60)
 
         print("\n전략별 신호:")
-        for name, sig in summary['signals'].items():
+        for name, sig in summary["signals"].items():
             if sig:
-                direction = sig['direction']
-                strength = sig['strength']
-                icon = "▲" if direction == 'LONG' else "▼"
+                direction = sig["direction"]
+                strength = sig["strength"]
+                icon = "▲" if direction == "LONG" else "▼"
                 print(f"  {name:<20}: {icon} {direction} (강도: {strength:.1%})")
                 print(f"                        사유: {sig['reason']}")
             else:
@@ -130,14 +130,14 @@ class KOSDAQ150SignalGenerator:
         print("=" * 60)
 
         # 행동 가이드
-        rec = summary['recommendation']
-        if rec == 'STRONG LONG':
+        rec = summary["recommendation"]
+        if rec == "STRONG LONG":
             print("\n[행동] 다음날 시초가에 롱 포지션 진입")
             print("       기존 숏 포지션이 있다면 청산 후 롱 진입")
-        elif rec == 'STRONG SHORT':
+        elif rec == "STRONG SHORT":
             print("\n[행동] 다음날 시초가에 숏 포지션 진입")
             print("       기존 롱 포지션이 있다면 청산 후 숏 진입")
-        elif rec in ['WEAK LONG', 'WEAK SHORT']:
+        elif rec in ["WEAK LONG", "WEAK SHORT"]:
             print("\n[행동] 신호 강도 약함 - 기존 포지션 유지 권장")
         else:
             print("\n[행동] 신호 없음 - 기존 포지션 유지")
@@ -149,7 +149,7 @@ class KOSDAQ150SignalGenerator:
         filename = f"daily_signal_{datetime.now().strftime('%Y%m%d')}.json"
         output_file = self.output_path / filename
 
-        with open(output_file, 'w', encoding='utf-8') as f:
+        with open(output_file, "w", encoding="utf-8") as f:
             json.dump(summary, f, indent=2, ensure_ascii=False, default=str)
 
         print(f"\n신호 저장: {output_file}")
@@ -166,8 +166,10 @@ class KOSDAQ150SignalGenerator:
         print("백테스트 결과")
         print("=" * 60)
         print(f"Sharpe Ratio: {result['sharpe']:.3f}")
-        cagr = result['cagr'] if not np.isnan(result['cagr']) else 0
-        total_ret = result['total_return'] if not np.isnan(result['total_return']) else 0
+        cagr = result["cagr"] if not np.isnan(result["cagr"]) else 0
+        total_ret = (
+            result["total_return"] if not np.isnan(result["total_return"]) else 0
+        )
         print(f"CAGR: {cagr*100:.1f}%")
         print(f"Total Return: {total_ret*100:.1f}%")
         print(f"MDD: {result['mdd']*100:.1f}%")

@@ -13,7 +13,8 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 print("=" * 80)
 print("KAMA=10, TSMOM=60 FULL VALIDATION SUITE")
@@ -39,27 +40,31 @@ print("=" * 80)
 
 # In-Sample results from grid search
 kama10_results = grid_df[
-    (grid_df['kama_period'] == 10) &
-    (grid_df['tsmom_period'] == 60) &
-    (grid_df['gate_ma_period'] == 30)
+    (grid_df["kama_period"] == 10)
+    & (grid_df["tsmom_period"] == 60)
+    & (grid_df["gate_ma_period"] == 30)
 ]
 
 print("\nKAMA=10, TSMOM=60, Gate=30 In-Sample Results:")
 print("-" * 60)
 for _, row in kama10_results.iterrows():
-    print(f"  {row['market']:15s}: Sharpe {row['sharpe']:.3f}, MDD {row['mdd']*100:.1f}%, Return {row['total_return']*100:.0f}%")
+    print(
+        f"  {row['market']:15s}: Sharpe {row['sharpe']:.3f}, MDD {row['mdd']*100:.1f}%, Return {row['total_return']*100:.0f}%"
+    )
 
 # Compare with KAMA=5, TSMOM=90
 kama5_results = grid_df[
-    (grid_df['kama_period'] == 5) &
-    (grid_df['tsmom_period'] == 90) &
-    (grid_df['gate_ma_period'] == 30)
+    (grid_df["kama_period"] == 5)
+    & (grid_df["tsmom_period"] == 90)
+    & (grid_df["gate_ma_period"] == 30)
 ]
 
 print("\nKAMA=5, TSMOM=90, Gate=30 In-Sample Results (Reference):")
 print("-" * 60)
 for _, row in kama5_results.iterrows():
-    print(f"  {row['market']:15s}: Sharpe {row['sharpe']:.3f}, MDD {row['mdd']*100:.1f}%, Return {row['total_return']*100:.0f}%")
+    print(
+        f"  {row['market']:15s}: Sharpe {row['sharpe']:.3f}, MDD {row['mdd']*100:.1f}%, Return {row['total_return']*100:.0f}%"
+    )
 
 # ============================================================
 # 3. 2025 Holdout Performance
@@ -71,7 +76,9 @@ print("=" * 80)
 print("\nKAMA=10, TSMOM=60 - 2025 Holdout:")
 print("-" * 60)
 for _, row in holdout_df.iterrows():
-    print(f"  {row['exchange']:15s}: Sharpe {row['sharpe']:.3f}, MDD {row['mdd']*100:.1f}%, Return {row['total_return']*100:.0f}%")
+    print(
+        f"  {row['exchange']:15s}: Sharpe {row['sharpe']:.3f}, MDD {row['mdd']*100:.1f}%, Return {row['total_return']*100:.0f}%"
+    )
 
 print("\n[NOTE] Binance 2025 Holdout for KAMA=10, TSMOM=60: NOT AVAILABLE")
 print("       The holdout test was only run for Upbit and Bithumb.")
@@ -93,13 +100,13 @@ Available Data Analysis:
 """)
 
 # Extract Sharpe values for comparison
-markets = ['upbit', 'bithumb', 'binance_spot']
+markets = ["upbit", "bithumb", "binance_spot"]
 kama10_sharpes = {}
 kama5_sharpes = {}
 
 for market in markets:
-    k10 = kama10_results[kama10_results['market'] == market]['sharpe'].values
-    k5 = kama5_results[kama5_results['market'] == market]['sharpe'].values
+    k10 = kama10_results[kama10_results["market"] == market]["sharpe"].values
+    k5 = kama5_results[kama5_results["market"] == market]["sharpe"].values
     if len(k10) > 0:
         kama10_sharpes[market] = k10[0]
     if len(k5) > 0:
@@ -110,8 +117,8 @@ print("-" * 60)
 print(f"{'Market':15s} | {'KAMA=10,TSMOM=60':18s} | {'KAMA=5,TSMOM=90':18s}")
 print("-" * 60)
 for market in markets:
-    k10 = kama10_sharpes.get(market, 'N/A')
-    k5 = kama5_sharpes.get(market, 'N/A')
+    k10 = kama10_sharpes.get(market, "N/A")
+    k5 = kama5_sharpes.get(market, "N/A")
     k10_str = f"{k10:.3f}" if isinstance(k10, float) else k10
     k5_str = f"{k5:.3f}" if isinstance(k5, float) else k5
     print(f"{market:15s} | {k10_str:18s} | {k5_str:18s}")
@@ -120,6 +127,7 @@ for market in markets:
 print("\nCross-Market Consistency Check:")
 print("-" * 60)
 
+
 def check_cross_market_consistency(sharpes):
     """Check if strategy performs consistently across markets."""
     values = list(sharpes.values())
@@ -127,8 +135,9 @@ def check_cross_market_consistency(sharpes):
         return None, None
     mean_sharpe = np.mean(values)
     std_sharpe = np.std(values)
-    cv = std_sharpe / mean_sharpe if mean_sharpe > 0 else float('inf')
+    cv = std_sharpe / mean_sharpe if mean_sharpe > 0 else float("inf")
     return mean_sharpe, cv
+
 
 k10_mean, k10_cv = check_cross_market_consistency(kama10_sharpes)
 k5_mean, k5_cv = check_cross_market_consistency(kama5_sharpes)
@@ -136,12 +145,16 @@ k5_mean, k5_cv = check_cross_market_consistency(kama5_sharpes)
 print(f"\nKAMA=10, TSMOM=60:")
 print(f"  Mean Sharpe across markets: {k10_mean:.3f}")
 print(f"  Coefficient of Variation: {k10_cv:.3f}")
-print(f"  Consistency: {'GOOD' if k10_cv < 0.15 else 'MODERATE' if k10_cv < 0.25 else 'POOR'}")
+print(
+    f"  Consistency: {'GOOD' if k10_cv < 0.15 else 'MODERATE' if k10_cv < 0.25 else 'POOR'}"
+)
 
 print(f"\nKAMA=5, TSMOM=90:")
 print(f"  Mean Sharpe across markets: {k5_mean:.3f}")
 print(f"  Coefficient of Variation: {k5_cv:.3f}")
-print(f"  Consistency: {'GOOD' if k5_cv < 0.15 else 'MODERATE' if k5_cv < 0.25 else 'POOR'}")
+print(
+    f"  Consistency: {'GOOD' if k5_cv < 0.15 else 'MODERATE' if k5_cv < 0.25 else 'POOR'}"
+)
 
 # Simulate cross-market validation using In-Sample differences
 print("\n" + "-" * 60)
@@ -149,19 +162,19 @@ print("Cross-Market Simulation (using In-Sample data):")
 print("-" * 60)
 
 pairs = [
-    ('upbit', 'bithumb'),
-    ('upbit', 'binance_spot'),
-    ('bithumb', 'upbit'),
-    ('bithumb', 'binance_spot'),
-    ('binance_spot', 'upbit'),
-    ('binance_spot', 'bithumb'),
+    ("upbit", "bithumb"),
+    ("upbit", "binance_spot"),
+    ("bithumb", "upbit"),
+    ("bithumb", "binance_spot"),
+    ("binance_spot", "upbit"),
+    ("binance_spot", "bithumb"),
 ]
 
 print(f"\n{'Train':15s} -> {'Test':15s} | {'K10 Sharpe':12s} | {'K5 Sharpe':12s}")
 print("-" * 60)
 for train, test in pairs:
-    k10_test = kama10_sharpes.get(test, float('nan'))
-    k5_test = kama5_sharpes.get(test, float('nan'))
+    k10_test = kama10_sharpes.get(test, float("nan"))
+    k5_test = kama5_sharpes.get(test, float("nan"))
     print(f"{train:15s} -> {test:15s} | {k10_test:.3f}        | {k5_test:.3f}")
 
 # ============================================================
@@ -171,22 +184,31 @@ print("\n" + "=" * 80)
 print("[4] OVERFITTING RISK ASSESSMENT")
 print("=" * 80)
 
+
 def deflated_sharpe_ratio(observed_sharpe, n_tests, years, skewness=0, kurtosis=3):
     euler = 0.5772156649
     if n_tests > 1:
-        expected_max = (1 - euler) * stats.norm.ppf(1 - 1/n_tests) + \
-                      euler * stats.norm.ppf(1 - 1/(n_tests * np.e))
+        expected_max = (1 - euler) * stats.norm.ppf(
+            1 - 1 / n_tests
+        ) + euler * stats.norm.ppf(1 - 1 / (n_tests * np.e))
     else:
         expected_max = 0
     n_obs = years * 252
-    var_sharpe = (1 + 0.5 * observed_sharpe**2 - skewness * observed_sharpe +
-                  (kurtosis - 3) / 4 * observed_sharpe**2) / n_obs
+    var_sharpe = (
+        1
+        + 0.5 * observed_sharpe**2
+        - skewness * observed_sharpe
+        + (kurtosis - 3) / 4 * observed_sharpe**2
+    ) / n_obs
     if var_sharpe > 0:
-        dsr = (observed_sharpe - expected_max * np.sqrt(var_sharpe)) / np.sqrt(var_sharpe)
+        dsr = (observed_sharpe - expected_max * np.sqrt(var_sharpe)) / np.sqrt(
+            var_sharpe
+        )
     else:
         dsr = 0
     p_value = 1 - stats.norm.cdf(dsr)
     return dsr, p_value, expected_max
+
 
 # Parameters
 n_tests = len(grid_df) + len(coarse_df)  # Total combinations tested
@@ -196,23 +218,29 @@ print(f"\nTotal parameter combinations tested: {n_tests}")
 print(f"Data period: {years} years")
 
 # KAMA=10, TSMOM=60
-k10_insample = kama10_sharpes.get('upbit', 3.42)
-k10_holdout = holdout_df[holdout_df['exchange'] == 'upbit']['sharpe'].values[0]
+k10_insample = kama10_sharpes.get("upbit", 3.42)
+k10_holdout = holdout_df[holdout_df["exchange"] == "upbit"]["sharpe"].values[0]
 dsr_k10_is, p_k10_is, _ = deflated_sharpe_ratio(k10_insample, n_tests, years)
 dsr_k10_oos, p_k10_oos, _ = deflated_sharpe_ratio(k10_holdout, n_tests, years)
 
 # KAMA=5, TSMOM=90
-k5_insample = kama5_sharpes.get('upbit', 3.83)
+k5_insample = kama5_sharpes.get("upbit", 3.83)
 k5_holdout = 2.35  # From optimization report
 dsr_k5_is, p_k5_is, _ = deflated_sharpe_ratio(k5_insample, n_tests, years)
 dsr_k5_oos, p_k5_oos, _ = deflated_sharpe_ratio(k5_holdout, n_tests, years)
 
 print("\nDeflated Sharpe Ratio Analysis:")
 print("-" * 70)
-print(f"{'Strategy':25s} | {'In-Sample':12s} | {'Holdout':12s} | {'DSR (IS)':10s} | {'DSR (OOS)':10s}")
+print(
+    f"{'Strategy':25s} | {'In-Sample':12s} | {'Holdout':12s} | {'DSR (IS)':10s} | {'DSR (OOS)':10s}"
+)
 print("-" * 70)
-print(f"{'KAMA=10, TSMOM=60':25s} | {k10_insample:.3f}        | {k10_holdout:.3f}       | {dsr_k10_is:.2f}       | {dsr_k10_oos:.2f}")
-print(f"{'KAMA=5, TSMOM=90':25s} | {k5_insample:.3f}        | {k5_holdout:.3f}       | {dsr_k5_is:.2f}       | {dsr_k5_oos:.2f}")
+print(
+    f"{'KAMA=10, TSMOM=60':25s} | {k10_insample:.3f}        | {k10_holdout:.3f}       | {dsr_k10_is:.2f}       | {dsr_k10_oos:.2f}"
+)
+print(
+    f"{'KAMA=5, TSMOM=90':25s} | {k5_insample:.3f}        | {k5_holdout:.3f}       | {dsr_k5_is:.2f}       | {dsr_k5_oos:.2f}"
+)
 
 # Overfitting metrics
 print("\nOverfitting Indicators:")
@@ -223,11 +251,15 @@ k5_decay = (k5_insample - k5_holdout) / k5_insample * 100
 
 print(f"KAMA=10, TSMOM=60:")
 print(f"  In-Sample → Holdout Sharpe Decay: {k10_decay:.1f}%")
-print(f"  Overfitting Risk: {'LOW' if k10_decay < 20 else 'MODERATE' if k10_decay < 40 else 'HIGH'}")
+print(
+    f"  Overfitting Risk: {'LOW' if k10_decay < 20 else 'MODERATE' if k10_decay < 40 else 'HIGH'}"
+)
 
 print(f"\nKAMA=5, TSMOM=90:")
 print(f"  In-Sample → Holdout Sharpe Decay: {k5_decay:.1f}%")
-print(f"  Overfitting Risk: {'LOW' if k5_decay < 20 else 'MODERATE' if k5_decay < 40 else 'HIGH'}")
+print(
+    f"  Overfitting Risk: {'LOW' if k5_decay < 20 else 'MODERATE' if k5_decay < 40 else 'HIGH'}"
+)
 
 # Monte Carlo
 print("\nMonte Carlo Simulation:")
@@ -245,7 +277,9 @@ k10_oos_pct = stats.percentileofscore(random_max_sharpes, k10_holdout)
 k5_is_pct = stats.percentileofscore(random_max_sharpes, k5_insample)
 k5_oos_pct = stats.percentileofscore(random_max_sharpes, k5_holdout)
 
-print(f"Random Max Sharpe: Mean={random_max_sharpes.mean():.2f}, 95th pct={np.percentile(random_max_sharpes, 95):.2f}")
+print(
+    f"Random Max Sharpe: Mean={random_max_sharpes.mean():.2f}, 95th pct={np.percentile(random_max_sharpes, 95):.2f}"
+)
 print(f"\nKAMA=10, TSMOM=60:")
 print(f"  In-Sample {k10_insample:.2f} at {k10_is_pct:.0f}th percentile")
 print(f"  Holdout {k10_holdout:.2f} at {k10_oos_pct:.0f}th percentile")
@@ -260,9 +294,9 @@ print("\n" + "=" * 80)
 print("[5] FINAL COMPARISON")
 print("=" * 80)
 
-k10_h_bi = holdout_df[holdout_df['exchange'] == 'bithumb']['sharpe'].values[0]
-k10_risk = 'LOW' if k10_decay < 20 else 'MODERATE'
-k5_risk = 'LOW' if k5_decay < 20 else 'MODERATE'
+k10_h_bi = holdout_df[holdout_df["exchange"] == "bithumb"]["sharpe"].values[0]
+k10_risk = "LOW" if k10_decay < 20 else "MODERATE"
+k5_risk = "LOW" if k5_decay < 20 else "MODERATE"
 
 print(f"""
 +-------------------------------------------------------------------+
@@ -295,7 +329,10 @@ print("=" * 80)
 print("[6] VALIDATION SCORING")
 print("=" * 80)
 
-def score_strategy(name, holdout_sharpe, decay, cv, mc_pct, markets_validated, cross_market_done):
+
+def score_strategy(
+    name, holdout_sharpe, decay, cv, mc_pct, markets_validated, cross_market_done
+):
     score = 0
     max_score = 6
     details = []
@@ -353,6 +390,7 @@ def score_strategy(name, holdout_sharpe, decay, cv, mc_pct, markets_validated, c
 
     return score, max_score, details
 
+
 # Score KAMA=10, TSMOM=60
 k10_score, k10_max, k10_details = score_strategy(
     "KAMA=10, TSMOM=60",
@@ -361,7 +399,7 @@ k10_score, k10_max, k10_details = score_strategy(
     cv=k10_cv,
     mc_pct=k10_is_pct,
     markets_validated=2,  # Only Upbit, Bithumb holdout
-    cross_market_done=False
+    cross_market_done=False,
 )
 
 # Score KAMA=5, TSMOM=90
@@ -372,7 +410,7 @@ k5_score, k5_max, k5_details = score_strategy(
     cv=k5_cv,
     mc_pct=k5_is_pct,
     markets_validated=3,  # All 3 markets
-    cross_market_done=True
+    cross_market_done=True,
 )
 
 print(f"\nKAMA=10, TSMOM=60 Score: {k10_score}/{k10_max}")
@@ -382,6 +420,7 @@ for d in k10_details:
 print(f"\nKAMA=5, TSMOM=90 Score: {k5_score}/{k5_max}")
 for d in k5_details:
     print(f"  {d}")
+
 
 # Grade
 def get_grade(score, max_score):
@@ -399,8 +438,11 @@ def get_grade(score, max_score):
     else:
         return "D"
 
+
 print(f"\nFINAL GRADES:")
-print(f"  KAMA=10, TSMOM=60: {k10_score}/{k10_max} = Grade {get_grade(k10_score, k10_max)}")
+print(
+    f"  KAMA=10, TSMOM=60: {k10_score}/{k10_max} = Grade {get_grade(k10_score, k10_max)}"
+)
 print(f"  KAMA=5, TSMOM=90:  {k5_score}/{k5_max} = Grade {get_grade(k5_score, k5_max)}")
 
 # ============================================================

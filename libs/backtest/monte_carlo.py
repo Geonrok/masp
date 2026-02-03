@@ -279,7 +279,9 @@ class MonteCarloSimulator:
             for j in range(n_periods):
                 n_trades = n_trades_per_period[i, j]
                 if n_trades > 0:
-                    trades = np.random.choice(trade_returns, size=n_trades, replace=True)
+                    trades = np.random.choice(
+                        trade_returns, size=n_trades, replace=True
+                    )
                     # Compound trades within period
                     period_return = np.prod(1 + trades) - 1
                     simulated_returns[i, j] = period_return
@@ -373,9 +375,7 @@ class MonteCarloSimulator:
             prob_lose_50pct=float(np.mean(capital_ratios < 0.50)),
             prob_lose_75pct=float(np.mean(capital_ratios < 0.25)),
             prob_total_ruin=float(np.mean(capital_ratios < 0.10)),
-            expected_min_capital=float(
-                np.mean(np.min(equity_curves, axis=1))
-            ),
+            expected_min_capital=float(np.mean(np.min(equity_curves, axis=1))),
             worst_case_capital=float(np.percentile(final_capitals, 1)),
         )
 
@@ -533,23 +533,23 @@ def format_monte_carlo_report(result: MonteCarloResult) -> str:
     ]
 
     for ci in result.confidence_intervals["final_return"]:
-        lines.append(
-            f"  {ci.level:.0%} CI Return: [{ci.lower:.2%}, {ci.upper:.2%}]"
-        )
+        lines.append(f"  {ci.level:.0%} CI Return: [{ci.lower:.2%}, {ci.upper:.2%}]")
 
-    lines.extend([
-        "",
-        "--- SHARPE RATIO DISTRIBUTION ---",
-        f"  Mean Sharpe:       {np.mean(result.sharpe_distribution):.2f}",
-        f"  Median Sharpe:     {np.median(result.sharpe_distribution):.2f}",
-        f"  5th Pctl Sharpe:   {np.percentile(result.sharpe_distribution, 5):.2f}",
-        f"  95th Pctl Sharpe:  {np.percentile(result.sharpe_distribution, 95):.2f}",
-        "",
-        "--- SUMMARY ---",
-        f"  Probability of Profit:      {result.summary['probability_profit']:.1%}",
-        f"  Expected Final Capital:     {result.summary['expected_final_capital']:,.0f}",
-        f"  Median Final Capital:       {result.summary['median_final_capital']:,.0f}",
-        "=" * 60,
-    ])
+    lines.extend(
+        [
+            "",
+            "--- SHARPE RATIO DISTRIBUTION ---",
+            f"  Mean Sharpe:       {np.mean(result.sharpe_distribution):.2f}",
+            f"  Median Sharpe:     {np.median(result.sharpe_distribution):.2f}",
+            f"  5th Pctl Sharpe:   {np.percentile(result.sharpe_distribution, 5):.2f}",
+            f"  95th Pctl Sharpe:  {np.percentile(result.sharpe_distribution, 95):.2f}",
+            "",
+            "--- SUMMARY ---",
+            f"  Probability of Profit:      {result.summary['probability_profit']:.1%}",
+            f"  Expected Final Capital:     {result.summary['expected_final_capital']:,.0f}",
+            f"  Median Final Capital:       {result.summary['median_final_capital']:,.0f}",
+            "=" * 60,
+        ]
+    )
 
     return "\n".join(lines)

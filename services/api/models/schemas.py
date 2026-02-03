@@ -1,4 +1,5 @@
 """Pydantic schemas for API responses and requests."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -48,6 +49,7 @@ class SystemStatus(BaseResponse):
 
 class ExchangeStatus(BaseModel):
     """Individual exchange status."""
+
     exchange: str
     enabled: bool = False
     connected: bool = False
@@ -60,6 +62,7 @@ class ExchangeStatus(BaseModel):
 
 class ExchangeStatusResponse(BaseResponse):
     """Response with all exchange statuses."""
+
     exchanges: List[ExchangeStatus] = Field(default_factory=list)
 
 

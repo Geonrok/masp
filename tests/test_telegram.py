@@ -72,12 +72,12 @@ def test_message_truncation():
     mock_response.status_code = 200
 
     with patch("httpx.Client") as mock_client:
-        mock_client.return_value.__enter__.return_value.post.return_value = mock_response
+        mock_client.return_value.__enter__.return_value.post.return_value = (
+            mock_response
+        )
         assert t.send_message_sync(long_text) is True
 
-        args, kwargs = (
-            mock_client.return_value.__enter__.return_value.post.call_args
-        )
+        args, kwargs = mock_client.return_value.__enter__.return_value.post.call_args
         payload = kwargs.get("json", {})
         sent_text = payload.get("text", "")
         assert len(sent_text) <= 4000

@@ -1,4 +1,5 @@
 """Alert history provider - connects Telegram/notification logs to alert_history component."""
+
 from __future__ import annotations
 
 import csv
@@ -25,7 +26,9 @@ STATUS_FAILED = "FAILED"
 DEFAULT_ALERT_LOG_DIR = "logs/alerts"
 
 
-def _get_alert_file_path(alert_date: Optional[date] = None, log_dir: str = DEFAULT_ALERT_LOG_DIR) -> Path:
+def _get_alert_file_path(
+    alert_date: Optional[date] = None, log_dir: str = DEFAULT_ALERT_LOG_DIR
+) -> Path:
     """Get alert log file path for a specific date.
 
     Args:
@@ -108,7 +111,9 @@ def _read_alert_file(file_path: Path) -> List[Dict[str, Any]]:
                     alert = {
                         "id": row.get("id", row.get("alert_id", "")),
                         "timestamp": _parse_timestamp(row.get("timestamp", "")),
-                        "alert_type": _parse_alert_type(row.get("alert_type", row.get("type", "SYSTEM"))),
+                        "alert_type": _parse_alert_type(
+                            row.get("alert_type", row.get("type", "SYSTEM"))
+                        ),
                         "exchange": row.get("exchange", ""),
                         "message": row.get("message", ""),
                         "status": row.get("status", STATUS_SENT).upper(),

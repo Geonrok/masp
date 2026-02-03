@@ -139,6 +139,7 @@ class AlertDeduplicator:
         elif self.dedup_config.strategy == DeduplicationStrategy.SIMILAR:
             # Remove numbers to match similar messages
             import re
+
             content = re.sub(r"\d+\.?\d*", "N", message)
 
         elif self.dedup_config.strategy == DeduplicationStrategy.KEY_BASED:
@@ -167,12 +168,11 @@ class AlertDeduplicator:
 
     def _cleanup_old_records(self) -> None:
         """Remove expired records."""
-        cutoff = datetime.now() - timedelta(seconds=self.dedup_config.window_seconds * 2)
+        cutoff = datetime.now() - timedelta(
+            seconds=self.dedup_config.window_seconds * 2
+        )
 
-        expired = [
-            h for h, r in self._alert_records.items()
-            if r.last_seen < cutoff
-        ]
+        expired = [h for h, r in self._alert_records.items() if r.last_seen < cutoff]
 
         for h in expired:
             del self._alert_records[h]
@@ -204,8 +204,7 @@ class AlertDeduplicator:
         # Clean old entries
         window_start = now - timedelta(seconds=config.window_seconds)
         self._rate_counters[priority] = [
-            t for t in self._rate_counters[priority]
-            if t > window_start
+            t for t in self._rate_counters[priority] if t > window_start
         ]
 
         # Check limit
@@ -343,7 +342,11 @@ class AlertDeduplicator:
             )
 
             rate_limit_active = {
-                p: (datetime.now() < until).item() if hasattr((datetime.now() < until), 'item') else (datetime.now() < until)
+                p: (
+                    (datetime.now() < until).item()
+                    if hasattr((datetime.now() < until), "item")
+                    else (datetime.now() < until)
+                )
                 for p, until in self._cooldown_until.items()
             }
 
@@ -417,8 +420,7 @@ class AlertAggregator:
             # Clean old entries
             cutoff = datetime.now() - timedelta(seconds=self.aggregation_window)
             self._pending[alert_key] = [
-                a for a in self._pending[alert_key]
-                if a["timestamp"] > cutoff
+                a for a in self._pending[alert_key] if a["timestamp"] > cutoff
             ]
 
             return None

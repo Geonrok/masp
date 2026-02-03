@@ -15,7 +15,9 @@ import uvicorn
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Multi-Asset Strategy Platform API Server")
+    parser = argparse.ArgumentParser(
+        description="Multi-Asset Strategy Platform API Server"
+    )
     parser.add_argument(
         "--host",
         type=str,
@@ -94,5 +96,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

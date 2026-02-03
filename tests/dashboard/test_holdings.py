@@ -1,4 +1,5 @@
 """Tests for holdings utilities."""
+
 import os
 from unittest.mock import patch
 

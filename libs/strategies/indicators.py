@@ -1,6 +1,7 @@
 """
 Technical indicators.
 """
+
 from typing import Union, List
 
 import numpy as np
@@ -79,7 +80,7 @@ def KAMA_series(
 
     for i in range(period, n):
         change = abs(arr[i] - arr[i - period])
-        volatility = np.sum(np.abs(np.diff(arr[i - period:i + 1])))
+        volatility = np.sum(np.abs(np.diff(arr[i - period : i + 1])))
 
         if volatility == 0:
             er = 0.0
@@ -488,12 +489,16 @@ def ADX_series(
     smoothed_plus_dm = np.zeros(n)
     smoothed_minus_dm = np.zeros(n)
 
-    smoothed_plus_dm[period] = np.sum(plus_dm[1:period + 1])
-    smoothed_minus_dm[period] = np.sum(minus_dm[1:period + 1])
+    smoothed_plus_dm[period] = np.sum(plus_dm[1 : period + 1])
+    smoothed_minus_dm[period] = np.sum(minus_dm[1 : period + 1])
 
     for i in range(period + 1, n):
-        smoothed_plus_dm[i] = smoothed_plus_dm[i - 1] - (smoothed_plus_dm[i - 1] / period) + plus_dm[i]
-        smoothed_minus_dm[i] = smoothed_minus_dm[i - 1] - (smoothed_minus_dm[i - 1] / period) + minus_dm[i]
+        smoothed_plus_dm[i] = (
+            smoothed_plus_dm[i - 1] - (smoothed_plus_dm[i - 1] / period) + plus_dm[i]
+        )
+        smoothed_minus_dm[i] = (
+            smoothed_minus_dm[i - 1] - (smoothed_minus_dm[i - 1] / period) + minus_dm[i]
+        )
 
     # +DI and -DI
     plus_di = np.zeros(n)
@@ -514,7 +519,7 @@ def ADX_series(
     # Smooth DX to get ADX
     adx = np.zeros(n)
     if n > 2 * period:
-        adx[2 * period - 1] = np.mean(dx[period:2 * period])
+        adx[2 * period - 1] = np.mean(dx[period : 2 * period])
         for i in range(2 * period, n):
             adx[i] = (adx[i - 1] * (period - 1) + dx[i]) / period
 
@@ -768,9 +773,9 @@ def Choppiness_series(
     chop = np.full(n, 50.0)
 
     for i in range(period, n):
-        tr_sum = np.sum(tr[i - period + 1:i + 1])
-        high_max = np.max(h[i - period + 1:i + 1])
-        low_min = np.min(l[i - period + 1:i + 1])
+        tr_sum = np.sum(tr[i - period + 1 : i + 1])
+        high_max = np.max(h[i - period + 1 : i + 1])
+        low_min = np.min(l[i - period + 1 : i + 1])
 
         hl_diff = high_max - low_min
         if hl_diff > 0 and tr_sum > 0:
@@ -833,7 +838,7 @@ def BBWP_series(
     bb_width = np.zeros(n)
 
     for i in range(bb_period - 1, n):
-        window = c[i - bb_period + 1:i + 1]
+        window = c[i - bb_period + 1 : i + 1]
         sma = np.mean(window)
         std = np.std(window, ddof=0)
 
@@ -844,7 +849,7 @@ def BBWP_series(
     bbwp = np.full(n, 50.0)
 
     for i in range(lookback, n):
-        width_window = bb_width[i - lookback + 1:i + 1]
+        width_window = bb_width[i - lookback + 1 : i + 1]
         current_width = bb_width[i]
         bbwp[i] = (np.sum(width_window < current_width) / lookback) * 100
 
@@ -918,8 +923,10 @@ def TSMOM_volume_weighted_series(
     tsmom_vw = np.zeros(n)
 
     for i in range(period, n):
-        weighted_sum = np.sum(returns[i - period + 1:i + 1] * v[i - period + 1:i + 1])
-        vol_sum = np.sum(v[i - period + 1:i + 1])
+        weighted_sum = np.sum(
+            returns[i - period + 1 : i + 1] * v[i - period + 1 : i + 1]
+        )
+        vol_sum = np.sum(v[i - period + 1 : i + 1])
 
         if vol_sum > 0:
             tsmom_vw[i] = weighted_sum / vol_sum

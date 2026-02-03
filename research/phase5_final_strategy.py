@@ -13,11 +13,13 @@ Improvements to try:
 5. Cross-sectional selection: only trade strongest breakouts
 6. Multiple lookback periods for robustness
 """
+
 import json
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
@@ -37,17 +39,18 @@ def load_ohlcv(symbol, timeframe="1h"):
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path)
-    for col in ['datetime', 'timestamp', 'date']:
+    for col in ["datetime", "timestamp", "date"]:
         if col in df.columns:
-            df['datetime'] = pd.to_datetime(df[col])
+            df["datetime"] = pd.to_datetime(df[col])
             break
-    return df.sort_values('datetime').reset_index(drop=True)
+    return df.sort_values("datetime").reset_index(drop=True)
 
 
 def calc_atr(high, low, close, period=14):
-    tr = np.maximum(high - low,
-         np.maximum(np.abs(high - np.roll(close, 1)),
-                    np.abs(low - np.roll(close, 1))))
+    tr = np.maximum(
+        high - low,
+        np.maximum(np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))),
+    )
     tr[0] = high[0] - low[0]
     return pd.Series(tr).rolling(period).mean().values
 
@@ -56,12 +59,13 @@ def calc_atr(high, low, close, period=14):
 # Strategy Variants
 # =============================================================================
 
+
 def strat_v1_vol_confirmed_breakout(df, lookback=96, ema_period=200, vol_mult=1.5):
     """Breakout with volume confirmation: only enter when volume > vol_mult * avg"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
-    volume = df['volume']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    volume = df["volume"]
 
     upper = high.rolling(lookback).max().shift(1)
     lower = low.rolling(lookback).min().shift(1)
@@ -70,16 +74,19 @@ def strat_v1_vol_confirmed_breakout(df, lookback=96, ema_period=200, vol_mult=1.
     vol_avg = volume.rolling(lookback).mean()
     vol_ok = volume > vol_avg * vol_mult
 
-    signals = np.where((close > upper) & (close > ema) & vol_ok, 1,
-              np.where((close < lower) & (close < ema) & vol_ok, -1, 0))
+    signals = np.where(
+        (close > upper) & (close > ema) & vol_ok,
+        1,
+        np.where((close < lower) & (close < ema) & vol_ok, -1, 0),
+    )
     return signals
 
 
 def strat_v2_atr_filter_breakout(df, lookback=96, ema_period=200, atr_expansion=1.3):
     """Breakout with ATR expansion filter: only trade when vol is expanding"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
 
     upper = high.rolling(lookback).max().shift(1)
     lower = low.rolling(lookback).min().shift(1)
@@ -90,16 +97,19 @@ def strat_v2_atr_filter_breakout(df, lookback=96, ema_period=200, atr_expansion=
     atr_avg = atr.rolling(lookback).mean()
     expanding = atr > atr_avg * atr_expansion
 
-    signals = np.where((close > upper) & (close > ema) & expanding, 1,
-              np.where((close < lower) & (close < ema) & expanding, -1, 0))
+    signals = np.where(
+        (close > upper) & (close > ema) & expanding,
+        1,
+        np.where((close < lower) & (close < ema) & expanding, -1, 0),
+    )
     return signals
 
 
 def strat_v3_multi_lookback(df, ema_period=200):
     """Multi-lookback breakout: require breakout on 2 of 3 timeframes"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     ema = close.ewm(span=ema_period, adjust=False).mean()
 
     scores = np.zeros(len(df))
@@ -109,16 +119,19 @@ def strat_v3_multi_lookback(df, ema_period=200):
         scores += np.where(close > upper, 1, np.where(close < lower, -1, 0))
 
     # Require 2 of 3 agree + EMA filter
-    signals = np.where((scores >= 2) & (close > ema), 1,
-              np.where((scores <= -2) & (close < ema), -1, 0))
+    signals = np.where(
+        (scores >= 2) & (close > ema),
+        1,
+        np.where((scores <= -2) & (close < ema), -1, 0),
+    )
     return signals
 
 
 def strat_v4_momentum_breakout(df, lookback=96, ema_period=200, mom_period=48):
     """Breakout + momentum confirmation"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
 
     upper = high.rolling(lookback).max().shift(1)
     lower = low.rolling(lookback).min().shift(1)
@@ -127,17 +140,21 @@ def strat_v4_momentum_breakout(df, lookback=96, ema_period=200, mom_period=48):
     # Momentum: require positive ROC
     roc = close.pct_change(mom_period)
 
-    signals = np.where((close > upper) & (close > ema) & (roc > 0), 1,
-              np.where((close < lower) & (close < ema) & (roc < 0), -1, 0))
+    signals = np.where(
+        (close > upper) & (close > ema) & (roc > 0),
+        1,
+        np.where((close < lower) & (close < ema) & (roc < 0), -1, 0),
+    )
     return signals
 
 
-def strat_v5_breakout_rsi_filter(df, lookback=96, ema_period=200,
-                                  rsi_period=14, rsi_long_min=50, rsi_short_max=50):
+def strat_v5_breakout_rsi_filter(
+    df, lookback=96, ema_period=200, rsi_period=14, rsi_long_min=50, rsi_short_max=50
+):
     """Breakout + RSI direction filter: RSI must confirm trend direction"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
 
     upper = high.rolling(lookback).max().shift(1)
     lower = low.rolling(lookback).min().shift(1)
@@ -150,18 +167,22 @@ def strat_v5_breakout_rsi_filter(df, lookback=96, ema_period=200,
     rs = gain / (loss + 1e-10)
     rsi = 100 - (100 / (1 + rs))
 
-    signals = np.where((close > upper) & (close > ema) & (rsi > rsi_long_min), 1,
-              np.where((close < lower) & (close < ema) & (rsi < rsi_short_max), -1, 0))
+    signals = np.where(
+        (close > upper) & (close > ema) & (rsi > rsi_long_min),
+        1,
+        np.where((close < lower) & (close < ema) & (rsi < rsi_short_max), -1, 0),
+    )
     return signals
 
 
-def strat_v6_breakout_vol_atr(df, lookback=96, ema_period=200,
-                               vol_mult=1.2, atr_expansion=1.2):
+def strat_v6_breakout_vol_atr(
+    df, lookback=96, ema_period=200, vol_mult=1.2, atr_expansion=1.2
+):
     """Combined: volume + ATR expansion + breakout"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
-    volume = df['volume']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    volume = df["volume"]
 
     upper = high.rolling(lookback).max().shift(1)
     lower = low.rolling(lookback).min().shift(1)
@@ -175,16 +196,21 @@ def strat_v6_breakout_vol_atr(df, lookback=96, ema_period=200,
     atr_avg = atr.rolling(lookback).mean()
     expanding = atr > atr_avg * atr_expansion
 
-    signals = np.where((close > upper) & (close > ema) & vol_ok & expanding, 1,
-              np.where((close < lower) & (close < ema) & vol_ok & expanding, -1, 0))
+    signals = np.where(
+        (close > upper) & (close > ema) & vol_ok & expanding,
+        1,
+        np.where((close < lower) & (close < ema) & vol_ok & expanding, -1, 0),
+    )
     return signals
 
 
-def strat_v7_breakout_trend_strength(df, lookback=96, ema_period=200, adx_period=14, adx_min=25):
+def strat_v7_breakout_trend_strength(
+    df, lookback=96, ema_period=200, adx_period=14, adx_min=25
+):
     """Breakout + ADX trend strength filter"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
 
     upper = high.rolling(lookback).max().shift(1)
     lower = low.rolling(lookback).min().shift(1)
@@ -200,23 +226,41 @@ def strat_v7_breakout_trend_strength(df, lookback=96, ema_period=200, adx_period
     atr_vals = calc_atr(high.values, low.values, close.values, adx_period)
     atr = pd.Series(atr_vals, index=df.index)
 
-    plus_di = pd.Series(plus_dm, index=df.index).rolling(adx_period).mean() / (atr + 1e-10) * 100
-    minus_di = pd.Series(minus_dm, index=df.index).rolling(adx_period).mean() / (atr + 1e-10) * 100
+    plus_di = (
+        pd.Series(plus_dm, index=df.index).rolling(adx_period).mean()
+        / (atr + 1e-10)
+        * 100
+    )
+    minus_di = (
+        pd.Series(minus_dm, index=df.index).rolling(adx_period).mean()
+        / (atr + 1e-10)
+        * 100
+    )
 
     dx = abs(plus_di - minus_di) / (plus_di + minus_di + 1e-10) * 100
     adx = dx.rolling(adx_period).mean()
 
-    signals = np.where((close > upper) & (close > ema) & (adx > adx_min), 1,
-              np.where((close < lower) & (close < ema) & (adx > adx_min), -1, 0))
+    signals = np.where(
+        (close > upper) & (close > ema) & (adx > adx_min),
+        1,
+        np.where((close < lower) & (close < ema) & (adx > adx_min), -1, 0),
+    )
     return signals
 
 
 # =============================================================================
 # Simulation with asymmetric exit
 # =============================================================================
-def simulate_asymmetric(df, signals, position_pct=0.02, max_bars=72,
-                        atr_stop=3.0, profit_target_atr=0.0,
-                        trailing_atr=0.0, breakeven_atr=0.0):
+def simulate_asymmetric(
+    df,
+    signals,
+    position_pct=0.02,
+    max_bars=72,
+    atr_stop=3.0,
+    profit_target_atr=0.0,
+    trailing_atr=0.0,
+    breakeven_atr=0.0,
+):
     """
     Advanced simulation:
     - ATR stop loss
@@ -230,9 +274,9 @@ def simulate_asymmetric(df, signals, position_pct=0.02, max_bars=72,
     trades = []
     best_price = 0
 
-    close = df['close'].values
-    high = df['high'].values
-    low = df['low'].values
+    close = df["close"].values
+    high = df["high"].values
+    low = df["low"].values
     atr_vals = calc_atr(high, low, close, 14)
 
     for i in range(len(df)):
@@ -306,23 +350,31 @@ def simulate_asymmetric(df, signals, position_pct=0.02, max_bars=72,
     gl = abs(sum(t for t in trades if t < 0))
 
     return {
-        'total_return': capital - 1,
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(trades),
-        'trades': trades,
+        "total_return": capital - 1,
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(trades),
+        "trades": trades,
     }
 
 
 # =============================================================================
 # Portfolio Walk-Forward
 # =============================================================================
-def portfolio_wf(symbols, strat_func, label,
-                 train_bars=4320, test_bars=720,
-                 target_vol=0.10, max_positions=5,
-                 atr_stop=3.0, profit_target_atr=0.0,
-                 trailing_atr=0.0, breakeven_atr=0.0,
-                 max_hold=72):
+def portfolio_wf(
+    symbols,
+    strat_func,
+    label,
+    train_bars=4320,
+    test_bars=720,
+    target_vol=0.10,
+    max_positions=5,
+    atr_stop=3.0,
+    profit_target_atr=0.0,
+    trailing_atr=0.0,
+    breakeven_atr=0.0,
+    max_hold=72,
+):
     all_data = {}
     for s in symbols:
         df = load_ohlcv(s, "1h")
@@ -343,7 +395,7 @@ def portfolio_wf(symbols, strat_func, label,
 
         scored = []
         for symbol, df in all_data.items():
-            train_ret = df['close'].iloc[:i].pct_change()
+            train_ret = df["close"].iloc[:i].pct_change()
             vol = train_ret.rolling(168).std().iloc[-1]
             if np.isnan(vol) or vol == 0:
                 vol = 0.01
@@ -354,19 +406,28 @@ def portfolio_wf(symbols, strat_func, label,
 
         for symbol, vol in selected:
             df = all_data[symbol]
-            full = df.iloc[:i + test_bars]
+            full = df.iloc[: i + test_bars]
             sigs = strat_func(full)
-            test_sigs = sigs[i:i + test_bars]
-            test_df = df.iloc[i:i + test_bars].copy().reset_index(drop=True)
+            test_sigs = sigs[i : i + test_bars]
+            test_df = df.iloc[i : i + test_bars].copy().reset_index(drop=True)
 
             ann_vol = vol * np.sqrt(24 * 365)
-            position_pct = min(target_vol / (ann_vol + 1e-10) / max(len(selected), 1), 0.05)
+            position_pct = min(
+                target_vol / (ann_vol + 1e-10) / max(len(selected), 1), 0.05
+            )
 
-            r = simulate_asymmetric(test_df, test_sigs, position_pct, max_hold,
-                                     atr_stop, profit_target_atr,
-                                     trailing_atr, breakeven_atr)
-            period_pnl += r['total_return']
-            all_trades.extend(r['trades'])
+            r = simulate_asymmetric(
+                test_df,
+                test_sigs,
+                position_pct,
+                max_hold,
+                atr_stop,
+                profit_target_atr,
+                trailing_atr,
+                breakeven_atr,
+            )
+            period_pnl += r["total_return"]
+            all_trades.extend(r["trades"])
 
         period_returns.append(period_pnl)
         equity.append(equity[-1] * (1 + period_pnl))
@@ -384,29 +445,35 @@ def portfolio_wf(symbols, strat_func, label,
     gp = sum(t for t in all_trades if t > 0)
     gl = abs(sum(t for t in all_trades if t < 0))
 
-    sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12) if len(period_returns) > 1 else 0
+    sharpe = (
+        np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
+        if len(period_returns) > 1
+        else 0
+    )
 
     return {
-        'name': label,
-        'total_return': equity[-1] - 1,
-        'max_drawdown': dd.min(),
-        'sharpe': sharpe,
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(all_trades),
-        'periods': len(period_returns),
-        'wfa_efficiency': sum(1 for r in period_returns if r > 0) / len(period_returns) * 100,
+        "name": label,
+        "total_return": equity[-1] - 1,
+        "max_drawdown": dd.min(),
+        "sharpe": sharpe,
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(all_trades),
+        "periods": len(period_returns),
+        "wfa_efficiency": sum(1 for r in period_returns if r > 0)
+        / len(period_returns)
+        * 100,
     }
 
 
 def check_criteria(r):
     c = {
-        'sharpe_gt_1': r['sharpe'] > 1.0,
-        'max_dd_lt_25': r['max_drawdown'] > -0.25,
-        'win_rate_gt_45': r['win_rate'] > 0.45,
-        'profit_factor_gt_1_5': r['profit_factor'] > 1.5,
-        'wfa_efficiency_gt_50': r['wfa_efficiency'] > 50,
-        'trade_count_gt_100': r['trade_count'] > 100,
+        "sharpe_gt_1": r["sharpe"] > 1.0,
+        "max_dd_lt_25": r["max_drawdown"] > -0.25,
+        "win_rate_gt_45": r["win_rate"] > 0.45,
+        "profit_factor_gt_1_5": r["profit_factor"] > 1.5,
+        "wfa_efficiency_gt_50": r["wfa_efficiency"] > 50,
+        "trade_count_gt_100": r["trade_count"] > 100,
     }
     return c, sum(v for v in c.values())
 
@@ -424,6 +491,7 @@ def main():
         df = pd.read_csv(f, nrows=5)
         # Check row count from file size (rough estimate)
         import os
+
         size = os.path.getsize(f)
         est_rows = size / 60  # ~60 bytes per row
         if est_rows > 10000:  # > ~400 days
@@ -432,40 +500,62 @@ def main():
     print(f"Symbols with >10000 bars: {len(available)}")
 
     # Use top liquidity symbols
-    symbols_10 = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT',
-                   'BNBUSDT', 'ADAUSDT', 'LINKUSDT', 'AVAXUSDT', 'LTCUSDT']
+    symbols_10 = [
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "DOGEUSDT",
+        "BNBUSDT",
+        "ADAUSDT",
+        "LINKUSDT",
+        "AVAXUSDT",
+        "LTCUSDT",
+    ]
 
     # Extended universe
     symbols_20 = symbols_10 + [
-        'MATICUSDT', 'DOTUSDT', 'UNIUSDT', 'AAVEUSDT', 'FILUSDT',
-        'ATOMUSDT', 'NEARUSDT', 'APTUSDT', 'ARBUSDT', 'OPUSDT',
+        "MATICUSDT",
+        "DOTUSDT",
+        "UNIUSDT",
+        "AAVEUSDT",
+        "FILUSDT",
+        "ATOMUSDT",
+        "NEARUSDT",
+        "APTUSDT",
+        "ARBUSDT",
+        "OPUSDT",
     ]
 
     # =================================================================
     # Test all strategy + exit combinations
     # =================================================================
     strategies = {
-        'v1_vol_confirm': lambda df: strat_v1_vol_confirmed_breakout(df, 96, 200, 1.5),
-        'v1_vol_1.2': lambda df: strat_v1_vol_confirmed_breakout(df, 96, 200, 1.2),
-        'v2_atr_expand': lambda df: strat_v2_atr_filter_breakout(df, 96, 200, 1.3),
-        'v2_atr_expand_1.2': lambda df: strat_v2_atr_filter_breakout(df, 96, 200, 1.2),
-        'v3_multi_lb': lambda df: strat_v3_multi_lookback(df, 200),
-        'v4_mom_confirm': lambda df: strat_v4_momentum_breakout(df, 96, 200, 48),
-        'v5_rsi_filter': lambda df: strat_v5_breakout_rsi_filter(df, 96, 200, 14, 50, 50),
-        'v5_rsi_55_45': lambda df: strat_v5_breakout_rsi_filter(df, 96, 200, 14, 55, 45),
-        'v6_vol_atr': lambda df: strat_v6_breakout_vol_atr(df, 96, 200, 1.2, 1.2),
-        'v7_adx_25': lambda df: strat_v7_breakout_trend_strength(df, 96, 200, 14, 25),
-        'v7_adx_20': lambda df: strat_v7_breakout_trend_strength(df, 96, 200, 14, 20),
+        "v1_vol_confirm": lambda df: strat_v1_vol_confirmed_breakout(df, 96, 200, 1.5),
+        "v1_vol_1.2": lambda df: strat_v1_vol_confirmed_breakout(df, 96, 200, 1.2),
+        "v2_atr_expand": lambda df: strat_v2_atr_filter_breakout(df, 96, 200, 1.3),
+        "v2_atr_expand_1.2": lambda df: strat_v2_atr_filter_breakout(df, 96, 200, 1.2),
+        "v3_multi_lb": lambda df: strat_v3_multi_lookback(df, 200),
+        "v4_mom_confirm": lambda df: strat_v4_momentum_breakout(df, 96, 200, 48),
+        "v5_rsi_filter": lambda df: strat_v5_breakout_rsi_filter(
+            df, 96, 200, 14, 50, 50
+        ),
+        "v5_rsi_55_45": lambda df: strat_v5_breakout_rsi_filter(
+            df, 96, 200, 14, 55, 45
+        ),
+        "v6_vol_atr": lambda df: strat_v6_breakout_vol_atr(df, 96, 200, 1.2, 1.2),
+        "v7_adx_25": lambda df: strat_v7_breakout_trend_strength(df, 96, 200, 14, 25),
+        "v7_adx_20": lambda df: strat_v7_breakout_trend_strength(df, 96, 200, 14, 20),
     }
 
     exit_configs = [
-        ('atr3', 3.0, 0, 0, 0, 72),
-        ('atr3_pt6', 3.0, 6.0, 0, 0, 72),
-        ('atr3_pt8', 3.0, 8.0, 0, 0, 72),
-        ('atr2_pt5', 2.0, 5.0, 0, 0, 72),
-        ('atr3_trail2_be1', 3.0, 0, 2.0, 1.0, 96),
-        ('atr3_trail3_be2', 3.0, 0, 3.0, 2.0, 96),
-        ('atr3_trail2_be2', 3.0, 0, 2.0, 2.0, 96),
+        ("atr3", 3.0, 0, 0, 0, 72),
+        ("atr3_pt6", 3.0, 6.0, 0, 0, 72),
+        ("atr3_pt8", 3.0, 8.0, 0, 0, 72),
+        ("atr2_pt5", 2.0, 5.0, 0, 0, 72),
+        ("atr3_trail2_be1", 3.0, 0, 2.0, 1.0, 96),
+        ("atr3_trail3_be2", 3.0, 0, 3.0, 2.0, 96),
+        ("atr3_trail2_be2", 3.0, 0, 2.0, 2.0, 96),
     ]
 
     all_results = []
@@ -475,30 +565,41 @@ def main():
             label = f"{strat_name}_{exit_name}"
             print(f"  {label}...", end=" ", flush=True)
 
-            r = portfolio_wf(symbols_10, strat_func, label,
-                             target_vol=0.10, max_positions=5,
-                             atr_stop=atr_s, profit_target_atr=pt,
-                             trailing_atr=trail, breakeven_atr=be,
-                             max_hold=mh)
+            r = portfolio_wf(
+                symbols_10,
+                strat_func,
+                label,
+                target_vol=0.10,
+                max_positions=5,
+                atr_stop=atr_s,
+                profit_target_atr=pt,
+                trailing_atr=trail,
+                breakeven_atr=be,
+                max_hold=mh,
+            )
 
             if r is None:
                 print("SKIP")
                 continue
 
             criteria, passed = check_criteria(r)
-            r['criteria'] = criteria
-            r['criteria_passed'] = passed
+            r["criteria"] = criteria
+            r["criteria_passed"] = passed
             all_results.append(r)
 
             marker = " ***" if passed >= 5 else (" **" if passed >= 4 else "")
-            print(f"[{passed}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                  f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-                  f"PF={r['profit_factor']:.2f} T={r['trade_count']}{marker}")
+            print(
+                f"[{passed}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+                f"PF={r['profit_factor']:.2f} T={r['trade_count']}{marker}"
+            )
 
     # =================================================================
     # Top candidates: test on wider universe
     # =================================================================
-    top_candidates = sorted(all_results, key=lambda x: (x['criteria_passed'], x['sharpe']), reverse=True)[:5]
+    top_candidates = sorted(
+        all_results, key=lambda x: (x["criteria_passed"], x["sharpe"]), reverse=True
+    )[:5]
 
     print(f"\n{'='*70}")
     print("TOP 5 → Testing on 20-symbol universe")
@@ -506,39 +607,48 @@ def main():
 
     final_results = []
     for r in top_candidates:
-        label = r['name']
+        label = r["name"]
         # Parse config from name
-        parts = label.split('_')
-        strat_key = '_'.join(parts[:-1])
-        exit_key = parts[-1] if len(parts) > 1 else 'atr3'
+        parts = label.split("_")
+        strat_key = "_".join(parts[:-1])
+        exit_key = parts[-1] if len(parts) > 1 else "atr3"
 
         # Find the matching strategy and exit
         for sn, sf in strategies.items():
             if label.startswith(sn):
                 strat_func = sf
                 strat_key = sn
-                exit_label = label[len(sn)+1:]
+                exit_label = label[len(sn) + 1 :]
                 break
 
         for en, atr_s, pt, trail, be, mh in exit_configs:
             if en == exit_label:
                 print(f"\n  {label} on 20 symbols...", end=" ", flush=True)
 
-                r20 = portfolio_wf(symbols_20, strat_func, f"{label}_20sym",
-                                   target_vol=0.10, max_positions=5,
-                                   atr_stop=atr_s, profit_target_atr=pt,
-                                   trailing_atr=trail, breakeven_atr=be,
-                                   max_hold=mh)
+                r20 = portfolio_wf(
+                    symbols_20,
+                    strat_func,
+                    f"{label}_20sym",
+                    target_vol=0.10,
+                    max_positions=5,
+                    atr_stop=atr_s,
+                    profit_target_atr=pt,
+                    trailing_atr=trail,
+                    breakeven_atr=be,
+                    max_hold=mh,
+                )
 
                 if r20:
                     criteria, passed = check_criteria(r20)
-                    r20['criteria'] = criteria
-                    r20['criteria_passed'] = passed
+                    r20["criteria"] = criteria
+                    r20["criteria_passed"] = passed
                     final_results.append(r20)
 
-                    print(f"[{passed}/6] Sharpe={r20['sharpe']:.2f} Ret={r20['total_return']*100:+.1f}% "
-                          f"DD={r20['max_drawdown']*100:.1f}% WR={r20['win_rate']*100:.0f}% "
-                          f"PF={r20['profit_factor']:.2f} T={r20['trade_count']}")
+                    print(
+                        f"[{passed}/6] Sharpe={r20['sharpe']:.2f} Ret={r20['total_return']*100:+.1f}% "
+                        f"DD={r20['max_drawdown']*100:.1f}% WR={r20['win_rate']*100:.0f}% "
+                        f"PF={r20['profit_factor']:.2f} T={r20['trade_count']}"
+                    )
                 break
 
     # =================================================================
@@ -549,14 +659,22 @@ def main():
     print(f"{'='*70}")
 
     all_combined = all_results + final_results
-    ranked = sorted(all_combined, key=lambda x: (x['criteria_passed'], x['sharpe']), reverse=True)
+    ranked = sorted(
+        all_combined, key=lambda x: (x["criteria_passed"], x["sharpe"]), reverse=True
+    )
 
     for rank, r in enumerate(ranked[:20], 1):
-        marker = "*** 6/6 ***" if r['criteria_passed'] == 6 else ("** 5/6 **" if r['criteria_passed'] == 5 else "")
-        print(f"  {rank:2d}. [{r['criteria_passed']}/6] {r['name']:<45} "
-              f"Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-              f"PF={r['profit_factor']:.2f} T={r['trade_count']} {marker}")
+        marker = (
+            "*** 6/6 ***"
+            if r["criteria_passed"] == 6
+            else ("** 5/6 **" if r["criteria_passed"] == 5 else "")
+        )
+        print(
+            f"  {rank:2d}. [{r['criteria_passed']}/6] {r['name']:<45} "
+            f"Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+            f"PF={r['profit_factor']:.2f} T={r['trade_count']} {marker}"
+        )
 
     # Detail on best
     if ranked:
@@ -564,29 +682,34 @@ def main():
         print(f"\n{'='*70}")
         print(f"BEST: {best['name']}")
         print(f"{'='*70}")
-        for c, v in best['criteria'].items():
+        for c, v in best["criteria"].items():
             print(f"  {c}: {'PASS' if v else 'FAIL'}")
 
     # Save
     report = {
-        'generated_at': datetime.now().isoformat(),
-        'configs_tested': len(all_combined),
-        'best': ranked[0]['name'] if ranked else None,
-        'best_criteria_passed': int(ranked[0]['criteria_passed']) if ranked else 0,
-        'ranking': [{'rank': i+1, 'name': r['name'],
-                     'criteria_passed': int(r['criteria_passed']),
-                     'sharpe': float(r['sharpe']),
-                     'total_return': float(r['total_return']),
-                     'max_drawdown': float(r['max_drawdown']),
-                     'win_rate': float(r['win_rate']),
-                     'profit_factor': float(r['profit_factor']),
-                     'wfa_efficiency': float(r['wfa_efficiency']),
-                     'trade_count': int(r['trade_count']),
-                     } for i, r in enumerate(ranked)],
+        "generated_at": datetime.now().isoformat(),
+        "configs_tested": len(all_combined),
+        "best": ranked[0]["name"] if ranked else None,
+        "best_criteria_passed": int(ranked[0]["criteria_passed"]) if ranked else 0,
+        "ranking": [
+            {
+                "rank": i + 1,
+                "name": r["name"],
+                "criteria_passed": int(r["criteria_passed"]),
+                "sharpe": float(r["sharpe"]),
+                "total_return": float(r["total_return"]),
+                "max_drawdown": float(r["max_drawdown"]),
+                "win_rate": float(r["win_rate"]),
+                "profit_factor": float(r["profit_factor"]),
+                "wfa_efficiency": float(r["wfa_efficiency"]),
+                "trade_count": int(r["trade_count"]),
+            }
+            for i, r in enumerate(ranked)
+        ],
     }
 
     report_path = RESULTS_PATH / "phase5_final_report.json"
-    report_path.write_text(json.dumps(report, indent=2), encoding='utf-8')
+    report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(f"\n  Report: {report_path}")
 
     return report

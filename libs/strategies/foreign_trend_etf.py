@@ -42,7 +42,7 @@ class ForeignTrendConfig:
 
     # 전략 파라미터
     foreign_period: int = 30  # 외국인 누적 기간
-    sma_period: int = 100     # 이동평균 기간
+    sma_period: int = 100  # 이동평균 기간
 
     # ETF 설정
     etf_code: str = "102110"  # TIGER 200
@@ -51,7 +51,7 @@ class ForeignTrendConfig:
 
     # 거래 비용
     commission_rate: float = 0.00015  # 매매 수수료 0.015%
-    slippage: float = 0.0001          # 슬리피지 0.01%
+    slippage: float = 0.0001  # 슬리피지 0.01%
 
     # 데이터 경로
     kospi_data_dir: str = "E:/투자/data/kospi_futures"
@@ -116,21 +116,21 @@ class ForeignTrendStrategy(BaseStrategy):
                 self._kospi_data.index = self._kospi_data.index.tz_localize(None)
 
             # SMA 계산
-            self._kospi_data[f'sma_{self.config.sma_period}'] = (
-                self._kospi_data['close'].rolling(self.config.sma_period).mean()
+            self._kospi_data[f"sma_{self.config.sma_period}"] = (
+                self._kospi_data["close"].rolling(self.config.sma_period).mean()
             )
 
             # 외국인 투자자 데이터
             investor_dir = self.config.investor_data_dir
-            files = [f for f in os.listdir(investor_dir) if f.endswith('_investor.csv')]
+            files = [f for f in os.listdir(investor_dir) if f.endswith("_investor.csv")]
 
             all_data = []
             for f in files:
                 try:
-                    df = pd.read_csv(f"{investor_dir}/{f}", encoding='utf-8-sig')
-                    df['날짜'] = pd.to_datetime(df['날짜'])
-                    df = df.set_index('날짜')
-                    all_data.append(df[['외국인합계']])
+                    df = pd.read_csv(f"{investor_dir}/{f}", encoding="utf-8-sig")
+                    df["날짜"] = pd.to_datetime(df["날짜"])
+                    df = df.set_index("날짜")
+                    all_data.append(df[["외국인합계"]])
                 except Exception:
                     continue
 
@@ -138,7 +138,7 @@ class ForeignTrendStrategy(BaseStrategy):
                 merged = all_data[0].copy()
                 for df in all_data[1:]:
                     merged = merged.add(df, fill_value=0)
-                self._foreign_data = merged['외국인합계'].sort_index()
+                self._foreign_data = merged["외국인합계"].sort_index()
 
                 # 외국인 누적 계산
                 self._foreign_cumsum = self._foreign_data.rolling(
@@ -164,8 +164,8 @@ class ForeignTrendStrategy(BaseStrategy):
 
         # 최신 데이터
         latest_date = self._kospi_data.index[-1]
-        current_close = self._kospi_data['close'].iloc[-1]
-        sma = self._kospi_data[f'sma_{self.config.sma_period}'].iloc[-1]
+        current_close = self._kospi_data["close"].iloc[-1]
+        sma = self._kospi_data[f"sma_{self.config.sma_period}"].iloc[-1]
 
         # 외국인 누적 (날짜 매칭)
         if latest_date in self._foreign_cumsum.index:
@@ -215,10 +215,14 @@ class ForeignTrendStrategy(BaseStrategy):
 
         if self._kospi_data is not None and len(self._kospi_data) > 0:
             latest = self._kospi_data.iloc[-1]
-            indicators["kospi200"] = float(latest['close'])
-            indicators["kospi200_date"] = self._kospi_data.index[-1].strftime("%Y-%m-%d")
-            indicators["sma100"] = float(latest[f'sma_{self.config.sma_period}'])
-            indicators["above_sma"] = latest['close'] > latest[f'sma_{self.config.sma_period}']
+            indicators["kospi200"] = float(latest["close"])
+            indicators["kospi200_date"] = self._kospi_data.index[-1].strftime(
+                "%Y-%m-%d"
+            )
+            indicators["sma100"] = float(latest[f"sma_{self.config.sma_period}"])
+            indicators["above_sma"] = (
+                latest["close"] > latest[f"sma_{self.config.sma_period}"]
+            )
 
         if self._foreign_cumsum is not None and len(self._foreign_cumsum) > 0:
             indicators["foreign_30d"] = float(self._foreign_cumsum.iloc[-1])
@@ -256,7 +260,7 @@ class ForeignTrendStrategy(BaseStrategy):
                 TradeSignal(
                     symbol=symbol,
                     signal=sig,
-                    price=float(self._kospi_data['close'].iloc[-1]),
+                    price=float(self._kospi_data["close"].iloc[-1]),
                     timestamp=datetime.now(),
                     reason=f"Foreign30d={indicators.get('foreign_30d', 0):.0f}, AboveSMA={indicators.get('above_sma', False)}",
                     strength=float(sig_value),
@@ -267,6 +271,7 @@ class ForeignTrendStrategy(BaseStrategy):
 
 
 # 전략 변형
+
 
 class ForeignTrend1xStrategy(ForeignTrendStrategy):
     """1배 레버리지 ETF용 (TIGER 200)."""

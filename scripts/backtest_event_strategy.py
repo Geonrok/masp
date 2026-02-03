@@ -9,6 +9,7 @@ Event-Based Trading Strategy Backtester
 Note: This uses simulated events based on price/volume anomalies
 Real implementation requires event data feeds (CoinGecko, CryptoRank, etc.)
 """
+
 from __future__ import annotations
 
 import logging
@@ -21,7 +22,7 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 
@@ -46,19 +47,17 @@ class EventDetector:
         - High volatility
         - Often at the start of data
         """
-        volume = df['volume']
+        volume = df["volume"]
         vol_mean = volume.rolling(50).mean()
         vol_spike = volume / vol_mean
 
-        close = df['close']
+        close = df["close"]
         volatility = close.pct_change().rolling(10).std()
         vol_mean_hist = volatility.rolling(50).mean()
 
         # Listing pattern: massive volume spike + high volatility
         listing_score = np.where(
-            (vol_spike > 5) & (volatility > vol_mean_hist * 2),
-            vol_spike,
-            0
+            (vol_spike > 5) & (volatility > vol_mean_hist * 2), vol_spike, 0
         )
         return pd.Series(listing_score, index=df.index)
 
@@ -69,8 +68,8 @@ class EventDetector:
         - Volume increase
         - Sharp drop on unlock day
         """
-        close = df['close']
-        volume = df['volume']
+        close = df["close"]
+        volume = df["volume"]
 
         # Pre-unlock: declining price with increasing volume
         price_trend = close.pct_change(20)
@@ -78,9 +77,7 @@ class EventDetector:
 
         # Unlock pattern: price down, volume up
         unlock_score = np.where(
-            (price_trend < -0.1) & (vol_trend > 0.5),
-            abs(price_trend) * vol_trend,
-            0
+            (price_trend < -0.1) & (vol_trend > 0.5), abs(price_trend) * vol_trend, 0
         )
         return pd.Series(unlock_score, index=df.index)
 
@@ -91,8 +88,8 @@ class EventDetector:
         - Volume spike on upgrade day
         - Consolidation after
         """
-        close = df['close']
-        volume = df['volume']
+        close = df["close"]
+        volume = df["volume"]
 
         # Pre-upgrade anticipation
         price_trend = close.pct_change(30)
@@ -100,9 +97,7 @@ class EventDetector:
 
         # Upgrade pattern: positive price trend + volume spike
         upgrade_score = np.where(
-            (price_trend > 0.15) & (vol_spike > 3),
-            price_trend * vol_spike,
-            0
+            (price_trend > 0.15) & (vol_spike > 3), price_trend * vol_spike, 0
         )
         return pd.Series(upgrade_score, index=df.index)
 
@@ -113,9 +108,9 @@ class EventDetector:
         - Volume spike
         - Gap up/down
         """
-        close = df['close']
-        open_price = df['open']
-        volume = df['volume']
+        close = df["close"]
+        open_price = df["open"]
+        volume = df["volume"]
 
         # Gap detection
         gap = abs(open_price - close.shift(1)) / close.shift(1)
@@ -124,11 +119,7 @@ class EventDetector:
         vol_spike = volume / volume.rolling(20).mean()
 
         # News pattern: gap + volume spike
-        news_score = np.where(
-            (gap > 0.03) & (vol_spike > 2),
-            gap * vol_spike * 10,
-            0
-        )
+        news_score = np.where((gap > 0.03) & (vol_spike > 2), gap * vol_spike * 10, 0)
         return pd.Series(news_score, index=df.index)
 
 
@@ -157,31 +148,29 @@ class EventStrategy:
         equity = [capital]
 
         for i in range(50, len(df)):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             score = listing_score.iloc[i]
 
             if position:
-                bars_held = i - position['entry_idx']
+                bars_held = i - position["entry_idx"]
                 # Exit after 12 bars (2 days for 4h) or if loss > 10%
-                pnl_pct = (price / position['entry'] - 1)
+                pnl_pct = price / position["entry"] - 1
                 should_exit = bars_held >= 12 or pnl_pct < -0.10
 
                 if should_exit:
                     pnl = capital * 0.15 * pnl_pct - capital * 0.002
-                    trades.append({'pnl': pnl, 'bars_held': bars_held, 'type': 'listing'})
+                    trades.append(
+                        {"pnl": pnl, "bars_held": bars_held, "type": "listing"}
+                    )
                     capital += pnl
                     position = None
 
             if not position and score > 3:
-                position = {
-                    'entry': price,
-                    'entry_idx': i,
-                    'score': score
-                }
+                position = {"entry": price, "entry_idx": i, "score": score}
 
             equity.append(capital)
 
-        return self._calc_result(trades, equity, capital, init, symbol, 'listing')
+        return self._calc_result(trades, equity, capital, init, symbol, "listing")
 
     def backtest_unlock_strategy(self, df: pd.DataFrame, symbol: str) -> Dict:
         """
@@ -202,30 +191,28 @@ class EventStrategy:
         equity = [capital]
 
         for i in range(50, len(df)):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             score = unlock_score.iloc[i]
 
             if position:
-                bars_held = i - position['entry_idx']
-                pnl_pct = (position['entry'] / price - 1)  # Short
+                bars_held = i - position["entry_idx"]
+                pnl_pct = position["entry"] / price - 1  # Short
                 should_exit = bars_held >= 6 or pnl_pct > 0.15 or pnl_pct < -0.10
 
                 if should_exit:
                     pnl = capital * 0.15 * pnl_pct - capital * 0.002
-                    trades.append({'pnl': pnl, 'bars_held': bars_held, 'type': 'unlock'})
+                    trades.append(
+                        {"pnl": pnl, "bars_held": bars_held, "type": "unlock"}
+                    )
                     capital += pnl
                     position = None
 
             if not position and score > 0.05:
-                position = {
-                    'entry': price,
-                    'entry_idx': i,
-                    'direction': -1  # Short
-                }
+                position = {"entry": price, "entry_idx": i, "direction": -1}  # Short
 
             equity.append(capital)
 
-        return self._calc_result(trades, equity, capital, init, symbol, 'unlock')
+        return self._calc_result(trades, equity, capital, init, symbol, "unlock")
 
     def backtest_upgrade_strategy(self, df: pd.DataFrame, symbol: str) -> Dict:
         """
@@ -245,31 +232,34 @@ class EventStrategy:
         equity = [capital]
 
         for i in range(50, len(df)):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             score = upgrade_score.iloc[i]
 
             if position:
-                bars_held = i - position['entry_idx']
-                pnl_pct = (price / position['entry'] - 1)
+                bars_held = i - position["entry_idx"]
+                pnl_pct = price / position["entry"] - 1
                 # Exit on big spike (sell the news) or timeout
-                vol_spike = df['volume'].iloc[i] / df['volume'].iloc[i-10:i].mean()
-                should_exit = bars_held >= 18 or (pnl_pct > 0.10 and vol_spike > 3) or pnl_pct < -0.10
+                vol_spike = df["volume"].iloc[i] / df["volume"].iloc[i - 10 : i].mean()
+                should_exit = (
+                    bars_held >= 18
+                    or (pnl_pct > 0.10 and vol_spike > 3)
+                    or pnl_pct < -0.10
+                )
 
                 if should_exit:
                     pnl = capital * 0.2 * pnl_pct - capital * 0.002
-                    trades.append({'pnl': pnl, 'bars_held': bars_held, 'type': 'upgrade'})
+                    trades.append(
+                        {"pnl": pnl, "bars_held": bars_held, "type": "upgrade"}
+                    )
                     capital += pnl
                     position = None
 
             if not position and score > 0.5:
-                position = {
-                    'entry': price,
-                    'entry_idx': i
-                }
+                position = {"entry": price, "entry_idx": i}
 
             equity.append(capital)
 
-        return self._calc_result(trades, equity, capital, init, symbol, 'upgrade')
+        return self._calc_result(trades, equity, capital, init, symbol, "upgrade")
 
     def backtest_news_strategy(self, df: pd.DataFrame, symbol: str) -> Dict:
         """
@@ -289,42 +279,47 @@ class EventStrategy:
         equity = [capital]
 
         for i in range(50, len(df)):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             score = news_score.iloc[i]
-            price_change = (price / df['close'].iloc[i-1] - 1) if i > 0 else 0
+            price_change = (price / df["close"].iloc[i - 1] - 1) if i > 0 else 0
 
             if position:
-                bars_held = i - position['entry_idx']
-                pnl_pct = (price / position['entry'] - 1) * position['dir']
+                bars_held = i - position["entry_idx"]
+                pnl_pct = (price / position["entry"] - 1) * position["dir"]
                 # Quick exit for news trades
                 should_exit = bars_held >= 6 or pnl_pct > 0.08 or pnl_pct < -0.05
 
                 if should_exit:
                     pnl = capital * 0.15 * pnl_pct - capital * 0.002
-                    trades.append({'pnl': pnl, 'bars_held': bars_held, 'type': 'news'})
+                    trades.append({"pnl": pnl, "bars_held": bars_held, "type": "news"})
                     capital += pnl
                     position = None
 
             if not position and score > 1:
                 direction = 1 if price_change > 0 else -1
-                position = {
-                    'entry': price,
-                    'entry_idx': i,
-                    'dir': direction
-                }
+                position = {"entry": price, "entry_idx": i, "dir": direction}
 
             equity.append(capital)
 
-        return self._calc_result(trades, equity, capital, init, symbol, 'news')
+        return self._calc_result(trades, equity, capital, init, symbol, "news")
 
-    def _calc_result(self, trades: List, equity: List, capital: float,
-                     init: float, symbol: str, strategy: str) -> Dict:
+    def _calc_result(
+        self,
+        trades: List,
+        equity: List,
+        capital: float,
+        init: float,
+        symbol: str,
+        strategy: str,
+    ) -> Dict:
         if len(trades) < 3:
             return None
 
-        pnls = [t['pnl'] for t in trades]
+        pnls = [t["pnl"] for t in trades]
         equity_s = pd.Series(equity)
-        mdd = ((equity_s - equity_s.expanding().max()) / equity_s.expanding().max()).min() * 100
+        mdd = (
+            (equity_s - equity_s.expanding().max()) / equity_s.expanding().max()
+        ).min() * 100
 
         wins = sum(1 for p in pnls if p > 0)
         gp = sum(p for p in pnls if p > 0)
@@ -332,14 +327,14 @@ class EventStrategy:
         pf = gp / gl if gl > 0 else (999 if gp > 0 else 0)
 
         return {
-            'symbol': symbol,
-            'strategy': strategy,
-            'pf': min(pf, 999),
-            'ret': (capital / init - 1) * 100,
-            'wr': wins / len(trades) * 100,
-            'mdd': mdd,
-            'trades': len(trades),
-            'avg_bars_held': np.mean([t['bars_held'] for t in trades])
+            "symbol": symbol,
+            "strategy": strategy,
+            "pf": min(pf, 999),
+            "ret": (capital / init - 1) * 100,
+            "wr": wins / len(trades) * 100,
+            "mdd": mdd,
+            "trades": len(trades),
+            "avg_bars_held": np.mean([t["bars_held"] for t in trades]),
         }
 
 
@@ -353,16 +348,18 @@ def main():
 
     # Load all symbols
     ohlcv_dir = DATA_ROOT / "binance_futures_4h"
-    symbols = sorted([f.stem for f in ohlcv_dir.glob("*.csv") if f.stem.endswith('USDT')])
+    symbols = sorted(
+        [f.stem for f in ohlcv_dir.glob("*.csv") if f.stem.endswith("USDT")]
+    )
 
     strategy = EventStrategy()
     all_results = []
 
     strategies = [
-        ('Listing', strategy.backtest_listing_strategy),
-        ('Unlock', strategy.backtest_unlock_strategy),
-        ('Upgrade', strategy.backtest_upgrade_strategy),
-        ('News', strategy.backtest_news_strategy),
+        ("Listing", strategy.backtest_listing_strategy),
+        ("Unlock", strategy.backtest_unlock_strategy),
+        ("Upgrade", strategy.backtest_upgrade_strategy),
+        ("News", strategy.backtest_news_strategy),
     ]
 
     for strat_name, strat_func in strategies:
@@ -373,7 +370,7 @@ def main():
         for symbol in symbols:
             filepath = ohlcv_dir / f"{symbol}.csv"
             df = pd.read_csv(filepath)
-            for col in ['datetime', 'timestamp', 'date']:
+            for col in ["datetime", "timestamp", "date"]:
                 if col in df.columns:
                     df[col] = pd.to_datetime(df[col])
                     df = df.set_index(col).sort_index()
@@ -384,23 +381,29 @@ def main():
                 continue
 
             result = strat_func(df, symbol)
-            if result and result['trades'] >= 5:
+            if result and result["trades"] >= 5:
                 results.append(result)
                 all_results.append(result)
 
         if results:
             df_results = pd.DataFrame(results)
-            profitable = df_results[df_results['pf'] > 1.0]
+            profitable = df_results[df_results["pf"] > 1.0]
             logger.info(f"  Tested: {len(results)} symbols")
-            logger.info(f"  Profitable: {len(profitable)} ({len(profitable)/len(results)*100:.1f}%)")
-            logger.info(f"  Avg PF: {df_results[df_results['pf'] < 999]['pf'].mean():.2f}")
+            logger.info(
+                f"  Profitable: {len(profitable)} ({len(profitable)/len(results)*100:.1f}%)"
+            )
+            logger.info(
+                f"  Avg PF: {df_results[df_results['pf'] < 999]['pf'].mean():.2f}"
+            )
             logger.info(f"  Avg Return: {df_results['ret'].mean():+.1f}%")
 
             # Top 5
-            top5 = df_results.nlargest(5, 'pf')
+            top5 = df_results.nlargest(5, "pf")
             logger.info(f"\n  Top 5 {strat_name}:")
             for _, r in top5.iterrows():
-                logger.info(f"    {r['symbol']:<14} PF={r['pf']:.2f} Ret={r['ret']:+.1f}% Trades={r['trades']}")
+                logger.info(
+                    f"    {r['symbol']:<14} PF={r['pf']:.2f} Ret={r['ret']:+.1f}% Trades={r['trades']}"
+                )
 
     # Overall summary
     logger.info("\n" + "=" * 70)
@@ -411,19 +414,23 @@ def main():
         df_all = pd.DataFrame(all_results)
 
         # Group by strategy
-        for strategy in df_all['strategy'].unique():
-            subset = df_all[df_all['strategy'] == strategy]
-            profitable = (subset['pf'] > 1.0).sum()
-            avg_pf = subset[subset['pf'] < 999]['pf'].mean()
-            logger.info(f"{strategy:<10}: {profitable}/{len(subset)} profitable ({profitable/len(subset)*100:.1f}%), "
-                       f"Avg PF={avg_pf:.2f}")
+        for strategy in df_all["strategy"].unique():
+            subset = df_all[df_all["strategy"] == strategy]
+            profitable = (subset["pf"] > 1.0).sum()
+            avg_pf = subset[subset["pf"] < 999]["pf"].mean()
+            logger.info(
+                f"{strategy:<10}: {profitable}/{len(subset)} profitable ({profitable/len(subset)*100:.1f}%), "
+                f"Avg PF={avg_pf:.2f}"
+            )
 
         # Best overall
         logger.info("\nTop 15 Event-Based Opportunities:")
-        top = df_all.nlargest(15, 'pf')
+        top = df_all.nlargest(15, "pf")
         for _, r in top.iterrows():
-            logger.info(f"  {r['symbol']:<14} {r['strategy']:<10} PF={r['pf']:.2f} "
-                       f"Ret={r['ret']:+.1f}% Trades={r['trades']}")
+            logger.info(
+                f"  {r['symbol']:<14} {r['strategy']:<10} PF={r['pf']:.2f} "
+                f"Ret={r['ret']:+.1f}% Trades={r['trades']}"
+            )
 
         # Save results
         df_all.to_csv(DATA_ROOT / "event_strategy_results.csv", index=False)

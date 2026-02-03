@@ -32,6 +32,7 @@ OOS Performance (v3):
     - Return: 11,763%
     - Avg Positions: 4.1
 """
+
 import logging
 from datetime import datetime
 from typing import List, Dict, Optional
@@ -140,13 +141,27 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
         self.higher_low_period = higher_low_period or self.DEFAULT_HIGHER_LOW_PERIOD
 
         # v3 parameters
-        self.min_signals = min_signals if min_signals is not None else self.DEFAULT_MIN_SIGNALS
-        self.volume_filter_pct = volume_filter_pct if volume_filter_pct is not None else self.DEFAULT_VOLUME_FILTER_PCT
+        self.min_signals = (
+            min_signals if min_signals is not None else self.DEFAULT_MIN_SIGNALS
+        )
+        self.volume_filter_pct = (
+            volume_filter_pct
+            if volume_filter_pct is not None
+            else self.DEFAULT_VOLUME_FILTER_PCT
+        )
 
         # Risk management parameters
-        self.portfolio_stop = portfolio_stop if portfolio_stop is not None else self.DEFAULT_PORTFOLIO_STOP
-        self.cooldown_days = cooldown_days if cooldown_days is not None else self.DEFAULT_COOLDOWN_DAYS
-        self.max_positions = max_positions if max_positions is not None else self.DEFAULT_MAX_POSITIONS
+        self.portfolio_stop = (
+            portfolio_stop
+            if portfolio_stop is not None
+            else self.DEFAULT_PORTFOLIO_STOP
+        )
+        self.cooldown_days = (
+            cooldown_days if cooldown_days is not None else self.DEFAULT_COOLDOWN_DAYS
+        )
+        self.max_positions = (
+            max_positions if max_positions is not None else self.DEFAULT_MAX_POSITIONS
+        )
         self.position_size_krw = position_size_krw or self.DEFAULT_POSITION_SIZE
 
         # Market data adapter
@@ -170,15 +185,19 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
         self._in_portfolio_stop: bool = False
 
         logger.info(f"[Strategy] {self.name} v{self.version} initialized")
-        logger.info(f"  v3 Changes: min_signals={self.min_signals}, "
-                   f"volume_filter={self.volume_filter_pct*100:.0f}%, "
-                   f"portfolio_stop={self.portfolio_stop*100:.0f}%")
+        logger.info(
+            f"  v3 Changes: min_signals={self.min_signals}, "
+            f"volume_filter={self.volume_filter_pct*100:.0f}%, "
+            f"portfolio_stop={self.portfolio_stop*100:.0f}%"
+        )
 
     def set_market_data(self, adapter) -> None:
         """Set market data adapter."""
         self._market_data = adapter
 
-    def update_prices(self, symbol: str, prices: List[float], volume: float = None) -> None:
+    def update_prices(
+        self, symbol: str, prices: List[float], volume: float = None
+    ) -> None:
         """Update cached price and volume data."""
         self._price_cache[symbol] = prices
         if volume is not None:
@@ -214,7 +233,9 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
         """Process daily update for cooldown tracking."""
         if self._cooldown_remaining > 0:
             self._cooldown_remaining -= 1
-            logger.info(f"[Strategy] Cooldown: {self._cooldown_remaining} days remaining")
+            logger.info(
+                f"[Strategy] Cooldown: {self._cooldown_remaining} days remaining"
+            )
 
             if self._cooldown_remaining == 0:
                 logger.info("[Strategy] Cooldown ended, trading resumed")
@@ -239,7 +260,9 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
             if self._market_data:
                 try:
                     ohlcv = self._market_data.get_ohlcv(
-                        "BTC/KRW", interval="1d", limit=self.gate_ma_period + 10,
+                        "BTC/KRW",
+                        interval="1d",
+                        limit=self.gate_ma_period + 10,
                     )
                     if ohlcv:
                         self._btc_prices = [candle.close for candle in ohlcv]
@@ -263,13 +286,17 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
 
         if self._market_data:
             try:
-                ohlcv = self._market_data.get_ohlcv(symbol, interval="1d", limit=min_length + 10)
+                ohlcv = self._market_data.get_ohlcv(
+                    symbol, interval="1d", limit=min_length + 10
+                )
                 if ohlcv:
                     prices = [candle.close for candle in ohlcv]
                     self._price_cache[symbol] = prices
                     # Update volume
                     if ohlcv:
-                        vol = sum(c.close * c.volume for c in ohlcv[-20:]) / min(20, len(ohlcv))
+                        vol = sum(c.close * c.volume for c in ohlcv[-20:]) / min(
+                            20, len(ohlcv)
+                        )
                         self._volume_cache[symbol] = vol
                     return prices
             except Exception as exc:
@@ -339,18 +366,25 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
         prices = self._get_prices(symbol, self.higher_low_period + 10)
         if len(prices) <= self.higher_low_period:
             return False
-        return prices[-1] > min(prices[-(self.higher_low_period + 1):-1])
+        return prices[-1] > min(prices[-(self.higher_low_period + 1) : -1])
 
     def _count_active_signals(self, symbol: str) -> int:
         """Count how many of 7 signals are True."""
         count = 0
-        if self._check_kama_signal(symbol): count += 1
-        if self._check_tsmom_signal(symbol): count += 1
-        if self._check_ema_cross_signal(symbol): count += 1
-        if self._check_momentum_signal(symbol): count += 1
-        if self._check_sma_cross_signal(symbol): count += 1
-        if self._check_rsi_signal(symbol): count += 1
-        if self._check_higher_low_signal(symbol): count += 1
+        if self._check_kama_signal(symbol):
+            count += 1
+        if self._check_tsmom_signal(symbol):
+            count += 1
+        if self._check_ema_cross_signal(symbol):
+            count += 1
+        if self._check_momentum_signal(symbol):
+            count += 1
+        if self._check_sma_cross_signal(symbol):
+            count += 1
+        if self._check_rsi_signal(symbol):
+            count += 1
+        if self._check_higher_low_signal(symbol):
+            count += 1
         return count
 
     def _check_signal(self, symbol: str) -> bool:
@@ -366,20 +400,27 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
         price = self._get_current_price(symbol)
         if price is None:
             return TradeSignal(
-                symbol=symbol, signal=Signal.HOLD, price=0,
-                timestamp=datetime.now(), reason="Price unavailable",
+                symbol=symbol,
+                signal=Signal.HOLD,
+                price=0,
+                timestamp=datetime.now(),
+                reason="Price unavailable",
             )
 
         # Cooldown check
         if self.is_in_cooldown():
             if self.has_position(symbol):
                 return TradeSignal(
-                    symbol=symbol, signal=Signal.SELL, price=price,
+                    symbol=symbol,
+                    signal=Signal.SELL,
+                    price=price,
                     timestamp=datetime.now(),
                     reason=f"Cooldown active ({self._cooldown_remaining}d remaining)",
                 )
             return TradeSignal(
-                symbol=symbol, signal=Signal.HOLD, price=price,
+                symbol=symbol,
+                signal=Signal.HOLD,
+                price=price,
                 timestamp=datetime.now(),
                 reason=f"Cooldown ({self._cooldown_remaining}d remaining)",
             )
@@ -391,12 +432,18 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
         if not gate_pass:
             if self.has_position(symbol):
                 return TradeSignal(
-                    symbol=symbol, signal=Signal.SELL, price=price,
-                    timestamp=datetime.now(), reason="BTC Gate FAIL - Close all",
+                    symbol=symbol,
+                    signal=Signal.SELL,
+                    price=price,
+                    timestamp=datetime.now(),
+                    reason="BTC Gate FAIL - Close all",
                 )
             return TradeSignal(
-                symbol=symbol, signal=Signal.HOLD, price=price,
-                timestamp=datetime.now(), reason="BTC Gate FAIL - No entry",
+                symbol=symbol,
+                signal=Signal.HOLD,
+                price=price,
+                timestamp=datetime.now(),
+                reason="BTC Gate FAIL - No entry",
             )
 
         # v3: Check minimum signals
@@ -407,7 +454,9 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
         if gate_pass and has_signal:
             if not has_pos:
                 return TradeSignal(
-                    symbol=symbol, signal=Signal.BUY, price=price,
+                    symbol=symbol,
+                    signal=Signal.BUY,
+                    price=price,
                     timestamp=datetime.now(),
                     reason=f"Gate PASS + {signal_count}/7 signals",
                 )
@@ -415,13 +464,17 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
         if not has_signal:
             if has_pos:
                 return TradeSignal(
-                    symbol=symbol, signal=Signal.SELL, price=price,
+                    symbol=symbol,
+                    signal=Signal.SELL,
+                    price=price,
                     timestamp=datetime.now(),
                     reason=f"Only {signal_count}/7 signals (min {self.min_signals})",
                 )
 
         return TradeSignal(
-            symbol=symbol, signal=Signal.HOLD, price=price,
+            symbol=symbol,
+            signal=Signal.HOLD,
+            price=price,
             timestamp=datetime.now(),
             reason="Holding position" if has_pos else "No action",
         )
@@ -432,21 +485,31 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
 
         # Cooldown check
         if self.is_in_cooldown():
-            logger.info(f"[Strategy] In cooldown: {self._cooldown_remaining} days remaining")
+            logger.info(
+                f"[Strategy] In cooldown: {self._cooldown_remaining} days remaining"
+            )
             for symbol in symbols:
                 if self.has_position(symbol):
                     price = self._get_current_price(symbol)
-                    signals.append(TradeSignal(
-                        symbol=symbol, signal=Signal.SELL,
-                        price=price or 0, timestamp=datetime.now(),
-                        reason=f"Portfolio Stop Cooldown ({self._cooldown_remaining}d)",
-                    ))
+                    signals.append(
+                        TradeSignal(
+                            symbol=symbol,
+                            signal=Signal.SELL,
+                            price=price or 0,
+                            timestamp=datetime.now(),
+                            reason=f"Portfolio Stop Cooldown ({self._cooldown_remaining}d)",
+                        )
+                    )
                 else:
-                    signals.append(TradeSignal(
-                        symbol=symbol, signal=Signal.HOLD,
-                        price=0, timestamp=datetime.now(),
-                        reason=f"Cooldown ({self._cooldown_remaining}d)",
-                    ))
+                    signals.append(
+                        TradeSignal(
+                            symbol=symbol,
+                            signal=Signal.HOLD,
+                            price=0,
+                            timestamp=datetime.now(),
+                            reason=f"Cooldown ({self._cooldown_remaining}d)",
+                        )
+                    )
             return signals
 
         # Gate check
@@ -459,17 +522,25 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
             for symbol in symbols:
                 price = self._get_current_price(symbol)
                 if self.has_position(symbol):
-                    signals.append(TradeSignal(
-                        symbol=symbol, signal=Signal.SELL,
-                        price=price or 0, timestamp=datetime.now(),
-                        reason="BTC Gate FAIL - Close all",
-                    ))
+                    signals.append(
+                        TradeSignal(
+                            symbol=symbol,
+                            signal=Signal.SELL,
+                            price=price or 0,
+                            timestamp=datetime.now(),
+                            reason="BTC Gate FAIL - Close all",
+                        )
+                    )
                 else:
-                    signals.append(TradeSignal(
-                        symbol=symbol, signal=Signal.HOLD,
-                        price=price or 0, timestamp=datetime.now(),
-                        reason="BTC Gate FAIL - No entry",
-                    ))
+                    signals.append(
+                        TradeSignal(
+                            symbol=symbol,
+                            signal=Signal.HOLD,
+                            price=price or 0,
+                            timestamp=datetime.now(),
+                            reason="BTC Gate FAIL - No entry",
+                        )
+                    )
             return signals
 
         # Collect symbols that pass signal condition
@@ -485,7 +556,9 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
             candidates.sort(key=lambda x: x[2], reverse=True)
             cutoff = max(1, int(len(candidates) * self.volume_filter_pct))
             candidates = candidates[:cutoff]
-            logger.info(f"[Strategy] Volume filter: {len(candidates)} symbols (top {self.volume_filter_pct*100:.0f}%)")
+            logger.info(
+                f"[Strategy] Volume filter: {len(candidates)} symbols (top {self.volume_filter_pct*100:.0f}%)"
+            )
 
         target_symbols = set(s for s, _, _ in candidates)
 
@@ -497,30 +570,46 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
             if symbol in target_symbols:
                 if not has_pos:
                     signal_count = next((c for s, c, _ in candidates if s == symbol), 0)
-                    signals.append(TradeSignal(
-                        symbol=symbol, signal=Signal.BUY,
-                        price=price or 0, timestamp=datetime.now(),
-                        reason=f"Gate PASS + {signal_count}/7 + Vol Top",
-                    ))
+                    signals.append(
+                        TradeSignal(
+                            symbol=symbol,
+                            signal=Signal.BUY,
+                            price=price or 0,
+                            timestamp=datetime.now(),
+                            reason=f"Gate PASS + {signal_count}/7 + Vol Top",
+                        )
+                    )
                 else:
-                    signals.append(TradeSignal(
-                        symbol=symbol, signal=Signal.HOLD,
-                        price=price or 0, timestamp=datetime.now(),
-                        reason="Holding position",
-                    ))
+                    signals.append(
+                        TradeSignal(
+                            symbol=symbol,
+                            signal=Signal.HOLD,
+                            price=price or 0,
+                            timestamp=datetime.now(),
+                            reason="Holding position",
+                        )
+                    )
             else:
                 if has_pos:
-                    signals.append(TradeSignal(
-                        symbol=symbol, signal=Signal.SELL,
-                        price=price or 0, timestamp=datetime.now(),
-                        reason="Signal or volume filter failed",
-                    ))
+                    signals.append(
+                        TradeSignal(
+                            symbol=symbol,
+                            signal=Signal.SELL,
+                            price=price or 0,
+                            timestamp=datetime.now(),
+                            reason="Signal or volume filter failed",
+                        )
+                    )
                 else:
-                    signals.append(TradeSignal(
-                        symbol=symbol, signal=Signal.HOLD,
-                        price=price or 0, timestamp=datetime.now(),
-                        reason="No action",
-                    ))
+                    signals.append(
+                        TradeSignal(
+                            symbol=symbol,
+                            signal=Signal.HOLD,
+                            price=price or 0,
+                            timestamp=datetime.now(),
+                            reason="No action",
+                        )
+                    )
 
         # v3: Max positions = 0 means unlimited
         if self.max_positions > 0:
@@ -529,15 +618,19 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
             available_slots = self.max_positions - current_positions
 
             if len(buy_signals) > available_slots:
-                logger.info(f"[Strategy] Limiting BUY signals: {len(buy_signals)} -> {available_slots}")
+                logger.info(
+                    f"[Strategy] Limiting BUY signals: {len(buy_signals)} -> {available_slots}"
+                )
                 for i, signal in enumerate(signals):
                     if signal.signal == Signal.BUY:
                         if available_slots > 0:
                             available_slots -= 1
                         else:
                             signals[i] = TradeSignal(
-                                symbol=signal.symbol, signal=Signal.HOLD,
-                                price=signal.price, timestamp=signal.timestamp,
+                                symbol=signal.symbol,
+                                signal=Signal.HOLD,
+                                price=signal.price,
+                                timestamp=signal.timestamp,
                                 reason="Max positions reached",
                             )
 
@@ -573,7 +666,9 @@ class SeptV3Rsi50GateStrategy(BaseStrategy):
             "cooldown_remaining": self._cooldown_remaining,
             "in_portfolio_stop": self._in_portfolio_stop,
             "current_drawdown": (
-                (self._last_portfolio_value - self._peak_portfolio_value) / self._peak_portfolio_value
-                if self._peak_portfolio_value > 0 else 0.0
+                (self._last_portfolio_value - self._peak_portfolio_value)
+                / self._peak_portfolio_value
+                if self._peak_portfolio_value > 0
+                else 0.0
             ),
         }

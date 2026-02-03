@@ -26,16 +26,17 @@ from typing import Dict, List, Tuple, Optional
 from datetime import datetime
 import json
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 # 경로 설정
-DATA_DIR = 'E:/투자/data/leveraged_etf'
-KOSPI_DIR = 'E:/투자/data/kospi_futures'
-OUTPUT_DIR = 'E:/투자/Multi-Asset Strategy Platform/logs'
+DATA_DIR = "E:/투자/data/leveraged_etf"
+KOSPI_DIR = "E:/투자/data/kospi_futures"
+OUTPUT_DIR = "E:/투자/Multi-Asset Strategy Platform/logs"
 
 # 비용 설정
 COMMISSION = 0.00015  # 0.015%
-SLIPPAGE = 0.0005     # 0.05%
+SLIPPAGE = 0.0005  # 0.05%
 ROUND_TRIP_COST = (COMMISSION + SLIPPAGE) * 2
 
 
@@ -58,10 +59,10 @@ def load_data() -> Dict[str, pd.DataFrame]:
 
     # 레버리지/인버스 ETF
     etf_files = {
-        'lev2x': f'{DATA_DIR}/122630_KODEX_레버리지.parquet',
-        'inv2x': f'{DATA_DIR}/252670_KODEX_200선물인버스2X.parquet',
-        'inv1x': f'{DATA_DIR}/114800_KODEX_인버스.parquet',
-        'spot': f'{DATA_DIR}/069500_KODEX_200.parquet',
+        "lev2x": f"{DATA_DIR}/122630_KODEX_레버리지.parquet",
+        "inv2x": f"{DATA_DIR}/252670_KODEX_200선물인버스2X.parquet",
+        "inv1x": f"{DATA_DIR}/114800_KODEX_인버스.parquet",
+        "spot": f"{DATA_DIR}/069500_KODEX_200.parquet",
     }
 
     for name, path in etf_files.items():
@@ -71,36 +72,38 @@ def load_data() -> Dict[str, pd.DataFrame]:
             if df.index.tz is not None:
                 df.index = df.index.tz_localize(None)
             data[name] = df
-            print(f'[OK] {name}: {len(df)}일')
+            print(f"[OK] {name}: {len(df)}일")
         except Exception as e:
-            print(f'[FAIL] {name}: {e}')
+            print(f"[FAIL] {name}: {e}")
 
     # VIX
     try:
-        vix = pd.read_parquet(f'{DATA_DIR}/VIX.parquet')
+        vix = pd.read_parquet(f"{DATA_DIR}/VIX.parquet")
         vix.columns = [c.lower() for c in vix.columns]
         if vix.index.tz is not None:
             vix.index = vix.index.tz_localize(None)
-        data['vix'] = vix
-        print(f'[OK] VIX: {len(vix)}일')
+        data["vix"] = vix
+        print(f"[OK] VIX: {len(vix)}일")
     except:
         # 기존 VIX 데이터 사용
-        vix = pd.read_parquet(f'{KOSPI_DIR.replace("kospi_futures", "kosdaq_futures/multi_asset")}/vix.parquet')
+        vix = pd.read_parquet(
+            f'{KOSPI_DIR.replace("kospi_futures", "kosdaq_futures/multi_asset")}/vix.parquet'
+        )
         if vix.index.tz is not None:
             vix.index = vix.index.tz_localize(None)
-        data['vix'] = vix
-        print(f'[OK] VIX (기존): {len(vix)}일')
+        data["vix"] = vix
+        print(f"[OK] VIX (기존): {len(vix)}일")
 
     # KOSPI200
     try:
-        kospi = pd.read_parquet(f'{KOSPI_DIR}/kospi200_daily_yf.parquet')
+        kospi = pd.read_parquet(f"{KOSPI_DIR}/kospi200_daily_yf.parquet")
         kospi.columns = [c.lower() for c in kospi.columns]
         if kospi.index.tz is not None:
             kospi.index = kospi.index.tz_localize(None)
-        data['kospi200'] = kospi
-        print(f'[OK] KOSPI200: {len(kospi)}일')
+        data["kospi200"] = kospi
+        print(f"[OK] KOSPI200: {len(kospi)}일")
     except Exception as e:
-        print(f'[FAIL] KOSPI200: {e}')
+        print(f"[FAIL] KOSPI200: {e}")
 
     return data
 
@@ -162,18 +165,20 @@ def calculate_metrics(returns: pd.Series, position: pd.Series) -> Dict:
     exposure = (position != 0).mean()
 
     return {
-        'cagr': cagr,
-        'sharpe': sharpe,
-        'mdd': mdd,
-        'avg_holding_days': avg_holding,
-        'trades_per_year': trades_per_year,
-        'win_rate': win_rate,
-        'exposure': exposure,
-        'equity': equity,
+        "cagr": cagr,
+        "sharpe": sharpe,
+        "mdd": mdd,
+        "avg_holding_days": avg_holding,
+        "trades_per_year": trades_per_year,
+        "win_rate": win_rate,
+        "exposure": exposure,
+        "equity": equity,
     }
 
 
-def strategy_a_vix_switching(data: Dict, max_holding: int = 20) -> Tuple[pd.Series, pd.Series]:
+def strategy_a_vix_switching(
+    data: Dict, max_holding: int = 20
+) -> Tuple[pd.Series, pd.Series]:
     """
     전략 A: VIX 기반 방향성 스위칭
 
@@ -181,9 +186,9 @@ def strategy_a_vix_switching(data: Dict, max_holding: int = 20) -> Tuple[pd.Seri
     - VIX > SMA(20) AND VIX 상승 → 인버스2X 매수 (-1)
     - 중립 → 현금 (0)
     """
-    vix = data['vix']['close']
-    lev2x = data['lev2x']['close']
-    inv2x = data['inv2x']['close']
+    vix = data["vix"]["close"]
+    lev2x = data["lev2x"]["close"]
+    inv2x = data["inv2x"]["close"]
 
     # 공통 인덱스
     common_idx = vix.index.intersection(lev2x.index).intersection(inv2x.index)
@@ -202,7 +207,7 @@ def strategy_a_vix_switching(data: Dict, max_holding: int = 20) -> Tuple[pd.Seri
 
     # 포지션
     position = pd.Series(0, index=common_idx)
-    position[long_signal == True] = 1   # 레버리지
+    position[long_signal == True] = 1  # 레버리지
     position[short_signal == True] = -1  # 인버스
 
     # 최대 보유 기간 제한
@@ -216,7 +221,9 @@ def strategy_a_vix_switching(data: Dict, max_holding: int = 20) -> Tuple[pd.Seri
     return returns, position
 
 
-def strategy_b_volatility_breakout(data: Dict, max_holding: int = 5) -> Tuple[pd.Series, pd.Series]:
+def strategy_b_volatility_breakout(
+    data: Dict, max_holding: int = 5
+) -> Tuple[pd.Series, pd.Series]:
     """
     전략 B: 변동성 브레이크아웃
 
@@ -224,9 +231,9 @@ def strategy_b_volatility_breakout(data: Dict, max_holding: int = 5) -> Tuple[pd
     - VIX 급락 (-15%) → 레버리지 매수
     - 보유: 최대 5일
     """
-    vix = data['vix']['close']
-    lev2x = data['lev2x']['close']
-    inv2x = data['inv2x']['close']
+    vix = data["vix"]["close"]
+    lev2x = data["lev2x"]["close"]
+    inv2x = data["inv2x"]["close"]
 
     common_idx = vix.index.intersection(lev2x.index).intersection(inv2x.index)
     vix = vix.reindex(common_idx)
@@ -237,13 +244,13 @@ def strategy_b_volatility_breakout(data: Dict, max_holding: int = 5) -> Tuple[pd
     vix_change = vix.pct_change()
 
     # 신호 (T-1 데이터로 T일 거래)
-    vix_spike = (vix_change > 0.20).shift(1)   # VIX +20%
+    vix_spike = (vix_change > 0.20).shift(1)  # VIX +20%
     vix_crash = (vix_change < -0.15).shift(1)  # VIX -15%
 
     # 포지션
     position = pd.Series(0, index=common_idx)
-    position[vix_spike == True] = -1   # 인버스 (VIX 급등 = 시장 하락)
-    position[vix_crash == True] = 1    # 레버리지 (VIX 급락 = 시장 상승)
+    position[vix_spike == True] = -1  # 인버스 (VIX 급등 = 시장 하락)
+    position[vix_crash == True] = 1  # 레버리지 (VIX 급락 = 시장 상승)
 
     # 최대 보유 기간 제한
     position = apply_max_holding(position, max_holding)
@@ -256,16 +263,18 @@ def strategy_b_volatility_breakout(data: Dict, max_holding: int = 5) -> Tuple[pd
     return returns, position
 
 
-def strategy_c_trend_following(data: Dict, max_holding: int = 20) -> Tuple[pd.Series, pd.Series]:
+def strategy_c_trend_following(
+    data: Dict, max_holding: int = 20
+) -> Tuple[pd.Series, pd.Series]:
     """
     전략 C: 추세 추종 + 레버리지
 
     - KOSPI200 > MA(20) > MA(60) → 레버리지 매수
     - KOSPI200 < MA(20) < MA(60) → 인버스2X 매수
     """
-    kospi = data['kospi200']['close']
-    lev2x = data['lev2x']['close']
-    inv2x = data['inv2x']['close']
+    kospi = data["kospi200"]["close"]
+    lev2x = data["lev2x"]["close"]
+    inv2x = data["inv2x"]["close"]
 
     common_idx = kospi.index.intersection(lev2x.index).intersection(inv2x.index)
     kospi = kospi.reindex(common_idx)
@@ -296,16 +305,18 @@ def strategy_c_trend_following(data: Dict, max_holding: int = 20) -> Tuple[pd.Se
     return returns, position
 
 
-def strategy_d_momentum(data: Dict, max_holding: int = 5) -> Tuple[pd.Series, pd.Series]:
+def strategy_d_momentum(
+    data: Dict, max_holding: int = 5
+) -> Tuple[pd.Series, pd.Series]:
     """
     전략 D: 단기 모멘텀
 
     - KOSPI200 5일 수익률 > +2% → 레버리지 매수
     - KOSPI200 5일 수익률 < -2% → 인버스 매수
     """
-    kospi = data['kospi200']['close']
-    lev2x = data['lev2x']['close']
-    inv2x = data['inv2x']['close']
+    kospi = data["kospi200"]["close"]
+    lev2x = data["lev2x"]["close"]
+    inv2x = data["inv2x"]["close"]
 
     common_idx = kospi.index.intersection(lev2x.index).intersection(inv2x.index)
     kospi = kospi.reindex(common_idx)
@@ -343,9 +354,9 @@ def strategy_e_hedge(data: Dict) -> Tuple[pd.Series, pd.Series]:
     - VIX > SMA(20): 인버스 30% 추가 (헷지)
     - 비율: 현물 70% + 인버스 30%
     """
-    vix = data['vix']['close']
-    spot = data['spot']['close']
-    inv1x = data['inv1x']['close']
+    vix = data["vix"]["close"]
+    spot = data["spot"]["close"]
+    inv1x = data["inv1x"]["close"]
 
     common_idx = vix.index.intersection(spot.index).intersection(inv1x.index)
     vix = vix.reindex(common_idx)
@@ -362,7 +373,9 @@ def strategy_e_hedge(data: Dict) -> Tuple[pd.Series, pd.Series]:
     # 헷지 ON: 현물 70% + 인버스 30%
     # 헷지 OFF: 현물 100%
     returns = pd.Series(0.0, index=common_idx)
-    returns[hedge_on == True] = 0.7 * spot_ret[hedge_on == True] + 0.3 * inv1x_ret[hedge_on == True]
+    returns[hedge_on == True] = (
+        0.7 * spot_ret[hedge_on == True] + 0.3 * inv1x_ret[hedge_on == True]
+    )
     returns[hedge_on == False] = spot_ret[hedge_on == False]
 
     # 포지션 (헷지 여부)
@@ -398,10 +411,10 @@ def walk_forward_validation(
 ) -> Dict:
     """Walk-Forward 검증."""
     # 데이터 기간 확인
-    common_dates = data['lev2x'].index.intersection(data['inv2x'].index)
-    common_dates = common_dates.intersection(data['vix'].index)
-    if 'kospi200' in data:
-        common_dates = common_dates.intersection(data['kospi200'].index)
+    common_dates = data["lev2x"].index.intersection(data["inv2x"].index)
+    common_dates = common_dates.intersection(data["vix"].index)
+    if "kospi200" in data:
+        common_dates = common_dates.intersection(data["kospi200"].index)
 
     start_date = common_dates.min()
     end_date = common_dates.max()
@@ -447,67 +460,73 @@ def walk_forward_validation(
             costs = turnover * ROUND_TRIP_COST / 2
             strat_ret = strat_ret - costs
 
-            sharpe = (strat_ret.mean() * 252) / (strat_ret.std() * np.sqrt(252)) if strat_ret.std() > 0 else 0
+            sharpe = (
+                (strat_ret.mean() * 252) / (strat_ret.std() * np.sqrt(252))
+                if strat_ret.std() > 0
+                else 0
+            )
 
-            folds.append({
-                'fold': fold_num,
-                'train_end': train_end.strftime('%Y-%m-%d'),
-                'test_end': test_end.strftime('%Y-%m-%d'),
-                'test_sharpe': sharpe,
-                'test_return': (1 + strat_ret).prod() - 1,
-            })
+            folds.append(
+                {
+                    "fold": fold_num,
+                    "train_end": train_end.strftime("%Y-%m-%d"),
+                    "test_end": test_end.strftime("%Y-%m-%d"),
+                    "test_sharpe": sharpe,
+                    "test_return": (1 + strat_ret).prod() - 1,
+                }
+            )
         except Exception as e:
-            print(f'  Fold {fold_num} error: {e}')
+            print(f"  Fold {fold_num} error: {e}")
 
         fold_start = train_end
 
     if len(folds) == 0:
-        return {'folds': [], 'avg_test_sharpe': 0, 'consistency': 0}
+        return {"folds": [], "avg_test_sharpe": 0, "consistency": 0}
 
     # 요약
-    sharpes = [f['test_sharpe'] for f in folds]
+    sharpes = [f["test_sharpe"] for f in folds]
     avg_sharpe = np.mean(sharpes)
     consistency = sum(1 for s in sharpes if s > 0) / len(sharpes)
 
     return {
-        'folds': folds,
-        'avg_test_sharpe': avg_sharpe,
-        'consistency': consistency,
-        'n_folds': len(folds),
+        "folds": folds,
+        "avg_test_sharpe": avg_sharpe,
+        "consistency": consistency,
+        "n_folds": len(folds),
     }
 
 
 def main():
-    print('=' * 80)
-    print('코스피 선물 ETF 알고리즘 트레이딩 전략 백테스트')
-    print('=' * 80)
+    print("=" * 80)
+    print("코스피 선물 ETF 알고리즘 트레이딩 전략 백테스트")
+    print("=" * 80)
     print()
 
     # 데이터 로드
-    print('[1] 데이터 로드')
+    print("[1] 데이터 로드")
     data = load_data()
     print()
 
-    if 'lev2x' not in data or 'inv2x' not in data:
-        print('[ERROR] 필수 데이터 누락')
+    if "lev2x" not in data or "inv2x" not in data:
+        print("[ERROR] 필수 데이터 누락")
         return
 
     # 전략 정의
     strategies = {
-        'A_VIX_Switching': (strategy_a_vix_switching, {'max_holding': 20}),
-        'B_Volatility_Breakout': (strategy_b_volatility_breakout, {'max_holding': 5}),
-        'C_Trend_Following': (strategy_c_trend_following, {'max_holding': 20}),
-        'D_Short_Momentum': (strategy_d_momentum, {'max_holding': 5}),
-        'E_Spot_Hedge': (strategy_e_hedge, {}),
+        "A_VIX_Switching": (strategy_a_vix_switching, {"max_holding": 20}),
+        "B_Volatility_Breakout": (strategy_b_volatility_breakout, {"max_holding": 5}),
+        "C_Trend_Following": (strategy_c_trend_following, {"max_holding": 20}),
+        "D_Short_Momentum": (strategy_d_momentum, {"max_holding": 5}),
+        "E_Spot_Hedge": (strategy_e_hedge, {}),
     }
 
     results = []
 
-    print('[2] 전략 테스트')
+    print("[2] 전략 테스트")
     print()
 
     for strat_name, (strat_func, kwargs) in strategies.items():
-        print(f'--- {strat_name} ---')
+        print(f"--- {strat_name} ---")
 
         try:
             # Full sample 백테스트
@@ -519,7 +538,7 @@ def main():
             metrics = calculate_metrics(returns, position)
 
             if metrics is None:
-                print('  [SKIP] 데이터 부족')
+                print("  [SKIP] 데이터 부족")
                 continue
 
             print(f'  CAGR: {metrics["cagr"]*100:.1f}%')
@@ -531,82 +550,89 @@ def main():
             print(f'  Exposure: {metrics["exposure"]*100:.1f}%')
 
             # Walk-Forward 검증
-            print('  Walk-Forward 검증 중...')
+            print("  Walk-Forward 검증 중...")
             wf = walk_forward_validation(strat_func, data)
             print(f'  WF Test Sharpe: {wf["avg_test_sharpe"]:.3f}')
-            print(f'  WF Consistency: {wf["consistency"]*100:.1f}% ({wf.get("n_folds", 0)} folds)')
+            print(
+                f'  WF Consistency: {wf["consistency"]*100:.1f}% ({wf.get("n_folds", 0)} folds)'
+            )
 
             # 통과 여부 판정
             passed = (
-                wf['avg_test_sharpe'] > 0.5 and
-                wf['consistency'] > 0.5 and
-                metrics['mdd'] > -0.40
+                wf["avg_test_sharpe"] > 0.5
+                and wf["consistency"] > 0.5
+                and metrics["mdd"] > -0.40
             )
 
-            verdict = 'PASS' if passed else 'FAIL'
-            print(f'  결론: {verdict}')
+            verdict = "PASS" if passed else "FAIL"
+            print(f"  결론: {verdict}")
 
-            results.append({
-                'strategy': strat_name,
-                'cagr': metrics['cagr'],
-                'sharpe': metrics['sharpe'],
-                'mdd': metrics['mdd'],
-                'avg_holding_days': metrics['avg_holding_days'],
-                'trades_per_year': metrics['trades_per_year'],
-                'win_rate': metrics['win_rate'],
-                'exposure': metrics['exposure'],
-                'wf_test_sharpe': wf['avg_test_sharpe'],
-                'wf_consistency': wf['consistency'],
-                'wf_folds': wf.get('n_folds', 0),
-                'verdict': verdict,
-            })
+            results.append(
+                {
+                    "strategy": strat_name,
+                    "cagr": metrics["cagr"],
+                    "sharpe": metrics["sharpe"],
+                    "mdd": metrics["mdd"],
+                    "avg_holding_days": metrics["avg_holding_days"],
+                    "trades_per_year": metrics["trades_per_year"],
+                    "win_rate": metrics["win_rate"],
+                    "exposure": metrics["exposure"],
+                    "wf_test_sharpe": wf["avg_test_sharpe"],
+                    "wf_consistency": wf["consistency"],
+                    "wf_folds": wf.get("n_folds", 0),
+                    "verdict": verdict,
+                }
+            )
 
         except Exception as e:
-            print(f'  [ERROR] {e}')
+            print(f"  [ERROR] {e}")
             import traceback
+
             traceback.print_exc()
 
         print()
 
     # 결과 요약
-    print('=' * 80)
-    print('[3] 결과 요약')
-    print('=' * 80)
+    print("=" * 80)
+    print("[3] 결과 요약")
+    print("=" * 80)
     print()
 
     if results:
         df = pd.DataFrame(results)
-        df = df.sort_values('sharpe', ascending=False)
+        df = df.sort_values("sharpe", ascending=False)
 
         print(df.to_string(index=False))
         print()
 
         # PASS 전략
-        passed = df[df['verdict'] == 'PASS']
+        passed = df[df["verdict"] == "PASS"]
         if len(passed) > 0:
-            print(f'통과 전략: {len(passed)}개')
+            print(f"통과 전략: {len(passed)}개")
             for _, row in passed.iterrows():
-                print(f'  - {row["strategy"]}: Sharpe {row["sharpe"]:.3f}, WF {row["wf_test_sharpe"]:.3f}')
+                print(
+                    f'  - {row["strategy"]}: Sharpe {row["sharpe"]:.3f}, WF {row["wf_test_sharpe"]:.3f}'
+                )
         else:
-            print('통과 전략 없음')
+            print("통과 전략 없음")
 
         # 저장
         output = {
-            'generated': datetime.now().isoformat(),
-            'type': 'leveraged_futures_etf_backtest',
-            'cost': ROUND_TRIP_COST,
-            'results': results,
+            "generated": datetime.now().isoformat(),
+            "type": "leveraged_futures_etf_backtest",
+            "cost": ROUND_TRIP_COST,
+            "results": results,
         }
 
-        output_path = f'{OUTPUT_DIR}/leveraged_futures_etf_backtest.json'
-        with open(output_path, 'w', encoding='utf-8') as f:
+        output_path = f"{OUTPUT_DIR}/leveraged_futures_etf_backtest.json"
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(output, f, ensure_ascii=False, indent=2, default=str)
 
-        print(f'\n결과 저장: {output_path}')
+        print(f"\n결과 저장: {output_path}")
 
     print()
-    print('완료')
+    print("완료")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

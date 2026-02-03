@@ -55,7 +55,9 @@ class WebSocketConfig:
     exchange: str = "generic"
 
     @classmethod
-    def for_upbit(cls, url: str = "wss://api.upbit.com/websocket/v1") -> "WebSocketConfig":
+    def for_upbit(
+        cls, url: str = "wss://api.upbit.com/websocket/v1"
+    ) -> "WebSocketConfig":
         """Create Upbit-specific configuration."""
         return cls(
             url=url,
@@ -65,7 +67,9 @@ class WebSocketConfig:
         )
 
     @classmethod
-    def for_binance(cls, url: str = "wss://stream.binance.com:9443/ws") -> "WebSocketConfig":
+    def for_binance(
+        cls, url: str = "wss://stream.binance.com:9443/ws"
+    ) -> "WebSocketConfig":
         """Create Binance-specific configuration."""
         return cls(
             url=url,
@@ -393,7 +397,8 @@ class ReconnectingWebSocket:
 
         # Calculate backoff with exponential increase
         backoff = min(
-            self.config.initial_backoff * (self.config.backoff_multiplier ** (self._reconnect_attempts - 1)),
+            self.config.initial_backoff
+            * (self.config.backoff_multiplier ** (self._reconnect_attempts - 1)),
             self.config.max_backoff,
         )
 
@@ -415,7 +420,9 @@ class ReconnectingWebSocket:
 
     async def _resubscribe(self) -> None:
         """Resubscribe to all channels after reconnection."""
-        logger.info("[WebSocket] Resubscribing to %d channels", len(self._subscriptions))
+        logger.info(
+            "[WebSocket] Resubscribing to %d channels", len(self._subscriptions)
+        )
 
         for sub in self._subscriptions:
             await self.send(sub)

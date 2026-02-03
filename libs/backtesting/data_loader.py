@@ -1,6 +1,7 @@
 """
 Data loader for KOSPI backtesting.
 """
+
 import os
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -29,8 +30,12 @@ class KOSPIDataLoader:
             self._ticker_list = [f.stem for f in files if not f.stem.startswith("_")]
         return self._ticker_list
 
-    def load_ticker(self, ticker: str, start_date: Optional[str] = None,
-                    end_date: Optional[str] = None) -> pd.DataFrame:
+    def load_ticker(
+        self,
+        ticker: str,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> pd.DataFrame:
         """
         Load OHLCV data for a single ticker.
 
@@ -49,23 +54,26 @@ class KOSPIDataLoader:
             if not filepath.exists():
                 raise FileNotFoundError(f"No data for ticker: {ticker}")
 
-            df = pd.read_csv(filepath, parse_dates=['Date'])
-            df = df.sort_values('Date').reset_index(drop=True)
+            df = pd.read_csv(filepath, parse_dates=["Date"])
+            df = df.sort_values("Date").reset_index(drop=True)
             self._cache[cache_key] = df
 
         df = self._cache[cache_key].copy()
 
         # Filter by date range
         if start_date:
-            df = df[df['Date'] >= pd.to_datetime(start_date)]
+            df = df[df["Date"] >= pd.to_datetime(start_date)]
         if end_date:
-            df = df[df['Date'] <= pd.to_datetime(end_date)]
+            df = df[df["Date"] <= pd.to_datetime(end_date)]
 
         return df.reset_index(drop=True)
 
-    def load_all_tickers(self, start_date: Optional[str] = None,
-                         end_date: Optional[str] = None,
-                         min_history_days: int = 250) -> Dict[str, pd.DataFrame]:
+    def load_all_tickers(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+        min_history_days: int = 250,
+    ) -> Dict[str, pd.DataFrame]:
         """
         Load all available tickers with minimum history requirement.
 
@@ -90,8 +98,9 @@ class KOSPIDataLoader:
 
         return data
 
-    def get_universe_panel(self, tickers: List[str],
-                          start_date: str, end_date: str) -> pd.DataFrame:
+    def get_universe_panel(
+        self, tickers: List[str], start_date: str, end_date: str
+    ) -> pd.DataFrame:
         """
         Create a panel DataFrame with all tickers.
 
@@ -101,9 +110,9 @@ class KOSPIDataLoader:
         for ticker in tickers:
             try:
                 df = self.load_ticker(ticker, start_date, end_date)
-                df = df[['Date', 'Close']].copy()
-                df = df.rename(columns={'Close': ticker})
-                df = df.set_index('Date')
+                df = df[["Date", "Close"]].copy()
+                df = df.rename(columns={"Close": ticker})
+                df = df.set_index("Date")
                 dfs.append(df)
             except Exception:
                 continue
@@ -114,8 +123,9 @@ class KOSPIDataLoader:
         panel = pd.concat(dfs, axis=1)
         return panel.sort_index()
 
-    def get_benchmark_data(self, start_date: Optional[str] = None,
-                          end_date: Optional[str] = None) -> pd.DataFrame:
+    def get_benchmark_data(
+        self, start_date: Optional[str] = None, end_date: Optional[str] = None
+    ) -> pd.DataFrame:
         """
         Get KOSPI index data as benchmark.
 

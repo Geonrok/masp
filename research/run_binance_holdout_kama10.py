@@ -6,6 +6,7 @@ This script fetches Binance spot data for 2025 and runs the holdout test.
 
 import sys
 import os
+
 sys.path.insert(0, "E:/투자/Multi-Asset Strategy Platform")
 
 import pandas as pd
@@ -13,7 +14,8 @@ import numpy as np
 from datetime import datetime, timedelta
 from typing import List, Dict, Tuple
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 print("=" * 70)
 print("BINANCE 2025 HOLDOUT TEST")
@@ -31,20 +33,24 @@ grid_path = "E:/투자/백테스트_결과_통합/backtest_results/optimization_
 grid_df = pd.read_csv(grid_path)
 
 # KAMA=10, TSMOM=60 In-Sample performance across markets
-k10_is = grid_df[(grid_df['kama_period'] == 10) &
-                  (grid_df['tsmom_period'] == 60) &
-                  (grid_df['gate_ma_period'] == 30)]
+k10_is = grid_df[
+    (grid_df["kama_period"] == 10)
+    & (grid_df["tsmom_period"] == 60)
+    & (grid_df["gate_ma_period"] == 30)
+]
 
 # KAMA=5, TSMOM=90 In-Sample performance (for comparison)
-k5_is = grid_df[(grid_df['kama_period'] == 5) &
-                 (grid_df['tsmom_period'] == 90) &
-                 (grid_df['gate_ma_period'] == 30)]
+k5_is = grid_df[
+    (grid_df["kama_period"] == 5)
+    & (grid_df["tsmom_period"] == 90)
+    & (grid_df["gate_ma_period"] == 30)
+]
 
 print("\nIn-Sample Sharpe Comparison:")
 print("-" * 50)
-for market in ['upbit', 'bithumb', 'binance_spot']:
-    k10_sharpe = k10_is[k10_is['market'] == market]['sharpe'].values[0]
-    k5_sharpe = k5_is[k5_is['market'] == market]['sharpe'].values[0]
+for market in ["upbit", "bithumb", "binance_spot"]:
+    k10_sharpe = k10_is[k10_is["market"] == market]["sharpe"].values[0]
+    k5_sharpe = k5_is[k5_is["market"] == market]["sharpe"].values[0]
     ratio = k10_sharpe / k5_sharpe
     print(f"{market:15s}: K10={k10_sharpe:.3f}, K5={k5_sharpe:.3f}, Ratio={ratio:.3f}")
 
@@ -58,13 +64,13 @@ k10_bithumb_holdout = 2.581
 k5_binance_holdout = 2.54  # From optimization report
 
 # In-Sample values
-k10_upbit_is = k10_is[k10_is['market'] == 'upbit']['sharpe'].values[0]
-k10_bithumb_is = k10_is[k10_is['market'] == 'bithumb']['sharpe'].values[0]
-k10_binance_is = k10_is[k10_is['market'] == 'binance_spot']['sharpe'].values[0]
+k10_upbit_is = k10_is[k10_is["market"] == "upbit"]["sharpe"].values[0]
+k10_bithumb_is = k10_is[k10_is["market"] == "bithumb"]["sharpe"].values[0]
+k10_binance_is = k10_is[k10_is["market"] == "binance_spot"]["sharpe"].values[0]
 
-k5_upbit_is = k5_is[k5_is['market'] == 'upbit']['sharpe'].values[0]
-k5_bithumb_is = k5_is[k5_is['market'] == 'bithumb']['sharpe'].values[0]
-k5_binance_is = k5_is[k5_is['market'] == 'binance_spot']['sharpe'].values[0]
+k5_upbit_is = k5_is[k5_is["market"] == "upbit"]["sharpe"].values[0]
+k5_bithumb_is = k5_is[k5_is["market"] == "bithumb"]["sharpe"].values[0]
+k5_binance_is = k5_is[k5_is["market"] == "binance_spot"]["sharpe"].values[0]
 
 # Decay rates
 k10_upbit_decay = (k10_upbit_is - k10_upbit_holdout) / k10_upbit_is
@@ -104,7 +110,7 @@ print(f"  K10 Binance IS ({k10_binance_is:.3f}) * (1 - {worst_decay:.3f})")
 print(f"  Estimated Holdout: {method_c:.3f}")
 
 # Final estimate: weighted average
-estimated_holdout = (method_a * 0.4 + method_b * 0.4 + method_c * 0.2)
+estimated_holdout = method_a * 0.4 + method_b * 0.4 + method_c * 0.2
 print(f"\nFinal Estimate (weighted avg):")
 print(f"  {estimated_holdout:.3f}")
 
@@ -176,22 +182,22 @@ Comparison with Known Holdout Results:
 KEY INSIGHT:
 -----------
 KAMA=10, TSMOM=60 is estimated to have Sharpe {est:.2f} on Binance 2025.
-""".format(
-    est=estimated_holdout,
-    low=ci_low,
-    high=ci_high
-))
+""".format(est=estimated_holdout, low=ci_low, high=ci_high))
 
 # Save results
-results_df = pd.DataFrame({
-    'strategy': ['KAMA=10, TSMOM=60', 'KAMA=5, TSMOM=90'],
-    'upbit_holdout': [k10_upbit_holdout, 2.35],
-    'bithumb_holdout': [k10_bithumb_holdout, 1.81],
-    'binance_holdout': [estimated_holdout, k5_binance_holdout],
-    'binance_source': ['estimated', 'actual'],
-})
+results_df = pd.DataFrame(
+    {
+        "strategy": ["KAMA=10, TSMOM=60", "KAMA=5, TSMOM=90"],
+        "upbit_holdout": [k10_upbit_holdout, 2.35],
+        "bithumb_holdout": [k10_bithumb_holdout, 1.81],
+        "binance_holdout": [estimated_holdout, k5_binance_holdout],
+        "binance_source": ["estimated", "actual"],
+    }
+)
 
-output_path = "E:/투자/Multi-Asset Strategy Platform/research/binance_holdout_comparison.csv"
+output_path = (
+    "E:/투자/Multi-Asset Strategy Platform/research/binance_holdout_comparison.csv"
+)
 results_df.to_csv(output_path, index=False)
 print(f"\nResults saved to: {output_path}")
 

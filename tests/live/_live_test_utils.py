@@ -2,6 +2,7 @@
 Live test utilities (v2.2 Final).
 Guards, logging, and shared constants.
 """
+
 from __future__ import annotations
 
 import json
@@ -9,7 +10,6 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, Optional
-
 
 LIVE_GUARD_ENV = {
     "MASP_ENABLE_LIVE_TRADING": "1",

@@ -1,4 +1,5 @@
 """Trade history panel component."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -168,15 +169,19 @@ def _filter_trades(
     end_naive = _normalize_datetime(end_date)
 
     if start_naive:
+
         def check_start(t):
             ts = _normalize_datetime(t.get("timestamp"))
             return ts is not None and ts >= start_naive
+
         result = [t for t in result if check_start(t)]
 
     if end_naive:
+
         def check_end(t):
             ts = _normalize_datetime(t.get("timestamp"))
             return ts is not None and ts <= end_naive
+
         result = [t for t in result if check_end(t)]
 
     return result
@@ -253,9 +258,9 @@ def render_trade_history_panel(api_client=None) -> None:
         trades,
         exchange=exchange_filter,
         symbol=symbol_filter,
-        start_date=datetime.combine(start_date, datetime.min.time())
-        if start_date
-        else None,
+        start_date=(
+            datetime.combine(start_date, datetime.min.time()) if start_date else None
+        ),
         end_date=datetime.combine(end_date, datetime.max.time()) if end_date else None,
     )
 

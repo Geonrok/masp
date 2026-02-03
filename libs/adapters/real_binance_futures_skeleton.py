@@ -23,7 +23,7 @@ class BinanceFuturesMarketDataSkeleton(MarketDataAdapter):
     Phase 0: 구현 없음 (RuntimeError)
     Phase 1: 실제 Binance Futures API 연동 예정
     """
-    
+
     def __init__(self, config: Optional[Dict] = None):
         self.config = config or {}
         logger.warning(
@@ -31,7 +31,7 @@ class BinanceFuturesMarketDataSkeleton(MarketDataAdapter):
             "Phase 0에서는 사용하지 않습니다. "
             "Phase 1에서 실거래 구현 예정."
         )
-    
+
     def get_ticker(self, symbol: str) -> Dict:
         """
         현재가 조회
@@ -42,7 +42,7 @@ class BinanceFuturesMarketDataSkeleton(MarketDataAdapter):
             "Not implemented. Phase 1에서 실거래 구현 예정. "
             "Phase 0에서는 MockAdapter를 사용하세요."
         )
-    
+
     def get_orderbook(self, symbol: str, depth: int = 10) -> Dict:
         """
         호가창 조회
@@ -52,7 +52,7 @@ class BinanceFuturesMarketDataSkeleton(MarketDataAdapter):
             f"[BinanceFuturesMarketDataSkeleton] get_orderbook({symbol}): "
             "Not implemented. Phase 1에서 실거래 구현 예정."
         )
-    
+
     def get_funding_rate(self, symbol: str) -> Dict:
         """
         펀딩 비율 조회 (선물 전용)
@@ -70,7 +70,7 @@ class BinanceFuturesExecutionSkeleton(ExecutionAdapter):
     Phase 0: 구현 없음 (RuntimeError)
     Phase 1: 실제 Binance Futures API 연동 예정 (API 키 필수)
     """
-    
+
     def __init__(self, config: Optional[Dict] = None):
         self.config = config or {}
         logger.warning(
@@ -78,7 +78,7 @@ class BinanceFuturesExecutionSkeleton(ExecutionAdapter):
             "Phase 0에서는 사용하지 않습니다. "
             "Phase 1에서 실거래 구현 예정 (API 키 필요)."
         )
-    
+
     def place_order(
         self,
         symbol: str,
@@ -86,7 +86,7 @@ class BinanceFuturesExecutionSkeleton(ExecutionAdapter):
         order_type: str,
         quantity: float,
         price: Optional[float] = None,
-        leverage: Optional[int] = None
+        leverage: Optional[int] = None,
     ) -> Dict:
         """
         주문 실행 (레버리지 옵션 포함)
@@ -97,7 +97,7 @@ class BinanceFuturesExecutionSkeleton(ExecutionAdapter):
             "Not implemented. Phase 1에서 실거래 구현 예정. "
             "레버리지 거래 위험. Mock 모드를 사용하세요."
         )
-    
+
     def set_leverage(self, symbol: str, leverage: int) -> Dict:
         """
         레버리지 설정 (선물 전용)
@@ -107,7 +107,7 @@ class BinanceFuturesExecutionSkeleton(ExecutionAdapter):
             f"[BinanceFuturesExecutionSkeleton] set_leverage({symbol}, {leverage}): "
             "Not implemented. Phase 1에서 실거래 구현 예정."
         )
-    
+
     def cancel_order(self, order_id: str) -> Dict:
         """
         주문 취소
@@ -117,7 +117,7 @@ class BinanceFuturesExecutionSkeleton(ExecutionAdapter):
             f"[BinanceFuturesExecutionSkeleton] cancel_order({order_id}): "
             "Not implemented. Phase 1에서 실거래 구현 예정."
         )
-    
+
     def get_position(self, symbol: str) -> Dict:
         """
         포지션 조회 (선물 전용)

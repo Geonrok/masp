@@ -45,10 +45,12 @@ class BackupConfig:
 
     # Paths relative to project root
     database_path: str = "storage/local.db"
-    config_paths: List[str] = field(default_factory=lambda: [
-        "storage/runtime_config.json",
-        "config/schedule_config.json",
-    ])
+    config_paths: List[str] = field(
+        default_factory=lambda: [
+            "storage/runtime_config.json",
+            "config/schedule_config.json",
+        ]
+    )
     trade_log_dir: str = "logs"
     backtest_dir: str = "data/backtests"
 
@@ -137,7 +139,9 @@ class BackupManager:
         self.config = config or BackupConfig()
         self.config.backup_dir.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"[BackupManager] Initialized with backup_dir={self.config.backup_dir}")
+        logger.info(
+            f"[BackupManager] Initialized with backup_dir={self.config.backup_dir}"
+        )
 
     def create_backup(
         self,
@@ -244,7 +248,9 @@ class BackupManager:
                 success=False,
                 backup_id=backup_id,
                 error=str(e),
-                duration_seconds=(datetime.now(timezone.utc) - start_time).total_seconds(),
+                duration_seconds=(
+                    datetime.now(timezone.utc) - start_time
+                ).total_seconds(),
             )
         finally:
             # Cleanup temp directory
@@ -324,14 +330,18 @@ class BackupManager:
                 warnings.append("Config files were not included in this backup")
 
             # 3. Restore trade logs
-            if restore_trade_logs and manifest.get("config", {}).get("include_trade_logs"):
+            if restore_trade_logs and manifest.get("config", {}).get(
+                "include_trade_logs"
+            ):
                 count = self._restore_trade_logs(source_dir)
                 items_restored["trade_logs"] = count
             elif restore_trade_logs:
                 warnings.append("Trade logs were not included in this backup")
 
             # 4. Restore backtests
-            if restore_backtests and manifest.get("config", {}).get("include_backtests"):
+            if restore_backtests and manifest.get("config", {}).get(
+                "include_backtests"
+            ):
                 count = self._restore_backtests(source_dir)
                 items_restored["backtests"] = count
             elif restore_backtests:
@@ -339,7 +349,9 @@ class BackupManager:
 
             duration = (datetime.now(timezone.utc) - start_time).total_seconds()
 
-            logger.info(f"[BackupManager] Restore complete: {backup_id} ({duration:.2f}s)")
+            logger.info(
+                f"[BackupManager] Restore complete: {backup_id} ({duration:.2f}s)"
+            )
 
             return RestoreResult(
                 success=True,
@@ -355,7 +367,9 @@ class BackupManager:
                 success=False,
                 backup_id=backup_id,
                 error=str(e),
-                duration_seconds=(datetime.now(timezone.utc) - start_time).total_seconds(),
+                duration_seconds=(
+                    datetime.now(timezone.utc) - start_time
+                ).total_seconds(),
             )
         finally:
             # Cleanup temp directory
@@ -384,15 +398,17 @@ class BackupManager:
                         manifest_file = tar.extractfile(manifest_member)
                         if manifest_file:
                             manifest = json.load(manifest_file)
-                            backups.append({
-                                "backup_id": backup_id,
-                                "path": str(item),
-                                "size_bytes": item.stat().st_size,
-                                "created_at": manifest.get("created_at"),
-                                "description": manifest.get("description", ""),
-                                "items": manifest.get("items", {}),
-                                "compressed": True,
-                            })
+                            backups.append(
+                                {
+                                    "backup_id": backup_id,
+                                    "path": str(item),
+                                    "size_bytes": item.stat().st_size,
+                                    "created_at": manifest.get("created_at"),
+                                    "description": manifest.get("description", ""),
+                                    "items": manifest.get("items", {}),
+                                    "compressed": True,
+                                }
+                            )
                 except Exception as e:
                     logger.warning(f"[BackupManager] Failed to read backup {item}: {e}")
 
@@ -403,17 +419,21 @@ class BackupManager:
                     try:
                         with open(manifest_path, "r", encoding="utf-8") as f:
                             manifest = json.load(f)
-                        backups.append({
-                            "backup_id": item.name,
-                            "path": str(item),
-                            "size_bytes": self._get_directory_size(item),
-                            "created_at": manifest.get("created_at"),
-                            "description": manifest.get("description", ""),
-                            "items": manifest.get("items", {}),
-                            "compressed": False,
-                        })
+                        backups.append(
+                            {
+                                "backup_id": item.name,
+                                "path": str(item),
+                                "size_bytes": self._get_directory_size(item),
+                                "created_at": manifest.get("created_at"),
+                                "description": manifest.get("description", ""),
+                                "items": manifest.get("items", {}),
+                                "compressed": False,
+                            }
+                        )
                     except Exception as e:
-                        logger.warning(f"[BackupManager] Failed to read backup {item}: {e}")
+                        logger.warning(
+                            f"[BackupManager] Failed to read backup {item}: {e}"
+                        )
 
         # Sort by created_at descending
         backups.sort(key=lambda x: x.get("created_at", ""), reverse=True)
@@ -645,7 +665,7 @@ class BackupManager:
             return
 
         # Delete oldest backups
-        for backup in backups[self.config.max_backups:]:
+        for backup in backups[self.config.max_backups :]:
             self.delete_backup(backup["backup_id"])
 
 

@@ -81,9 +81,8 @@ class ExecutionSlice:
         if self.executed_quantity > 0:
             # Weighted average price
             total_value = (
-                (self.executed_price * (self.executed_quantity - quantity))
-                + (price * quantity)
-            )
+                self.executed_price * (self.executed_quantity - quantity)
+            ) + (price * quantity)
             self.executed_price = total_value / self.executed_quantity
 
         self.actual_time = timestamp or datetime.now()
@@ -133,9 +132,7 @@ class ExecutionPlan:
     @property
     def average_price(self) -> float:
         """Volume weighted average execution price."""
-        total_value = sum(
-            s.executed_price * s.executed_quantity for s in self.slices
-        )
+        total_value = sum(s.executed_price * s.executed_quantity for s in self.slices)
         total_qty = self.executed_quantity
         return total_value / total_qty if total_qty > 0 else 0.0
 
@@ -144,7 +141,8 @@ class ExecutionPlan:
         """Get slices that are ready to execute."""
         now = datetime.now()
         return [
-            s for s in self.slices
+            s
+            for s in self.slices
             if s.status in [ExecutionStatus.PENDING, ExecutionStatus.IN_PROGRESS]
             and s.scheduled_time <= now
         ]
@@ -227,6 +225,7 @@ class ExecutionAlgorithm(ABC):
     def _generate_plan_id(self) -> str:
         """Generate unique plan ID."""
         import uuid
+
         return f"{self.algorithm_name.upper()}-{uuid.uuid4().hex[:8]}"
 
     def _apply_size_limits(self, size: float) -> float:
@@ -272,17 +271,19 @@ class TWAPAlgorithm(ExecutionAlgorithm):
         for i in range(num_slices):
             slice_qty = self._apply_size_limits(base_quantity)
 
-            slices.append(ExecutionSlice(
-                slice_id=i,
-                scheduled_time=start + (interval * i),
-                target_quantity=slice_qty,
-                target_percentage=100 / num_slices,
-            ))
+            slices.append(
+                ExecutionSlice(
+                    slice_id=i,
+                    scheduled_time=start + (interval * i),
+                    target_quantity=slice_qty,
+                    target_percentage=100 / num_slices,
+                )
+            )
 
         # Adjust last slice to ensure total matches
         total_planned = sum(s.target_quantity for s in slices)
         if slices and total_planned != total_quantity:
-            slices[-1].target_quantity += (total_quantity - total_planned)
+            slices[-1].target_quantity += total_quantity - total_planned
 
         plan = ExecutionPlan(
             plan_id=self._generate_plan_id(),
@@ -380,15 +381,19 @@ class VWAPAlgorithm(ExecutionAlgorithm):
             profile_idx = min(profile_idx, len(normalized_profile) - 1)
 
             volume_weight = normalized_profile[profile_idx]
-            slice_qty = total_quantity * volume_weight * (num_slices / len(normalized_profile))
+            slice_qty = (
+                total_quantity * volume_weight * (num_slices / len(normalized_profile))
+            )
             slice_qty = self._apply_size_limits(slice_qty)
 
-            slices.append(ExecutionSlice(
-                slice_id=i,
-                scheduled_time=start + (interval * i),
-                target_quantity=slice_qty,
-                target_percentage=volume_weight * 100,
-            ))
+            slices.append(
+                ExecutionSlice(
+                    slice_id=i,
+                    scheduled_time=start + (interval * i),
+                    target_quantity=slice_qty,
+                    target_percentage=volume_weight * 100,
+                )
+            )
 
         # Normalize to ensure total matches
         total_planned = sum(s.target_quantity for s in slices)
@@ -483,12 +488,14 @@ class POVAlgorithm(ExecutionAlgorithm):
 
             slice_qty = min(estimated_slice, remaining)
 
-            slices.append(ExecutionSlice(
-                slice_id=i,
-                scheduled_time=start + (interval * i),
-                target_quantity=slice_qty,
-                target_percentage=self.participation_rate * 100,
-            ))
+            slices.append(
+                ExecutionSlice(
+                    slice_id=i,
+                    scheduled_time=start + (interval * i),
+                    target_quantity=slice_qty,
+                    target_percentage=self.participation_rate * 100,
+                )
+            )
 
             remaining -= slice_qty
 
@@ -580,7 +587,9 @@ def create_execution_plan(
 
     algo_class = algorithms.get(algorithm.lower())
     if not algo_class:
-        raise ValueError(f"Unknown algorithm: {algorithm}. Available: {list(algorithms.keys())}")
+        raise ValueError(
+            f"Unknown algorithm: {algorithm}. Available: {list(algorithms.keys())}"
+        )
 
     algo = algo_class(**kwargs)
     return algo.create_plan(

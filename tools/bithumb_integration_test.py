@@ -25,6 +25,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(override=True)
 
 
@@ -86,6 +87,7 @@ class BithumbIntegrationTest:
         """Initialize adapters."""
         result = TestResult("Adapter Initialization")
         import time
+
         start = time.time()
 
         try:
@@ -105,18 +107,28 @@ class BithumbIntegrationTest:
 
             if self.mode == "dryrun":
                 if os.getenv("MASP_ENABLE_LIVE_TRADING") != "1":
-                    result.message = "MASP_ENABLE_LIVE_TRADING must be 1 for dryrun mode"
+                    result.message = (
+                        "MASP_ENABLE_LIVE_TRADING must be 1 for dryrun mode"
+                    )
                     self.results.append(result)
                     return False
 
-                config = Config(asset_class="crypto_spot", strategy_name="integration_test")
+                config = Config(
+                    asset_class="crypto_spot", strategy_name="integration_test"
+                )
                 from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
                 self.adapter = BithumbExecutionAdapter(config)
             else:
                 # Readonly mode - still need adapter for balance checks
                 try:
-                    config = Config(asset_class="crypto_spot", strategy_name="integration_test")
-                    from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+                    config = Config(
+                        asset_class="crypto_spot", strategy_name="integration_test"
+                    )
+                    from libs.adapters.real_bithumb_execution import (
+                        BithumbExecutionAdapter,
+                    )
+
                     self.adapter = BithumbExecutionAdapter(config)
                 except Exception as e:
                     print(f"  Note: Execution adapter not available: {e}")
@@ -143,6 +155,7 @@ class BithumbIntegrationTest:
         """Test API connectivity."""
         result = TestResult("API Connectivity")
         import time
+
         start = time.time()
 
         try:
@@ -171,6 +184,7 @@ class BithumbIntegrationTest:
         """Test balance query."""
         result = TestResult("Balance Query")
         import time
+
         start = time.time()
 
         if not self.adapter:
@@ -202,6 +216,7 @@ class BithumbIntegrationTest:
         """Test market data functions."""
         result = TestResult("Market Data")
         import time
+
         start = time.time()
 
         try:
@@ -235,6 +250,7 @@ class BithumbIntegrationTest:
         """Test order status tracking."""
         result = TestResult("Order Status Tracking")
         import time
+
         start = time.time()
 
         if not self.adapter:
@@ -253,7 +269,9 @@ class BithumbIntegrationTest:
             result.details = {
                 "recent_orders_count": len(recent_orders),
                 "open_orders_count": len(open_orders),
-                "recent_order_states": [o.state for o in recent_orders[:3]] if recent_orders else [],
+                "recent_order_states": (
+                    [o.state for o in recent_orders[:3]] if recent_orders else []
+                ),
             }
 
         except Exception as e:
@@ -268,6 +286,7 @@ class BithumbIntegrationTest:
         """Test position synchronization."""
         result = TestResult("Position Sync")
         import time
+
         start = time.time()
 
         if not self.adapter:
@@ -302,6 +321,7 @@ class BithumbIntegrationTest:
         """Test small order execution (dryrun mode only)."""
         result = TestResult("Small Order Test")
         import time
+
         start = time.time()
 
         if self.mode != "dryrun":
@@ -322,7 +342,9 @@ class BithumbIntegrationTest:
             test_amount = 6000  # Minimum + buffer
 
             if krw_balance < test_amount:
-                result.message = f"Insufficient balance: {krw_balance:,.0f} < {test_amount:,} KRW"
+                result.message = (
+                    f"Insufficient balance: {krw_balance:,.0f} < {test_amount:,} KRW"
+                )
                 self.results.append(result)
                 print(f"\n[7] {result.name}: SKIP")
                 return
@@ -375,6 +397,7 @@ class BithumbIntegrationTest:
 
             # Sell back
             import time as t
+
             t.sleep(1)  # Brief pause
 
             sell_result = self.adapter.place_order(
@@ -417,6 +440,7 @@ class BithumbIntegrationTest:
         except Exception as e:
             result.message = f"Error: {e}"
             import traceback
+
             traceback.print_exc()
 
         result.duration_ms = int((time.time() - start) * 1000)
@@ -434,14 +458,24 @@ class BithumbIntegrationTest:
         skipped = sum(1 for r in self.results if "skip" in r.message.lower())
 
         for r in self.results:
-            status = "PASS" if r.passed else ("SKIP" if "skip" in r.message.lower() else "FAIL")
+            status = (
+                "PASS"
+                if r.passed
+                else ("SKIP" if "skip" in r.message.lower() else "FAIL")
+            )
             print(f"  [{status:4}] {r.name}: {r.message}")
 
         print("-" * 60)
-        print(f"  Total: {total}, Passed: {passed}, Skipped: {skipped}, Failed: {total - passed - skipped}")
+        print(
+            f"  Total: {total}, Passed: {passed}, Skipped: {skipped}, Failed: {total - passed - skipped}"
+        )
 
         # Save results
-        results_file = PROJECT_ROOT / "logs" / f"bithumb_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        results_file = (
+            PROJECT_ROOT
+            / "logs"
+            / f"bithumb_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         results_file.parent.mkdir(parents=True, exist_ok=True)
 
         with open(results_file, "w", encoding="utf-8") as f:

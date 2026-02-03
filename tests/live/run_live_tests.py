@@ -1,6 +1,7 @@
 """
 Live trading test runner (v2.2 Final).
 """
+
 from __future__ import annotations
 
 import os
@@ -18,7 +19,6 @@ from libs.core.config import Config
 from _helpers import resolve_market, get_fee_rates
 from _teardown import cancel_all_open_orders, verify_no_open_orders
 from _live_test_utils import require_live_guard, log_event, get_loss_cap_krw
-
 
 TIMEOUT_SECONDS = 300
 
@@ -113,23 +113,28 @@ class LiveTestRunner:
 
     def _test_pre_check(self) -> bool:
         from test_pre_check import test_pre_check
+
         return test_pre_check()
 
     def _test_kill_switch(self) -> bool:
         from test_kill_switch import test_kill_switch
+
         return test_kill_switch()
 
     def _test_balance(self) -> bool:
         from test_live_balance import test_live_balance
+
         return test_live_balance(self.execution)
 
     def _test_buy(self) -> bool:
         from test_live_buy import test_live_buy
+
         result = test_live_buy(self.execution, self.fee_rates)
         return result.get("status") == "passed"
 
     def _test_sell(self) -> bool:
         from test_live_sell import test_live_sell
+
         result = test_live_sell(self.execution, self.fee_rates)
         return result.get("status") in ["passed", "skipped"]
 
@@ -169,7 +174,9 @@ class LiveTestRunner:
         passed = sum(1 for r in self.results.values() if "PASS" in str(r))
         total = len(self.results)
         print(f"\n  Result: {passed}/{total} PASS")
-        print(f"  Duration: {(datetime.now(timezone.utc) - self.test_start_time).total_seconds():.1f}s")
+        print(
+            f"  Duration: {(datetime.now(timezone.utc) - self.test_start_time).total_seconds():.1f}s"
+        )
         log_event(
             {
                 "type": "test_complete",

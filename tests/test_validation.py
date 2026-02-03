@@ -257,41 +257,49 @@ class TestPriceValidator:
 
     def test_valid_ohlcv(self):
         """Test valid OHLCV data."""
-        result = PriceValidator.validate_ohlcv({
-            "open": 100,
-            "high": 110,
-            "low": 90,
-            "close": 105,
-            "volume": 1000,
-        })
+        result = PriceValidator.validate_ohlcv(
+            {
+                "open": 100,
+                "high": 110,
+                "low": 90,
+                "close": 105,
+                "volume": 1000,
+            }
+        )
         assert result.valid
 
     def test_invalid_ohlcv_high_low(self):
         """Test OHLCV with high < low."""
-        result = PriceValidator.validate_ohlcv({
-            "open": 100,
-            "high": 90,  # Invalid: high < low
-            "low": 110,
-            "close": 100,
-        })
+        result = PriceValidator.validate_ohlcv(
+            {
+                "open": 100,
+                "high": 90,  # Invalid: high < low
+                "low": 110,
+                "close": 100,
+            }
+        )
         assert not result.valid
         assert any("high" in e for e in result.errors)
 
     def test_valid_quote(self):
         """Test valid quote data."""
-        result = PriceValidator.validate_quote({
-            "bid": 99,
-            "ask": 101,
-            "last": 100,
-        })
+        result = PriceValidator.validate_quote(
+            {
+                "bid": 99,
+                "ask": 101,
+                "last": 100,
+            }
+        )
         assert result.valid
 
     def test_crossed_market_warning(self):
         """Test crossed market warning."""
-        result = PriceValidator.validate_quote({
-            "bid": 101,
-            "ask": 99,  # Crossed: bid > ask
-        })
+        result = PriceValidator.validate_quote(
+            {
+                "bid": 101,
+                "ask": 99,  # Crossed: bid > ask
+            }
+        )
         assert result.valid  # Still valid but with warning
         assert any("crossed" in w for w in result.warnings)
 
@@ -301,9 +309,7 @@ class TestConfigValidator:
 
     def test_valid_api_key(self):
         """Test valid API key."""
-        result = ConfigValidator.validate_api_key(
-            "abcdefghijklmnopqrstuvwxyz123456"
-        )
+        result = ConfigValidator.validate_api_key("abcdefghijklmnopqrstuvwxyz123456")
         assert result.valid
 
     def test_empty_api_key(self):

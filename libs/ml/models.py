@@ -246,9 +246,11 @@ class SklearnModel(ModelInterface):
         self._is_fitted = True
 
         # Create metadata
-        features = list(X.columns) if isinstance(X, pd.DataFrame) else [
-            f"feature_{i}" for i in range(X_arr.shape[1])
-        ]
+        features = (
+            list(X.columns)
+            if isinstance(X, pd.DataFrame)
+            else [f"feature_{i}" for i in range(X_arr.shape[1])]
+        )
         target = y.name if isinstance(y, pd.Series) else "target"
 
         self.metadata = ModelMetadata(
@@ -358,9 +360,11 @@ class EnsembleModel(ModelInterface):
         self._is_fitted = True
 
         # Create metadata
-        features = list(X.columns) if isinstance(X, pd.DataFrame) else [
-            f"feature_{i}" for i in range(X.shape[1])
-        ]
+        features = (
+            list(X.columns)
+            if isinstance(X, pd.DataFrame)
+            else [f"feature_{i}" for i in range(X.shape[1])]
+        )
         target = y.name if isinstance(y, pd.Series) else "target"
 
         self.metadata = ModelMetadata(

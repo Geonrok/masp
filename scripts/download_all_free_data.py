@@ -49,18 +49,33 @@ def download_binance_funding_rate(symbols: List[str] = None):
     output_dir = DATA_ROOT / "binance_funding_rate"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    exchange = ccxt.binance({
-        'enableRateLimit': True,
-        'options': {'defaultType': 'future'}
-    })
+    exchange = ccxt.binance(
+        {"enableRateLimit": True, "options": {"defaultType": "future"}}
+    )
 
     if symbols is None:
         # 주요 심볼만
         symbols = [
-            'BTC/USDT', 'ETH/USDT', 'BNB/USDT', 'XRP/USDT', 'ADA/USDT',
-            'DOGE/USDT', 'SOL/USDT', 'DOT/USDT', 'MATIC/USDT', 'LTC/USDT',
-            'AVAX/USDT', 'LINK/USDT', 'ATOM/USDT', 'UNI/USDT', 'ETC/USDT',
-            'XLM/USDT', 'ALGO/USDT', 'NEAR/USDT', 'FTM/USDT', 'SAND/USDT',
+            "BTC/USDT",
+            "ETH/USDT",
+            "BNB/USDT",
+            "XRP/USDT",
+            "ADA/USDT",
+            "DOGE/USDT",
+            "SOL/USDT",
+            "DOT/USDT",
+            "MATIC/USDT",
+            "LTC/USDT",
+            "AVAX/USDT",
+            "LINK/USDT",
+            "ATOM/USDT",
+            "UNI/USDT",
+            "ETC/USDT",
+            "XLM/USDT",
+            "ALGO/USDT",
+            "NEAR/USDT",
+            "FTM/USDT",
+            "SAND/USDT",
         ]
 
     for symbol in symbols:
@@ -68,19 +83,21 @@ def download_binance_funding_rate(symbols: List[str] = None):
             log(f"  {symbol} funding rate...")
 
             # Binance API로 직접 호출 (ccxt는 funding rate 히스토리 제한적)
-            symbol_id = symbol.replace('/', '')
+            symbol_id = symbol.replace("/", "")
             url = "https://fapi.binance.com/fapi/v1/fundingRate"
 
             all_data = []
             end_time = int(datetime.now().timestamp() * 1000)
-            start_time = int((datetime.now() - timedelta(days=365*3)).timestamp() * 1000)
+            start_time = int(
+                (datetime.now() - timedelta(days=365 * 3)).timestamp() * 1000
+            )
 
             while True:
                 params = {
-                    'symbol': symbol_id,
-                    'startTime': start_time,
-                    'endTime': end_time,
-                    'limit': 1000
+                    "symbol": symbol_id,
+                    "startTime": start_time,
+                    "endTime": end_time,
+                    "limit": 1000,
                 }
 
                 response = requests.get(url, params=params)
@@ -94,7 +111,7 @@ def download_binance_funding_rate(symbols: List[str] = None):
                 all_data.extend(data)
 
                 # 다음 페이지
-                start_time = data[-1]['fundingTime'] + 1
+                start_time = data[-1]["fundingTime"] + 1
                 if start_time >= end_time:
                     break
 
@@ -102,10 +119,10 @@ def download_binance_funding_rate(symbols: List[str] = None):
 
             if all_data:
                 df = pd.DataFrame(all_data)
-                df['datetime'] = pd.to_datetime(df['fundingTime'], unit='ms')
-                df['fundingRate'] = df['fundingRate'].astype(float)
-                df = df[['datetime', 'fundingRate', 'fundingTime']]
-                df = df.sort_values('datetime').drop_duplicates()
+                df["datetime"] = pd.to_datetime(df["fundingTime"], unit="ms")
+                df["fundingRate"] = df["fundingRate"].astype(float)
+                df = df[["datetime", "fundingRate", "fundingTime"]]
+                df = df.sort_values("datetime").drop_duplicates()
 
                 filename = output_dir / f"{symbol_id}_funding.csv"
                 df.to_csv(filename, index=False)
@@ -135,9 +152,21 @@ def download_binance_open_interest(symbols: List[str] = None):
 
     if symbols is None:
         symbols = [
-            'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT',
-            'DOGEUSDT', 'SOLUSDT', 'DOTUSDT', 'MATICUSDT', 'LTCUSDT',
-            'AVAXUSDT', 'LINKUSDT', 'ATOMUSDT', 'UNIUSDT', 'ETCUSDT',
+            "BTCUSDT",
+            "ETHUSDT",
+            "BNBUSDT",
+            "XRPUSDT",
+            "ADAUSDT",
+            "DOGEUSDT",
+            "SOLUSDT",
+            "DOTUSDT",
+            "MATICUSDT",
+            "LTCUSDT",
+            "AVAXUSDT",
+            "LINKUSDT",
+            "ATOMUSDT",
+            "UNIUSDT",
+            "ETCUSDT",
         ]
 
     for symbol in symbols:
@@ -152,10 +181,10 @@ def download_binance_open_interest(symbols: List[str] = None):
             # 최대 30일씩 가져오기 (API 제한)
             for _ in range(36):  # 약 3년
                 params = {
-                    'symbol': symbol,
-                    'period': '1d',
-                    'limit': 30,
-                    'endTime': end_time
+                    "symbol": symbol,
+                    "period": "1d",
+                    "limit": 30,
+                    "endTime": end_time,
                 }
 
                 response = requests.get(url, params=params)
@@ -167,17 +196,17 @@ def download_binance_open_interest(symbols: List[str] = None):
                     break
 
                 all_data.extend(data)
-                end_time = data[0]['timestamp'] - 1
+                end_time = data[0]["timestamp"] - 1
 
                 time.sleep(0.2)
 
             if all_data:
                 df = pd.DataFrame(all_data)
-                df['datetime'] = pd.to_datetime(df['timestamp'], unit='ms')
-                df['sumOpenInterest'] = df['sumOpenInterest'].astype(float)
-                df['sumOpenInterestValue'] = df['sumOpenInterestValue'].astype(float)
-                df = df[['datetime', 'sumOpenInterest', 'sumOpenInterestValue']]
-                df = df.sort_values('datetime').drop_duplicates()
+                df["datetime"] = pd.to_datetime(df["timestamp"], unit="ms")
+                df["sumOpenInterest"] = df["sumOpenInterest"].astype(float)
+                df["sumOpenInterestValue"] = df["sumOpenInterestValue"].astype(float)
+                df = df[["datetime", "sumOpenInterest", "sumOpenInterestValue"]]
+                df = df.sort_values("datetime").drop_duplicates()
 
                 filename = output_dir / f"{symbol}_oi.csv"
                 df.to_csv(filename, index=False)
@@ -205,8 +234,16 @@ def download_binance_long_short_ratio(symbols: List[str] = None):
 
     if symbols is None:
         symbols = [
-            'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT',
-            'DOGEUSDT', 'SOLUSDT', 'DOTUSDT', 'MATICUSDT', 'LTCUSDT',
+            "BTCUSDT",
+            "ETHUSDT",
+            "BNBUSDT",
+            "XRPUSDT",
+            "ADAUSDT",
+            "DOGEUSDT",
+            "SOLUSDT",
+            "DOTUSDT",
+            "MATICUSDT",
+            "LTCUSDT",
         ]
 
     for symbol in symbols:
@@ -221,10 +258,10 @@ def download_binance_long_short_ratio(symbols: List[str] = None):
 
             for _ in range(36):
                 params = {
-                    'symbol': symbol,
-                    'period': '1d',
-                    'limit': 30,
-                    'endTime': end_time
+                    "symbol": symbol,
+                    "period": "1d",
+                    "limit": 30,
+                    "endTime": end_time,
                 }
 
                 response = requests.get(url, params=params)
@@ -236,18 +273,18 @@ def download_binance_long_short_ratio(symbols: List[str] = None):
                     break
 
                 all_data.extend(data)
-                end_time = data[0]['timestamp'] - 1
+                end_time = data[0]["timestamp"] - 1
 
                 time.sleep(0.2)
 
             if all_data:
                 df = pd.DataFrame(all_data)
-                df['datetime'] = pd.to_datetime(df['timestamp'], unit='ms')
-                df['longShortRatio'] = df['longShortRatio'].astype(float)
-                df['longAccount'] = df['longAccount'].astype(float)
-                df['shortAccount'] = df['shortAccount'].astype(float)
-                df = df[['datetime', 'longShortRatio', 'longAccount', 'shortAccount']]
-                df = df.sort_values('datetime').drop_duplicates()
+                df["datetime"] = pd.to_datetime(df["timestamp"], unit="ms")
+                df["longShortRatio"] = df["longShortRatio"].astype(float)
+                df["longAccount"] = df["longAccount"].astype(float)
+                df["shortAccount"] = df["shortAccount"].astype(float)
+                df = df[["datetime", "longShortRatio", "longAccount", "shortAccount"]]
+                df = df.sort_values("datetime").drop_duplicates()
 
                 filename = output_dir / f"{symbol}_lsratio.csv"
                 df.to_csv(filename, index=False)
@@ -264,27 +301,44 @@ def download_binance_long_short_ratio(symbols: List[str] = None):
 # ============================================================
 # 4. Binance 다중 시간프레임 OHLCV
 # ============================================================
-def download_binance_multi_timeframe(symbols: List[str] = None, timeframes: List[str] = None):
+def download_binance_multi_timeframe(
+    symbols: List[str] = None, timeframes: List[str] = None
+):
     """Binance 다중 시간프레임 OHLCV 다운로드"""
     log("=" * 60)
     log("Binance 다중 시간프레임 OHLCV 다운로드 시작")
     log("=" * 60)
 
     if timeframes is None:
-        timeframes = ['4h', '1h']
+        timeframes = ["4h", "1h"]
 
     if symbols is None:
         symbols = [
-            'BTC/USDT', 'ETH/USDT', 'BNB/USDT', 'XRP/USDT', 'ADA/USDT',
-            'DOGE/USDT', 'SOL/USDT', 'DOT/USDT', 'MATIC/USDT', 'LTC/USDT',
-            'AVAX/USDT', 'LINK/USDT', 'ATOM/USDT', 'UNI/USDT', 'ETC/USDT',
-            'XLM/USDT', 'ALGO/USDT', 'NEAR/USDT', 'FTM/USDT', 'SAND/USDT',
+            "BTC/USDT",
+            "ETH/USDT",
+            "BNB/USDT",
+            "XRP/USDT",
+            "ADA/USDT",
+            "DOGE/USDT",
+            "SOL/USDT",
+            "DOT/USDT",
+            "MATIC/USDT",
+            "LTC/USDT",
+            "AVAX/USDT",
+            "LINK/USDT",
+            "ATOM/USDT",
+            "UNI/USDT",
+            "ETC/USDT",
+            "XLM/USDT",
+            "ALGO/USDT",
+            "NEAR/USDT",
+            "FTM/USDT",
+            "SAND/USDT",
         ]
 
-    exchange = ccxt.binance({
-        'enableRateLimit': True,
-        'options': {'defaultType': 'future'}
-    })
+    exchange = ccxt.binance(
+        {"enableRateLimit": True, "options": {"defaultType": "future"}}
+    )
 
     for tf in timeframes:
         output_dir = DATA_ROOT / f"binance_futures_{tf}"
@@ -297,7 +351,7 @@ def download_binance_multi_timeframe(symbols: List[str] = None, timeframes: List
                 log(f"  {symbol}...")
 
                 all_data = []
-                since = exchange.parse8601('2020-01-01T00:00:00Z')
+                since = exchange.parse8601("2020-01-01T00:00:00Z")
 
                 while True:
                     ohlcv = exchange.fetch_ohlcv(symbol, tf, since=since, limit=1000)
@@ -313,12 +367,15 @@ def download_binance_multi_timeframe(symbols: List[str] = None, timeframes: List
                     time.sleep(0.1)
 
                 if all_data:
-                    df = pd.DataFrame(all_data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-                    df['datetime'] = pd.to_datetime(df['timestamp'], unit='ms')
-                    df = df[['datetime', 'open', 'high', 'low', 'close', 'volume']]
-                    df = df.drop_duplicates('datetime').sort_values('datetime')
+                    df = pd.DataFrame(
+                        all_data,
+                        columns=["timestamp", "open", "high", "low", "close", "volume"],
+                    )
+                    df["datetime"] = pd.to_datetime(df["timestamp"], unit="ms")
+                    df = df[["datetime", "open", "high", "low", "close", "volume"]]
+                    df = df.drop_duplicates("datetime").sort_values("datetime")
 
-                    symbol_clean = symbol.replace('/', '')
+                    symbol_clean = symbol.replace("/", "")
                     filename = output_dir / f"{symbol_clean}.csv"
                     df.to_csv(filename, index=False)
                     log(f"    저장: {len(df)}개 캔들")
@@ -349,13 +406,13 @@ def download_fear_greed_index():
         if response.status_code == 200:
             data = response.json()
 
-            if 'data' in data:
-                df = pd.DataFrame(data['data'])
-                df['datetime'] = pd.to_datetime(df['timestamp'].astype(int), unit='s')
-                df['value'] = df['value'].astype(int)
-                df = df[['datetime', 'value', 'value_classification']]
-                df.columns = ['datetime', 'fear_greed_value', 'classification']
-                df = df.sort_values('datetime')
+            if "data" in data:
+                df = pd.DataFrame(data["data"])
+                df["datetime"] = pd.to_datetime(df["timestamp"].astype(int), unit="s")
+                df["value"] = df["value"].astype(int)
+                df = df[["datetime", "value", "value_classification"]]
+                df.columns = ["datetime", "fear_greed_value", "classification"]
+                df = df.sort_values("datetime")
 
                 filename = output_dir / "fear_greed_index.csv"
                 df.to_csv(filename, index=False)
@@ -387,25 +444,33 @@ def download_macro_data():
 
     # 다운로드할 티커
     tickers = {
-        'DX-Y.NYB': 'DXY',           # 달러 인덱스
-        '^VIX': 'VIX',               # 변동성 지수
-        '^GSPC': 'SP500',            # S&P 500
-        '^IXIC': 'NASDAQ',           # 나스닥
-        '^TNX': 'US10Y',             # 미국 10년물 금리
-        'GC=F': 'GOLD',              # 금
-        'CL=F': 'OIL',               # 원유 (WTI)
+        "DX-Y.NYB": "DXY",  # 달러 인덱스
+        "^VIX": "VIX",  # 변동성 지수
+        "^GSPC": "SP500",  # S&P 500
+        "^IXIC": "NASDAQ",  # 나스닥
+        "^TNX": "US10Y",  # 미국 10년물 금리
+        "GC=F": "GOLD",  # 금
+        "CL=F": "OIL",  # 원유 (WTI)
     }
 
     for ticker, name in tickers.items():
         try:
             log(f"  {name} ({ticker})...")
 
-            data = yf.download(ticker, start='2017-01-01', progress=False)
+            data = yf.download(ticker, start="2017-01-01", progress=False)
 
             if len(data) > 0:
                 data = data.reset_index()
-                data.columns = ['datetime', 'open', 'high', 'low', 'close', 'adj_close', 'volume']
-                data = data[['datetime', 'open', 'high', 'low', 'close', 'volume']]
+                data.columns = [
+                    "datetime",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "adj_close",
+                    "volume",
+                ]
+                data = data[["datetime", "open", "high", "low", "close", "volume"]]
 
                 filename = output_dir / f"{name}.csv"
                 data.to_csv(filename, index=False)
@@ -422,24 +487,36 @@ def download_macro_data():
 # ============================================================
 # 7. Binance 현물 추가 시간프레임
 # ============================================================
-def download_binance_spot_multi_timeframe(symbols: List[str] = None, timeframes: List[str] = None):
+def download_binance_spot_multi_timeframe(
+    symbols: List[str] = None, timeframes: List[str] = None
+):
     """Binance 현물 다중 시간프레임 OHLCV 다운로드"""
     log("=" * 60)
     log("Binance 현물 다중 시간프레임 OHLCV 다운로드 시작")
     log("=" * 60)
 
     if timeframes is None:
-        timeframes = ['4h', '1h']
+        timeframes = ["4h", "1h"]
 
     if symbols is None:
         symbols = [
-            'BTC/USDT', 'ETH/USDT', 'BNB/USDT', 'XRP/USDT', 'ADA/USDT',
-            'DOGE/USDT', 'SOL/USDT', 'DOT/USDT', 'MATIC/USDT', 'LTC/USDT',
+            "BTC/USDT",
+            "ETH/USDT",
+            "BNB/USDT",
+            "XRP/USDT",
+            "ADA/USDT",
+            "DOGE/USDT",
+            "SOL/USDT",
+            "DOT/USDT",
+            "MATIC/USDT",
+            "LTC/USDT",
         ]
 
-    exchange = ccxt.binance({
-        'enableRateLimit': True,
-    })
+    exchange = ccxt.binance(
+        {
+            "enableRateLimit": True,
+        }
+    )
 
     for tf in timeframes:
         output_dir = DATA_ROOT / f"binance_spot_{tf}"
@@ -452,7 +529,7 @@ def download_binance_spot_multi_timeframe(symbols: List[str] = None, timeframes:
                 log(f"  {symbol}...")
 
                 all_data = []
-                since = exchange.parse8601('2020-01-01T00:00:00Z')
+                since = exchange.parse8601("2020-01-01T00:00:00Z")
 
                 while True:
                     ohlcv = exchange.fetch_ohlcv(symbol, tf, since=since, limit=1000)
@@ -468,12 +545,15 @@ def download_binance_spot_multi_timeframe(symbols: List[str] = None, timeframes:
                     time.sleep(0.1)
 
                 if all_data:
-                    df = pd.DataFrame(all_data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-                    df['datetime'] = pd.to_datetime(df['timestamp'], unit='ms')
-                    df = df[['datetime', 'open', 'high', 'low', 'close', 'volume']]
-                    df = df.drop_duplicates('datetime').sort_values('datetime')
+                    df = pd.DataFrame(
+                        all_data,
+                        columns=["timestamp", "open", "high", "low", "close", "volume"],
+                    )
+                    df["datetime"] = pd.to_datetime(df["timestamp"], unit="ms")
+                    df = df[["datetime", "open", "high", "low", "close", "volume"]]
+                    df = df.drop_duplicates("datetime").sort_values("datetime")
 
-                    symbol_clean = symbol.replace('/', '')
+                    symbol_clean = symbol.replace("/", "")
                     filename = output_dir / f"{symbol_clean}.csv"
                     df.to_csv(filename, index=False)
                     log(f"    저장: {len(df)}개 캔들")
@@ -526,7 +606,7 @@ def main():
     print("\n저장된 데이터 폴더:")
     for folder in sorted(DATA_ROOT.iterdir()):
         if folder.is_dir():
-            file_count = len(list(folder.glob('*.csv')))
+            file_count = len(list(folder.glob("*.csv")))
             print(f"  {folder.name}: {file_count}개 파일")
 
 

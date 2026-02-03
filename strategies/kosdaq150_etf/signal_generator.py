@@ -19,7 +19,7 @@ from .etf_strategy import (
     KOSDAQ150ETFStrategy,
     PortfolioConfig,
     Position,
-    TradeRecommendation
+    TradeRecommendation,
 )
 
 
@@ -32,8 +32,7 @@ class KOSDAQ150ETFSignalGenerator:
         generator.run()
     """
 
-    def __init__(self, data_path: Optional[Path] = None,
-                 capital: float = 1_000_000):
+    def __init__(self, data_path: Optional[Path] = None, capital: float = 1_000_000):
         self.data_path = data_path or Path("E:/투자/data/kosdaq_futures")
         self.output_path = self.data_path / "validated_strategies"
 
@@ -82,12 +81,12 @@ class KOSDAQ150ETFSignalGenerator:
         actual_amount = shares * etf_price
 
         return {
-            'total_capital': self.capital,
-            'invest_amount': invest_amount,
-            'etf_price': etf_price,
-            'shares': shares,
-            'actual_amount': actual_amount,
-            'reserve': self.capital - actual_amount
+            "total_capital": self.capital,
+            "invest_amount": invest_amount,
+            "etf_price": etf_price,
+            "shares": shares,
+            "actual_amount": actual_amount,
+            "reserve": self.capital - actual_amount,
         }
 
     def print_signal(self):
@@ -97,7 +96,9 @@ class KOSDAQ150ETFSignalGenerator:
         print("=" * 65)
         print("  KOSDAQ 150 ETF 일일 거래 신호")
         print("=" * 65)
-        print(f"  기준일: {self.last_date.strftime('%Y-%m-%d') if self.last_date else 'N/A'}")
+        print(
+            f"  기준일: {self.last_date.strftime('%Y-%m-%d') if self.last_date else 'N/A'}"
+        )
         print(f"  자본금: {self.capital:,.0f}원")
         print("=" * 65)
 
@@ -107,7 +108,9 @@ class KOSDAQ150ETFSignalGenerator:
         for name, sig in today_signals.items():
             if sig:
                 direction = "▲ 롱" if sig.direction == 1 else "▼ 숏"
-                print(f"  {name:<15}: {direction} (강도: {sig.strength:.0%}) - {sig.reason}")
+                print(
+                    f"  {name:<15}: {direction} (강도: {sig.strength:.0%}) - {sig.reason}"
+                )
             else:
                 print(f"  {name:<15}: - 신호 없음")
 
@@ -174,30 +177,31 @@ class KOSDAQ150ETFSignalGenerator:
         today_signals = self.strategy.get_today_signals(self.data)
 
         output = {
-            'timestamp': datetime.now().isoformat(),
-            'date': str(self.last_date.date()) if self.last_date else None,
-            'capital': self.capital,
-            'recommendation': {
-                'action': rec.action,
-                'position': rec.position_type.value,
-                'etf_code': rec.etf_code,
-                'etf_name': rec.etf_name,
-                'strength': rec.strength,
-                'reasons': rec.reasons
+            "timestamp": datetime.now().isoformat(),
+            "date": str(self.last_date.date()) if self.last_date else None,
+            "capital": self.capital,
+            "recommendation": {
+                "action": rec.action,
+                "position": rec.position_type.value,
+                "etf_code": rec.etf_code,
+                "etf_name": rec.etf_name,
+                "strength": rec.strength,
+                "reasons": rec.reasons,
             },
-            'individual_signals': {
+            "individual_signals": {
                 name: {
-                    'direction': sig.direction if sig else None,
-                    'strength': sig.strength if sig else None,
-                    'reason': sig.reason if sig else None
-                } for name, sig in today_signals.items()
-            }
+                    "direction": sig.direction if sig else None,
+                    "strength": sig.strength if sig else None,
+                    "reason": sig.reason if sig else None,
+                }
+                for name, sig in today_signals.items()
+            },
         }
 
         filename = f"etf_signal_{datetime.now().strftime('%Y%m%d')}.json"
         filepath = self.output_path / filename
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(output, f, indent=2, ensure_ascii=False)
 
         print(f"\n신호 저장: {filepath}")
@@ -234,15 +238,13 @@ def main():
     """메인 함수"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='KOSDAQ 150 ETF 신호 생성')
-    parser.add_argument('--capital', type=int, default=1_000_000,
-                        help='투자 자본금 (기본: 100만원)')
-    parser.add_argument('--save', action='store_true',
-                        help='신호 저장')
-    parser.add_argument('--backtest', action='store_true',
-                        help='백테스트 실행')
-    parser.add_argument('--summary', action='store_true',
-                        help='전략 요약')
+    parser = argparse.ArgumentParser(description="KOSDAQ 150 ETF 신호 생성")
+    parser.add_argument(
+        "--capital", type=int, default=1_000_000, help="투자 자본금 (기본: 100만원)"
+    )
+    parser.add_argument("--save", action="store_true", help="신호 저장")
+    parser.add_argument("--backtest", action="store_true", help="백테스트 실행")
+    parser.add_argument("--summary", action="store_true", help="전략 요약")
 
     args = parser.parse_args()
 

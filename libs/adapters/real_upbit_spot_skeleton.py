@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 class UpbitSpotMarketData(MarketDataAdapter):
     """
     Upbit Spot Market Data Adapter
-    
+
     Phase 0: Not implemented (RuntimeError)
     Phase 1: Real Upbit API integration planned
     """
-    
+
     def __init__(self, config: Optional[dict] = None):
         self.config = config or {}
         logger.warning(
@@ -37,7 +37,7 @@ class UpbitSpotMarketData(MarketDataAdapter):
             "Phase 0: NOT USED. "
             "Phase 1: Real trading implementation pending."
         )
-    
+
     def get_quote(self, symbol: str) -> Optional[MarketQuote]:
         """
         Get current quote for a symbol.
@@ -48,7 +48,7 @@ class UpbitSpotMarketData(MarketDataAdapter):
             "Not implemented. Phase 1 implementation pending. "
             "Phase 0: Use MockMarketDataAdapter."
         )
-    
+
     def get_quotes(self, symbols: list[str]) -> dict[str, MarketQuote]:
         """
         Get quotes for multiple symbols.
@@ -58,7 +58,7 @@ class UpbitSpotMarketData(MarketDataAdapter):
             f"[UpbitSpotMarketData] get_quotes({len(symbols)} symbols): "
             "Not implemented. Phase 1 implementation pending."
         )
-    
+
     def is_market_open(self) -> bool:
         """
         Check if Upbit market is open.
@@ -73,11 +73,11 @@ class UpbitSpotMarketData(MarketDataAdapter):
 class UpbitSpotExecution(ExecutionAdapter):
     """
     Upbit Spot Execution Adapter
-    
+
     Phase 0: Not implemented (RuntimeError)
     Phase 1: Real Upbit API integration planned (API keys required)
     """
-    
+
     def __init__(self, config: Optional[dict] = None):
         self.config = config or {}
         logger.warning(
@@ -85,7 +85,7 @@ class UpbitSpotExecution(ExecutionAdapter):
             "Phase 0: NOT USED. "
             "Phase 1: Real trading implementation pending (API keys required)."
         )
-    
+
     def place_order(
         self,
         symbol: str,
@@ -103,7 +103,7 @@ class UpbitSpotExecution(ExecutionAdapter):
             "Not implemented. Phase 1 implementation pending. "
             "DANGER: Real money execution risk. Use Mock mode."
         )
-    
+
     def get_order_status(self, order_id: str) -> Optional[dict]:
         """
         Get order status from Upbit.
@@ -113,7 +113,7 @@ class UpbitSpotExecution(ExecutionAdapter):
             f"[UpbitSpotExecution] get_order_status({order_id}): "
             "Not implemented. Phase 1 implementation pending."
         )
-    
+
     def cancel_order(self, order_id: str) -> bool:
         """
         Cancel an order on Upbit.
@@ -123,7 +123,7 @@ class UpbitSpotExecution(ExecutionAdapter):
             f"[UpbitSpotExecution] cancel_order({order_id}): "
             "Not implemented. Phase 1 implementation pending."
         )
-    
+
     def get_balance(self, asset: str) -> Optional[float]:
         """
         Get balance from Upbit.

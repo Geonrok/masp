@@ -16,12 +16,15 @@ BASE_URL = "https://api.kiwoom.com"
 def get_token():
     """토큰 발급"""
     url = f"{BASE_URL}/oauth2/token"
-    response = requests.post(url, json={
-        "grant_type": "client_credentials",
-        "appkey": APPKEY,
-        "secretkey": SECRETKEY
-    })
-    return response.json().get('token')
+    response = requests.post(
+        url,
+        json={
+            "grant_type": "client_credentials",
+            "appkey": APPKEY,
+            "secretkey": SECRETKEY,
+        },
+    )
+    return response.json().get("token")
 
 
 def test_endpoint(token, method, path, params=None, data=None):
@@ -29,7 +32,7 @@ def test_endpoint(token, method, path, params=None, data=None):
     url = f"{BASE_URL}{path}"
     headers = {
         "Content-Type": "application/json;charset=UTF-8",
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {token}",
     }
 
     print(f"\n{'='*50}")
@@ -45,7 +48,9 @@ def test_endpoint(token, method, path, params=None, data=None):
 
         if response.status_code == 200:
             result = response.json()
-            print(f"SUCCESS! Response: {json.dumps(result, indent=2, ensure_ascii=False)[:500]}")
+            print(
+                f"SUCCESS! Response: {json.dumps(result, indent=2, ensure_ascii=False)[:500]}"
+            )
             return True
         elif response.status_code != 500:
             # 500이 아닌 다른 오류는 출력
@@ -70,16 +75,21 @@ def main():
         ("GET", "/api/dostk/stkinfo", {"stk_cd": "005930"}),
         ("GET", "/api/dostk/chart", {"stk_cd": "005930", "chart_tp": "D"}),
         ("GET", "/api/dostk/investor", {"stk_cd": "005930"}),
-
         # TR 코드 기반
         ("POST", "/api/ka10001", {"stk_cd": "005930"}),
         ("POST", "/api/ka10008", {"stk_cd": "005930"}),
         ("POST", "/api/ka10081", {"stk_cd": "005930", "base_dt": "00000000"}),
-
         # 다른 형식
-        ("GET", "/v1/quotations/inquire-price", {"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": "005930"}),
-        ("GET", "/uapi/domestic-stock/v1/quotations/inquire-price", {"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": "005930"}),
-
+        (
+            "GET",
+            "/v1/quotations/inquire-price",
+            {"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": "005930"},
+        ),
+        (
+            "GET",
+            "/uapi/domestic-stock/v1/quotations/inquire-price",
+            {"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": "005930"},
+        ),
         # 기타
         ("GET", "/api/health", None),
         ("GET", "/health", None),

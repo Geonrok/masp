@@ -3,6 +3,7 @@ Strategy base interfaces and models.
 
 Supports decision-based and signal-based strategies.
 """
+
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -15,6 +16,7 @@ from libs.core.event_logger import EventLogger
 
 class Action(str, Enum):
     """Trading action types."""
+
     BUY = "BUY"
     SELL = "SELL"
     HOLD = "HOLD"
@@ -23,6 +25,7 @@ class Action(str, Enum):
 
 class Signal(Enum):
     """Trading signal types."""
+
     BUY = "BUY"
     SELL = "SELL"
     HOLD = "HOLD"
@@ -39,6 +42,7 @@ class Decision:
         notes: Human-readable explanation
         metrics: Optional numerical metrics that led to decision
     """
+
     symbol: str
     action: Action
     notes: Optional[str] = None
@@ -60,6 +64,7 @@ class StrategyContext:
     Context passed to strategy execution.
     Contains all information needed for strategy to make decisions.
     """
+
     config: Config
     run_id: str
     event_logger: EventLogger
@@ -75,6 +80,7 @@ class StrategyContext:
 @dataclass
 class TradeSignal:
     """Signal output for signal-based strategies."""
+
     symbol: str
     signal: Signal
     price: float
@@ -86,6 +92,7 @@ class TradeSignal:
 @dataclass
 class StrategyState:
     """Strategy runtime state snapshot."""
+
     name: str
     is_running: bool
     gate_status: bool

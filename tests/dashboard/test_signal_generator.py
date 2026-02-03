@@ -1,4 +1,5 @@
 """Tests for SignalGenerator."""
+
 from __future__ import annotations
 
 from services.dashboard.utils.signal_generator import (

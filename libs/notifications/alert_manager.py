@@ -5,6 +5,7 @@ AlertManager - 중앙화된 알림 관리 시스템
 - 시스템 이상 감지
 - 알림 히스토리 저장
 """
+
 from __future__ import annotations
 
 import html
@@ -80,16 +81,18 @@ class Alert:
             priority=AlertPriority[data.get("priority", "NORMAL")],
             title=data.get("title", ""),
             message=data.get("message", ""),
-            timestamp=datetime.fromisoformat(data["timestamp"])
-            if data.get("timestamp")
-            else datetime.now(),
+            timestamp=(
+                datetime.fromisoformat(data["timestamp"])
+                if data.get("timestamp")
+                else datetime.now()
+            ),
             exchange=data.get("exchange", ""),
             symbol=data.get("symbol", ""),
             metadata=data.get("metadata", {}),
             sent=data.get("sent", False),
-            sent_at=datetime.fromisoformat(data["sent_at"])
-            if data.get("sent_at")
-            else None,
+            sent_at=(
+                datetime.fromisoformat(data["sent_at"]) if data.get("sent_at") else None
+            ),
         )
 
 
@@ -126,7 +129,9 @@ class AlertRule:
             return False
 
         # Check symbol
-        if self.symbols and alert.symbol.upper() not in [s.upper() for s in self.symbols]:
+        if self.symbols and alert.symbol.upper() not in [
+            s.upper() for s in self.symbols
+        ]:
             return False
 
         return True
@@ -157,7 +162,9 @@ class AlertManager:
         self._alerts: List[Alert] = []
         self._rules: List[AlertRule] = []
         self._last_sent: Dict[str, datetime] = {}  # type -> last_sent_time
-        self._pending: Dict[str, List[Alert]] = {}  # type -> pending alerts (for aggregation)
+        self._pending: Dict[str, List[Alert]] = (
+            {}
+        )  # type -> pending alerts (for aggregation)
         self._counter = 0
 
         self._ensure_directory()

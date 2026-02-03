@@ -13,5 +13,3 @@ main = create_service_main(AssetClass.KR_STOCK_SPOT)
 
 if __name__ == "__main__":
     main()
-
-

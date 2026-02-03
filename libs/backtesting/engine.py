@@ -1,6 +1,7 @@
 """
 Backtesting engine for KOSPI stocks.
 """
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Callable, Dict, List, Optional, Tuple
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Position:
     """Trading position."""
+
     ticker: str
     entry_date: datetime
     entry_price: float
@@ -51,6 +53,7 @@ class Position:
 @dataclass
 class BacktestConfig:
     """Backtest configuration."""
+
     initial_capital: float = 100_000_000  # 1억원
     commission_rate: float = 0.00015  # 0.015% per trade
     slippage_rate: float = 0.001  # 0.1% slippage
@@ -63,6 +66,7 @@ class BacktestConfig:
 @dataclass
 class BacktestResult:
     """Backtest results."""
+
     strategy_name: str
     config: BacktestConfig
     equity_curve: pd.Series
@@ -105,69 +109,78 @@ class BacktestEngine:
             BacktestResult
         """
         data = data.copy().reset_index(drop=True)
-        data['Date'] = pd.to_datetime(data['Date'])
+        data["Date"] = pd.to_datetime(data["Date"])
 
         # Generate signals
         signals = signal_func(data)
-        data['Signal'] = signals
+        data["Signal"] = signals
 
         # Apply direction
         if direction == -1:
-            data['Signal'] = -data['Signal']
+            data["Signal"] = -data["Signal"]
 
         # Calculate position (1 = in position, 0 = out)
-        data['Position'] = 0
+        data["Position"] = 0
         in_position = False
 
         for i in range(len(data)):
-            if not in_position and data.loc[i, 'Signal'] == 1:
+            if not in_position and data.loc[i, "Signal"] == 1:
                 in_position = True
-            elif in_position and data.loc[i, 'Signal'] == -1:
+            elif in_position and data.loc[i, "Signal"] == -1:
                 in_position = False
-            data.loc[i, 'Position'] = 1 if in_position else 0
+            data.loc[i, "Position"] = 1 if in_position else 0
 
         # Calculate returns
-        data['Returns'] = data['Close'].pct_change()
-        data['Strategy_Returns'] = data['Returns'] * data['Position'].shift(1)
+        data["Returns"] = data["Close"].pct_change()
+        data["Strategy_Returns"] = data["Returns"] * data["Position"].shift(1)
 
         # Apply transaction costs
-        data['Position_Change'] = data['Position'].diff().abs()
+        data["Position_Change"] = data["Position"].diff().abs()
 
         # Commission on both entry and exit
-        data['Commission'] = data['Position_Change'] * self.config.commission_rate
+        data["Commission"] = data["Position_Change"] * self.config.commission_rate
 
         # Tax only on exit (when position changes from 1 to 0)
-        data['Tax'] = 0.0
-        data.loc[(data['Position'].shift(1) == 1) & (data['Position'] == 0), 'Tax'] = self.config.tax_rate
+        data["Tax"] = 0.0
+        data.loc[(data["Position"].shift(1) == 1) & (data["Position"] == 0), "Tax"] = (
+            self.config.tax_rate
+        )
 
         # Slippage
-        data['Slippage'] = data['Position_Change'] * self.config.slippage_rate
+        data["Slippage"] = data["Position_Change"] * self.config.slippage_rate
 
         # Net returns
-        data['Net_Returns'] = data['Strategy_Returns'] - data['Commission'] - data['Tax'] - data['Slippage']
-        data['Net_Returns'] = data['Net_Returns'].fillna(0)
+        data["Net_Returns"] = (
+            data["Strategy_Returns"]
+            - data["Commission"]
+            - data["Tax"]
+            - data["Slippage"]
+        )
+        data["Net_Returns"] = data["Net_Returns"].fillna(0)
 
         # Equity curve
-        data['Equity'] = self.config.initial_capital * (1 + data['Net_Returns']).cumprod()
+        data["Equity"] = (
+            self.config.initial_capital * (1 + data["Net_Returns"]).cumprod()
+        )
 
         # Extract trades
         positions, trades_df = self._extract_trades(data, direction)
 
         # Calculate metrics
-        returns_series = data.set_index('Date')['Net_Returns']
-        benchmark_returns = data.set_index('Date')['Returns']
+        returns_series = data.set_index("Date")["Net_Returns"]
+        benchmark_returns = data.set_index("Date")["Returns"]
         metrics = calculate_metrics(returns_series, benchmark_returns)
 
         return BacktestResult(
             strategy_name=strategy_name,
             config=self.config,
-            equity_curve=data.set_index('Date')['Equity'],
+            equity_curve=data.set_index("Date")["Equity"],
             daily_returns=returns_series,
             positions=positions,
             trades=trades_df,
             metrics=metrics,
-            start_date=data['Date'].iloc[0],
-            end_date=data['Date'].iloc[-1],
+            start_date=data["Date"].iloc[0],
+            end_date=data["Date"].iloc[-1],
         )
 
     def run_universe(
@@ -176,9 +189,9 @@ class BacktestEngine:
         signal_func: Callable[[pd.DataFrame], pd.Series],
         strategy_name: str = "Strategy",
         direction: int = 1,
-        rebalance_freq: str = 'M',  # M=monthly, W=weekly, D=daily
+        rebalance_freq: str = "M",  # M=monthly, W=weekly, D=daily
         top_n: int = 10,  # Number of stocks to hold
-        rank_by: str = 'signal_strength',  # Ranking criteria
+        rank_by: str = "signal_strength",  # Ranking criteria
     ) -> BacktestResult:
         """
         Run backtest on a universe of stocks with periodic rebalancing.
@@ -198,7 +211,7 @@ class BacktestEngine:
         # Get common date range
         all_dates = set()
         for df in data_dict.values():
-            all_dates.update(df['Date'].tolist())
+            all_dates.update(df["Date"].tolist())
         all_dates = sorted(all_dates)
 
         if not all_dates:
@@ -209,8 +222,8 @@ class BacktestEngine:
         signal_matrix = pd.DataFrame(index=all_dates)
 
         for ticker, df in data_dict.items():
-            df = df.set_index('Date')
-            price_matrix[ticker] = df['Close']
+            df = df.set_index("Date")
+            price_matrix[ticker] = df["Close"]
 
             # Generate signals
             df_reset = df.reset_index()
@@ -228,9 +241,9 @@ class BacktestEngine:
         dates_df = pd.DataFrame(index=all_dates)
         dates_df.index = pd.to_datetime(dates_df.index)
 
-        if rebalance_freq == 'M':
+        if rebalance_freq == "M":
             rebalance_mask = dates_df.index.is_month_end
-        elif rebalance_freq == 'W':
+        elif rebalance_freq == "W":
             rebalance_mask = dates_df.index.dayofweek == 4  # Friday
         else:
             rebalance_mask = [True] * len(dates_df)
@@ -272,7 +285,8 @@ class BacktestEngine:
                 day_return = sum(
                     weight * returns_matrix.loc[date, ticker]
                     for ticker, weight in current_holdings.items()
-                    if ticker in returns_matrix.columns and pd.notna(returns_matrix.loc[date, ticker])
+                    if ticker in returns_matrix.columns
+                    and pd.notna(returns_matrix.loc[date, ticker])
                 )
             else:
                 day_return = 0
@@ -281,7 +295,9 @@ class BacktestEngine:
 
         # Apply costs (simplified for portfolio)
         returns_series = pd.Series(portfolio_returns, index=all_dates)
-        returns_series = returns_series - self.config.commission_rate / 20  # Amortize costs
+        returns_series = (
+            returns_series - self.config.commission_rate / 20
+        )  # Amortize costs
 
         # Equity curve
         equity = self.config.initial_capital * (1 + returns_series).cumprod()
@@ -302,7 +318,9 @@ class BacktestEngine:
             end_date=all_dates[-1],
         )
 
-    def _extract_trades(self, data: pd.DataFrame, direction: int) -> Tuple[List[Position], pd.DataFrame]:
+    def _extract_trades(
+        self, data: pd.DataFrame, direction: int
+    ) -> Tuple[List[Position], pd.DataFrame]:
         """Extract individual trades from backtest data."""
         positions = []
         trades_list = []
@@ -310,35 +328,47 @@ class BacktestEngine:
         current_pos = None
 
         for i in range(1, len(data)):
-            prev_pos = data.loc[i - 1, 'Position']
-            curr_pos = data.loc[i, 'Position']
+            prev_pos = data.loc[i - 1, "Position"]
+            curr_pos = data.loc[i, "Position"]
 
             # Entry
             if prev_pos == 0 and curr_pos == 1:
                 current_pos = Position(
-                    ticker=data.get('Ticker', ['UNKNOWN'] * len(data))[i] if 'Ticker' in data.columns else 'STOCK',
-                    entry_date=data.loc[i, 'Date'],
-                    entry_price=data.loc[i, 'Close'],
-                    shares=int(self.config.initial_capital * self.config.max_position_size / data.loc[i, 'Close']),
+                    ticker=(
+                        data.get("Ticker", ["UNKNOWN"] * len(data))[i]
+                        if "Ticker" in data.columns
+                        else "STOCK"
+                    ),
+                    entry_date=data.loc[i, "Date"],
+                    entry_price=data.loc[i, "Close"],
+                    shares=int(
+                        self.config.initial_capital
+                        * self.config.max_position_size
+                        / data.loc[i, "Close"]
+                    ),
                     direction=direction,
                 )
 
             # Exit
             elif prev_pos == 1 and curr_pos == 0 and current_pos is not None:
-                current_pos.close(data.loc[i, 'Date'], data.loc[i, 'Close'])
+                current_pos.close(data.loc[i, "Date"], data.loc[i, "Close"])
                 positions.append(current_pos)
 
-                trades_list.append({
-                    'entry_date': current_pos.entry_date,
-                    'exit_date': current_pos.exit_date,
-                    'entry_price': current_pos.entry_price,
-                    'exit_price': current_pos.exit_price,
-                    'shares': current_pos.shares,
-                    'direction': 'LONG' if current_pos.direction == 1 else 'SHORT',
-                    'pnl': current_pos.pnl,
-                    'return_pct': current_pos.return_pct,
-                    'holding_days': (current_pos.exit_date - current_pos.entry_date).days,
-                })
+                trades_list.append(
+                    {
+                        "entry_date": current_pos.entry_date,
+                        "exit_date": current_pos.exit_date,
+                        "entry_price": current_pos.entry_price,
+                        "exit_price": current_pos.exit_price,
+                        "shares": current_pos.shares,
+                        "direction": "LONG" if current_pos.direction == 1 else "SHORT",
+                        "pnl": current_pos.pnl,
+                        "return_pct": current_pos.return_pct,
+                        "holding_days": (
+                            current_pos.exit_date - current_pos.entry_date
+                        ).days,
+                    }
+                )
 
                 current_pos = None
 

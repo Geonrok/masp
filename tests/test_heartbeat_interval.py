@@ -15,8 +15,10 @@ from services.multi_exchange_scheduler import MultiExchangeScheduler
 def scheduler():
     """Mock scheduler instance for testing."""
     scheduler = MagicMock(spec=MultiExchangeScheduler)
-    scheduler._get_heartbeat_interval = MultiExchangeScheduler._get_heartbeat_interval.__get__(
-        scheduler, MultiExchangeScheduler
+    scheduler._get_heartbeat_interval = (
+        MultiExchangeScheduler._get_heartbeat_interval.__get__(
+            scheduler, MultiExchangeScheduler
+        )
     )
     return scheduler
 

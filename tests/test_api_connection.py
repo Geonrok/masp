@@ -1,6 +1,7 @@
 """
 API connection test script (extended).
 """
+
 import os
 import sys
 

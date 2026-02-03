@@ -29,21 +29,29 @@ async def main():
         # 테스트할 TR 코드와 파라미터 조합
         test_cases = [
             # 외국인/기관 순매수 상위 (sort_tp 추가)
-            ("ka10029", {"mrkt_tp": "0", "sort_tp": "1"}, "외국인순매수상위 (전체, 순매수금액순)"),
+            (
+                "ka10029",
+                {"mrkt_tp": "0", "sort_tp": "1"},
+                "외국인순매수상위 (전체, 순매수금액순)",
+            ),
             ("ka10029", {"mrkt_tp": "1", "sort_tp": "1"}, "외국인순매수상위 (코스피)"),
             ("ka10029", {"mrkt_tp": "2", "sort_tp": "1"}, "외국인순매수상위 (코스닥)"),
-
             ("ka10030", {"mrkt_tp": "0", "sort_tp": "1"}, "기관순매수상위 (전체)"),
             ("ka10030", {"mrkt_tp": "1", "sort_tp": "1"}, "기관순매수상위 (코스피)"),
             ("ka10030", {"mrkt_tp": "2", "sort_tp": "1"}, "기관순매수상위 (코스닥)"),
-
             ("ka10031", {"mrkt_tp": "0", "sort_tp": "1"}, "외국인순매도상위 (전체)"),
             ("ka10032", {"mrkt_tp": "0", "sort_tp": "1"}, "기관순매도상위 (전체)"),
-
             # 외국인/기관 종합 (netslmt_tp 추가)
-            ("ka10131", {"dt": "20260128", "mrkt_tp": "0", "netslmt_tp": "1"}, "외국인/기관 순매수 상위"),
-            ("ka10131", {"dt": "20260128", "mrkt_tp": "0", "netslmt_tp": "2"}, "외국인/기관 순매도 상위"),
-
+            (
+                "ka10131",
+                {"dt": "20260128", "mrkt_tp": "0", "netslmt_tp": "1"},
+                "외국인/기관 순매수 상위",
+            ),
+            (
+                "ka10131",
+                {"dt": "20260128", "mrkt_tp": "0", "netslmt_tp": "2"},
+                "외국인/기관 순매도 상위",
+            ),
             # 프로그램매매 관련
             ("ka10027", {"mrkt_tp": "0"}, "프로그램 순매수 상위"),
         ]
@@ -64,15 +72,19 @@ async def main():
 
                     # 리스트 데이터 찾기
                     for key in keys:
-                        if key not in ['return_code', 'return_msg'] and isinstance(body[key], list):
+                        if key not in ["return_code", "return_msg"] and isinstance(
+                            body[key], list
+                        ):
                             data = body[key]
                             print(f"  [{key}] 데이터 수: {len(data)}")
                             if len(data) > 0:
                                 print(f"  첫 항목 키: {list(data[0].keys())[:10]}")
                                 # 종목명과 순매수 정보 추출
                                 first = data[0]
-                                stk_nm = first.get('stk_nm', first.get('hname', 'N/A'))
-                                net_buy = first.get('net_buy', first.get('netbuyqty', 'N/A'))
+                                stk_nm = first.get("stk_nm", first.get("hname", "N/A"))
+                                net_buy = first.get(
+                                    "net_buy", first.get("netbuyqty", "N/A")
+                                )
                                 print(f"  샘플 - 종목: {stk_nm}, 순매수: {net_buy}")
                 else:
                     print(f"메시지: {response.return_msg}")
@@ -85,6 +97,7 @@ async def main():
     except Exception as e:
         print(f"오류: {e}")
         import traceback
+
         traceback.print_exc()
 
     finally:

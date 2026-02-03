@@ -24,6 +24,7 @@ Portfolio management:
 Validated: Phase 18-19 TRUE OOS (2yr, 18 windows)
 Performance: Sharpe 1.41, +59.6% (5x), MDD -4.9%
 """
+
 import logging
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -133,9 +134,15 @@ class VwapBreakoutStrategy(BaseStrategy):
         logger.info(
             "  Donchian=%d, VWAP=%d*%.2f, EMA=%d/%d, KAMA=%d, "
             "Stop=%.1fATR, Target=%.1fATR, MaxHold=%d",
-            self.donchian_period, self.vwap_period, self.vwap_mult,
-            self.ema_fast, self.ema_slow, self.kama_period,
-            self.atr_stop, self.atr_target, self.max_hold_bars,
+            self.donchian_period,
+            self.vwap_period,
+            self.vwap_mult,
+            self.ema_fast,
+            self.ema_slow,
+            self.kama_period,
+            self.atr_stop,
+            self.atr_target,
+            self.max_hold_bars,
         )
 
     def set_market_data(self, adapter) -> None:
@@ -150,13 +157,12 @@ class VwapBreakoutStrategy(BaseStrategy):
 
         try:
             limit = self._min_bars + 50
-            ohlcv_list = self._market_data.get_ohlcv(
-                symbol, interval="1h", limit=limit
-            )
+            ohlcv_list = self._market_data.get_ohlcv(symbol, interval="1h", limit=limit)
             if not ohlcv_list or len(ohlcv_list) < self._min_bars:
                 logger.debug(
                     "[VwapBreakout] Insufficient data for %s: %d bars",
-                    symbol, len(ohlcv_list) if ohlcv_list else 0,
+                    symbol,
+                    len(ohlcv_list) if ohlcv_list else 0,
                 )
                 return None
 
@@ -171,8 +177,9 @@ class VwapBreakoutStrategy(BaseStrategy):
             logger.error("[VwapBreakout] OHLCV fetch failed for %s: %s", symbol, exc)
             return None
 
-    def update_ohlcv(self, symbol: str, close: list, high: list,
-                     low: list, volume: list) -> None:
+    def update_ohlcv(
+        self, symbol: str, close: list, high: list, low: list, volume: list
+    ) -> None:
         """Manually update OHLCV cache (for testing or external data feeds)."""
         self._ohlcv_cache[symbol] = {
             "close": np.array(close, dtype=float),
@@ -202,13 +209,13 @@ class VwapBreakoutStrategy(BaseStrategy):
         current_close = close[-1]
 
         # 1. Donchian breakout: close > highest high of last N bars (shifted 1)
-        donchian_upper = np.max(high[-(self.donchian_period + 1):-1])
+        donchian_upper = np.max(high[-(self.donchian_period + 1) : -1])
         if current_close <= donchian_upper:
             return False
 
         # 2. VWAP filter: close > VWAP(N) * multiplier
-        recent_close = close[-self.vwap_period:]
-        recent_vol = volume[-self.vwap_period:]
+        recent_close = close[-self.vwap_period :]
+        recent_vol = volume[-self.vwap_period :]
         vol_sum = np.sum(recent_vol)
         if vol_sum <= 0:
             return False
@@ -264,7 +271,9 @@ class VwapBreakoutStrategy(BaseStrategy):
         if unrealized_atr < -self.atr_stop:
             logger.info(
                 "[VwapBreakout] %s STOP-LOSS: %.2f ATR (limit: -%.1f)",
-                symbol, unrealized_atr, self.atr_stop,
+                symbol,
+                unrealized_atr,
+                self.atr_stop,
             )
             return True
 
@@ -272,7 +281,9 @@ class VwapBreakoutStrategy(BaseStrategy):
         if unrealized_atr > self.atr_target:
             logger.info(
                 "[VwapBreakout] %s TAKE-PROFIT: %.2f ATR (target: %.1f)",
-                symbol, unrealized_atr, self.atr_target,
+                symbol,
+                unrealized_atr,
+                self.atr_target,
             )
             return True
 
@@ -281,7 +292,9 @@ class VwapBreakoutStrategy(BaseStrategy):
         if bars_held >= self.max_hold_bars:
             logger.info(
                 "[VwapBreakout] %s TIME-EXIT: %d bars (max: %d)",
-                symbol, bars_held, self.max_hold_bars,
+                symbol,
+                bars_held,
+                self.max_hold_bars,
             )
             return True
 
@@ -374,7 +387,10 @@ class VwapBreakoutStrategy(BaseStrategy):
                 if signal.signal != Signal.HOLD:
                     logger.info(
                         "[VwapBreakout] %s: %s - %s @ %.4f",
-                        symbol, signal.signal.value, signal.reason, signal.price,
+                        symbol,
+                        signal.signal.value,
+                        signal.reason,
+                        signal.price,
                     )
             except Exception as exc:
                 logger.error("[VwapBreakout] Error for %s: %s", symbol, exc)

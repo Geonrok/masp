@@ -221,7 +221,13 @@ class TestAlertManager:
     def test_get_active_alerts(self, manager):
         """Test getting active alerts."""
         manager.alert(AlertCategory.SYSTEM, AlertSeverity.INFO, "Info", "Message")
-        manager.alert(AlertCategory.TRADING, AlertSeverity.WARNING, "Warning", "Message", skip_rate_limit=True)
+        manager.alert(
+            AlertCategory.TRADING,
+            AlertSeverity.WARNING,
+            "Warning",
+            "Message",
+            skip_rate_limit=True,
+        )
 
         active = manager.get_active_alerts()
         assert len(active) == 2
@@ -229,7 +235,13 @@ class TestAlertManager:
     def test_get_active_alerts_by_category(self, manager):
         """Test filtering active alerts by category."""
         manager.alert(AlertCategory.SYSTEM, AlertSeverity.INFO, "System", "Message")
-        manager.alert(AlertCategory.TRADING, AlertSeverity.INFO, "Trading", "Message", skip_rate_limit=True)
+        manager.alert(
+            AlertCategory.TRADING,
+            AlertSeverity.INFO,
+            "Trading",
+            "Message",
+            skip_rate_limit=True,
+        )
 
         system_alerts = manager.get_active_alerts(category=AlertCategory.SYSTEM)
         assert len(system_alerts) == 1
@@ -238,7 +250,13 @@ class TestAlertManager:
     def test_get_active_alerts_by_severity(self, manager):
         """Test filtering active alerts by severity."""
         manager.alert(AlertCategory.SYSTEM, AlertSeverity.INFO, "Info", "Message")
-        manager.alert(AlertCategory.SYSTEM, AlertSeverity.ERROR, "Error", "Message", skip_rate_limit=True)
+        manager.alert(
+            AlertCategory.SYSTEM,
+            AlertSeverity.ERROR,
+            "Error",
+            "Message",
+            skip_rate_limit=True,
+        )
 
         error_alerts = manager.get_active_alerts(min_severity=AlertSeverity.ERROR)
         assert len(error_alerts) == 1
@@ -247,7 +265,13 @@ class TestAlertManager:
     def test_get_alert_history(self, manager):
         """Test getting alert history."""
         manager.alert(AlertCategory.SYSTEM, AlertSeverity.INFO, "Test1", "Message")
-        manager.alert(AlertCategory.SYSTEM, AlertSeverity.INFO, "Test2", "Message", skip_rate_limit=True)
+        manager.alert(
+            AlertCategory.SYSTEM,
+            AlertSeverity.INFO,
+            "Test2",
+            "Message",
+            skip_rate_limit=True,
+        )
 
         history = manager.get_alert_history(hours=1)
         assert len(history) == 2
@@ -255,8 +279,20 @@ class TestAlertManager:
     def test_get_alert_count(self, manager):
         """Test getting alert counts."""
         manager.alert(AlertCategory.SYSTEM, AlertSeverity.INFO, "Info", "Message")
-        manager.alert(AlertCategory.SYSTEM, AlertSeverity.WARNING, "Warning", "Message", skip_rate_limit=True)
-        manager.alert(AlertCategory.TRADING, AlertSeverity.ERROR, "Error", "Message", skip_rate_limit=True)
+        manager.alert(
+            AlertCategory.SYSTEM,
+            AlertSeverity.WARNING,
+            "Warning",
+            "Message",
+            skip_rate_limit=True,
+        )
+        manager.alert(
+            AlertCategory.TRADING,
+            AlertSeverity.ERROR,
+            "Error",
+            "Message",
+            skip_rate_limit=True,
+        )
 
         by_severity = manager.get_alert_count(hours=1, by="severity")
         assert by_severity["info"] == 1
@@ -270,7 +306,13 @@ class TestAlertManager:
     def test_get_stats(self, manager):
         """Test getting statistics."""
         manager.alert(AlertCategory.SYSTEM, AlertSeverity.INFO, "Test1", "Message")
-        manager.alert(AlertCategory.SYSTEM, AlertSeverity.WARNING, "Test2", "Message", skip_rate_limit=True)
+        manager.alert(
+            AlertCategory.SYSTEM,
+            AlertSeverity.WARNING,
+            "Test2",
+            "Message",
+            skip_rate_limit=True,
+        )
 
         stats = manager.get_stats()
         assert stats["total_created"] == 2
@@ -295,7 +337,13 @@ class TestAlertManager:
         assert len(received) == 0
 
         # WARNING should trigger
-        manager.alert(AlertCategory.SYSTEM, AlertSeverity.WARNING, "Warning", "Message", skip_rate_limit=True)
+        manager.alert(
+            AlertCategory.SYSTEM,
+            AlertSeverity.WARNING,
+            "Warning",
+            "Message",
+            skip_rate_limit=True,
+        )
         assert len(received) == 1
 
     def test_alert_rule_by_category(self, manager):
@@ -317,7 +365,13 @@ class TestAlertManager:
         assert len(received) == 0
 
         # Trading should trigger
-        manager.alert(AlertCategory.TRADING, AlertSeverity.INFO, "Trading", "Message", skip_rate_limit=True)
+        manager.alert(
+            AlertCategory.TRADING,
+            AlertSeverity.INFO,
+            "Trading",
+            "Message",
+            skip_rate_limit=True,
+        )
         assert len(received) == 1
 
     def test_unregister_rule(self, manager):
@@ -348,12 +402,20 @@ class TestAlertManager:
     def test_cleanup(self, manager):
         """Test cleanup of old alerts."""
         # Add old alert
-        old_alert = manager.alert(AlertCategory.SYSTEM, AlertSeverity.INFO, "Old", "Message")
+        old_alert = manager.alert(
+            AlertCategory.SYSTEM, AlertSeverity.INFO, "Old", "Message"
+        )
         if old_alert:
             old_alert.timestamp = datetime.now() - timedelta(hours=48)
 
         # Add new alert
-        manager.alert(AlertCategory.SYSTEM, AlertSeverity.INFO, "New", "Message", skip_rate_limit=True)
+        manager.alert(
+            AlertCategory.SYSTEM,
+            AlertSeverity.INFO,
+            "New",
+            "Message",
+            skip_rate_limit=True,
+        )
 
         removed = manager.cleanup_old_alerts()
         assert removed == 1

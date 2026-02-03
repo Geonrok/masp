@@ -1,4 +1,5 @@
 """Symbol format utilities for MASP Dashboard."""
+
 from __future__ import annotations
 
 from typing import List

@@ -1,4 +1,5 @@
 """Telegram notification settings - status display and test."""
+
 from __future__ import annotations
 
 import html
@@ -54,8 +55,8 @@ def render_telegram_settings() -> None:
         st.markdown(
             "**Set environment variables before starting the dashboard:**\n"
             "```powershell\n"
-            "$env:TELEGRAM_BOT_TOKEN=\"your-bot-token\"\n"
-            "$env:TELEGRAM_CHAT_ID=\"your-chat-id\"\n"
+            '$env:TELEGRAM_BOT_TOKEN="your-bot-token"\n'
+            '$env:TELEGRAM_CHAT_ID="your-chat-id"\n'
             "```\n\n"
             "**How to get these values:**\n"
             "1. Create a bot via @BotFather\n"

@@ -40,11 +40,11 @@ pytestmark = [
     pytest.mark.integration,
     pytest.mark.skipif(
         not EBEST_CREDENTIALS_AVAILABLE,
-        reason="EBEST_APP_KEY and EBEST_APP_SECRET not set"
+        reason="EBEST_APP_KEY and EBEST_APP_SECRET not set",
     ),
     pytest.mark.skipif(
         not RUN_INTEGRATION_TESTS,
-        reason="Integration tests disabled. Set RUN_EBEST_INTEGRATION=1 to run"
+        reason="Integration tests disabled. Set RUN_EBEST_INTEGRATION=1 to run",
     ),
 ]
 
@@ -56,6 +56,7 @@ class TestEbestMarketData:
     def adapter(self):
         """Create adapter instance."""
         from libs.adapters.real_ebest_spot import EbestSpotMarketData
+
         return EbestSpotMarketData()
 
     def test_get_quote(self, adapter):
@@ -129,11 +130,11 @@ class TestEbestExecution:
     def adapter(self):
         """Create execution adapter instance."""
         from libs.adapters.real_ebest_execution import EbestSpotExecution
+
         return EbestSpotExecution()
 
     @pytest.mark.skipif(
-        not os.getenv("EBEST_ACCOUNT_NO"),
-        reason="EBEST_ACCOUNT_NO not set"
+        not os.getenv("EBEST_ACCOUNT_NO"), reason="EBEST_ACCOUNT_NO not set"
     )
     def test_get_balance(self, adapter):
         """Test getting account balance."""
@@ -144,8 +145,7 @@ class TestEbestExecution:
             print(f"\nKRW Balance: {balance:,.0f}")
 
     @pytest.mark.skipif(
-        not os.getenv("EBEST_ACCOUNT_NO"),
-        reason="EBEST_ACCOUNT_NO not set"
+        not os.getenv("EBEST_ACCOUNT_NO"), reason="EBEST_ACCOUNT_NO not set"
     )
     def test_get_all_balances(self, adapter):
         """Test getting all balances including holdings."""
@@ -157,7 +157,9 @@ class TestEbestExecution:
             print(f"\n=== Account Balances ===")
             for b in balances:
                 if b.get("currency") == "KRW":
-                    print(f"Cash: {b.get('balance', 0):,.0f} KRW (Available: {b.get('available', 0):,.0f})")
+                    print(
+                        f"Cash: {b.get('balance', 0):,.0f} KRW (Available: {b.get('available', 0):,.0f})"
+                    )
                 else:
                     print(
                         f"{b.get('name', b.get('currency'))}: "
@@ -209,6 +211,7 @@ if __name__ == "__main__":
 
     print("\n2. Testing Market Data Adapter...")
     from libs.adapters.real_ebest_spot import EbestSpotMarketData
+
     adapter = EbestSpotMarketData()
 
     print("\n   - Getting Samsung quote...")
@@ -222,7 +225,9 @@ if __name__ == "__main__":
     candles = adapter.get_ohlcv("005930", interval="1d", limit=5)
     if candles:
         print(f"     Got {len(candles)} candles")
-        print(f"     Latest: {candles[-1].timestamp.date()} - Close: {candles[-1].close:,.0f}")
+        print(
+            f"     Latest: {candles[-1].timestamp.date()} - Close: {candles[-1].close:,.0f}"
+        )
     else:
         print("     Failed to get OHLCV")
 

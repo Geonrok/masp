@@ -9,6 +9,7 @@ Now performing rigorous validation:
 3. Parameter Sensitivity
 4. Per-Symbol Analysis
 """
+
 from __future__ import annotations
 
 import logging
@@ -22,7 +23,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 
@@ -46,7 +47,7 @@ class DataLoader:
         folder = tf_map.get(timeframe, "binance_futures_4h")
         for file_path in [
             self.data_root / folder / f"{symbol}.csv",
-            self.data_root / folder / f"{symbol.replace('USDT', '')}.csv"
+            self.data_root / folder / f"{symbol.replace('USDT', '')}.csv",
         ]:
             if file_path.exists():
                 df = pd.read_csv(file_path)
@@ -74,6 +75,7 @@ class MultiTimeframeTrendStrategy:
     - 4H: EMA_fast vs EMA_slow for entry timing
     - Entry when both align, exit when misaligned
     """
+
     def __init__(
         self,
         daily_fast: int = 50,
@@ -86,53 +88,57 @@ class MultiTimeframeTrendStrategy:
         self.h4_fast = h4_fast
         self.h4_slow = h4_slow
 
-    def generate_signals(self, df_4h: pd.DataFrame, df_1d: pd.DataFrame) -> pd.DataFrame:
-        signals = pd.DataFrame(index=df_4h.index, columns=['signal', 'exit'])
-        signals['signal'] = 0
-        signals['exit'] = False
+    def generate_signals(
+        self, df_4h: pd.DataFrame, df_1d: pd.DataFrame
+    ) -> pd.DataFrame:
+        signals = pd.DataFrame(index=df_4h.index, columns=["signal", "exit"])
+        signals["signal"] = 0
+        signals["exit"] = False
 
         if df_1d.empty:
             return signals
 
         # 4H indicators
         df = df_4h.copy()
-        df['ema_fast'] = calc_ema(df['close'], self.h4_fast)
-        df['ema_slow'] = calc_ema(df['close'], self.h4_slow)
-        df['trend_4h'] = np.where(df['ema_fast'] > df['ema_slow'], 1, -1)
+        df["ema_fast"] = calc_ema(df["close"], self.h4_fast)
+        df["ema_slow"] = calc_ema(df["close"], self.h4_slow)
+        df["trend_4h"] = np.where(df["ema_fast"] > df["ema_slow"], 1, -1)
 
         # Daily indicators
         df_daily = df_1d.copy()
-        df_daily['ema_fast_d'] = calc_ema(df_daily['close'], self.daily_fast)
-        df_daily['ema_slow_d'] = calc_ema(df_daily['close'], self.daily_slow)
-        df_daily['trend_daily'] = np.where(df_daily['ema_fast_d'] > df_daily['ema_slow_d'], 1, -1)
+        df_daily["ema_fast_d"] = calc_ema(df_daily["close"], self.daily_fast)
+        df_daily["ema_slow_d"] = calc_ema(df_daily["close"], self.daily_slow)
+        df_daily["trend_daily"] = np.where(
+            df_daily["ema_fast_d"] > df_daily["ema_slow_d"], 1, -1
+        )
 
         # Merge daily to 4h
-        df['trend_daily'] = df_daily['trend_daily'].reindex(df.index, method='ffill')
+        df["trend_daily"] = df_daily["trend_daily"].reindex(df.index, method="ffill")
 
         position = 0
         min_bars = max(self.daily_slow, self.h4_slow) + 50
 
         for i in range(min_bars, len(df)):
-            trend_4h = df['trend_4h'].iloc[i]
-            trend_daily = df['trend_daily'].iloc[i]
-            close = df['close'].iloc[i]
-            ema_fast = df['ema_fast'].iloc[i]
+            trend_4h = df["trend_4h"].iloc[i]
+            trend_daily = df["trend_daily"].iloc[i]
+            close = df["close"].iloc[i]
+            ema_fast = df["ema_fast"].iloc[i]
 
             # Exit on trend break
             if position == 1 and (trend_4h == -1 or trend_daily == -1):
-                signals.iloc[i, signals.columns.get_loc('exit')] = True
+                signals.iloc[i, signals.columns.get_loc("exit")] = True
                 position = 0
             elif position == -1 and (trend_4h == 1 or trend_daily == 1):
-                signals.iloc[i, signals.columns.get_loc('exit')] = True
+                signals.iloc[i, signals.columns.get_loc("exit")] = True
                 position = 0
 
             # Entry when both trends align
             if position == 0:
                 if trend_4h == 1 and trend_daily == 1 and close > ema_fast:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = 1
+                    signals.iloc[i, signals.columns.get_loc("signal")] = 1
                     position = 1
                 elif trend_4h == -1 and trend_daily == -1 and close < ema_fast:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = -1
+                    signals.iloc[i, signals.columns.get_loc("signal")] = -1
                     position = -1
 
         return signals
@@ -162,7 +168,13 @@ class BacktestResult:
 
 
 class Backtester:
-    def __init__(self, commission: float = 0.001, slippage: float = 0.0005, leverage: int = 3, size_pct: float = 0.25):
+    def __init__(
+        self,
+        commission: float = 0.001,
+        slippage: float = 0.0005,
+        leverage: int = 3,
+        size_pct: float = 0.25,
+    ):
         self.commission = commission
         self.slippage = slippage
         self.leverage = leverage
@@ -176,14 +188,16 @@ class Backtester:
         equity = [capital]
 
         for i in range(1, len(df)):
-            price = df['close'].iloc[i]
-            signal = signals['signal'].iloc[i] if i < len(signals) else 0
-            exit_sig = signals['exit'].iloc[i] if i < len(signals) else False
+            price = df["close"].iloc[i]
+            signal = signals["signal"].iloc[i] if i < len(signals) else 0
+            exit_sig = signals["exit"].iloc[i] if i < len(signals) else False
 
             if position is not None:
                 if exit_sig or (signal != 0 and signal != position.direction):
                     exit_price = price * (1 - self.slippage * position.direction)
-                    pnl_pct = (exit_price / position.entry_price - 1) * position.direction - self.commission * 2
+                    pnl_pct = (
+                        exit_price / position.entry_price - 1
+                    ) * position.direction - self.commission * 2
                     pnl = capital * self.size_pct * self.leverage * pnl_pct
                     position.exit_time = df.index[i]
                     position.exit_price = exit_price
@@ -194,13 +208,17 @@ class Backtester:
 
             if position is None and signal != 0:
                 entry_price = price * (1 + self.slippage * signal)
-                position = Trade(entry_time=df.index[i], entry_price=entry_price, direction=signal)
+                position = Trade(
+                    entry_time=df.index[i], entry_price=entry_price, direction=signal
+                )
 
             equity.append(capital)
 
         if position:
-            exit_price = df['close'].iloc[-1]
-            pnl_pct = (exit_price / position.entry_price - 1) * position.direction - self.commission * 2
+            exit_price = df["close"].iloc[-1]
+            pnl_pct = (
+                exit_price / position.entry_price - 1
+            ) * position.direction - self.commission * 2
             position.pnl = capital * self.size_pct * self.leverage * pnl_pct
             trades.append(position)
             capital += position.pnl
@@ -214,10 +232,18 @@ class Backtester:
 
         gross_profit = sum(t.pnl for t in trades if t.pnl > 0)
         gross_loss = abs(sum(t.pnl for t in trades if t.pnl < 0))
-        pf = gross_profit / gross_loss if gross_loss > 0 else (float('inf') if gross_profit > 0 else 0)
+        pf = (
+            gross_profit / gross_loss
+            if gross_loss > 0
+            else (float("inf") if gross_profit > 0 else 0)
+        )
 
         returns = equity.pct_change().dropna()
-        sharpe = returns.mean() / returns.std() * np.sqrt(252 * 6) if returns.std() > 0 else 0
+        sharpe = (
+            returns.mean() / returns.std() * np.sqrt(252 * 6)
+            if returns.std() > 0
+            else 0
+        )
 
         return BacktestResult(
             total_return=(capital / init_capital - 1) * 100,
@@ -225,7 +251,7 @@ class Backtester:
             win_rate=wr,
             profit_factor=pf,
             num_trades=len(trades),
-            sharpe=sharpe
+            sharpe=sharpe,
         )
 
 
@@ -237,9 +263,20 @@ def run_validation():
     backtester = Backtester()
 
     symbols = [
-        "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
-        "ADAUSDT", "DOGEUSDT", "LINKUSDT", "DOTUSDT", "LTCUSDT",
-        "AVAXUSDT", "ATOMUSDT", "UNIUSDT", "NEARUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "ADAUSDT",
+        "DOGEUSDT",
+        "LINKUSDT",
+        "DOTUSDT",
+        "LTCUSDT",
+        "AVAXUSDT",
+        "ATOMUSDT",
+        "UNIUSDT",
+        "NEARUSDT",
     ]
 
     logger.info("=" * 70)
@@ -284,7 +321,7 @@ def run_validation():
             signals = strategy.generate_signals(test_4h, test_1d)
             result = backtester.run(test_4h, signals)
 
-            if result.profit_factor < float('inf'):
+            if result.profit_factor < float("inf"):
                 period_pfs.append(result.profit_factor)
             period_rets.append(result.total_return)
 
@@ -292,13 +329,19 @@ def run_validation():
             avg_pf = np.mean(period_pfs)
             avg_ret = np.mean(period_rets)
             profitable = sum(1 for pf in period_pfs if pf > 1.0)
-            wf_results.append((period_name, avg_pf, avg_ret, profitable, len(period_pfs)))
-            logger.info(f"  {period_name}: Avg PF={avg_pf:.2f}, Avg Ret={avg_ret:+.1f}%, "
-                       f"Profitable={profitable}/{len(period_pfs)}")
+            wf_results.append(
+                (period_name, avg_pf, avg_ret, profitable, len(period_pfs))
+            )
+            logger.info(
+                f"  {period_name}: Avg PF={avg_pf:.2f}, Avg Ret={avg_ret:+.1f}%, "
+                f"Profitable={profitable}/{len(period_pfs)}"
+            )
 
     if wf_results:
         overall_pf = np.mean([r[1] for r in wf_results])
-        overall_profitable = sum(r[3] for r in wf_results) / sum(r[4] for r in wf_results) * 100
+        overall_profitable = (
+            sum(r[3] for r in wf_results) / sum(r[4] for r in wf_results) * 100
+        )
         logger.info(f"\n  WALK-FORWARD SUMMARY:")
         logger.info(f"    Overall Avg PF: {overall_pf:.2f}")
         logger.info(f"    Overall Profitable: {overall_profitable:.0f}%")
@@ -342,7 +385,9 @@ def run_validation():
 
     logger.info("\n  IN-SAMPLE (2020-2022):")
     is_profitable = sum(1 for s, r in is_results if r.profit_factor > 1.0)
-    is_avg_pf = np.mean([r.profit_factor for s, r in is_results if r.profit_factor < float('inf')])
+    is_avg_pf = np.mean(
+        [r.profit_factor for s, r in is_results if r.profit_factor < float("inf")]
+    )
     is_avg_ret = np.mean([r.total_return for s, r in is_results])
     logger.info(f"    Profitable: {is_profitable}/{len(is_results)}")
     logger.info(f"    Avg PF: {is_avg_pf:.2f}")
@@ -350,7 +395,9 @@ def run_validation():
 
     logger.info("\n  OUT-OF-SAMPLE (2023-2026):")
     oos_profitable = sum(1 for s, r in oos_results if r.profit_factor > 1.0)
-    oos_avg_pf = np.mean([r.profit_factor for s, r in oos_results if r.profit_factor < float('inf')])
+    oos_avg_pf = np.mean(
+        [r.profit_factor for s, r in oos_results if r.profit_factor < float("inf")]
+    )
     oos_avg_ret = np.mean([r.total_return for s, r in oos_results])
     logger.info(f"    Profitable: {oos_profitable}/{len(oos_results)}")
     logger.info(f"    Avg PF: {oos_avg_pf:.2f}")
@@ -372,11 +419,11 @@ def run_validation():
 
     # Test different parameter combinations
     param_combos = [
-        (20, 100, 10, 30),   # Faster
-        (50, 200, 20, 50),   # Default
+        (20, 100, 10, 30),  # Faster
+        (50, 200, 20, 50),  # Default
         (100, 300, 30, 80),  # Slower
-        (30, 150, 15, 40),   # Medium-fast
-        (75, 250, 25, 60),   # Medium-slow
+        (30, 150, 15, 40),  # Medium-fast
+        (75, 250, 25, 60),  # Medium-slow
     ]
 
     param_results = []
@@ -392,19 +439,33 @@ def run_validation():
 
             df_4h = df_4h[df_4h.index >= "2020-01-01"]
 
-            strategy = MultiTimeframeTrendStrategy(daily_fast, daily_slow, h4_fast, h4_slow)
+            strategy = MultiTimeframeTrendStrategy(
+                daily_fast, daily_slow, h4_fast, h4_slow
+            )
             signals = strategy.generate_signals(df_4h, df_1d)
             result = backtester.run(df_4h, signals)
 
-            if result.profit_factor < float('inf'):
+            if result.profit_factor < float("inf"):
                 combo_pfs.append(result.profit_factor)
 
         if combo_pfs:
             avg_pf = np.mean(combo_pfs)
             profitable = sum(1 for pf in combo_pfs if pf > 1.0)
-            param_results.append((daily_fast, daily_slow, h4_fast, h4_slow, avg_pf, profitable, len(combo_pfs)))
-            logger.info(f"  D({daily_fast}/{daily_slow}) H4({h4_fast}/{h4_slow}): "
-                       f"PF={avg_pf:.2f}, Profitable={profitable}/{len(combo_pfs)}")
+            param_results.append(
+                (
+                    daily_fast,
+                    daily_slow,
+                    h4_fast,
+                    h4_slow,
+                    avg_pf,
+                    profitable,
+                    len(combo_pfs),
+                )
+            )
+            logger.info(
+                f"  D({daily_fast}/{daily_slow}) H4({h4_fast}/{h4_slow}): "
+                f"PF={avg_pf:.2f}, Profitable={profitable}/{len(combo_pfs)}"
+            )
 
     if param_results:
         pfs = [r[4] for r in param_results]
@@ -438,19 +499,23 @@ def run_validation():
         result = backtester.run(df_4h, signals)
 
         status = "✓" if result.profit_factor > 1.0 else "✗"
-        logger.info(f"  {status} {symbol}: PF={result.profit_factor:.2f}, "
-                   f"Ret={result.total_return:+.1f}%, WR={result.win_rate:.0f}%, "
-                   f"MDD={result.mdd:.1f}%, Trades={result.num_trades}")
+        logger.info(
+            f"  {status} {symbol}: PF={result.profit_factor:.2f}, "
+            f"Ret={result.total_return:+.1f}%, WR={result.win_rate:.0f}%, "
+            f"MDD={result.mdd:.1f}%, Trades={result.num_trades}"
+        )
 
-        symbol_details.append({
-            'symbol': symbol,
-            'pf': result.profit_factor,
-            'return': result.total_return,
-            'wr': result.win_rate,
-            'mdd': result.mdd,
-            'trades': result.num_trades,
-            'sharpe': result.sharpe,
-        })
+        symbol_details.append(
+            {
+                "symbol": symbol,
+                "pf": result.profit_factor,
+                "return": result.total_return,
+                "wr": result.win_rate,
+                "mdd": result.mdd,
+                "trades": result.num_trades,
+                "sharpe": result.sharpe,
+            }
+        )
 
     # ========================================================================
     # FINAL VERDICT
@@ -459,12 +524,14 @@ def run_validation():
     logger.info("FINAL VALIDATION VERDICT")
     logger.info("=" * 70)
 
-    profitable_count = sum(1 for d in symbol_details if d['pf'] > 1.0)
-    avg_pf_all = np.mean([d['pf'] for d in symbol_details if d['pf'] < float('inf')])
-    avg_ret_all = np.mean([d['return'] for d in symbol_details])
+    profitable_count = sum(1 for d in symbol_details if d["pf"] > 1.0)
+    avg_pf_all = np.mean([d["pf"] for d in symbol_details if d["pf"] < float("inf")])
+    avg_ret_all = np.mean([d["return"] for d in symbol_details])
 
     logger.info(f"\n  Overall Statistics:")
-    logger.info(f"    Profitable Symbols: {profitable_count}/{len(symbol_details)} ({profitable_count/len(symbol_details)*100:.0f}%)")
+    logger.info(
+        f"    Profitable Symbols: {profitable_count}/{len(symbol_details)} ({profitable_count/len(symbol_details)*100:.0f}%)"
+    )
     logger.info(f"    Average PF: {avg_pf_all:.2f}")
     logger.info(f"    Average Return: {avg_ret_all:+.1f}%")
 
@@ -503,7 +570,7 @@ def run_validation():
         logger.info(f"    ⚠ Parameters sensitive")
 
     # 5. Reasonable trade count
-    avg_trades = np.mean([d['trades'] for d in symbol_details])
+    avg_trades = np.mean([d["trades"] for d in symbol_details])
     if avg_trades > 50:
         logger.info(f"    ✓ Sufficient trade count ({avg_trades:.0f} avg)")
         criteria_met += 1
@@ -515,17 +582,19 @@ def run_validation():
     if criteria_met >= 4:
         logger.info("\n  ==> ✓✓ STRATEGY VALIDATED FOR LIVE TRADING (with caution)")
     elif criteria_met >= 3:
-        logger.info("\n  ==> ⚠ STRATEGY CONDITIONALLY VALIDATED - More testing recommended")
+        logger.info(
+            "\n  ==> ⚠ STRATEGY CONDITIONALLY VALIDATED - More testing recommended"
+        )
     else:
         logger.info("\n  ==> ✗ STRATEGY NOT VALIDATED - Do not use for live trading")
 
     # Return detailed results
     return {
-        'symbol_details': symbol_details,
-        'is_results': is_results,
-        'oos_results': oos_results,
-        'param_results': param_results,
-        'criteria_met': criteria_met,
+        "symbol_details": symbol_details,
+        "is_results": is_results,
+        "oos_results": oos_results,
+        "param_results": param_results,
+        "criteria_met": criteria_met,
     }
 
 

@@ -1,4 +1,5 @@
 """System status component for monitoring system health."""
+
 from __future__ import annotations
 
 import math
@@ -227,7 +228,9 @@ def _calculate_overall_status(services: List[ServiceHealth]) -> ServiceStatus:
     return ServiceStatus.UNKNOWN
 
 
-def _get_level_indicator(value: float, warning: float = 70.0, critical: float = 90.0) -> str:
+def _get_level_indicator(
+    value: float, warning: float = 70.0, critical: float = 90.0
+) -> str:
     """Get level indicator based on threshold."""
     if value >= critical:
         return "[HIGH]"
@@ -283,7 +286,9 @@ def render_system_status(
         st.caption("Demo Mode")
 
     resources = (
-        resource_provider() if resource_provider is not None else _get_demo_resource_usage()
+        resource_provider()
+        if resource_provider is not None
+        else _get_demo_resource_usage()
     )
     services = (
         service_provider() if service_provider is not None else _get_demo_services()
@@ -316,13 +321,20 @@ def render_system_status(
             res_cols = st.columns(3)
             with res_cols[0]:
                 cpu_ind = _get_level_indicator(resources.cpu_percent)
-                st.metric(f"CPU {cpu_ind}", f"{_clamp(resources.cpu_percent, 0, 100):.1f}%")
+                st.metric(
+                    f"CPU {cpu_ind}", f"{_clamp(resources.cpu_percent, 0, 100):.1f}%"
+                )
             with res_cols[1]:
                 mem_ind = _get_level_indicator(resources.memory_percent)
-                st.metric(f"Memory {mem_ind}", f"{_clamp(resources.memory_percent, 0, 100):.1f}%")
+                st.metric(
+                    f"Memory {mem_ind}",
+                    f"{_clamp(resources.memory_percent, 0, 100):.1f}%",
+                )
             with res_cols[2]:
                 disk_ind = _get_level_indicator(resources.disk_percent)
-                st.metric(f"Disk {disk_ind}", f"{_clamp(resources.disk_percent, 0, 100):.1f}%")
+                st.metric(
+                    f"Disk {disk_ind}", f"{_clamp(resources.disk_percent, 0, 100):.1f}%"
+                )
         else:
             # Full: with progress bars
             res_cols = st.columns(3)
@@ -389,9 +401,7 @@ def get_system_health_summary() -> Dict[str, Any]:
             "platform": system_info.platform,
             "hostname": system_info.hostname,
             "uptime_seconds": (
-                int(system_info.uptime.total_seconds())
-                if system_info.uptime
-                else None
+                int(system_info.uptime.total_seconds()) if system_info.uptime else None
             ),
         },
         "resources": {

@@ -86,12 +86,14 @@ def get_registered_state() -> List[str]:
 # Auto-register known global state components
 # ============================================================================
 
+
 def _register_known_state() -> None:
     """Register known global state components."""
 
     # AdapterFactory cache
     try:
         from libs.adapters.factory import clear_adapter_cache
+
         register_state_reset("adapter_factory_cache", clear_adapter_cache)
     except ImportError:
         pass
@@ -99,6 +101,7 @@ def _register_known_state() -> None:
     # MetricsRegistry singleton
     try:
         from libs.core.metrics import MetricsRegistry
+
         register_state_reset("metrics_registry", MetricsRegistry.reset)
     except ImportError:
         pass
@@ -129,6 +132,7 @@ _register_known_state()
 # Pytest fixture helper
 # ============================================================================
 
+
 def create_state_reset_fixture():
     """
     Create a pytest fixture that resets global state.
@@ -151,6 +155,7 @@ def create_state_reset_fixture():
 # ============================================================================
 # Context manager for temporary state changes
 # ============================================================================
+
 
 class StateContext:
     """

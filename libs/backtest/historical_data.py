@@ -310,14 +310,16 @@ class HistoricalDataLoader:
         # Convert to DataFrame
         data = []
         for candle in ohlcv_list:
-            data.append({
-                "timestamp": candle.timestamp,
-                "open": candle.open,
-                "high": candle.high,
-                "low": candle.low,
-                "close": candle.close,
-                "volume": candle.volume,
-            })
+            data.append(
+                {
+                    "timestamp": candle.timestamp,
+                    "open": candle.open,
+                    "high": candle.high,
+                    "low": candle.low,
+                    "close": candle.close,
+                    "volume": candle.volume,
+                }
+            )
 
         df = pd.DataFrame(data)
         df["timestamp"] = pd.to_datetime(df["timestamp"])
@@ -365,14 +367,17 @@ class HistoricalDataLoader:
         # Save metadata
         meta_path = cache_path.with_suffix(".meta.json")
         with open(meta_path, "w") as f:
-            json.dump({
-                "symbol": dataset.symbol,
-                "interval": dataset.interval,
-                "start_date": dataset.start_date.isoformat(),
-                "end_date": dataset.end_date.isoformat(),
-                "source": dataset.source,
-                "length": dataset.length,
-            }, f)
+            json.dump(
+                {
+                    "symbol": dataset.symbol,
+                    "interval": dataset.interval,
+                    "start_date": dataset.start_date.isoformat(),
+                    "end_date": dataset.end_date.isoformat(),
+                    "source": dataset.source,
+                    "length": dataset.length,
+                },
+                f,
+            )
 
         logger.info(f"[HistoricalDataLoader] Cached: {cache_key}")
         return cache_key
@@ -466,14 +471,16 @@ class HistoricalDataLoader:
             base_volume = 1_000_000
             volume = base_volume * np.random.uniform(0.5, 2.0)
 
-            data.append({
-                "timestamp": start_date + timedelta(days=i),
-                "open": round(open_price, 2),
-                "high": round(high, 2),
-                "low": round(low, 2),
-                "close": round(close, 2),
-                "volume": round(volume, 0),
-            })
+            data.append(
+                {
+                    "timestamp": start_date + timedelta(days=i),
+                    "open": round(open_price, 2),
+                    "high": round(high, 2),
+                    "low": round(low, 2),
+                    "close": round(close, 2),
+                    "volume": round(volume, 0),
+                }
+            )
 
         df = pd.DataFrame(data)
 

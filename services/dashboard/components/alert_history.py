@@ -1,4 +1,5 @@
 """Alert history panel component for Telegram notifications."""
+
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
@@ -160,14 +161,12 @@ def _filter_alerts(
 
     if start_date:
         result = [
-            a for a in result
-            if _normalize_timestamp(a.get("timestamp")) >= start_date
+            a for a in result if _normalize_timestamp(a.get("timestamp")) >= start_date
         ]
 
     if end_date:
         result = [
-            a for a in result
-            if _normalize_timestamp(a.get("timestamp")) <= end_date
+            a for a in result if _normalize_timestamp(a.get("timestamp")) <= end_date
         ]
 
     return result
@@ -249,7 +248,9 @@ def _key(name: str) -> str:
     return f"{_KEY_PREFIX}{name}"
 
 
-def render_alert_history_panel(alert_store: Optional[List[Dict[str, Any]]] = None) -> None:
+def render_alert_history_panel(
+    alert_store: Optional[List[Dict[str, Any]]] = None,
+) -> None:
     """Render alert history table with filters."""
     st.subheader("Alert History")
 
@@ -273,9 +274,7 @@ def render_alert_history_panel(alert_store: Optional[List[Dict[str, Any]]] = Non
 
     with col2:
         exchange_set = set(
-            a.get("exchange", "").upper()
-            for a in alerts
-            if a.get("exchange")
+            a.get("exchange", "").upper() for a in alerts if a.get("exchange")
         )
         exchanges = ["ALL"] + sorted(exchange_set)
         exchange_filter = st.selectbox("Exchange", exchanges, key=_key("exchange"))
@@ -305,9 +304,9 @@ def render_alert_history_panel(alert_store: Optional[List[Dict[str, Any]]] = Non
         alert_type=type_filter,
         exchange=exchange_filter,
         status=status_filter,
-        start_date=datetime.combine(start_date, datetime.min.time())
-        if start_date
-        else None,
+        start_date=(
+            datetime.combine(start_date, datetime.min.time()) if start_date else None
+        ),
         end_date=None,
     )
 
@@ -321,9 +320,13 @@ def render_alert_history_panel(alert_store: Optional[List[Dict[str, Any]]] = Non
     if page_items:
         data = [
             {
-                "Time": _normalize_timestamp(a.get("timestamp")).strftime("%Y-%m-%d %H:%M"),
+                "Time": _normalize_timestamp(a.get("timestamp")).strftime(
+                    "%Y-%m-%d %H:%M"
+                ),
                 "Type": _get_type_label(a.get("alert_type", "")),
-                "Exchange": a.get("exchange", "-").upper() if a.get("exchange") else "-",
+                "Exchange": (
+                    a.get("exchange", "-").upper() if a.get("exchange") else "-"
+                ),
                 "Message": a.get("message", "")[:50],
                 "Status": _get_status_icon(a.get("status", "")),
             }

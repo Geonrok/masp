@@ -103,7 +103,9 @@ class AutomationScheduler:
         # 주간 리포트 (매주 일요일 오전 10:00)
         self.scheduler.add_job(
             self._job_weekly_report,
-            trigger=CronTrigger(day_of_week=6, hour=10, minute=0, timezone=self.timezone),
+            trigger=CronTrigger(
+                day_of_week=6, hour=10, minute=0, timezone=self.timezone
+            ),
             id="weekly_report",
             name="Weekly Performance Report",
             max_instances=1,
@@ -142,9 +144,7 @@ class AutomationScheduler:
             if self.notifier.enabled:
                 message = self.regime_detector.format_telegram_message(analysis)
                 await loop.run_in_executor(
-                    None,
-                    self.notifier.send_message_sync,
-                    message
+                    None, self.notifier.send_message_sync, message
                 )
             logger.info(f"[Job] Market regime: {analysis.regime.value}")
         except Exception as e:
@@ -170,10 +170,7 @@ class AutomationScheduler:
         try:
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(
-                None,
-                self.report_service.generate_report,
-                "weekly",
-                True
+                None, self.report_service.generate_report, "weekly", True
             )
             logger.info("[Job] Weekly report completed")
         except Exception as e:
@@ -185,10 +182,7 @@ class AutomationScheduler:
         try:
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(
-                None,
-                self.report_service.generate_report,
-                "monthly",
-                True
+                None, self.report_service.generate_report, "monthly", True
             )
             logger.info("[Job] Monthly report completed")
         except Exception as e:
@@ -200,8 +194,12 @@ class AutomationScheduler:
             "daily_signal": self.signal_service.send_daily_alert,
             "market_regime": lambda: self.regime_detector.analyze(),
             "risk_monitor": self.risk_service.monitor,
-            "weekly_report": lambda: self.report_service.generate_report("weekly", True),
-            "monthly_report": lambda: self.report_service.generate_report("monthly", True),
+            "weekly_report": lambda: self.report_service.generate_report(
+                "weekly", True
+            ),
+            "monthly_report": lambda: self.report_service.generate_report(
+                "monthly", True
+            ),
         }
 
         if job_name not in job_map:
@@ -267,12 +265,14 @@ class AutomationScheduler:
                 next_run = job.next_run_time.isoformat() if job.next_run_time else None
             except (AttributeError, TypeError):
                 next_run = None
-            jobs.append({
-                'id': job.id,
-                'name': job.name,
-                'next_run': next_run,
-                'trigger': str(job.trigger),
-            })
+            jobs.append(
+                {
+                    "id": job.id,
+                    "name": job.name,
+                    "next_run": next_run,
+                    "trigger": str(job.trigger),
+                }
+            )
         return jobs
 
 
@@ -282,19 +282,23 @@ def main():
 
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
-    parser = argparse.ArgumentParser(description='MASP Automation Scheduler')
+    parser = argparse.ArgumentParser(description="MASP Automation Scheduler")
     parser.add_argument(
-        '--run-now',
-        choices=['daily_signal', 'market_regime', 'risk_monitor', 'weekly_report', 'monthly_report'],
-        help='Run specific job immediately'
+        "--run-now",
+        choices=[
+            "daily_signal",
+            "market_regime",
+            "risk_monitor",
+            "weekly_report",
+            "monthly_report",
+        ],
+        help="Run specific job immediately",
     )
     parser.add_argument(
-        '--daemon',
-        action='store_true',
-        help='Run as daemon (scheduler mode)'
+        "--daemon", action="store_true", help="Run as daemon (scheduler mode)"
     )
 
     args = parser.parse_args()

@@ -1,4 +1,5 @@
 """Tests for AlertManager and related classes."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -221,15 +222,9 @@ def test_alert_manager_get_alerts(tmp_path):
     manager = AlertManager(notifier=None, history_dir=str(tmp_path))
 
     # Create multiple alerts
-    manager.create_alert(
-        AlertType.TRADE, AlertPriority.NORMAL, "Trade 1", "BUY"
-    )
-    manager.create_alert(
-        AlertType.SIGNAL, AlertPriority.HIGH, "Signal 1", "KAMA"
-    )
-    manager.create_alert(
-        AlertType.ERROR, AlertPriority.CRITICAL, "Error 1", "API fail"
-    )
+    manager.create_alert(AlertType.TRADE, AlertPriority.NORMAL, "Trade 1", "BUY")
+    manager.create_alert(AlertType.SIGNAL, AlertPriority.HIGH, "Signal 1", "KAMA")
+    manager.create_alert(AlertType.ERROR, AlertPriority.CRITICAL, "Error 1", "API fail")
 
     # Get all
     all_alerts = manager.get_alerts()

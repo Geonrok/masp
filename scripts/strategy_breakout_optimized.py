@@ -12,6 +12,7 @@ Donchian Channel Breakout + 필터 조합
 4. ATR-based Stop Loss
 5. Position Sizing
 """
+
 from __future__ import annotations
 
 import logging
@@ -23,7 +24,7 @@ import random
 import numpy as np
 import pandas as pd
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 
@@ -57,7 +58,7 @@ class DataLoader:
         if not fp.exists():
             return pd.DataFrame()
         df = pd.read_csv(fp)
-        for col in ['datetime', 'timestamp', 'date']:
+        for col in ["datetime", "timestamp", "date"]:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col])
                 df = df.set_index(col).sort_index()
@@ -67,11 +68,13 @@ class DataLoader:
 
     def get_symbols(self) -> List[str]:
         folder = DATA_ROOT / "binance_futures_4h"
-        return sorted([f.stem for f in folder.glob("*.csv") if f.stem.endswith('USDT')])
+        return sorted([f.stem for f in folder.glob("*.csv") if f.stem.endswith("USDT")])
 
 
 def atr(h: pd.Series, l: pd.Series, c: pd.Series, p: int) -> pd.Series:
-    tr = pd.concat([h - l, abs(h - c.shift(1)), abs(l - c.shift(1))], axis=1).max(axis=1)
+    tr = pd.concat([h - l, abs(h - c.shift(1)), abs(l - c.shift(1))], axis=1).max(
+        axis=1
+    )
     return tr.rolling(p).mean()
 
 
@@ -84,12 +87,14 @@ class BreakoutStrategy:
     Donchian Channel Breakout Strategy
     """
 
-    def __init__(self,
-                 lookback: int = 20,
-                 use_volume_filter: bool = True,
-                 use_trend_filter: bool = True,
-                 atr_stop_mult: float = 2.0,
-                 trend_ema: int = 100):
+    def __init__(
+        self,
+        lookback: int = 20,
+        use_volume_filter: bool = True,
+        use_trend_filter: bool = True,
+        atr_stop_mult: float = 2.0,
+        trend_ema: int = 100,
+    ):
         self.lookback = lookback
         self.use_volume_filter = use_volume_filter
         self.use_trend_filter = use_trend_filter
@@ -104,10 +109,10 @@ class BreakoutStrategy:
             signals: 1 (Long), -1 (Short), 0 (No signal)
             stops: ATR 기반 스탑로스 레벨
         """
-        close = df['close']
-        high = df['high']
-        low = df['low']
-        volume = df['volume']
+        close = df["close"]
+        high = df["high"]
+        low = df["low"]
+        volume = df["volume"]
 
         # Donchian Channel
         high_max = high.rolling(self.lookback).max().shift(1)
@@ -148,9 +153,14 @@ class BreakoutStrategy:
 
         return signals, stops
 
-    def backtest(self, df: pd.DataFrame, cost: CostModel,
-                 position_pct: float = 0.15, leverage: float = 2.0,
-                 max_bars: int = 48) -> Dict:
+    def backtest(
+        self,
+        df: pd.DataFrame,
+        cost: CostModel,
+        position_pct: float = 0.15,
+        leverage: float = 2.0,
+        max_bars: int = 48,
+    ) -> Dict:
         """
         백테스트 실행
         """
@@ -166,43 +176,52 @@ class BreakoutStrategy:
         equity = [capital]
 
         # 테스트 시작: 2023-01-01
-        test_start = df.index.get_indexer([pd.Timestamp("2023-01-01")], method='nearest')[0]
+        test_start = df.index.get_indexer(
+            [pd.Timestamp("2023-01-01")], method="nearest"
+        )[0]
         test_start = max(test_start, self.lookback + 10)
 
         for i in range(test_start, len(df)):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             sig = signals.iloc[i]
             stop = stops.iloc[i]
 
             if position:
-                bars = i - position['idx']
+                bars = i - position["idx"]
 
                 # 청산 조건
                 # 1. 스탑로스
-                if position['dir'] == 1:  # Long
-                    stop_hit = price < position['entry'] - position['stop']
+                if position["dir"] == 1:  # Long
+                    stop_hit = price < position["entry"] - position["stop"]
                 else:  # Short
-                    stop_hit = price > position['entry'] + position['stop']
+                    stop_hit = price > position["entry"] + position["stop"]
 
                 # 2. 반대 신호
-                reverse_signal = (position['dir'] == 1 and sig == -1) or \
-                                (position['dir'] == -1 and sig == 1)
+                reverse_signal = (position["dir"] == 1 and sig == -1) or (
+                    position["dir"] == -1 and sig == 1
+                )
 
                 # 3. 최대 보유 기간
                 max_hold = bars >= max_bars
 
                 if stop_hit or reverse_signal or max_hold:
-                    gross_pnl = (price / position['entry'] - 1) * position['dir']
+                    gross_pnl = (price / position["entry"] - 1) * position["dir"]
                     net_pnl = gross_pnl - cost.total_cost(bars)
-                    pnl = position['value'] * net_pnl
+                    pnl = position["value"] * net_pnl
 
-                    trades.append({
-                        'pnl': pnl,
-                        'pct': net_pnl,
-                        'bars': bars,
-                        'dir': position['dir'],
-                        'exit_reason': 'stop' if stop_hit else ('reverse' if reverse_signal else 'timeout')
-                    })
+                    trades.append(
+                        {
+                            "pnl": pnl,
+                            "pct": net_pnl,
+                            "bars": bars,
+                            "dir": position["dir"],
+                            "exit_reason": (
+                                "stop"
+                                if stop_hit
+                                else ("reverse" if reverse_signal else "timeout")
+                            ),
+                        }
+                    )
                     capital += pnl
                     position = None
 
@@ -210,11 +229,11 @@ class BreakoutStrategy:
             if not position and sig != 0 and capital > 0:
                 value = capital * position_pct * leverage
                 position = {
-                    'entry': price,
-                    'dir': sig,
-                    'idx': i,
-                    'value': value,
-                    'stop': stop
+                    "entry": price,
+                    "dir": sig,
+                    "idx": i,
+                    "value": value,
+                    "stop": stop,
                 }
 
             equity.append(max(capital, 0))
@@ -223,8 +242,8 @@ class BreakoutStrategy:
             return None
 
         # 통계
-        pnls = [t['pnl'] for t in trades]
-        pcts = [t['pct'] for t in trades]
+        pnls = [t["pnl"] for t in trades]
+        pcts = [t["pct"] for t in trades]
         eq = pd.Series(equity)
         mdd = ((eq - eq.expanding().max()) / eq.expanding().max()).min() * 100
 
@@ -244,14 +263,14 @@ class BreakoutStrategy:
                 streak = 0
 
         return {
-            'pf': min(pf, 999),
-            'ret': (capital / init - 1) * 100,
-            'wr': wins / len(trades) * 100,
-            'mdd': mdd,
-            'trades': len(trades),
-            'avg_bars': np.mean([t['bars'] for t in trades]),
-            'max_loss_streak': max_streak,
-            'trade_pcts': pcts
+            "pf": min(pf, 999),
+            "ret": (capital / init - 1) * 100,
+            "wr": wins / len(trades) * 100,
+            "mdd": mdd,
+            "trades": len(trades),
+            "avg_bars": np.mean([t["bars"] for t in trades]),
+            "max_loss_streak": max_streak,
+            "trade_pcts": pcts,
         }
 
 
@@ -259,8 +278,16 @@ def parameter_optimization(loader: DataLoader, cost: CostModel) -> Dict:
     """파라미터 최적화"""
 
     test_symbols = [
-        'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'ARBUSDT',
-        'APTUSDT', 'AVAXUSDT', 'DOTUSDT', 'NEARUSDT', 'INJUSDT'
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "ARBUSDT",
+        "APTUSDT",
+        "AVAXUSDT",
+        "DOTUSDT",
+        "NEARUSDT",
+        "INJUSDT",
     ]
 
     # 파라미터 조합
@@ -276,7 +303,7 @@ def parameter_optimization(loader: DataLoader, cost: CostModel) -> Dict:
                 strategy = BreakoutStrategy(
                     lookback=lookback,
                     use_volume_filter=vol_filter,
-                    use_trend_filter=trend_filter
+                    use_trend_filter=trend_filter,
                 )
 
                 symbol_results = []
@@ -292,18 +319,20 @@ def parameter_optimization(loader: DataLoader, cost: CostModel) -> Dict:
 
                 if symbol_results:
                     df_r = pd.DataFrame(symbol_results)
-                    profitable = (df_r['pf'] > 1.0).sum()
+                    profitable = (df_r["pf"] > 1.0).sum()
 
-                    results.append({
-                        'lookback': lookback,
-                        'vol_filter': vol_filter,
-                        'trend_filter': trend_filter,
-                        'n': len(symbol_results),
-                        'profitable_pct': profitable / len(symbol_results) * 100,
-                        'avg_pf': df_r[df_r['pf'] < 999]['pf'].mean(),
-                        'avg_ret': df_r['ret'].mean(),
-                        'avg_wr': df_r['wr'].mean()
-                    })
+                    results.append(
+                        {
+                            "lookback": lookback,
+                            "vol_filter": vol_filter,
+                            "trend_filter": trend_filter,
+                            "n": len(symbol_results),
+                            "profitable_pct": profitable / len(symbol_results) * 100,
+                            "avg_pf": df_r[df_r["pf"] < 999]["pf"].mean(),
+                            "avg_ret": df_r["ret"].mean(),
+                            "avg_wr": df_r["wr"].mean(),
+                        }
+                    )
 
     return pd.DataFrame(results)
 
@@ -319,7 +348,7 @@ def monte_carlo(trade_pcts: List[float], n_sim: int = 5000) -> Dict:
         peak = cap
         mdd = 0
         for pct in shuffled:
-            cap *= (1 + pct)
+            cap *= 1 + pct
             if cap > peak:
                 peak = cap
             dd = (peak - cap) / peak
@@ -329,12 +358,12 @@ def monte_carlo(trade_pcts: List[float], n_sim: int = 5000) -> Dict:
 
     finals = np.array(finals)
     return {
-        'mean': (np.mean(finals) / 10000 - 1) * 100,
-        'median': (np.median(finals) / 10000 - 1) * 100,
-        'p5': (np.percentile(finals, 5) / 10000 - 1) * 100,
-        'p95': (np.percentile(finals, 95) / 10000 - 1) * 100,
-        'prob_profit': (finals > 10000).mean() * 100,
-        'mean_mdd': np.mean(mdds) * 100
+        "mean": (np.mean(finals) / 10000 - 1) * 100,
+        "median": (np.median(finals) / 10000 - 1) * 100,
+        "p5": (np.percentile(finals, 5) / 10000 - 1) * 100,
+        "p95": (np.percentile(finals, 95) / 10000 - 1) * 100,
+        "prob_profit": (finals > 10000).mean() * 100,
+        "mean_mdd": np.mean(mdds) * 100,
     }
 
 
@@ -370,14 +399,18 @@ def main():
     logger.info("-" * 50)
 
     opt_results = parameter_optimization(loader, cost)
-    opt_results = opt_results.sort_values('avg_pf', ascending=False)
+    opt_results = opt_results.sort_values("avg_pf", ascending=False)
 
-    logger.info(f"\n{'Lookback':>8} {'Vol':>6} {'Trend':>6} {'Profit%':>10} {'Avg PF':>10} {'Avg Ret':>10}")
+    logger.info(
+        f"\n{'Lookback':>8} {'Vol':>6} {'Trend':>6} {'Profit%':>10} {'Avg PF':>10} {'Avg Ret':>10}"
+    )
     logger.info("-" * 60)
 
     for _, r in opt_results.head(10).iterrows():
-        logger.info(f"{r['lookback']:>8} {str(r['vol_filter']):>6} {str(r['trend_filter']):>6} "
-                   f"{r['profitable_pct']:>9.1f}% {r['avg_pf']:>10.2f} {r['avg_ret']:>9.1f}%")
+        logger.info(
+            f"{r['lookback']:>8} {str(r['vol_filter']):>6} {str(r['trend_filter']):>6} "
+            f"{r['profitable_pct']:>9.1f}% {r['avg_pf']:>10.2f} {r['avg_ret']:>9.1f}%"
+        )
 
     # 최적 파라미터
     best = opt_results.iloc[0]
@@ -394,22 +427,54 @@ def main():
     logger.info("=" * 70)
 
     strategy = BreakoutStrategy(
-        lookback=int(best['lookback']),
-        use_volume_filter=best['vol_filter'],
-        use_trend_filter=best['trend_filter']
+        lookback=int(best["lookback"]),
+        use_volume_filter=best["vol_filter"],
+        use_trend_filter=best["trend_filter"],
     )
 
     # 유동성 상위 40개 심볼
     all_symbols = loader.get_symbols()
     test_symbols = [
-        'BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'SOLUSDT',
-        'ADAUSDT', 'DOGEUSDT', 'AVAXUSDT', 'LINKUSDT', 'DOTUSDT',
-        'MATICUSDT', 'LTCUSDT', 'ATOMUSDT', 'UNIUSDT', 'NEARUSDT',
-        'APTUSDT', 'ARBUSDT', 'OPUSDT', 'INJUSDT', 'SUIUSDT',
-        'SEIUSDT', 'TIAUSDT', 'LDOUSDT', 'RUNEUSDT', 'AAVEUSDT',
-        'FILUSDT', 'ETCUSDT', 'XLMUSDT', 'ALGOUSDT', 'VETUSDT',
-        'ICPUSDT', 'SANDUSDT', 'MANAUSDT', 'AXSUSDT', 'GALAUSDT',
-        'FLOWUSDT', 'APEUSDT', 'GMTUSDT', 'CHZUSDT', 'LRCUSDT'
+        "BTCUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "XRPUSDT",
+        "SOLUSDT",
+        "ADAUSDT",
+        "DOGEUSDT",
+        "AVAXUSDT",
+        "LINKUSDT",
+        "DOTUSDT",
+        "MATICUSDT",
+        "LTCUSDT",
+        "ATOMUSDT",
+        "UNIUSDT",
+        "NEARUSDT",
+        "APTUSDT",
+        "ARBUSDT",
+        "OPUSDT",
+        "INJUSDT",
+        "SUIUSDT",
+        "SEIUSDT",
+        "TIAUSDT",
+        "LDOUSDT",
+        "RUNEUSDT",
+        "AAVEUSDT",
+        "FILUSDT",
+        "ETCUSDT",
+        "XLMUSDT",
+        "ALGOUSDT",
+        "VETUSDT",
+        "ICPUSDT",
+        "SANDUSDT",
+        "MANAUSDT",
+        "AXSUSDT",
+        "GALAUSDT",
+        "FLOWUSDT",
+        "APEUSDT",
+        "GMTUSDT",
+        "CHZUSDT",
+        "LRCUSDT",
     ]
 
     results = []
@@ -423,17 +488,19 @@ def main():
 
         result = strategy.backtest(df, cost)
         if result:
-            result['symbol'] = symbol
+            result["symbol"] = symbol
             results.append(result)
-            all_trades.extend(result['trade_pcts'])
+            all_trades.extend(result["trade_pcts"])
 
     if results:
         df_r = pd.DataFrame(results)
-        profitable = (df_r['pf'] > 1.0).sum()
+        profitable = (df_r["pf"] > 1.0).sum()
 
         logger.info(f"\n[결과 요약]")
         logger.info(f"  테스트 심볼: {len(results)}")
-        logger.info(f"  수익 심볼: {profitable}/{len(results)} ({profitable/len(results)*100:.1f}%)")
+        logger.info(
+            f"  수익 심볼: {profitable}/{len(results)} ({profitable/len(results)*100:.1f}%)"
+        )
         logger.info(f"  평균 PF: {df_r[df_r['pf'] < 999]['pf'].mean():.2f}")
         logger.info(f"  평균 수익률: {df_r['ret'].mean():.1f}%")
         logger.info(f"  평균 승률: {df_r['wr'].mean():.1f}%")
@@ -441,13 +508,17 @@ def main():
 
         # 상세 결과
         logger.info(f"\n[심볼별 상세]")
-        logger.info(f"{'Symbol':<12} {'PF':>8} {'Return':>10} {'WR':>8} {'Trades':>8} {'MDD':>10}")
+        logger.info(
+            f"{'Symbol':<12} {'PF':>8} {'Return':>10} {'WR':>8} {'Trades':>8} {'MDD':>10}"
+        )
         logger.info("-" * 60)
 
-        for _, r in df_r.sort_values('pf', ascending=False).iterrows():
-            status = "PASS" if r['pf'] > 1.0 else "FAIL"
-            logger.info(f"[{status}] {r['symbol']:<8} {r['pf']:>8.2f} {r['ret']:>9.1f}% "
-                       f"{r['wr']:>7.1f}% {r['trades']:>8} {r['mdd']:>9.1f}%")
+        for _, r in df_r.sort_values("pf", ascending=False).iterrows():
+            status = "PASS" if r["pf"] > 1.0 else "FAIL"
+            logger.info(
+                f"[{status}] {r['symbol']:<8} {r['pf']:>8.2f} {r['ret']:>9.1f}% "
+                f"{r['wr']:>7.1f}% {r['trades']:>8} {r['mdd']:>9.1f}%"
+            )
 
     # =========================================================================
     # 3. Monte Carlo
@@ -486,7 +557,9 @@ def main():
         if kelly > 0.15:
             logger.info(f"  >>> Kelly 충족: 현재 포지션 적정 <<<")
         else:
-            logger.info(f"  >>> 경고: 포지션 크기 조정 필요 (권장: {kelly*100:.0f}%) <<<")
+            logger.info(
+                f"  >>> 경고: 포지션 크기 조정 필요 (권장: {kelly*100:.0f}%) <<<"
+            )
 
     # =========================================================================
     # 5. Final Assessment
@@ -499,25 +572,29 @@ def main():
 
     if results:
         df_r = pd.DataFrame(results)
-        profitable_pct = (df_r['pf'] > 1.0).sum() / len(df_r) * 100
-        avg_pf = df_r[df_r['pf'] < 999]['pf'].mean()
-        avg_ret = df_r['ret'].mean()
+        profitable_pct = (df_r["pf"] > 1.0).sum() / len(df_r) * 100
+        avg_pf = df_r[df_r["pf"] < 999]["pf"].mean()
+        avg_ret = df_r["ret"].mean()
 
         c1 = profitable_pct >= 50
         c2 = avg_pf >= 1.0
         c3 = avg_ret > 0
 
-        logger.info(f"\n  [{'PASS' if c1 else 'FAIL'}] 수익 심볼 >= 50%: {profitable_pct:.1f}%")
+        logger.info(
+            f"\n  [{'PASS' if c1 else 'FAIL'}] 수익 심볼 >= 50%: {profitable_pct:.1f}%"
+        )
         logger.info(f"  [{'PASS' if c2 else 'FAIL'}] 평균 PF >= 1.0: {avg_pf:.2f}")
         logger.info(f"  [{'PASS' if c3 else 'FAIL'}] 평균 수익률 > 0%: {avg_ret:.1f}%")
 
         criteria = [c1, c2, c3]
 
     if all_trades:
-        c4 = mc['prob_profit'] >= 55
+        c4 = mc["prob_profit"] >= 55
         c5 = kelly > 0.05
 
-        logger.info(f"  [{'PASS' if c4 else 'FAIL'}] MC 수익 확률 >= 55%: {mc['prob_profit']:.1f}%")
+        logger.info(
+            f"  [{'PASS' if c4 else 'FAIL'}] MC 수익 확률 >= 55%: {mc['prob_profit']:.1f}%"
+        )
         logger.info(f"  [{'PASS' if c5 else 'FAIL'}] Kelly >= 5%: {kelly*100:.1f}%")
 
         criteria.extend([c4, c5])
@@ -539,7 +616,7 @@ def main():
     # 권장 심볼
     if results:
         df_r = pd.DataFrame(results)
-        recommended = df_r[df_r['pf'] > 1.0].nlargest(10, 'pf')
+        recommended = df_r[df_r["pf"] > 1.0].nlargest(10, "pf")
 
         logger.info(f"\n[권장 거래 심볼 TOP 10]")
         for _, r in recommended.iterrows():

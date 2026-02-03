@@ -1,4 +1,5 @@
 """Risk metrics provider - provides returns data for risk_metrics_panel component."""
+
 from __future__ import annotations
 
 import logging
@@ -15,6 +16,7 @@ def _get_trade_logger():
     """Get TradeLogger instance."""
     try:
         from libs.adapters.trade_logger import TradeLogger
+
         return TradeLogger()
     except ImportError:
         return None
@@ -120,7 +122,9 @@ def _calculate_equity_curve(
 
 
 @st.cache_data(ttl=30, show_spinner=False)
-def get_risk_metrics_data(days: int = 30) -> Optional[Tuple[List[float], List[float], List[date]]]:
+def get_risk_metrics_data(
+    days: int = 30,
+) -> Optional[Tuple[List[float], List[float], List[date]]]:
     """Get data for risk_metrics_panel.
 
     Cached for 30 seconds to reduce file reads.

@@ -21,12 +21,13 @@ import numpy as np
 from datetime import datetime
 import json
 import warnings
-warnings.filterwarnings('ignore')
 
-DATA_DIR = 'E:/투자/data/leveraged_etf'
-KOSPI_DIR = 'E:/투자/data/kospi_futures'
-INVESTOR_DIR = 'E:/투자/data/kr_stock/investor_trading'
-OUTPUT_DIR = 'E:/투자/Multi-Asset Strategy Platform/logs'
+warnings.filterwarnings("ignore")
+
+DATA_DIR = "E:/투자/data/leveraged_etf"
+KOSPI_DIR = "E:/투자/data/kospi_futures"
+INVESTOR_DIR = "E:/투자/data/kr_stock/investor_trading"
+OUTPUT_DIR = "E:/투자/Multi-Asset Strategy Platform/logs"
 
 ROUND_TRIP_COST = 0.0009
 
@@ -36,35 +37,35 @@ def load_data():
     data = {}
 
     # 레버리지 ETF
-    data['lev2x'] = pd.read_parquet(f'{DATA_DIR}/122630_KODEX_레버리지.parquet')
-    data['lev2x'].columns = [c.lower() for c in data['lev2x'].columns]
+    data["lev2x"] = pd.read_parquet(f"{DATA_DIR}/122630_KODEX_레버리지.parquet")
+    data["lev2x"].columns = [c.lower() for c in data["lev2x"].columns]
 
     # 현물 ETF
-    data['spot'] = pd.read_parquet(f'{DATA_DIR}/069500_KODEX_200.parquet')
-    data['spot'].columns = [c.lower() for c in data['spot'].columns]
+    data["spot"] = pd.read_parquet(f"{DATA_DIR}/069500_KODEX_200.parquet")
+    data["spot"].columns = [c.lower() for c in data["spot"].columns]
 
     # VIX
-    data['vix'] = pd.read_parquet(f'{DATA_DIR}/VIX.parquet')
-    data['vix'].columns = [c.lower() for c in data['vix'].columns]
+    data["vix"] = pd.read_parquet(f"{DATA_DIR}/VIX.parquet")
+    data["vix"].columns = [c.lower() for c in data["vix"].columns]
 
     # KOSPI200
-    data['kospi200'] = pd.read_parquet(f'{KOSPI_DIR}/kospi200_daily_yf.parquet')
-    data['kospi200'].columns = [c.lower() for c in data['kospi200'].columns]
+    data["kospi200"] = pd.read_parquet(f"{KOSPI_DIR}/kospi200_daily_yf.parquet")
+    data["kospi200"].columns = [c.lower() for c in data["kospi200"].columns]
 
     # 외국인 데이터
     try:
-        foreign_file = f'{INVESTOR_DIR}/all_stocks_foreign_sum.csv'
-        foreign = pd.read_csv(foreign_file, encoding='utf-8-sig')
-        foreign['날짜'] = pd.to_datetime(foreign['날짜'])
-        foreign = foreign.set_index('날짜')
-        data['foreign'] = foreign['외국인합계']
+        foreign_file = f"{INVESTOR_DIR}/all_stocks_foreign_sum.csv"
+        foreign = pd.read_csv(foreign_file, encoding="utf-8-sig")
+        foreign["날짜"] = pd.to_datetime(foreign["날짜"])
+        foreign = foreign.set_index("날짜")
+        data["foreign"] = foreign["외국인합계"]
     except:
-        data['foreign'] = None
+        data["foreign"] = None
 
     # 인덱스 정규화
     for key in data:
-        if data[key] is not None and hasattr(data[key], 'index'):
-            if hasattr(data[key].index, 'tz') and data[key].index.tz is not None:
+        if data[key] is not None and hasattr(data[key], "index"):
+            if hasattr(data[key].index, "tz") and data[key].index.tz is not None:
                 data[key].index = data[key].index.tz_localize(None)
 
     return data
@@ -99,11 +100,11 @@ def calculate_metrics(equity: pd.Series, position: pd.Series = None):
         exposure = 1.0
 
     return {
-        'cagr': cagr,
-        'sharpe': sharpe,
-        'mdd': mdd,
-        'trades_per_year': trades_per_year,
-        'exposure': exposure,
+        "cagr": cagr,
+        "sharpe": sharpe,
+        "mdd": mdd,
+        "trades_per_year": trades_per_year,
+        "exposure": exposure,
     }
 
 
@@ -115,9 +116,9 @@ def strategy_f_foreign_trend_lev(data, foreign_period=30, sma_period=100):
     - 외국인 30일 순매수 > 0 AND 종가 > SMA100 → 레버리지 매수
     - 조건 미충족 → 현금
     """
-    kospi = data['kospi200']['close']
-    lev2x = data['lev2x']['close']
-    foreign = data['foreign']
+    kospi = data["kospi200"]["close"]
+    lev2x = data["lev2x"]["close"]
+    foreign = data["foreign"]
 
     if foreign is None:
         return None, None
@@ -160,8 +161,8 @@ def strategy_g_vix_level_lev(data, vix_threshold=20):
     - VIX < 20 AND VIX < SMA20 → 레버리지 매수
     - VIX >= 20 OR VIX > SMA20 → 현금
     """
-    vix = data['vix']['close']
-    lev2x = data['lev2x']['close']
+    vix = data["vix"]["close"]
+    lev2x = data["lev2x"]["close"]
 
     common_idx = vix.index.intersection(lev2x.index)
     vix = vix.reindex(common_idx)
@@ -194,9 +195,9 @@ def strategy_h_trend_vix_combo(data):
     - KOSPI200 > SMA50 AND VIX < SMA20 → 레버리지
     - 조건 미충족 → 현금
     """
-    kospi = data['kospi200']['close']
-    vix = data['vix']['close']
-    lev2x = data['lev2x']['close']
+    kospi = data["kospi200"]["close"]
+    vix = data["vix"]["close"]
+    lev2x = data["lev2x"]["close"]
 
     common_idx = kospi.index.intersection(vix.index).intersection(lev2x.index)
     kospi = kospi.reindex(common_idx)
@@ -234,15 +235,19 @@ def strategy_i_conservative_lev(data):
     - VIX < SMA20
     - 외국인 30일 순매수 > 0
     """
-    kospi = data['kospi200']['close']
-    vix = data['vix']['close']
-    lev2x = data['lev2x']['close']
-    foreign = data['foreign']
+    kospi = data["kospi200"]["close"]
+    vix = data["vix"]["close"]
+    lev2x = data["lev2x"]["close"]
+    foreign = data["foreign"]
 
     if foreign is None:
         return None, None
 
-    common_idx = kospi.index.intersection(vix.index).intersection(lev2x.index).intersection(foreign.index)
+    common_idx = (
+        kospi.index.intersection(vix.index)
+        .intersection(lev2x.index)
+        .intersection(foreign.index)
+    )
     kospi = kospi.reindex(common_idx)
     vix = vix.reindex(common_idx)
     lev2x = lev2x.reindex(common_idx)
@@ -255,10 +260,7 @@ def strategy_i_conservative_lev(data):
 
     # 모든 조건
     signal = (
-        (kospi > kospi_sma100) &
-        (vix < 25) &
-        (vix < vix_sma20) &
-        (foreign_30d > 0)
+        (kospi > kospi_sma100) & (vix < 25) & (vix < vix_sma20) & (foreign_30d > 0)
     ).shift(1)
 
     position = signal.astype(float).fillna(0)
@@ -283,12 +285,16 @@ def strategy_j_spot_then_lev(data):
     - 기본: 현물 ETF 보유
     - 강세 조건 (KOSPI>SMA50 AND VIX<SMA20): 현물→레버리지 전환
     """
-    kospi = data['kospi200']['close']
-    vix = data['vix']['close']
-    spot = data['spot']['close']
-    lev2x = data['lev2x']['close']
+    kospi = data["kospi200"]["close"]
+    vix = data["vix"]["close"]
+    spot = data["spot"]["close"]
+    lev2x = data["lev2x"]["close"]
 
-    common_idx = kospi.index.intersection(vix.index).intersection(spot.index).intersection(lev2x.index)
+    common_idx = (
+        kospi.index.intersection(vix.index)
+        .intersection(spot.index)
+        .intersection(lev2x.index)
+    )
     kospi = kospi.reindex(common_idx)
     vix = vix.reindex(common_idx)
     spot = spot.reindex(common_idx)
@@ -330,27 +336,35 @@ def walk_forward(equity: pd.Series, train_ratio=0.7):
     test_eq = equity.iloc[train_end:]
 
     if len(test_eq) < 50:
-        return {'train_sharpe': 0, 'test_sharpe': 0, 'wf_ratio': 0}
+        return {"train_sharpe": 0, "test_sharpe": 0, "wf_ratio": 0}
 
     train_ret = train_eq.pct_change().dropna()
     test_ret = test_eq.pct_change().dropna()
 
-    train_sharpe = (train_ret.mean() * 252) / (train_ret.std() * np.sqrt(252)) if train_ret.std() > 0 else 0
-    test_sharpe = (test_ret.mean() * 252) / (test_ret.std() * np.sqrt(252)) if test_ret.std() > 0 else 0
+    train_sharpe = (
+        (train_ret.mean() * 252) / (train_ret.std() * np.sqrt(252))
+        if train_ret.std() > 0
+        else 0
+    )
+    test_sharpe = (
+        (test_ret.mean() * 252) / (test_ret.std() * np.sqrt(252))
+        if test_ret.std() > 0
+        else 0
+    )
 
     wf_ratio = test_sharpe / train_sharpe if train_sharpe != 0 else 0
 
     return {
-        'train_sharpe': train_sharpe,
-        'test_sharpe': test_sharpe,
-        'wf_ratio': wf_ratio,
+        "train_sharpe": train_sharpe,
+        "test_sharpe": test_sharpe,
+        "wf_ratio": wf_ratio,
     }
 
 
 def main():
-    print('=' * 80)
-    print('코스피 선물 ETF 전략 v3 - 개선된 레버리지 전략')
-    print('=' * 80)
+    print("=" * 80)
+    print("코스피 선물 ETF 전략 v3 - 개선된 레버리지 전략")
+    print("=" * 80)
     print()
 
     data = load_data()
@@ -360,18 +374,18 @@ def main():
     print()
 
     strategies = {
-        'F_Foreign_Trend_Lev': strategy_f_foreign_trend_lev,
-        'G_VIX_Level_Lev': strategy_g_vix_level_lev,
-        'H_Trend_VIX_Combo': strategy_h_trend_vix_combo,
-        'I_Conservative_Lev': strategy_i_conservative_lev,
-        'J_Spot_Then_Lev': strategy_j_spot_then_lev,
+        "F_Foreign_Trend_Lev": strategy_f_foreign_trend_lev,
+        "G_VIX_Level_Lev": strategy_g_vix_level_lev,
+        "H_Trend_VIX_Combo": strategy_h_trend_vix_combo,
+        "I_Conservative_Lev": strategy_i_conservative_lev,
+        "J_Spot_Then_Lev": strategy_j_spot_then_lev,
     }
 
     results = []
 
     # Buy & Hold 벤치마크
-    print('--- Buy & Hold (레버리지) ---')
-    lev_ret = data['lev2x']['close'].pct_change()
+    print("--- Buy & Hold (레버리지) ---")
+    lev_ret = data["lev2x"]["close"].pct_change()
     lev_eq = (1 + lev_ret.fillna(0)).cumprod()
     bh_metrics = calculate_metrics(lev_eq)
     print(f'  CAGR: {bh_metrics["cagr"]*100:.1f}%')
@@ -380,18 +394,18 @@ def main():
     print()
 
     for name, func in strategies.items():
-        print(f'--- {name} ---')
+        print(f"--- {name} ---")
 
         try:
             equity, position = func(data)
 
             if equity is None:
-                print('  [SKIP] 데이터 부족')
+                print("  [SKIP] 데이터 부족")
                 continue
 
             metrics = calculate_metrics(equity, position)
             if metrics is None:
-                print('  [SKIP] 기간 부족')
+                print("  [SKIP] 기간 부족")
                 continue
 
             wf = walk_forward(equity)
@@ -406,50 +420,55 @@ def main():
 
             # 판정
             passed = (
-                wf['test_sharpe'] > 0.5 and
-                metrics['mdd'] > -0.40 and
-                metrics['sharpe'] > 0.5
+                wf["test_sharpe"] > 0.5
+                and metrics["mdd"] > -0.40
+                and metrics["sharpe"] > 0.5
             )
-            verdict = 'PASS' if passed else 'FAIL'
-            print(f'  결론: {verdict}')
+            verdict = "PASS" if passed else "FAIL"
+            print(f"  결론: {verdict}")
 
-            results.append({
-                'strategy': name,
-                'cagr': metrics['cagr'],
-                'sharpe': metrics['sharpe'],
-                'mdd': metrics['mdd'],
-                'trades_per_year': metrics['trades_per_year'],
-                'exposure': metrics['exposure'],
-                'wf_test_sharpe': wf['test_sharpe'],
-                'wf_ratio': wf['wf_ratio'],
-                'verdict': verdict,
-            })
+            results.append(
+                {
+                    "strategy": name,
+                    "cagr": metrics["cagr"],
+                    "sharpe": metrics["sharpe"],
+                    "mdd": metrics["mdd"],
+                    "trades_per_year": metrics["trades_per_year"],
+                    "exposure": metrics["exposure"],
+                    "wf_test_sharpe": wf["test_sharpe"],
+                    "wf_ratio": wf["wf_ratio"],
+                    "verdict": verdict,
+                }
+            )
 
         except Exception as e:
-            print(f'  [ERROR] {e}')
+            print(f"  [ERROR] {e}")
             import traceback
+
             traceback.print_exc()
 
         print()
 
     # 요약
-    print('=' * 80)
-    print('결과 요약')
-    print('=' * 80)
+    print("=" * 80)
+    print("결과 요약")
+    print("=" * 80)
 
     if results:
-        df = pd.DataFrame(results).sort_values('sharpe', ascending=False)
+        df = pd.DataFrame(results).sort_values("sharpe", ascending=False)
         print()
         print(df.to_string(index=False))
 
-        passed = df[df['verdict'] == 'PASS']
+        passed = df[df["verdict"] == "PASS"]
         print()
         if len(passed) > 0:
-            print(f'통과 전략: {len(passed)}개')
+            print(f"통과 전략: {len(passed)}개")
             for _, row in passed.iterrows():
-                print(f'  - {row["strategy"]}: Sharpe {row["sharpe"]:.3f}, MDD {row["mdd"]*100:.1f}%')
+                print(
+                    f'  - {row["strategy"]}: Sharpe {row["sharpe"]:.3f}, MDD {row["mdd"]*100:.1f}%'
+                )
         else:
-            print('통과 전략 없음 - 기준 완화 필요')
+            print("통과 전략 없음 - 기준 완화 필요")
 
             # 차선책 제안
             best = df.iloc[0]
@@ -460,16 +479,16 @@ def main():
 
         # 저장
         output = {
-            'generated': datetime.now().isoformat(),
-            'type': 'leveraged_etf_v3',
-            'benchmark': bh_metrics,
-            'results': results,
+            "generated": datetime.now().isoformat(),
+            "type": "leveraged_etf_v3",
+            "benchmark": bh_metrics,
+            "results": results,
         }
-        output_path = f'{OUTPUT_DIR}/leveraged_etf_v3_results.json'
-        with open(output_path, 'w', encoding='utf-8') as f:
+        output_path = f"{OUTPUT_DIR}/leveraged_etf_v3_results.json"
+        with open(output_path, "w", encoding="utf-8") as f:
             json.dump(output, f, ensure_ascii=False, indent=2, default=str)
-        print(f'\n저장: {output_path}')
+        print(f"\n저장: {output_path}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -18,7 +18,7 @@ from typing import Dict, List, Optional, Tuple, Any
 from itertools import product
 import warnings
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 import numpy as np
 import pandas as pd
@@ -27,8 +27,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,10 @@ DATA_ROOT = Path("E:/data/crypto_ohlcv")
 # 지표 계산 함수들
 # ============================================================
 
-def calc_kama(prices: np.ndarray, period: int = 5, fast: int = 2, slow: int = 30) -> np.ndarray:
+
+def calc_kama(
+    prices: np.ndarray, period: int = 5, fast: int = 2, slow: int = 30
+) -> np.ndarray:
     """Kaufman Adaptive Moving Average"""
     n = len(prices)
     kama = np.full(n, np.nan)
@@ -52,7 +54,7 @@ def calc_kama(prices: np.ndarray, period: int = 5, fast: int = 2, slow: int = 30
 
     for i in range(period, n):
         change = abs(prices[i] - prices[i - period])
-        volatility = np.sum(np.abs(np.diff(prices[i - period:i + 1])))
+        volatility = np.sum(np.abs(np.diff(prices[i - period : i + 1])))
         er = change / volatility if volatility > 0 else 0
         sc = (er * (fast_sc - slow_sc) + slow_sc) ** 2
         kama[i] = kama[i - 1] + sc * (prices[i] - kama[i - 1])
@@ -64,7 +66,7 @@ def calc_sma(prices: np.ndarray, period: int) -> np.ndarray:
     """Simple Moving Average"""
     result = np.full(len(prices), np.nan)
     for i in range(period - 1, len(prices)):
-        result[i] = np.mean(prices[i - period + 1:i + 1])
+        result[i] = np.mean(prices[i - period + 1 : i + 1])
     return result
 
 
@@ -82,7 +84,7 @@ def calc_adv(volumes: np.ndarray, prices: np.ndarray, period: int = 20) -> np.nd
     dollar_volume = volumes * prices
     adv = np.full(len(prices), np.nan)
     for i in range(period - 1, len(prices)):
-        adv[i] = np.mean(dollar_volume[i - period + 1:i + 1])
+        adv[i] = np.mean(dollar_volume[i - period + 1 : i + 1])
     return adv
 
 
@@ -90,9 +92,11 @@ def calc_adv(volumes: np.ndarray, prices: np.ndarray, period: int = 20) -> np.nd
 # 전략 시그널 생성
 # ============================================================
 
+
 @dataclass
 class StrategyConfig:
     """전략 설정"""
+
     name: str = "or_loose"
     kama_period: int = 5
     tsmom_period: int = 90
@@ -107,12 +111,10 @@ class StrategyConfig:
 
 
 def generate_signals(
-    df: pd.DataFrame,
-    config: StrategyConfig,
-    btc_gate: Optional[pd.Series] = None
+    df: pd.DataFrame, config: StrategyConfig, btc_gate: Optional[pd.Series] = None
 ) -> pd.Series:
     """전략별 시그널 생성"""
-    prices = df['close'].values
+    prices = df["close"].values
     n = len(prices)
 
     if config.name == "buy_hold":
@@ -154,9 +156,11 @@ def generate_signals(
 # 백테스터
 # ============================================================
 
+
 @dataclass
 class BacktestResult:
     """백테스트 결과"""
+
     strategy: str
     exchange: str
     universe: str
@@ -173,19 +177,19 @@ class BacktestResult:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            'strategy': self.strategy,
-            'exchange': self.exchange,
-            'universe': self.universe,
-            'params': str(self.params),
-            'total_return': self.total_return,
-            'annualized_return': self.annualized_return,
-            'sharpe_ratio': self.sharpe_ratio,
-            'max_drawdown': self.max_drawdown,
-            'win_rate': self.win_rate,
-            'total_trades': self.total_trades,
-            'invested_days': self.invested_days,
-            'total_days': self.total_days,
-            'final_value': self.final_value,
+            "strategy": self.strategy,
+            "exchange": self.exchange,
+            "universe": self.universe,
+            "params": str(self.params),
+            "total_return": self.total_return,
+            "annualized_return": self.annualized_return,
+            "sharpe_ratio": self.sharpe_ratio,
+            "max_drawdown": self.max_drawdown,
+            "win_rate": self.win_rate,
+            "total_trades": self.total_trades,
+            "invested_days": self.invested_days,
+            "total_days": self.total_days,
+            "final_value": self.final_value,
         }
 
 
@@ -202,17 +206,25 @@ def run_backtest(
     """
     if not data:
         return BacktestResult(
-            strategy=config.name, exchange="", universe="",
-            params={}, total_return=0, annualized_return=0,
-            sharpe_ratio=0, max_drawdown=0, win_rate=0,
-            total_trades=0, invested_days=0, total_days=0,
-            final_value=initial_capital
+            strategy=config.name,
+            exchange="",
+            universe="",
+            params={},
+            total_return=0,
+            annualized_return=0,
+            sharpe_ratio=0,
+            max_drawdown=0,
+            win_rate=0,
+            total_trades=0,
+            invested_days=0,
+            total_days=0,
+            final_value=initial_capital,
         )
 
     # BTC Gate 계산
     btc_gate = None
     if config.use_btc_gate and btc_data is not None:
-        btc_prices = btc_data['close'].values
+        btc_prices = btc_data["close"].values
         btc_ma = calc_sma(btc_prices, config.btc_ma_period)
         btc_gate = pd.Series(btc_prices > btc_ma, index=btc_data.index)
 
@@ -224,23 +236,31 @@ def run_backtest(
 
         # ADV 필터
         if config.adv_threshold > 0:
-            adv = calc_adv(df['volume'].values, df['close'].values)
+            adv = calc_adv(df["volume"].values, df["close"].values)
             if np.nanmean(adv) < config.adv_threshold:
                 continue
 
         signal = generate_signals(df, config, btc_gate)
         df = df.copy()
-        df['signal'] = signal
-        df['dollar_volume'] = df['close'] * df['volume']
+        df["signal"] = signal
+        df["dollar_volume"] = df["close"] * df["volume"]
         signal_data[symbol] = df
 
     if not signal_data:
         return BacktestResult(
-            strategy=config.name, exchange="", universe="",
-            params={}, total_return=0, annualized_return=0,
-            sharpe_ratio=0, max_drawdown=0, win_rate=0,
-            total_trades=0, invested_days=0, total_days=0,
-            final_value=initial_capital
+            strategy=config.name,
+            exchange="",
+            universe="",
+            params={},
+            total_return=0,
+            annualized_return=0,
+            sharpe_ratio=0,
+            max_drawdown=0,
+            win_rate=0,
+            total_trades=0,
+            invested_days=0,
+            total_days=0,
+            final_value=initial_capital,
         )
 
     # 모든 날짜 수집
@@ -264,9 +284,9 @@ def run_backtest(
 
         for symbol, df in signal_data.items():
             if date in df.index:
-                prices_today[symbol] = df.loc[date, 'close']
-                signals_today[symbol] = df.loc[date, 'signal']
-                volumes_today[symbol] = df.loc[date, 'dollar_volume']
+                prices_today[symbol] = df.loc[date, "close"]
+                signals_today[symbol] = df.loc[date, "signal"]
+                volumes_today[symbol] = df.loc[date, "dollar_volume"]
 
         # 포트폴리오 가치 계산
         position_value = sum(
@@ -278,7 +298,9 @@ def run_backtest(
         # 일간 수익률
         if i > 0:
             prev_value = portfolio_values[-1]
-            daily_ret = (portfolio_value - prev_value) / prev_value if prev_value > 0 else 0
+            daily_ret = (
+                (portfolio_value - prev_value) / prev_value if prev_value > 0 else 0
+            )
             daily_returns.append(daily_ret)
             if positions:
                 invested_days += 1
@@ -286,9 +308,13 @@ def run_backtest(
         portfolio_values.append(portfolio_value)
 
         # 타겟 포지션 결정 (Day T 시그널 -> Day T+1 실행)
-        active = [(sym, volumes_today.get(sym, 0)) for sym, sig in signals_today.items() if sig]
+        active = [
+            (sym, volumes_today.get(sym, 0))
+            for sym, sig in signals_today.items()
+            if sig
+        ]
         active_sorted = sorted(active, key=lambda x: x[1], reverse=True)
-        target_symbols = set(s for s, _ in active_sorted[:config.max_positions])
+        target_symbols = set(s for s, _ in active_sorted[: config.max_positions])
 
         # 매도 (타겟에 없는 포지션)
         for sym in list(positions.keys()):
@@ -302,7 +328,9 @@ def run_backtest(
 
         # 매수 (새 포지션)
         if target_symbols:
-            current_value = cash + sum(s * prices_today.get(sym, 0) for sym, (s, _) in positions.items())
+            current_value = cash + sum(
+                s * prices_today.get(sym, 0) for sym, (s, _) in positions.items()
+            )
             target_per_position = current_value / len(target_symbols)
 
             for sym in target_symbols:
@@ -326,7 +354,11 @@ def run_backtest(
     annualized_return = (1 + total_return) ** (1 / n_years) - 1 if n_years > 0 else 0
 
     daily_rets = np.array(daily_returns)
-    sharpe = np.mean(daily_rets) / np.std(daily_rets) * np.sqrt(252) if len(daily_rets) > 1 and np.std(daily_rets) > 0 else 0
+    sharpe = (
+        np.mean(daily_rets) / np.std(daily_rets) * np.sqrt(252)
+        if len(daily_rets) > 1 and np.std(daily_rets) > 0
+        else 0
+    )
 
     portfolio_arr = np.array(portfolio_values)
     peak = np.maximum.accumulate(portfolio_arr)
@@ -340,11 +372,11 @@ def run_backtest(
         exchange="",
         universe="",
         params={
-            'kama': config.kama_period,
-            'tsmom': config.tsmom_period,
-            'btc_ma': config.btc_ma_period,
-            'btc_gate': config.use_btc_gate,
-            'max_pos': config.max_positions,
+            "kama": config.kama_period,
+            "tsmom": config.tsmom_period,
+            "btc_ma": config.btc_ma_period,
+            "btc_gate": config.use_btc_gate,
+            "max_pos": config.max_positions,
         },
         total_return=total_return,
         annualized_return=annualized_return,
@@ -362,7 +394,10 @@ def run_backtest(
 # 데이터 로딩
 # ============================================================
 
-def load_exchange_data(exchange: str, min_days: int = 100) -> Tuple[Dict[str, pd.DataFrame], Optional[pd.DataFrame]]:
+
+def load_exchange_data(
+    exchange: str, min_days: int = 100
+) -> Tuple[Dict[str, pd.DataFrame], Optional[pd.DataFrame]]:
     """거래소 데이터 로드"""
     folder = DATA_ROOT / f"{exchange}_1d"
 
@@ -380,20 +415,20 @@ def load_exchange_data(exchange: str, min_days: int = 100) -> Tuple[Dict[str, pd
             # 날짜 컬럼 찾기
             date_col = None
             for col in df.columns:
-                if 'date' in col.lower() or 'time' in col.lower():
+                if "date" in col.lower() or "time" in col.lower():
                     date_col = col
                     break
 
             if date_col is None:
                 continue
 
-            df['date'] = pd.to_datetime(df[date_col]).dt.normalize()
-            df = df.set_index('date')
+            df["date"] = pd.to_datetime(df[date_col]).dt.normalize()
+            df = df.set_index("date")
             df = df.sort_index()
-            df = df[~df.index.duplicated(keep='last')]
+            df = df[~df.index.duplicated(keep="last")]
 
             # OHLCV 컬럼 확인
-            required = ['open', 'high', 'low', 'close', 'volume']
+            required = ["open", "high", "low", "close", "volume"]
             if not all(col in df.columns for col in required):
                 continue
 
@@ -404,7 +439,7 @@ def load_exchange_data(exchange: str, min_days: int = 100) -> Tuple[Dict[str, pd
                 data[symbol] = df
 
                 # BTC 데이터 식별
-                if symbol.upper() in ['BTC', 'BTCUSDT', 'BTC-KRW']:
+                if symbol.upper() in ["BTC", "BTCUSDT", "BTC-KRW"]:
                     btc_data = df
 
         except Exception as e:
@@ -413,7 +448,11 @@ def load_exchange_data(exchange: str, min_days: int = 100) -> Tuple[Dict[str, pd
     # BTC 찾기 (없으면 이름으로 검색)
     if btc_data is None:
         for key, df in data.items():
-            if 'BTC' in key.upper() and 'DOWN' not in key.upper() and 'UP' not in key.upper():
+            if (
+                "BTC" in key.upper()
+                and "DOWN" not in key.upper()
+                and "UP" not in key.upper()
+            ):
                 btc_data = df
                 break
 
@@ -423,12 +462,12 @@ def load_exchange_data(exchange: str, min_days: int = 100) -> Tuple[Dict[str, pd
 def filter_universe(
     data: Dict[str, pd.DataFrame],
     universe_type: str,
-    btc_data: Optional[pd.DataFrame] = None
+    btc_data: Optional[pd.DataFrame] = None,
 ) -> Dict[str, pd.DataFrame]:
     """유니버스 필터링"""
     if universe_type == "btc_only":
         for key, df in data.items():
-            if 'BTC' in key.upper() and 'DOWN' not in key.upper():
+            if "BTC" in key.upper() and "DOWN" not in key.upper():
                 return {key: df}
         return {}
 
@@ -451,7 +490,7 @@ def filter_universe(
     # 평균 거래량으로 정렬
     volumes = []
     for symbol, df in data.items():
-        avg_vol = (df['close'] * df['volume']).mean()
+        avg_vol = (df["close"] * df["volume"]).mean()
         volumes.append((symbol, avg_vol))
 
     volumes.sort(key=lambda x: x[1], reverse=True)
@@ -463,6 +502,7 @@ def filter_universe(
 # ============================================================
 # 메인 실행
 # ============================================================
+
 
 def run_comprehensive_backtest():
     """종합 백테스트 실행"""
@@ -517,14 +557,18 @@ def run_comprehensive_backtest():
 
             for strat_name, use_kama, use_tsmom, use_gate in strategies:
                 # AND 조합 처리
-                is_and_combo = "and" in strat_name.lower() or "strict" in strat_name.lower()
+                is_and_combo = (
+                    "and" in strat_name.lower() or "strict" in strat_name.lower()
+                )
 
                 # 파라미터 조합 테스트
                 if strat_name == "buy_hold":
                     # Buy & Hold는 파라미터 불필요
                     param_combos = [(5, 90, 30)]
                 else:
-                    param_combos = list(product(kama_periods, tsmom_periods, btc_ma_periods))
+                    param_combos = list(
+                        product(kama_periods, tsmom_periods, btc_ma_periods)
+                    )
 
                 for kama_p, tsmom_p, btc_ma_p in param_combos:
                     config = StrategyConfig(
@@ -559,9 +603,13 @@ def run_comprehensive_backtest():
     df_results = pd.DataFrame([r.to_dict() for r in results])
 
     # 결과 저장
-    output_file = PROJECT_ROOT / "outputs" / f"comprehensive_backtest_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    output_file = (
+        PROJECT_ROOT
+        / "outputs"
+        / f"comprehensive_backtest_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    )
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    df_results.to_csv(output_file, index=False, encoding='utf-8-sig')
+    df_results.to_csv(output_file, index=False, encoding="utf-8-sig")
     print(f"\n결과 저장: {output_file}")
 
     # 요약 출력
@@ -572,11 +620,11 @@ def run_comprehensive_backtest():
     # 거래소별 최고 전략
     print("\n[거래소별 최고 수익률 전략]")
     for exchange in exchanges:
-        ex_results = df_results[df_results['exchange'] == exchange]
+        ex_results = df_results[df_results["exchange"] == exchange]
         if len(ex_results) == 0:
             continue
 
-        best = ex_results.loc[ex_results['total_return'].idxmax()]
+        best = ex_results.loc[ex_results["total_return"].idxmax()]
         print(f"\n  {exchange.upper()}:")
         print(f"    전략: {best['strategy']}")
         print(f"    유니버스: {best['universe']}")
@@ -587,37 +635,59 @@ def run_comprehensive_backtest():
 
     # 전략별 평균 성과
     print("\n\n[전략별 평균 성과]")
-    strategy_summary = df_results.groupby('strategy').agg({
-        'total_return': 'mean',
-        'sharpe_ratio': 'mean',
-        'max_drawdown': 'mean',
-        'win_rate': 'mean',
-    }).round(3)
+    strategy_summary = (
+        df_results.groupby("strategy")
+        .agg(
+            {
+                "total_return": "mean",
+                "sharpe_ratio": "mean",
+                "max_drawdown": "mean",
+                "win_rate": "mean",
+            }
+        )
+        .round(3)
+    )
 
-    strategy_summary = strategy_summary.sort_values('sharpe_ratio', ascending=False)
+    strategy_summary = strategy_summary.sort_values("sharpe_ratio", ascending=False)
     print(strategy_summary.to_string())
 
     # 유니버스별 평균 성과
     print("\n\n[유니버스별 평균 성과]")
-    universe_summary = df_results.groupby('universe').agg({
-        'total_return': 'mean',
-        'sharpe_ratio': 'mean',
-        'max_drawdown': 'mean',
-    }).round(3)
+    universe_summary = (
+        df_results.groupby("universe")
+        .agg(
+            {
+                "total_return": "mean",
+                "sharpe_ratio": "mean",
+                "max_drawdown": "mean",
+            }
+        )
+        .round(3)
+    )
 
-    universe_summary = universe_summary.sort_values('sharpe_ratio', ascending=False)
+    universe_summary = universe_summary.sort_values("sharpe_ratio", ascending=False)
     print(universe_summary.to_string())
 
     # 상위 10개 전략
     print("\n\n[상위 10개 전략 (샤프비율 기준)]")
-    top10 = df_results.nlargest(10, 'sharpe_ratio')[
-        ['strategy', 'exchange', 'universe', 'total_return', 'sharpe_ratio', 'max_drawdown', 'params']
+    top10 = df_results.nlargest(10, "sharpe_ratio")[
+        [
+            "strategy",
+            "exchange",
+            "universe",
+            "total_return",
+            "sharpe_ratio",
+            "max_drawdown",
+            "params",
+        ]
     ]
 
     for i, row in top10.iterrows():
         print(f"\n  #{top10.index.get_loc(i)+1}:")
         print(f"    {row['strategy']} | {row['exchange']} | {row['universe']}")
-        print(f"    수익률: {row['total_return']*100:.1f}% | 샤프: {row['sharpe_ratio']:.2f} | MDD: {row['max_drawdown']*100:.1f}%")
+        print(
+            f"    수익률: {row['total_return']*100:.1f}% | 샤프: {row['sharpe_ratio']:.2f} | MDD: {row['max_drawdown']*100:.1f}%"
+        )
 
     return df_results
 

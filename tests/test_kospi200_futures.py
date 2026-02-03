@@ -174,7 +174,7 @@ class TestKOSPI200FuturesStrategy:
 
         # Create uptrending price data
         prices = list(range(100, 150))  # Strong uptrend
-        hourly_df = pd.DataFrame({'close': prices})
+        hourly_df = pd.DataFrame({"close": prices})
         strategy._hourly_data = hourly_df
 
         signal = strategy._calculate_sma_15_30_hourly_signal()
@@ -186,7 +186,7 @@ class TestKOSPI200FuturesStrategy:
 
         # Create downtrending price data
         prices = list(range(150, 100, -1))  # Strong downtrend
-        hourly_df = pd.DataFrame({'close': prices})
+        hourly_df = pd.DataFrame({"close": prices})
         strategy._hourly_data = hourly_df
 
         signal = strategy._calculate_sma_15_30_hourly_signal()
@@ -346,7 +346,7 @@ class TestSignalGeneration:
         strategy = KOSPI200FuturesStrategy()
 
         # Don't load data, should return HOLD
-        with patch.object(strategy, 'load_data', return_value=False):
+        with patch.object(strategy, "load_data", return_value=False):
             signals = strategy.generate_signals(["KOSPI200"])
 
         assert len(signals) == 1
@@ -359,8 +359,10 @@ class TestSignalGeneration:
 
         # Mock data for all LONG signals (T-1 shift applied)
         # VIX: T-1=10 (below SMA ~19.5), declining from T-2=20
-        strategy._daily_data = pd.DataFrame({'close': [100.0] * 30})
-        strategy._vix_data = pd.Series([20.0] * 19 + [10.0] + [99.0])  # T-1=10, today=99
+        strategy._daily_data = pd.DataFrame({"close": [100.0] * 30})
+        strategy._vix_data = pd.Series(
+            [20.0] * 19 + [10.0] + [99.0]
+        )  # T-1=10, today=99
         strategy._semicon_data = pd.Series([100.0] * 19 + [120.0])
         strategy._foreign_data = pd.Series([1e10] * 20)
 
@@ -379,7 +381,7 @@ class TestSignalGeneration:
         strategy = KOSPI200FuturesStrategy(config=config)
 
         # Mock data for CASH signal (T-1 VIX above SMA)
-        strategy._daily_data = pd.DataFrame({'close': [100.0] * 30})
+        strategy._daily_data = pd.DataFrame({"close": [100.0] * 30})
         strategy._vix_data = pd.Series([15.0] * 19 + [25.0] + [1.0])  # T-1=25 above SMA
 
         signals = strategy.generate_signals(["KOSPI200"])

@@ -15,6 +15,7 @@ Rules:
 
 Target: Profit Factor > 1.3
 """
+
 from __future__ import annotations
 
 import argparse
@@ -52,8 +53,8 @@ class BacktestConfig:
     max_positions: int = 2
     position_size_pct: float = 0.15
     # Strategy parameters
-    fear_entry: int = 35     # Enter on Fear
-    greed_exit: int = 70     # Exit on Greed
+    fear_entry: int = 35  # Enter on Fear
+    greed_exit: int = 70  # Exit on Greed
     trend_deviation: float = 0.01  # 1% above EMA200
 
 
@@ -64,8 +65,10 @@ class DataLoader:
     def load_ohlcv(self, symbol: str, timeframe: str = "4h") -> pd.DataFrame:
         tf_map = {"4h": "binance_futures_4h", "1d": "binance_futures_1d"}
         folder = tf_map.get(timeframe, "binance_futures_4h")
-        for file_path in [self.data_root / folder / f"{symbol}.csv",
-                          self.data_root / folder / f"{symbol.replace('USDT', '')}.csv"]:
+        for file_path in [
+            self.data_root / folder / f"{symbol}.csv",
+            self.data_root / folder / f"{symbol.replace('USDT', '')}.csv",
+        ]:
             if file_path.exists():
                 df = pd.read_csv(file_path)
                 if "datetime" in df.columns:
@@ -119,21 +122,23 @@ class LongOnlyStrategy:
         self.trend_dev = config.trend_deviation
 
         # Risk management
-        self.stop_atr = 2.5    # Wider stop for trend following
-        self.trail_atr = 2.0   # Trailing stop
-        self.tp_atr = 4.0      # Target profit
+        self.stop_atr = 2.5  # Wider stop for trend following
+        self.trail_atr = 2.0  # Trailing stop
+        self.tp_atr = 4.0  # Target profit
 
     def calc_ema(self, data: np.ndarray, period: int) -> np.ndarray:
         ema = np.zeros(len(data))
         ema[0] = data[0]
         mult = 2 / (period + 1)
         for i in range(1, len(data)):
-            ema[i] = (data[i] - ema[i-1]) * mult + ema[i-1]
+            ema[i] = (data[i] - ema[i - 1]) * mult + ema[i - 1]
         return ema
 
     def calc_atr(self, df: pd.DataFrame, period: int = 14) -> np.ndarray:
         h, l, c = df["high"].values, df["low"].values, df["close"].values
-        tr = np.maximum(h - l, np.maximum(np.abs(h - np.roll(c, 1)), np.abs(l - np.roll(c, 1))))
+        tr = np.maximum(
+            h - l, np.maximum(np.abs(h - np.roll(c, 1)), np.abs(l - np.roll(c, 1)))
+        )
         tr[0] = h[0] - l[0]
         return pd.Series(tr).rolling(period).mean().values
 
@@ -147,7 +152,9 @@ class LongOnlyStrategy:
         rs = avg_gain / np.maximum(avg_loss, 1e-10)
         return 100 - (100 / (1 + rs))
 
-    def is_uptrend(self, price: float, ema50: float, ema200: float, ema200_prev: float) -> bool:
+    def is_uptrend(
+        self, price: float, ema50: float, ema200: float, ema200_prev: float
+    ) -> bool:
         """Check if we're in a confirmed uptrend."""
         ema200_rising = ema200 > ema200_prev
         price_above_ema200 = price > ema200 * (1 + self.trend_dev)
@@ -281,7 +288,9 @@ class LongOnlyBacktester:
         df = self.funding_rates[symbol]
         date = ts.date()
         day_start = pd.Timestamp(date)
-        mask = (df.index >= day_start - pd.Timedelta(days=1)) & (df.index < day_start + pd.Timedelta(days=1))
+        mask = (df.index >= day_start - pd.Timedelta(days=1)) & (
+            df.index < day_start + pd.Timedelta(days=1)
+        )
         if mask.any():
             return df.loc[mask, "fundingRate"].sum()
         return None
@@ -292,7 +301,11 @@ class LongOnlyBacktester:
         logger.info("=" * 60)
 
         start_dt = pd.Timestamp(self.config.start_date)
-        end_dt = pd.Timestamp(self.config.end_date) if self.config.end_date else pd.Timestamp.now()
+        end_dt = (
+            pd.Timestamp(self.config.end_date)
+            if self.config.end_date
+            else pd.Timestamp.now()
+        )
 
         if "BTCUSDT" not in self.data_4h:
             return {"error": "BTC data required"}
@@ -311,8 +324,14 @@ class LongOnlyBacktester:
         self.equity_curve = [capital]
         self.trade_log = []
 
-        stats = {"longs": 0, "wins": 0, "losses": 0,
-                 "extreme_fear_trades": 0, "strong_fear_trades": 0, "fear_dip_trades": 0}
+        stats = {
+            "longs": 0,
+            "wins": 0,
+            "losses": 0,
+            "extreme_fear_trades": 0,
+            "strong_fear_trades": 0,
+            "fear_dip_trades": 0,
+        }
 
         for i in range(250, len(timestamps)):
             ts = timestamps[i]
@@ -351,18 +370,30 @@ class LongOnlyBacktester:
 
                     if exit_sig:
                         exit_price = price * (1 - self.config.slippage_pct)
-                        pnl = (exit_price - pos["entry_price"]) / pos["entry_price"] * pos["leverage"]
-                        pnl_usd = pos["size"] * pnl - pos["size"] * self.config.commission_pct * 2
+                        pnl = (
+                            (exit_price - pos["entry_price"])
+                            / pos["entry_price"]
+                            * pos["leverage"]
+                        )
+                        pnl_usd = (
+                            pos["size"] * pnl
+                            - pos["size"] * self.config.commission_pct * 2
+                        )
                         capital += pnl_usd
 
-                        self.trade_log.append({
-                            "symbol": symbol,
-                            "entry_time": pos["entry_time"], "entry_price": pos["entry_price"],
-                            "exit_time": ts, "exit_price": exit_price,
-                            "pnl_pct": pnl, "pnl_usd": pnl_usd,
-                            "exit_reason": exit_reason,
-                            "entry_fg": pos.get("entry_fg"),
-                        })
+                        self.trade_log.append(
+                            {
+                                "symbol": symbol,
+                                "entry_time": pos["entry_time"],
+                                "entry_price": pos["entry_price"],
+                                "exit_time": ts,
+                                "exit_price": exit_price,
+                                "pnl_pct": pnl,
+                                "pnl_usd": pnl_usd,
+                                "exit_reason": exit_reason,
+                                "entry_fg": pos.get("entry_fg"),
+                            }
+                        )
 
                         if pnl_usd > 0:
                             stats["wins"] += 1
@@ -372,16 +403,32 @@ class LongOnlyBacktester:
                         continue
 
                 # Entry check
-                if symbol not in positions and len(positions) < self.config.max_positions:
+                if (
+                    symbol not in positions
+                    and len(positions) < self.config.max_positions
+                ):
                     sig = self.strategy.generate_signal(df_curr, fg, funding)
 
                     if sig["signal"] == "LONG":
-                        peak = max(self.equity_curve) if self.equity_curve else self.config.initial_capital
+                        peak = (
+                            max(self.equity_curve)
+                            if self.equity_curve
+                            else self.config.initial_capital
+                        )
                         dd = (capital - peak) / peak if peak > 0 else 0
-                        dd_mult = 0.25 if dd < -0.20 else 0.5 if dd < -0.15 else 0.75 if dd < -0.10 else 1.0
+                        dd_mult = (
+                            0.25
+                            if dd < -0.20
+                            else 0.5 if dd < -0.15 else 0.75 if dd < -0.10 else 1.0
+                        )
 
                         entry_price = sig["price"] * (1 + self.config.slippage_pct)
-                        size = capital * self.config.position_size_pct * sig["pos_mult"] * dd_mult
+                        size = (
+                            capital
+                            * self.config.position_size_pct
+                            * sig["pos_mult"]
+                            * dd_mult
+                        )
 
                         positions[symbol] = {
                             "entry_price": entry_price,
@@ -406,13 +453,19 @@ class LongOnlyBacktester:
                             stats["fear_dip_trades"] += 1
 
                         if stats["longs"] <= 25:
-                            logger.info(f"[{ts.strftime('%Y-%m-%d')}] LONG {symbol} @ {entry_price:.2f} - {sig['reason']}")
+                            logger.info(
+                                f"[{ts.strftime('%Y-%m-%d')}] LONG {symbol} @ {entry_price:.2f} - {sig['reason']}"
+                            )
 
             # MTM
             pv = capital
             for sym, pos in positions.items():
                 if sym in self.data_4h:
-                    curr = self.data_4h[sym].loc[self.data_4h[sym].index <= ts]["close"].iloc[-1]
+                    curr = (
+                        self.data_4h[sym]
+                        .loc[self.data_4h[sym].index <= ts]["close"]
+                        .iloc[-1]
+                    )
                     unr = (curr - pos["entry_price"]) / pos["entry_price"]
                     pv += pos["size"] * unr * pos["leverage"]
             self.equity_curve.append(pv)
@@ -421,15 +474,27 @@ class LongOnlyBacktester:
         for sym, pos in list(positions.items()):
             if sym in self.data_4h:
                 exit_price = self.data_4h[sym].iloc[-1]["close"]
-                pnl = (exit_price - pos["entry_price"]) / pos["entry_price"] * pos["leverage"]
-                pnl_usd = pos["size"] * pnl - pos["size"] * self.config.commission_pct * 2
+                pnl = (
+                    (exit_price - pos["entry_price"])
+                    / pos["entry_price"]
+                    * pos["leverage"]
+                )
+                pnl_usd = (
+                    pos["size"] * pnl - pos["size"] * self.config.commission_pct * 2
+                )
                 capital += pnl_usd
-                self.trade_log.append({
-                    "symbol": sym,
-                    "entry_time": pos["entry_time"], "entry_price": pos["entry_price"],
-                    "exit_time": timestamps[-1], "exit_price": exit_price,
-                    "pnl_pct": pnl, "pnl_usd": pnl_usd, "exit_reason": "end",
-                })
+                self.trade_log.append(
+                    {
+                        "symbol": sym,
+                        "entry_time": pos["entry_time"],
+                        "entry_price": pos["entry_price"],
+                        "exit_time": timestamps[-1],
+                        "exit_price": exit_price,
+                        "pnl_pct": pnl,
+                        "pnl_usd": pnl_usd,
+                        "exit_reason": "end",
+                    }
+                )
                 if pnl_usd > 0:
                     stats["wins"] += 1
                 else:
@@ -446,7 +511,9 @@ class LongOnlyBacktester:
         n_years = (len(eq) - 1) / (252 * 6)
         ann_ret = (1 + total_ret) ** (1 / max(n_years, 0.1)) - 1
         rets = np.diff(eq) / eq[:-1]
-        sharpe = np.mean(rets) / np.std(rets) * np.sqrt(252 * 6) if np.std(rets) > 0 else 0
+        sharpe = (
+            np.mean(rets) / np.std(rets) * np.sqrt(252 * 6) if np.std(rets) > 0 else 0
+        )
         peak = np.maximum.accumulate(eq)
         mdd = np.min((eq - peak) / peak)
         total_trades = stats["wins"] + stats["losses"]
@@ -472,15 +539,20 @@ class LongOnlyBacktester:
                 exit_reasons[r]["wins"] += 1
 
         return {
-            "total_return": total_ret, "annualized_return": ann_ret,
-            "sharpe_ratio": sharpe, "max_drawdown": mdd,
-            "win_rate": wr, "profit_factor": pf,
+            "total_return": total_ret,
+            "annualized_return": ann_ret,
+            "sharpe_ratio": sharpe,
+            "max_drawdown": mdd,
+            "win_rate": wr,
+            "profit_factor": pf,
             "total_trades": total_trades,
-            "wins": stats["wins"], "losses": stats["losses"],
+            "wins": stats["wins"],
+            "losses": stats["losses"],
             "extreme_fear_trades": stats["extreme_fear_trades"],
             "strong_fear_trades": stats["strong_fear_trades"],
             "fear_dip_trades": stats["fear_dip_trades"],
-            "avg_win": avg_win, "avg_loss": avg_loss,
+            "avg_win": avg_win,
+            "avg_loss": avg_loss,
             "final_capital": eq[-1],
             "exit_reasons": exit_reasons,
         }
@@ -508,11 +580,13 @@ def param_sweep(config: BacktestConfig):
                 if "error" not in res:
                     label = f"F{fear}_G{greed}"
                     results[label] = res
-                    logger.info(f"\n{label}: Ret={res['total_return']*100:+.1f}%, "
-                               f"MDD={res['max_drawdown']*100:.1f}%, "
-                               f"WR={res['win_rate']*100:.1f}%, "
-                               f"PF={res['profit_factor']:.2f}, "
-                               f"Trades={res['total_trades']}")
+                    logger.info(
+                        f"\n{label}: Ret={res['total_return']*100:+.1f}%, "
+                        f"MDD={res['max_drawdown']*100:.1f}%, "
+                        f"WR={res['win_rate']*100:.1f}%, "
+                        f"PF={res['profit_factor']:.2f}, "
+                        f"Trades={res['total_trades']}"
+                    )
     return results
 
 
@@ -553,13 +627,17 @@ def main():
 
         best = None
         best_pf = 0
-        for label, res in sorted(sweep_results.items(), key=lambda x: x[1]["profit_factor"], reverse=True):
+        for label, res in sorted(
+            sweep_results.items(), key=lambda x: x[1]["profit_factor"], reverse=True
+        ):
             if res["profit_factor"] > best_pf:
                 best_pf = res["profit_factor"]
                 best = label
-            logger.info(f"{label}: Ret={res['total_return']*100:+.1f}%, "
-                       f"PF={res['profit_factor']:.2f}, WR={res['win_rate']*100:.1f}%, "
-                       f"Trades={res['total_trades']}")
+            logger.info(
+                f"{label}: Ret={res['total_return']*100:+.1f}%, "
+                f"PF={res['profit_factor']:.2f}, WR={res['win_rate']*100:.1f}%, "
+                f"Trades={res['total_trades']}"
+            )
 
         if best:
             logger.info(f"\nBest: {best} with PF={best_pf:.2f}")
@@ -584,24 +662,34 @@ def main():
     logger.info(f"    Extreme Fear: {results['extreme_fear_trades']}")
     logger.info(f"    Strong Fear: {results['strong_fear_trades']}")
     logger.info(f"    Fear Dip: {results['fear_dip_trades']}")
-    logger.info(f"  Avg Win: ${results['avg_win']:.2f}, Avg Loss: ${results['avg_loss']:.2f}")
+    logger.info(
+        f"  Avg Win: ${results['avg_win']:.2f}, Avg Loss: ${results['avg_loss']:.2f}"
+    )
     logger.info(f"  Final: ${results['final_capital']:,.2f}")
 
     logger.info("\n  Exit Reasons:")
     for reason, data in results.get("exit_reasons", {}).items():
-        wr = data['wins'] / data['count'] * 100 if data['count'] > 0 else 0
-        logger.info(f"    {reason}: {data['count']} trades, ${data['pnl']:.2f}, WR={wr:.0f}%")
+        wr = data["wins"] / data["count"] * 100 if data["count"] > 0 else 0
+        logger.info(
+            f"    {reason}: {data['count']} trades, ${data['pnl']:.2f}, WR={wr:.0f}%"
+        )
 
     logger.info("\n" + "=" * 60)
     logger.info("TARGET CHECK")
     logger.info("=" * 60)
-    pf_ok = "✓" if results['profit_factor'] >= 1.3 else "✗"
-    mdd_ok = "✓" if results['max_drawdown'] >= -0.25 else "✗"
-    logger.info(f"  [{pf_ok}] Profit Factor: {results['profit_factor']:.2f} (target >= 1.30)")
-    logger.info(f"  [{mdd_ok}] Max DD: {results['max_drawdown']*100:.1f}% (target < 25%)")
+    pf_ok = "✓" if results["profit_factor"] >= 1.3 else "✗"
+    mdd_ok = "✓" if results["max_drawdown"] >= -0.25 else "✗"
+    logger.info(
+        f"  [{pf_ok}] Profit Factor: {results['profit_factor']:.2f} (target >= 1.30)"
+    )
+    logger.info(
+        f"  [{mdd_ok}] Max DD: {results['max_drawdown']*100:.1f}% (target < 25%)"
+    )
 
-    if results['profit_factor'] >= 1.3:
-        logger.info("\n  *** TARGET MET - Strategy ready for paper trading validation ***")
+    if results["profit_factor"] >= 1.3:
+        logger.info(
+            "\n  *** TARGET MET - Strategy ready for paper trading validation ***"
+        )
 
     return 0
 

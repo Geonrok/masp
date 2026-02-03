@@ -26,7 +26,6 @@ FREE_DATA_SOURCES = {
         "status": "PARTIAL",  # We have 2023+ only
         "action": "Collect 2020-2022 data",
     },
-
     "binance_open_interest_hist": {
         "description": "Historical Open Interest",
         "endpoint": "GET /futures/data/openInterestHist",
@@ -37,7 +36,6 @@ FREE_DATA_SOURCES = {
         "status": "PARTIAL",  # Only recent 1 month
         "action": "Collect full history (1d interval)",
     },
-
     "binance_long_short_ratio": {
         "description": "Top trader long/short ratio",
         "endpoint": "GET /futures/data/topLongShortAccountRatio",
@@ -48,7 +46,6 @@ FREE_DATA_SOURCES = {
         "status": "PARTIAL",
         "action": "Collect full history",
     },
-
     "binance_taker_volume": {
         "description": "Taker buy/sell volume",
         "endpoint": "GET /futures/data/takerlongshortRatio",
@@ -59,7 +56,6 @@ FREE_DATA_SOURCES = {
         "status": "NOT_COLLECTED",
         "action": "Collect full history",
     },
-
     # ---------------------------------------------------------------------
     # 2. Coinglass (Free Tier)
     # ---------------------------------------------------------------------
@@ -73,14 +69,12 @@ FREE_DATA_SOURCES = {
         "status": "NOT_COLLECTED",
         "action": "Scrape or use API",
     },
-
     "coinglass_oi_aggregated": {
         "description": "Aggregated OI across exchanges",
         "source": "https://www.coinglass.com/",
         "priority": "MEDIUM",
         "status": "NOT_COLLECTED",
     },
-
     # ---------------------------------------------------------------------
     # 3. Google Trends
     # ---------------------------------------------------------------------
@@ -92,14 +86,13 @@ FREE_DATA_SOURCES = {
         "priority": "MEDIUM",
         "status": "NOT_COLLECTED",
         "action": "Use pytrends to collect",
-        "code_example": '''
+        "code_example": """
 from pytrends.request import TrendReq
 pytrends = TrendReq()
 pytrends.build_payload(["bitcoin"], timeframe="2020-01-01 2025-12-31")
 df = pytrends.interest_over_time()
-        ''',
+        """,
     },
-
     # ---------------------------------------------------------------------
     # 4. Alternative.me Fear & Greed (Already have)
     # ---------------------------------------------------------------------
@@ -135,7 +128,6 @@ PAID_DATA_SOURCES = {
         "priority": "HIGH if Phase 1 fails",
         "recommendation": "Start with Advanced tier",
     },
-
     # ---------------------------------------------------------------------
     # 2. CryptoQuant (Alternative to Glassnode)
     # ---------------------------------------------------------------------
@@ -149,7 +141,6 @@ PAID_DATA_SOURCES = {
         ],
         "priority": "MEDIUM",
     },
-
     # ---------------------------------------------------------------------
     # 3. Santiment (Social + On-chain)
     # ---------------------------------------------------------------------
@@ -317,22 +308,18 @@ EXPECTED_IMPACT = {
         "expected_pf_improvement": "+0.1 to +0.2",
         "reason": "Extreme funding (>0.1%) = contrarian signal",
     },
-
     "open_interest_change": {
         "expected_pf_improvement": "+0.1 to +0.15",
         "reason": "OI divergence from price = reversal signal",
     },
-
     "liquidation_data": {
         "expected_pf_improvement": "+0.15 to +0.25",
         "reason": "Large liquidations = capitulation = entry opportunity",
     },
-
     "exchange_netflow": {
         "expected_pf_improvement": "+0.1 to +0.2",
         "reason": "Inflow spike = sell pressure incoming",
     },
-
     "combined_all": {
         "target_pf": "1.3 to 1.5",
         "target_win_rate": "40-45%",
@@ -358,5 +345,7 @@ if __name__ == "__main__":
 
     print("\n[EXPECTED IMPACT]")
     for name, impact in EXPECTED_IMPACT.items():
-        improvement = impact.get("expected_pf_improvement", impact.get("target_pf", "N/A"))
+        improvement = impact.get(
+            "expected_pf_improvement", impact.get("target_pf", "N/A")
+        )
         print(f"  {name}: PF {improvement}")

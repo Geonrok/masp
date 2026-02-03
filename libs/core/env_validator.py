@@ -220,6 +220,7 @@ class EnvironmentValidator:
 
         elif spec.var_type == EnvVarType.JSON:
             import json
+
             return json.loads(raw)
 
         elif spec.var_type == EnvVarType.LIST:
@@ -297,7 +298,11 @@ class EnvironmentValidator:
     def _log_value(self, name: str, value: Any, spec: EnvVarSpec) -> None:
         """Log validated value (masking sensitive data)."""
         if spec.sensitive:
-            display = f"{str(value)[:4]}...{str(value)[-4:]}" if len(str(value)) > 8 else "****"
+            display = (
+                f"{str(value)[:4]}...{str(value)[-4:]}"
+                if len(str(value)) > 8
+                else "****"
+            )
         else:
             display = value
 
@@ -347,6 +352,7 @@ class EnvironmentValidator:
 
 
 # Pre-built validators for MASP
+
 
 def create_masp_validator() -> EnvironmentValidator:
     """Create validator with MASP-specific environment variables."""

@@ -348,7 +348,9 @@ class AuditLogger:
         # Console output
         if self._console_output:
             log_level = getattr(logging, event.severity.value.upper(), logging.INFO)
-            logger.log(log_level, "[Audit] %s: %s", event.event_type.value, event.message)
+            logger.log(
+                log_level, "[Audit] %s: %s", event.event_type.value, event.message
+            )
 
         # Callbacks
         for callback in self._callbacks:

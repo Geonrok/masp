@@ -98,7 +98,9 @@ class TestEnvironmentValidator:
 
         result = validator.validate({"API_URL": "https://api.example.com/"})
         assert result.valid
-        assert result.values["API_URL"] == "https://api.example.com"  # Trailing slash removed
+        assert (
+            result.values["API_URL"] == "https://api.example.com"
+        )  # Trailing slash removed
 
         result = validator.validate({"API_URL": "not-a-url"})
         assert not result.valid
@@ -331,8 +333,12 @@ class TestDocumentation:
     def test_generate_documentation(self):
         """Test documentation generation."""
         validator = EnvironmentValidator()
-        validator.register("REQUIRED_VAR", required=True, description="A required variable")
-        validator.register("OPTIONAL_VAR", required=False, default="default", description="Optional")
+        validator.register(
+            "REQUIRED_VAR", required=True, description="A required variable"
+        )
+        validator.register(
+            "OPTIONAL_VAR", required=False, default="default", description="Optional"
+        )
 
         docs = validator.get_documentation()
 

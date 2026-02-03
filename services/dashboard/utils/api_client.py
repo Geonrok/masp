@@ -1,4 +1,5 @@
 """Config/keys API client for the dashboard."""
+
 from __future__ import annotations
 
 import logging

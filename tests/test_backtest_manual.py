@@ -7,8 +7,17 @@ print("=== Backtest Engine Test ===\n")
 
 # Create simple test data
 signals = ["BUY", "HOLD", "HOLD", "SELL", "BUY", "HOLD", "SELL", "BUY", "SELL"]
-prices = [100_000_000, 105_000_000, 110_000_000, 115_000_000, 
-          110_000_000, 115_000_000, 120_000_000, 115_000_000, 125_000_000]
+prices = [
+    100_000_000,
+    105_000_000,
+    110_000_000,
+    115_000_000,
+    110_000_000,
+    115_000_000,
+    120_000_000,
+    115_000_000,
+    125_000_000,
+]
 
 # Run backtest
 engine = BacktestEngine(initial_capital=10_000_000)

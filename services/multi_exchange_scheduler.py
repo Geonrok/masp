@@ -2,6 +2,7 @@
 MultiExchangeScheduler - Multi-Asset Strategy Platform Core Scheduler
 MASP Phase 9 - Multi Exchange Support (Upbit, Bithumb, Binance Spot/Futures)
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -20,6 +21,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 try:
     import yaml
+
     HAS_YAML = True
 except ImportError:
     HAS_YAML = False
@@ -34,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from services.health_server import HealthServer
+
     HEALTH_SERVER_AVAILABLE = True
 except ImportError:
     HEALTH_SERVER_AVAILABLE = False
@@ -45,13 +48,13 @@ from services import metrics
 class MultiExchangeScheduler:
     """
     Multi-exchange scheduler for simultaneous Upbit/Bithumb execution.
-    
+
     Features:
         - Upbit: 09:00 KST (Daily Rebalancing)
         - Bithumb: 00:00 KST (Midnight Rebalancing)
         - Independent job management per exchange
         - Graceful shutdown handling
-    
+
     Usage:
         scheduler = MultiExchangeScheduler()
         await scheduler.run_forever()
@@ -70,28 +73,31 @@ class MultiExchangeScheduler:
         self._health_server = None
         self._initialized = False
         self._heartbeat_log_level = self._get_heartbeat_log_level()
-        
+
         # Exchange runners and jobs
         self._runners: Dict[str, StrategyRunner] = {}
         self._jobs: Dict[str, Any] = {}
         self._triggers: Dict[str, CronTrigger] = {}
-        
+
         # Single scheduler for all jobs
         self._scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
-        
+
         # Initialize exchange configurations
         self._init_exchanges()
 
     def _load_config(self) -> Dict[str, Any]:
         """Load YAML/JSON config file."""
         if not self._config_path.exists():
-            logger.warning(f"[MultiExchangeScheduler] Config not found: {self._config_path}")
+            logger.warning(
+                f"[MultiExchangeScheduler] Config not found: {self._config_path}"
+            )
             return self._default_config()
 
         raw = self._config_path.read_text(encoding="utf-8")
 
         try:
             import json
+
             data = json.loads(raw)
             if isinstance(data, dict):
                 if "exchanges" in data:
@@ -147,10 +153,10 @@ class MultiExchangeScheduler:
         """Convert legacy single-exchange config to new format."""
         if not isinstance(data, dict):
             return self._default_config()
-        
+
         schedule = data.get("schedule", {})
         cron = schedule.get("cron", {})
-        
+
         return {
             "exchanges": {
                 "upbit": {
@@ -186,7 +192,9 @@ class MultiExchangeScheduler:
 
         for exchange_name, cfg in exchanges.items():
             if not cfg.get("enabled", False):
-                logger.info(f"[MultiExchangeScheduler] {exchange_name} disabled, skipping")
+                logger.info(
+                    f"[MultiExchangeScheduler] {exchange_name} disabled, skipping"
+                )
                 continue
 
             # Normalize symbols (string -> list, ALL_KRW/ALL_USDT -> dynamic fetch).
@@ -245,6 +253,7 @@ class MultiExchangeScheduler:
         if symbols_cfg == "ALL_KRW":
             if exchange_name == "upbit":
                 from libs.adapters.upbit_public import get_all_krw_symbols
+
                 return get_all_krw_symbols()
             elif exchange_name == "bithumb":
                 return BithumbPublic().get_all_krw_symbols()
@@ -255,6 +264,7 @@ class MultiExchangeScheduler:
         if symbols_cfg == "ALL_USDT" and exchange_name == "binance_spot":
             try:
                 from libs.adapters.real_binance_spot import BinanceSpotMarketData
+
                 md = BinanceSpotMarketData()
                 all_symbols = md.get_all_symbols()
                 return all_symbols  # All USDT pairs
@@ -269,6 +279,7 @@ class MultiExchangeScheduler:
         if symbols_cfg == "ALL_USDT_PERP" and exchange_name == "binance_futures":
             try:
                 from libs.adapters.real_binance_futures import BinanceFuturesMarketData
+
                 md = BinanceFuturesMarketData()
                 all_symbols = md.get_all_symbols()
                 return all_symbols  # All USDT-M perpetuals
@@ -292,36 +303,44 @@ class MultiExchangeScheduler:
             return
 
         def _handler(signum, frame):
-            logger.info(f"[MultiExchangeScheduler] Signal {signum} received, shutting down")
+            logger.info(
+                f"[MultiExchangeScheduler] Signal {signum} received, shutting down"
+            )
             self._running = False
 
         for sig in (signal.SIGINT, signal.SIGTERM):
             try:
                 signal.signal(sig, _handler)
             except (ValueError, OSError) as exc:
-                logger.warning(f"[MultiExchangeScheduler] Signal {sig} registration failed: {exc}")
+                logger.warning(
+                    f"[MultiExchangeScheduler] Signal {sig} registration failed: {exc}"
+                )
 
         if hasattr(signal, "SIGBREAK"):
             try:
                 signal.signal(signal.SIGBREAK, _handler)
             except (ValueError, OSError) as exc:
-                logger.warning(f"[MultiExchangeScheduler] SIGBREAK registration failed: {exc}")
+                logger.warning(
+                    f"[MultiExchangeScheduler] SIGBREAK registration failed: {exc}"
+                )
 
         self._signal_handlers_registered = True
 
     def _configure_scheduler(self) -> None:
         """Configure scheduler with all exchange jobs."""
         if not self._listener_added:
-            self._scheduler.add_listener(self._on_job_event, 
-                EVENT_JOB_MISSED | EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
+            self._scheduler.add_listener(
+                self._on_job_event,
+                EVENT_JOB_MISSED | EVENT_JOB_EXECUTED | EVENT_JOB_ERROR,
+            )
             self._listener_added = True
 
         exchanges = self._config.get("exchanges", {})
-        
+
         for exchange_name, cfg in exchanges.items():
             if exchange_name not in self._runners:
                 continue
-            
+
             sched = cfg.get("schedule", {})
             jitter = int(sched.get("jitter", 30))
             if jitter < 0:
@@ -339,7 +358,7 @@ class MultiExchangeScheduler:
                 misfire_grace_time=300,
             )
             self._jobs[exchange_name] = job
-            
+
             logger.info(
                 f"[MultiExchangeScheduler] Job scheduled: {exchange_name.upper()} "
                 f"(jitter={jitter}s)"
@@ -348,7 +367,7 @@ class MultiExchangeScheduler:
     def _on_job_event(self, event) -> None:
         """Handle job events (missed, executed, error)."""
         job_id = getattr(event, "job_id", "unknown")
-        
+
         if hasattr(event, "exception") and event.exception:
             logger.error(
                 f"[MultiExchangeScheduler] Job {job_id} ERROR: {event.exception}"
@@ -369,43 +388,51 @@ class MultiExchangeScheduler:
                 logger.error(f"[MultiExchangeScheduler] No runner for {exchange_name}")
                 return
 
-            logger.info(f"[MultiExchangeScheduler] Running {exchange_name.upper()} strategy")
-            
+            logger.info(
+                f"[MultiExchangeScheduler] Running {exchange_name.upper()} strategy"
+            )
+
             loop = asyncio.get_running_loop()
             try:
                 result = await loop.run_in_executor(None, runner.run_once)
-                logger.info(f"[MultiExchangeScheduler] {exchange_name.upper()} result: {result}")
+                logger.info(
+                    f"[MultiExchangeScheduler] {exchange_name.upper()} result: {result}"
+                )
             except Exception as exc:
-                logger.error(f"[MultiExchangeScheduler] {exchange_name.upper()} failed: {exc}")
+                logger.error(
+                    f"[MultiExchangeScheduler] {exchange_name.upper()} failed: {exc}"
+                )
                 raise
 
     def run_once(self, exchange_name: str = None) -> Dict[str, Any]:
         """
         Run strategy once (manual trigger).
-        
+
         Args:
             exchange_name: Specific exchange or None for all enabled
-            
+
         Returns:
             Dict of results per exchange
         """
         results = {}
-        
+
         try:
             asyncio.get_running_loop()
-            logger.error("[MultiExchangeScheduler] run_once called from running event loop")
+            logger.error(
+                "[MultiExchangeScheduler] run_once called from running event loop"
+            )
             return {"error": "Cannot run from async context"}
         except RuntimeError:
             pass
-        
+
         targets = [exchange_name] if exchange_name else list(self._runners.keys())
-        
+
         for name in targets:
             runner = self._runners.get(name)
             if runner is None:
                 results[name] = {"error": f"No runner for {name}"}
                 continue
-            
+
             try:
                 result = runner.run_once()
                 results[name] = result
@@ -634,28 +661,30 @@ class MultiExchangeScheduler:
 # CLI Entry Point
 if __name__ == "__main__":
     import argparse
-    
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-    
+
     parser = argparse.ArgumentParser(description="Multi-Exchange Scheduler")
-    parser.add_argument("--config", default="config/schedule_config.json", help="Config path")
+    parser.add_argument(
+        "--config", default="config/schedule_config.json", help="Config path"
+    )
     parser.add_argument("--once", action="store_true", help="Run once and exit")
     parser.add_argument("--exchange", default=None, help="Specific exchange for --once")
     parser.add_argument("--status", action="store_true", help="Show status and exit")
-    
+
     args = parser.parse_args()
-    
+
     scheduler = MultiExchangeScheduler(config_path=args.config)
-    
+
     if args.status:
         import json
+
         print(json.dumps(scheduler.get_status(), indent=2, default=str))
     elif args.once:
         result = scheduler.run_once(exchange_name=args.exchange)
         print(f"Result: {result}")
     else:
         asyncio.run(scheduler.run_forever())
-

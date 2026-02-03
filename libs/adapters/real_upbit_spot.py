@@ -20,7 +20,12 @@ from urllib.parse import urlencode, unquote
 
 import requests
 import jwt
-from libs.adapters.base import MarketDataAdapter, ExecutionAdapter, MarketQuote, OrderResult
+from libs.adapters.base import (
+    MarketDataAdapter,
+    ExecutionAdapter,
+    MarketQuote,
+    OrderResult,
+)
 from libs.adapters.rate_limit import TokenBucket
 from libs.core.market_cache import MarketCache
 from libs.adapters.trade_logger import TradeLogger
@@ -52,24 +57,28 @@ def _open_circuit(cooldown: float) -> None:
 class UpbitSpotMarketData(MarketDataAdapter):
     """
     Upbit Spot Market Data Adapter
-    
+
     Phase 2A: Real market data (read-only, Public API)
     Supports: get_quote, get_quotes, get_orderbook
-    
+
     API Documentation: https://docs.upbit.com/reference
     """
-    
+
     BASE_URL = "https://api.upbit.com/v1"
     MAX_RETRIES = 3
     MAX_BACKOFF_SECONDS = 8
     BASE_BACKOFF_SECONDS = 1.0
     CIRCUIT_BREAKER_COOLDOWN_SECONDS = 60
 
-    def __init__(self, access_key: Optional[str] = None, secret_key: Optional[str] = None,
-                 cache: Optional[MarketCache] = None):
+    def __init__(
+        self,
+        access_key: Optional[str] = None,
+        secret_key: Optional[str] = None,
+        cache: Optional[MarketCache] = None,
+    ):
         """
         Initialize Upbit adapter.
-        
+
         Args:
             access_key: Upbit API access key (optional for public API)
             secret_key: Upbit API secret key (optional for public API)
@@ -78,11 +87,13 @@ class UpbitSpotMarketData(MarketDataAdapter):
         self.access_key = access_key
         self.secret_key = secret_key
         self.session = requests.Session()
-        self.session.headers.update({
-            "Accept": "application/json",
-            "User-Agent": "Multi-Asset-Strategy-Platform/1.0"
-        })
-        
+        self.session.headers.update(
+            {
+                "Accept": "application/json",
+                "User-Agent": "Multi-Asset-Strategy-Platform/1.0",
+            }
+        )
+
         # [CRITICAL PATCH #2] Cache integration for rate limit protection
         self._cache = cache if cache else MarketCache(default_ttl=5.0)
         logger.info(
@@ -99,7 +110,9 @@ class UpbitSpotMarketData(MarketDataAdapter):
             return cached
 
         if _circuit_is_open():
-            logger.warning(f"[Upbit] Circuit breaker open. Skipping request for {symbol}")
+            logger.warning(
+                f"[Upbit] Circuit breaker open. Skipping request for {symbol}"
+            )
             return None
 
         retry_count = 0
@@ -132,7 +145,9 @@ class UpbitSpotMarketData(MarketDataAdapter):
 
                 if response.status_code == 429:
                     if retry_count >= self.MAX_RETRIES:
-                        logger.error(f"[Upbit] Rate limit exceeded max retries for {symbol}")
+                        logger.error(
+                            f"[Upbit] Rate limit exceeded max retries for {symbol}"
+                        )
                         raise RuntimeError(
                             f"429 Too Many Requests after {self.MAX_RETRIES} retries"
                         )
@@ -164,7 +179,7 @@ class UpbitSpotMarketData(MarketDataAdapter):
                     ask=float(data.get("trade_price", 0)),
                     last=float(data.get("trade_price", 0)),
                     volume_24h=float(data.get("acc_trade_volume_24h", 0)),
-                    timestamp=str(data.get("timestamp", ""))
+                    timestamp=str(data.get("timestamp", "")),
                 )
 
                 self._cache.set(symbol, quote)
@@ -181,13 +196,15 @@ class UpbitSpotMarketData(MarketDataAdapter):
             except (KeyError, IndexError, ValueError) as e:
                 logger.error(f"[Upbit] Failed to parse quote data for {symbol}: {e}")
                 return None
-    
+
     def get_quotes(self, symbols: List[str]) -> Dict[str, MarketQuote]:
         """
         Get quotes for multiple symbols (with Circuit Breaker, 418/429 protection).
         """
         if _circuit_is_open():
-            logger.warning("[Upbit] Circuit breaker open. Skipping request (get_quotes).")
+            logger.warning(
+                "[Upbit] Circuit breaker open. Skipping request (get_quotes)."
+            )
             return {}
 
         retry_count = 0
@@ -214,7 +231,9 @@ class UpbitSpotMarketData(MarketDataAdapter):
 
                 if response.status_code == 429:
                     if retry_count >= self.MAX_RETRIES:
-                        logger.error("[Upbit] Rate limit exceeded max retries (get_quotes)")
+                        logger.error(
+                            "[Upbit] Rate limit exceeded max retries (get_quotes)"
+                        )
                         raise RuntimeError(
                             f"429 Too Many Requests after {self.MAX_RETRIES} retries"
                         )
@@ -248,7 +267,7 @@ class UpbitSpotMarketData(MarketDataAdapter):
                         ask=float(data.get("trade_price", 0)),
                         last=float(data.get("trade_price", 0)),
                         volume_24h=float(data.get("acc_trade_volume_24h", 0)),
-                        timestamp=str(data.get("timestamp", ""))
+                        timestamp=str(data.get("timestamp", "")),
                     )
 
                 return result
@@ -259,22 +278,24 @@ class UpbitSpotMarketData(MarketDataAdapter):
             except (KeyError, ValueError) as e:
                 logger.error(f"[Upbit] Failed to parse quotes data: {e}")
                 return {}
-    
+
     def is_market_open(self) -> bool:
         """
         Check if Upbit market is open.
-        
+
         Returns:
             True (Upbit operates 24/7)
         """
         return True
-    
+
     def get_orderbook(self, symbol: str, depth: int = 10) -> Optional[Dict[str, Any]]:
         """
         Get orderbook for a symbol (with Circuit Breaker, 418/429 protection).
         """
         if _circuit_is_open():
-            logger.warning(f"[Upbit] Circuit breaker open. Skipping request for {symbol} (get_orderbook).")
+            logger.warning(
+                f"[Upbit] Circuit breaker open. Skipping request for {symbol} (get_orderbook)."
+            )
             return None
 
         retry_count = 0
@@ -302,7 +323,9 @@ class UpbitSpotMarketData(MarketDataAdapter):
 
                 if response.status_code == 429:
                     if retry_count >= self.MAX_RETRIES:
-                        logger.error(f"[Upbit] Rate limit exceeded max retries for {symbol} (get_orderbook)")
+                        logger.error(
+                            f"[Upbit] Rate limit exceeded max retries for {symbol} (get_orderbook)"
+                        )
                         raise RuntimeError(
                             f"429 Too Many Requests after {self.MAX_RETRIES} retries"
                         )
@@ -332,20 +355,28 @@ class UpbitSpotMarketData(MarketDataAdapter):
                     "symbol": symbol,
                     "timestamp": data.get("timestamp"),
                     "bids": [
-                        {"price": float(unit["bid_price"]), "size": float(unit["bid_size"])}
+                        {
+                            "price": float(unit["bid_price"]),
+                            "size": float(unit["bid_size"]),
+                        }
                         for unit in data.get("orderbook_units", [])
                     ],
                     "asks": [
-                        {"price": float(unit["ask_price"]), "size": float(unit["ask_size"])}
+                        {
+                            "price": float(unit["ask_price"]),
+                            "size": float(unit["ask_size"]),
+                        }
                         for unit in data.get("orderbook_units", [])
-                    ]
+                    ],
                 }
 
             except requests.exceptions.RequestException as e:
                 logger.error(f"[Upbit] Failed to get orderbook for {symbol}: {e}")
                 return None
             except (KeyError, IndexError, ValueError) as e:
-                logger.error(f"[Upbit] Failed to parse orderbook data for {symbol}: {e}")
+                logger.error(
+                    f"[Upbit] Failed to parse orderbook data for {symbol}: {e}"
+                )
                 return None
 
     def get_ohlcv(
@@ -357,19 +388,19 @@ class UpbitSpotMarketData(MarketDataAdapter):
     ) -> List:
         """
         Get OHLCV candle data.
-        
+
         Args:
             symbol: Trading symbol (e.g., "BTC/KRW")
             interval: Candle interval ("1m", "5m", "15m", "1h", "4h", "1d", "1w")
             limit: Number of candles (max 200)
             to: End datetime (ISO format, optional)
-        
+
         Returns:
             List of OHLCV objects (oldest first)
         """
         from dataclasses import dataclass
         from datetime import datetime as dt
-        
+
         @dataclass
         class OHLCVCandle:
             timestamp: dt
@@ -378,13 +409,15 @@ class UpbitSpotMarketData(MarketDataAdapter):
             low: float
             close: float
             volume: float
-        
+
         if _circuit_is_open():
-            logger.warning("[Upbit] Circuit breaker open, returning empty for get_ohlcv")
+            logger.warning(
+                "[Upbit] Circuit breaker open, returning empty for get_ohlcv"
+            )
             return []
-        
+
         market = self._convert_symbol(symbol)
-        
+
         # Interval mapping (Upbit API format)
         interval_map = {
             "1m": ("minutes", 1),
@@ -398,67 +431,71 @@ class UpbitSpotMarketData(MarketDataAdapter):
             "1w": ("weeks", None),
             "1M": ("months", None),
         }
-        
+
         if interval not in interval_map:
             logger.warning(f"[Upbit] Unknown interval {interval}, using 1d")
             interval = "1d"
-        
+
         candle_type, unit = interval_map[interval]
-        
+
         if candle_type == "minutes":
             url = f"{self.BASE_URL}/candles/{candle_type}/{unit}"
         else:
             url = f"{self.BASE_URL}/candles/{candle_type}"
-        
+
         params = {
             "market": market,
             "count": min(limit, 200),
         }
         if to:
             params["to"] = to
-        
+
         try:
             time.sleep(random.uniform(0.05, 0.15))  # Decorrelated jitter
-            
+
             resp = self.session.get(url, params=params, timeout=5)
-            
+
             if resp.status_code == 418:
                 _open_circuit(self.CIRCUIT_BREAKER_COOLDOWN_SECONDS)
                 logger.error("[Upbit] 418 received in get_ohlcv, circuit opened")
                 return []
-            
+
             if resp.status_code == 429:
                 logger.warning("[Upbit] 429 rate limit in get_ohlcv, backing off")
                 time.sleep(1.0)
                 return []
-            
+
             resp.raise_for_status()
             data = resp.json()
-            
+
             candles = []
             for item in reversed(data):  # Oldest first
                 try:
-                    ts_str = item.get("candle_date_time_kst", item.get("candle_date_time_utc", ""))
+                    ts_str = item.get(
+                        "candle_date_time_kst", item.get("candle_date_time_utc", "")
+                    )
                     if ts_str:
                         ts = dt.fromisoformat(ts_str.replace("T", " ").split("+")[0])
                     else:
                         ts = dt.now()
-                    
-                    candles.append(OHLCVCandle(
-                        timestamp=ts,
-                        open=float(item["opening_price"]),
-                        high=float(item["high_price"]),
-                        low=float(item["low_price"]),
-                        close=float(item["trade_price"]),
-                        volume=float(item["candle_acc_trade_volume"]),
-                    ))
+
+                    candles.append(
+                        OHLCVCandle(
+                            timestamp=ts,
+                            open=float(item["opening_price"]),
+                            high=float(item["high_price"]),
+                            low=float(item["low_price"]),
+                            close=float(item["trade_price"]),
+                            volume=float(item["candle_acc_trade_volume"]),
+                        )
+                    )
                 except (KeyError, ValueError) as e:
                     logger.warning(f"[Upbit] Failed to parse candle: {e}")
                     continue
-            
+
             logger.debug(f"[Upbit] get_ohlcv: {symbol} - {len(candles)} candles")
             return candles
-            
+
         except requests.RequestException as exc:
             logger.error(f"[Upbit] OHLCV request failed for {symbol}: {exc}")
             return []
@@ -466,23 +503,23 @@ class UpbitSpotMarketData(MarketDataAdapter):
     def _convert_symbol(self, symbol: str) -> str:
         """
         Convert symbol format: 'BTC/KRW' ??'KRW-BTC'
-        
+
         Args:
             symbol: Symbol in "BTC/KRW" format
-        
+
         Returns:
             Upbit market code "KRW-BTC"
         """
         base, quote = symbol.split("/")
         return f"{quote}-{base}"
-    
+
     def _revert_symbol(self, market: str) -> str:
         """
         Revert symbol format: 'KRW-BTC' ??'BTC/KRW'
-        
+
         Args:
             market: Upbit market code "KRW-BTC"
-        
+
         Returns:
             Symbol in "BTC/KRW" format
         """
@@ -509,7 +546,9 @@ class UpbitSpotExecution(ExecutionAdapter):
     BASE_BACKOFF_SECONDS = 1.0
     CIRCUIT_BREAKER_COOLDOWN_SECONDS = 60
 
-    def __init__(self, access_key: Optional[str] = None, secret_key: Optional[str] = None):
+    def __init__(
+        self, access_key: Optional[str] = None, secret_key: Optional[str] = None
+    ):
         self.access_key = access_key or os.getenv("UPBIT_ACCESS_KEY")
         self.secret_key = secret_key or os.getenv("UPBIT_SECRET_KEY")
         jwt_alg_env = os.getenv("UPBIT_JWT_ALG", "HS512").upper()
@@ -517,18 +556,22 @@ class UpbitSpotExecution(ExecutionAdapter):
             raise ValueError(f"Invalid JWT algorithm: {jwt_alg_env}")
         self.jwt_alg = jwt_alg_env
         self._session = requests.Session()
-        self._session.headers.update({
-            "Accept": "application/json",
-            "User-Agent": "Multi-Asset-Strategy-Platform/1.0",
-        })
-        self.client = ccxt.upbit({
-            "apiKey": self.access_key,
-            "secret": self.secret_key,
-            "enableRateLimit": True,
-            "options": {
-                "createMarketBuyOrderRequiresPrice": False,
-            },
-        })
+        self._session.headers.update(
+            {
+                "Accept": "application/json",
+                "User-Agent": "Multi-Asset-Strategy-Platform/1.0",
+            }
+        )
+        self.client = ccxt.upbit(
+            {
+                "apiKey": self.access_key,
+                "secret": self.secret_key,
+                "enableRateLimit": True,
+                "options": {
+                    "createMarketBuyOrderRequiresPrice": False,
+                },
+            }
+        )
         self._order_bucket = TokenBucket(rate_per_sec=8, capacity=8)
         self._default_bucket = TokenBucket(rate_per_sec=30, capacity=30)
         self._rate_limit_info: Dict[str, Any] = {
@@ -591,7 +634,9 @@ class UpbitSpotExecution(ExecutionAdapter):
             if amount_krw is None and units is None:
                 raise ValueError("[Upbit] MARKET BUY requires amount_krw")
             if amount_krw is not None and amount_krw < self.MIN_ORDER_KRW:
-                raise ValueError(f"[Upbit] MARKET BUY requires at least {self.MIN_ORDER_KRW} KRW")
+                raise ValueError(
+                    f"[Upbit] MARKET BUY requires at least {self.MIN_ORDER_KRW} KRW"
+                )
         elif side_upper == "SELL":
             if units is None:
                 raise ValueError("[Upbit] SELL requires units")
@@ -632,22 +677,31 @@ class UpbitSpotExecution(ExecutionAdapter):
 
         try:
             data = self._request("POST", "/orders", params=params, is_order=True)
-            result = self._to_order_result(data, symbol, side_upper, result_quantity, price)
+            result = self._to_order_result(
+                data, symbol, side_upper, result_quantity, price
+            )
             self._log_trade(result, data)
             return result
         except requests.exceptions.Timeout:
             start_time = time.monotonic()
             attempts = 0
-            while attempts < self.MAX_RECOVERY_ATTEMPTS and (time.monotonic() - start_time) < self.RECOVERY_TIMEOUT:
+            while (
+                attempts < self.MAX_RECOVERY_ATTEMPTS
+                and (time.monotonic() - start_time) < self.RECOVERY_TIMEOUT
+            ):
                 attempts += 1
                 recovered = self._get_order_by_identifier(identifier)
                 if recovered:
-                    result = self._to_order_result(recovered, symbol, side_upper, result_quantity, price)
+                    result = self._to_order_result(
+                        recovered, symbol, side_upper, result_quantity, price
+                    )
                     self._log_trade(result, recovered)
                     return result
                 if attempts < self.MAX_RECOVERY_ATTEMPTS:
-                    time.sleep(2 ** attempts)
-            return OrderResult(success=False, message="Timeout and order not found", mock=False)
+                    time.sleep(2**attempts)
+            return OrderResult(
+                success=False, message="Timeout and order not found", mock=False
+            )
         except Exception as exc:
             return OrderResult(success=False, message=str(exc), mock=False)
 
@@ -659,7 +713,9 @@ class UpbitSpotExecution(ExecutionAdapter):
     def cancel_order(self, order_id: str) -> bool:
         self._ensure_live_trading()
         self._ensure_credentials()
-        data = self._request("DELETE", "/order", params={"uuid": order_id}, is_order=True)
+        data = self._request(
+            "DELETE", "/order", params={"uuid": order_id}, is_order=True
+        )
         return bool(data and data.get("uuid"))
 
     def get_balance(self, asset: str) -> Optional[float]:
@@ -761,7 +817,9 @@ class UpbitSpotExecution(ExecutionAdapter):
             volume: float
 
         if _circuit_is_open():
-            logger.warning("[Upbit] Circuit breaker open, returning empty for get_ohlcv")
+            logger.warning(
+                "[Upbit] Circuit breaker open, returning empty for get_ohlcv"
+            )
             return []
 
         market = self._convert_symbol(symbol)
@@ -802,44 +860,48 @@ class UpbitSpotExecution(ExecutionAdapter):
             time.sleep(random.uniform(0.05, 0.15))  # Decorrelated jitter
 
             resp = self._session.get(url, params=params, timeout=5)
-            
+
             if resp.status_code == 418:
                 _open_circuit(self.CIRCUIT_BREAKER_COOLDOWN_SECONDS)
                 logger.error("[Upbit] 418 received in get_ohlcv, circuit opened")
                 return []
-            
+
             if resp.status_code == 429:
                 logger.warning("[Upbit] 429 rate limit in get_ohlcv, backing off")
                 time.sleep(1.0)
                 return []
-            
+
             resp.raise_for_status()
             data = resp.json()
-            
+
             candles = []
             for item in reversed(data):  # Oldest first
                 try:
-                    ts_str = item.get("candle_date_time_kst", item.get("candle_date_time_utc", ""))
+                    ts_str = item.get(
+                        "candle_date_time_kst", item.get("candle_date_time_utc", "")
+                    )
                     if ts_str:
                         ts = dt.fromisoformat(ts_str.replace("T", " ").split("+")[0])
                     else:
                         ts = dt.now()
-                    
-                    candles.append(OHLCVCandle(
-                        timestamp=ts,
-                        open=float(item["opening_price"]),
-                        high=float(item["high_price"]),
-                        low=float(item["low_price"]),
-                        close=float(item["trade_price"]),
-                        volume=float(item["candle_acc_trade_volume"]),
-                    ))
+
+                    candles.append(
+                        OHLCVCandle(
+                            timestamp=ts,
+                            open=float(item["opening_price"]),
+                            high=float(item["high_price"]),
+                            low=float(item["low_price"]),
+                            close=float(item["trade_price"]),
+                            volume=float(item["candle_acc_trade_volume"]),
+                        )
+                    )
                 except (KeyError, ValueError) as e:
                     logger.warning(f"[Upbit] Failed to parse candle: {e}")
                     continue
-            
+
             logger.debug(f"[Upbit] get_ohlcv: {symbol} - {len(candles)} candles")
             return candles
-            
+
         except requests.RequestException as exc:
             logger.error(f"[Upbit] OHLCV request failed for {symbol}: {exc}")
             return []
@@ -871,7 +933,9 @@ class UpbitSpotExecution(ExecutionAdapter):
         bucket = self._order_bucket if is_order else self._default_bucket
         bucket.consume()
 
-    def _update_rate_limit_headers(self, headers: Mapping[str, str], *, is_order: bool) -> None:
+    def _update_rate_limit_headers(
+        self, headers: Mapping[str, str], *, is_order: bool
+    ) -> None:
         now = int(time.time())
 
         standard_info = None
@@ -950,7 +1014,9 @@ class UpbitSpotExecution(ExecutionAdapter):
             except (ValueError, TypeError, AttributeError) as exc:
                 logger.debug("[Upbit] TokenBucket sync failed: %s", exc)
 
-    def _request(self, method: str, path: str, params: Dict[str, Any], is_order: bool) -> Any:
+    def _request(
+        self, method: str, path: str, params: Dict[str, Any], is_order: bool
+    ) -> Any:
         """Execute HTTP request with rate limiting, Decorrelated Jitter backoff, and 418 Circuit Breaker."""
         if _circuit_is_open():
             raise RuntimeError("[Upbit] Circuit breaker is open. Request blocked.")
@@ -1041,13 +1107,17 @@ class UpbitSpotExecution(ExecutionAdapter):
                         message = payload.get("error", {}).get("message", message)
                 except ValueError:
                     pass
-                raise RuntimeError(f"[Upbit] API error {response.status_code}: {message}")
+                raise RuntimeError(
+                    f"[Upbit] API error {response.status_code}: {message}"
+                )
 
             return response.json()
 
     def _get_order_by_identifier(self, identifier: str) -> Optional[Dict[str, Any]]:
         try:
-            return self._request("GET", "/order", params={"identifier": identifier}, is_order=True)
+            return self._request(
+                "GET", "/order", params={"identifier": identifier}, is_order=True
+            )
         except Exception:
             return None
 
@@ -1083,7 +1153,11 @@ class UpbitSpotExecution(ExecutionAdapter):
             quantity=quantity,
             price=float(data.get("price") or price or 0),
             status=status,
-            message=data.get("error", {}).get("message") if isinstance(data.get("error"), dict) else None,
+            message=(
+                data.get("error", {}).get("message")
+                if isinstance(data.get("error"), dict)
+                else None
+            ),
             mock=False,
         )
 
@@ -1107,7 +1181,9 @@ class UpbitSpotExecution(ExecutionAdapter):
                     fee += float(trade.get("fee", 0) or 0)
 
             # Get executed volume and price
-            executed_vol = float(raw_data.get("executed_volume", 0) or result.quantity or 0)
+            executed_vol = float(
+                raw_data.get("executed_volume", 0) or result.quantity or 0
+            )
             avg_price = float(raw_data.get("avg_price", 0) or result.price or 0)
             if avg_price == 0 and result.price:
                 avg_price = result.price
@@ -1127,7 +1203,9 @@ class UpbitSpotExecution(ExecutionAdapter):
             }
 
             self._trade_logger.log_trade(trade_record)
-            logger.info(f"[Upbit] Trade logged: {result.symbol} {result.side} {executed_vol}")
+            logger.info(
+                f"[Upbit] Trade logged: {result.symbol} {result.side} {executed_vol}"
+            )
 
         except Exception as e:
             logger.warning(f"[Upbit] Failed to log trade: {e}")

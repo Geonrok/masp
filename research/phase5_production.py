@@ -5,41 +5,55 @@ Ralph-Loop Phase 5: Production Readiness
 Task 5.1~5.4: Position sizing, risk management, and production code
 Best strategy: TSMOM(84) with portfolio-level optimization
 """
+
 import json
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
-STATE_PATH = Path("E:/투자/Multi-Asset Strategy Platform/research/ralph_loop_state.json")
+STATE_PATH = Path(
+    "E:/투자/Multi-Asset Strategy Platform/research/ralph_loop_state.json"
+)
 RESULTS_PATH = Path("E:/투자/Multi-Asset Strategy Platform/research/results")
 
 SLIPPAGE = 0.0005
 COMMISSION = 0.0004
 FUNDING_PER_8H = 0.0001
 
+
 def load_state():
-    return json.loads(STATE_PATH.read_text(encoding='utf-8'))
+    return json.loads(STATE_PATH.read_text(encoding="utf-8"))
+
 
 def save_state(state):
     state["last_updated"] = datetime.now().isoformat()
-    STATE_PATH.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding='utf-8')
+    STATE_PATH.write_text(
+        json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+
 
 def load_ohlcv(symbol, timeframe="4h"):
-    tf_map = {"1h": "binance_futures_1h", "4h": "binance_futures_4h", "1d": "binance_futures_1d"}
+    tf_map = {
+        "1h": "binance_futures_1h",
+        "4h": "binance_futures_4h",
+        "1d": "binance_futures_1d",
+    }
     path = DATA_ROOT / tf_map.get(timeframe, "binance_futures_4h") / f"{symbol}.csv"
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path)
-    for col in ['datetime', 'timestamp', 'date']:
+    for col in ["datetime", "timestamp", "date"]:
         if col in df.columns:
-            df['datetime'] = pd.to_datetime(df[col])
+            df["datetime"] = pd.to_datetime(df[col])
             break
-    return df.sort_values('datetime').reset_index(drop=True)
+    return df.sort_values("datetime").reset_index(drop=True)
+
 
 # =============================================================================
 # Task 5.1: Position Sizing
@@ -54,18 +68,27 @@ def kelly_criterion(win_rate, avg_win, avg_loss):
     kelly = (p * b - q) / b
     return max(0, kelly * 0.5)  # Half-Kelly for safety
 
+
 def volatility_targeting(returns, target_vol=0.10, lookback=42):
     """Target portfolio volatility"""
-    rolling_vol = returns.rolling(lookback).std() * np.sqrt(6 * 365)  # Annualized from 4h
+    rolling_vol = returns.rolling(lookback).std() * np.sqrt(
+        6 * 365
+    )  # Annualized from 4h
     scaling = target_vol / (rolling_vol + 1e-10)
     return scaling.clip(0.1, 3.0)  # Limit leverage 0.1x-3x
+
 
 # =============================================================================
 # Task 5.2: Risk Management
 # =============================================================================
 class RiskManager:
-    def __init__(self, max_position_pct=0.05, max_portfolio_dd=0.15,
-                 max_daily_loss=0.03, max_positions=5):
+    def __init__(
+        self,
+        max_position_pct=0.05,
+        max_portfolio_dd=0.15,
+        max_daily_loss=0.03,
+        max_positions=5,
+    ):
         self.max_position_pct = max_position_pct
         self.max_portfolio_dd = max_portfolio_dd
         self.max_daily_loss = max_daily_loss
@@ -86,8 +109,14 @@ class RiskManager:
 # =============================================================================
 # Task 5.3 & 5.4: Full Production Backtest with Portfolio
 # =============================================================================
-def portfolio_backtest(symbols, lookback=84, train_bars=1080, test_bars=180,
-                       target_vol=0.10, max_positions=5):
+def portfolio_backtest(
+    symbols,
+    lookback=84,
+    train_bars=1080,
+    test_bars=180,
+    target_vol=0.10,
+    max_positions=5,
+):
     """
     Full portfolio-level walk-forward backtest with:
     - TSMOM signals
@@ -126,14 +155,14 @@ def portfolio_backtest(symbols, lookback=84, train_bars=1080, test_bars=180,
 
         for symbol, df in all_data.items():
             train = df.iloc[:i]
-            test = df.iloc[i:i+test_bars]
+            test = df.iloc[i : i + test_bars]
 
             # TSMOM signal
-            ret = train['close'].pct_change(lookback)
+            ret = train["close"].pct_change(lookback)
             signal = np.sign(ret.iloc[-1]) if not np.isnan(ret.iloc[-1]) else 0
 
             # Volatility for sizing
-            returns = train['close'].pct_change()
+            returns = train["close"].pct_change()
             vol = returns.rolling(lookback).std().iloc[-1]
             if np.isnan(vol) or vol == 0:
                 vol = 0.02
@@ -159,14 +188,18 @@ def portfolio_backtest(symbols, lookback=84, train_bars=1080, test_bars=180,
 
             for symbol, signal, inv_vol in selected:
                 df = all_data[symbol]
-                test = df.iloc[i:i+test_bars]
+                test = df.iloc[i : i + test_bars]
 
                 # Position size = vol target / realized vol
-                position_pct = min(target_per_position / (vol_scores[symbol] * np.sqrt(6 * 365) + 1e-10), 0.05)
+                position_pct = min(
+                    target_per_position
+                    / (vol_scores[symbol] * np.sqrt(6 * 365) + 1e-10),
+                    0.05,
+                )
 
                 # Simulate trade for this period
-                entry_price = test['close'].iloc[0] * (1 + SLIPPAGE * signal)
-                exit_price = test['close'].iloc[-1] * (1 - SLIPPAGE * signal)
+                entry_price = test["close"].iloc[0] * (1 + SLIPPAGE * signal)
+                exit_price = test["close"].iloc[-1] * (1 - SLIPPAGE * signal)
 
                 pnl = signal * (exit_price - entry_price) / entry_price * position_pct
                 pnl -= COMMISSION * position_pct * 2  # entry + exit
@@ -199,31 +232,45 @@ def portfolio_backtest(symbols, lookback=84, train_bars=1080, test_bars=180,
     profit_factor = gross_profit / (gross_loss + 1e-10)
 
     if len(monthly_returns) > 1:
-        sharpe = np.mean(monthly_returns) / (np.std(monthly_returns) + 1e-10) * np.sqrt(12)
-        sortino_denom = np.std([r for r in monthly_returns if r < 0]) if any(r < 0 for r in monthly_returns) else 1e-10
+        sharpe = (
+            np.mean(monthly_returns) / (np.std(monthly_returns) + 1e-10) * np.sqrt(12)
+        )
+        sortino_denom = (
+            np.std([r for r in monthly_returns if r < 0])
+            if any(r < 0 for r in monthly_returns)
+            else 1e-10
+        )
         sortino = np.mean(monthly_returns) / sortino_denom * np.sqrt(12)
     else:
         sharpe = 0
         sortino = 0
 
     # Calmar ratio
-    calmar = (total_return / len(monthly_returns) * 12) / abs(max_dd) if max_dd != 0 else 0
+    calmar = (
+        (total_return / len(monthly_returns) * 12) / abs(max_dd) if max_dd != 0 else 0
+    )
 
     return {
-        'total_return': total_return,
-        'annualized_return': total_return / (len(monthly_returns) / 12) if monthly_returns else 0,
-        'max_drawdown': max_dd,
-        'sharpe': sharpe,
-        'sortino': sortino,
-        'calmar': calmar,
-        'win_rate': win_rate,
-        'profit_factor': profit_factor,
-        'trade_count': len(all_trades),
-        'periods': len(monthly_returns),
-        'profitable_periods': sum(1 for r in monthly_returns if r > 0),
-        'wfa_efficiency': sum(1 for r in monthly_returns if r > 0) / len(monthly_returns) * 100 if monthly_returns else 0,
-        'monthly_returns': monthly_returns,
-        'equity_curve': equity.tolist(),
+        "total_return": total_return,
+        "annualized_return": (
+            total_return / (len(monthly_returns) / 12) if monthly_returns else 0
+        ),
+        "max_drawdown": max_dd,
+        "sharpe": sharpe,
+        "sortino": sortino,
+        "calmar": calmar,
+        "win_rate": win_rate,
+        "profit_factor": profit_factor,
+        "trade_count": len(all_trades),
+        "periods": len(monthly_returns),
+        "profitable_periods": sum(1 for r in monthly_returns if r > 0),
+        "wfa_efficiency": (
+            sum(1 for r in monthly_returns if r > 0) / len(monthly_returns) * 100
+            if monthly_returns
+            else 0
+        ),
+        "monthly_returns": monthly_returns,
+        "equity_curve": equity.tolist(),
     }
 
 
@@ -237,18 +284,34 @@ def main():
 
     # Test multiple symbol universes
     universes = {
-        'top_5': ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DOGEUSDT', 'ADAUSDT'],
-        'top_10': ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT',
-                   'BNBUSDT', 'ADAUSDT', 'LINKUSDT', 'AVAXUSDT', 'LTCUSDT'],
-        'best_oos': ['DOGEUSDT', 'ADAUSDT', 'AVAXUSDT', 'SOLUSDT', 'ETHUSDT'],  # Top OOS performers from Phase 4
+        "top_5": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT", "ADAUSDT"],
+        "top_10": [
+            "BTCUSDT",
+            "ETHUSDT",
+            "SOLUSDT",
+            "XRPUSDT",
+            "DOGEUSDT",
+            "BNBUSDT",
+            "ADAUSDT",
+            "LINKUSDT",
+            "AVAXUSDT",
+            "LTCUSDT",
+        ],
+        "best_oos": [
+            "DOGEUSDT",
+            "ADAUSDT",
+            "AVAXUSDT",
+            "SOLUSDT",
+            "ETHUSDT",
+        ],  # Top OOS performers from Phase 4
     }
 
     # Test multiple configurations
     configs = {
-        'base': {'lookback': 84, 'target_vol': 0.10, 'max_positions': 5},
-        'conservative': {'lookback': 84, 'target_vol': 0.05, 'max_positions': 3},
-        'aggressive': {'lookback': 84, 'target_vol': 0.15, 'max_positions': 5},
-        'short_lookback': {'lookback': 42, 'target_vol': 0.10, 'max_positions': 5},
+        "base": {"lookback": 84, "target_vol": 0.10, "max_positions": 5},
+        "conservative": {"lookback": 84, "target_vol": 0.05, "max_positions": 3},
+        "aggressive": {"lookback": 84, "target_vol": 0.15, "max_positions": 5},
+        "short_lookback": {"lookback": 42, "target_vol": 0.10, "max_positions": 5},
     }
 
     all_results = {}
@@ -259,7 +322,9 @@ def main():
             print(f"\n{'='*60}")
             print(f"Testing: {uni_name} / {cfg_name}")
             print(f"  Symbols: {', '.join(symbols)}")
-            print(f"  Config: lookback={cfg['lookback']}, target_vol={cfg['target_vol']}, max_pos={cfg['max_positions']}")
+            print(
+                f"  Config: lookback={cfg['lookback']}, target_vol={cfg['target_vol']}, max_pos={cfg['max_positions']}"
+            )
             print(f"{'='*60}")
 
             result = portfolio_backtest(symbols, **cfg)
@@ -278,12 +343,12 @@ def main():
 
                 # Check criteria
                 criteria = {
-                    'sharpe_gt_1': result['sharpe'] > 1.0,
-                    'max_dd_lt_25': result['max_drawdown'] > -0.25,
-                    'win_rate_gt_45': result['win_rate'] > 0.45,
-                    'profit_factor_gt_1_5': result['profit_factor'] > 1.5,
-                    'wfa_efficiency_gt_50': result['wfa_efficiency'] > 50,
-                    'trade_count_gt_100': result['trade_count'] > 100,
+                    "sharpe_gt_1": result["sharpe"] > 1.0,
+                    "max_dd_lt_25": result["max_drawdown"] > -0.25,
+                    "win_rate_gt_45": result["win_rate"] > 0.45,
+                    "profit_factor_gt_1_5": result["profit_factor"] > 1.5,
+                    "wfa_efficiency_gt_50": result["wfa_efficiency"] > 50,
+                    "trade_count_gt_100": result["trade_count"] > 100,
                 }
 
                 passed = sum(v for v in criteria.values())
@@ -291,62 +356,77 @@ def main():
                 for c, v in criteria.items():
                     print(f"    {c}: {'PASS' if v else 'FAIL'}")
 
-                result['criteria'] = criteria
-                result['criteria_passed'] = passed
+                result["criteria"] = criteria
+                result["criteria_passed"] = passed
 
-            all_results[key] = {k: v for k, v in result.items() if k not in ('monthly_returns', 'equity_curve')} if result else {}
+            all_results[key] = (
+                {
+                    k: v
+                    for k, v in result.items()
+                    if k not in ("monthly_returns", "equity_curve")
+                }
+                if result
+                else {}
+            )
 
     # Find best configuration
     print("\n" + "=" * 70)
     print("CONFIGURATION RANKING")
     print("=" * 70)
 
-    ranked = sorted(all_results.items(), key=lambda x: x[1].get('sharpe', -999), reverse=True)
+    ranked = sorted(
+        all_results.items(), key=lambda x: x[1].get("sharpe", -999), reverse=True
+    )
 
     for rank, (key, res) in enumerate(ranked[:10], 1):
-        cp = res.get('criteria_passed', 0)
-        print(f"  {rank}. {key:<35} Sharpe={res.get('sharpe',0):.2f}  Ret={res.get('total_return',0)*100:+.1f}%  DD={res.get('max_drawdown',0)*100:.1f}%  Criteria={cp}/6")
+        cp = res.get("criteria_passed", 0)
+        print(
+            f"  {rank}. {key:<35} Sharpe={res.get('sharpe',0):.2f}  Ret={res.get('total_return',0)*100:+.1f}%  DD={res.get('max_drawdown',0)*100:.1f}%  Criteria={cp}/6"
+        )
 
-    best_key = ranked[0][0] if ranked else 'none'
+    best_key = ranked[0][0] if ranked else "none"
     best_result = ranked[0][1] if ranked else {}
 
     # Save report
     report = {
-        'generated_at': datetime.now().isoformat(),
-        'configurations_tested': len(all_results),
-        'best_config': best_key,
-        'best_result': best_result,
-        'all_results': all_results,
-        'production_recommendation': {
-            'strategy': 'TSMOM(84)',
-            'best_universe': best_key.split('_')[0] if '_' in best_key else best_key,
-            'target_vol': 0.10,
-            'max_positions': 5,
-            'rebalance_frequency': '30 days (monthly)',
-            'position_sizing': 'volatility_targeting',
-            'risk_limits': {
-                'max_position_pct': 0.05,
-                'max_portfolio_dd': 0.15,
-                'max_daily_loss': 0.03,
-            }
-        }
+        "generated_at": datetime.now().isoformat(),
+        "configurations_tested": len(all_results),
+        "best_config": best_key,
+        "best_result": best_result,
+        "all_results": all_results,
+        "production_recommendation": {
+            "strategy": "TSMOM(84)",
+            "best_universe": best_key.split("_")[0] if "_" in best_key else best_key,
+            "target_vol": 0.10,
+            "max_positions": 5,
+            "rebalance_frequency": "30 days (monthly)",
+            "position_sizing": "volatility_targeting",
+            "risk_limits": {
+                "max_position_pct": 0.05,
+                "max_portfolio_dd": 0.15,
+                "max_daily_loss": 0.03,
+            },
+        },
     }
 
     report_path = RESULTS_PATH / "phase5_production_report.json"
-    report_path.write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')
+    report_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
 
     # Update state
-    state['current_phase'] = 'COMPLETE'
-    state['current_task'] = 'DONE'
-    state['completed_tasks'].extend(['5.1', '5.2', '5.3', '5.4'])
-    state['findings']['production'] = {
-        'best_config': best_key,
-        'sharpe': float(best_result.get('sharpe', 0)),
-        'total_return': float(best_result.get('total_return', 0)),
-        'max_drawdown': float(best_result.get('max_drawdown', 0)),
-        'criteria_passed': int(best_result.get('criteria_passed', 0)),
+    state["current_phase"] = "COMPLETE"
+    state["current_task"] = "DONE"
+    state["completed_tasks"].extend(["5.1", "5.2", "5.3", "5.4"])
+    state["findings"]["production"] = {
+        "best_config": best_key,
+        "sharpe": float(best_result.get("sharpe", 0)),
+        "total_return": float(best_result.get("total_return", 0)),
+        "max_drawdown": float(best_result.get("max_drawdown", 0)),
+        "criteria_passed": int(best_result.get("criteria_passed", 0)),
     }
-    state['next_actions'] = ['Human review of final results', 'Live paper trading deployment']
+    state["next_actions"] = [
+        "Human review of final results",
+        "Live paper trading deployment",
+    ]
     save_state(state)
 
     print(f"\n{'='*70}")

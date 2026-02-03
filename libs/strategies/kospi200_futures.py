@@ -106,7 +106,10 @@ class KOSPI200FuturesStrategy(BaseStrategy):
         Returns True if data is available, False otherwise.
         """
         # Check if data is already loaded
-        if self._vix_data is not None and len(self._vix_data) >= self.config.vix_sma_period:
+        if (
+            self._vix_data is not None
+            and len(self._vix_data) >= self.config.vix_sma_period
+        ):
             return True
         return False
 
@@ -117,7 +120,10 @@ class KOSPI200FuturesStrategy(BaseStrategy):
         Uses T-1 shift: compares VIX(T-1) vs SMA(T-1 basis).
         Returns 1 (LONG) if VIX(T-1) < SMA, 0 (CASH) otherwise.
         """
-        if self._vix_data is None or len(self._vix_data) < self.config.vix_sma_period + 1:
+        if (
+            self._vix_data is None
+            or len(self._vix_data) < self.config.vix_sma_period + 1
+        ):
             return 0
 
         # T-1 shift: use data up to T-1 (exclude today)
@@ -155,9 +161,15 @@ class KOSPI200FuturesStrategy(BaseStrategy):
 
         Returns 1 (LONG) if both conditions met, 0 (CASH) otherwise.
         """
-        if self._semicon_data is None or len(self._semicon_data) < self.config.semicon_sma_period:
+        if (
+            self._semicon_data is None
+            or len(self._semicon_data) < self.config.semicon_sma_period
+        ):
             return 0
-        if self._foreign_data is None or len(self._foreign_data) < self.config.foreign_sum_period:
+        if (
+            self._foreign_data is None
+            or len(self._foreign_data) < self.config.foreign_sum_period
+        ):
             return 0
 
         # Semicon condition
@@ -179,7 +191,10 @@ class KOSPI200FuturesStrategy(BaseStrategy):
 
         Returns 1 (LONG) if SMA15 > SMA30, 0 (CASH) otherwise.
         """
-        if self._hourly_data is None or len(self._hourly_data) < self.config.hourly_sma_long:
+        if (
+            self._hourly_data is None
+            or len(self._hourly_data) < self.config.hourly_sma_long
+        ):
             return 0
 
         close = self._hourly_data["close"]
@@ -287,10 +302,14 @@ class KOSPI200FuturesStrategy(BaseStrategy):
             # Determine signal based on composite score
             if composite >= self.config.composite_threshold:
                 signal = Signal.BUY
-                reason = f"Composite {composite:.2f} >= {self.config.composite_threshold}"
+                reason = (
+                    f"Composite {composite:.2f} >= {self.config.composite_threshold}"
+                )
             else:
                 signal = Signal.HOLD
-                reason = f"Composite {composite:.2f} < {self.config.composite_threshold}"
+                reason = (
+                    f"Composite {composite:.2f} < {self.config.composite_threshold}"
+                )
 
             results.append(
                 TradeSignal(
@@ -325,6 +344,7 @@ class KOSPI200FuturesStrategy(BaseStrategy):
 
 
 # Convenience sub-strategy classes
+
 
 class VIXBelowSMA20Strategy(KOSPI200FuturesStrategy):
     """Single-strategy variant: VIX Below SMA20 only."""

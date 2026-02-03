@@ -137,9 +137,7 @@ class SlackNotifier:
                     logger.debug("[Slack] Message sent")
                     return True
 
-                logger.warning(
-                    f"[Slack] Failed: {resp.status_code} - {resp.text}"
-                )
+                logger.warning(f"[Slack] Failed: {resp.status_code} - {resp.text}")
 
         except Exception as exc:
             logger.warning(f"[Slack] Error (swallowed): {exc}")
@@ -172,8 +170,14 @@ class SlackNotifier:
             True if sent
         """
         side_upper = side.upper()
-        emoji = ":chart_with_upwards_trend:" if side_upper == "BUY" else ":chart_with_downwards_trend:"
-        color = self.COLORS["SUCCESS"] if side_upper == "BUY" else self.COLORS["WARNING"]
+        emoji = (
+            ":chart_with_upwards_trend:"
+            if side_upper == "BUY"
+            else ":chart_with_downwards_trend:"
+        )
+        color = (
+            self.COLORS["SUCCESS"] if side_upper == "BUY" else self.COLORS["WARNING"]
+        )
 
         fields = [
             {"title": "Exchange", "value": exchange.upper(), "short": True},
@@ -186,11 +190,13 @@ class SlackNotifier:
 
         if pnl is not None:
             pnl_emoji = ":money_with_wings:" if pnl > 0 else ":money_mouth_face:"
-            fields.append({
-                "title": "PnL",
-                "value": f"{pnl_emoji} {pnl:+,.0f} KRW",
-                "short": True,
-            })
+            fields.append(
+                {
+                    "title": "PnL",
+                    "value": f"{pnl_emoji} {pnl:+,.0f} KRW",
+                    "short": True,
+                }
+            )
 
         attachment = SlackAttachment(
             fallback=f"{side_upper} {quantity} {symbol} @ {price}",
@@ -299,11 +305,13 @@ class SlackNotifier:
 
         if metadata:
             for key, value in metadata.items():
-                fields.append({
-                    "title": key.replace("_", " ").title(),
-                    "value": str(value),
-                    "short": True,
-                })
+                fields.append(
+                    {
+                        "title": key.replace("_", " ").title(),
+                        "value": str(value),
+                        "short": True,
+                    }
+                )
 
         attachment = SlackAttachment(
             fallback=f"{priority}: {title}",
@@ -346,7 +354,11 @@ class SlackNotifier:
         Returns:
             True if sent
         """
-        pnl_emoji = ":chart_with_upwards_trend:" if total_pnl >= 0 else ":chart_with_downwards_trend:"
+        pnl_emoji = (
+            ":chart_with_upwards_trend:"
+            if total_pnl >= 0
+            else ":chart_with_downwards_trend:"
+        )
         color = self.COLORS["SUCCESS"] if total_pnl >= 0 else self.COLORS["ERROR"]
 
         fields = [
@@ -361,7 +373,9 @@ class SlackNotifier:
         if best_trade:
             fields.append({"title": "Best Trade", "value": best_trade, "short": False})
         if worst_trade:
-            fields.append({"title": "Worst Trade", "value": worst_trade, "short": False})
+            fields.append(
+                {"title": "Worst Trade", "value": worst_trade, "short": False}
+            )
 
         attachment = SlackAttachment(
             fallback=f"Daily Summary: {total_pnl:+,.0f} KRW",

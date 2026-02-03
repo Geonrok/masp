@@ -1,4 +1,5 @@
 """MASP dashboard Streamlit app."""
+
 from __future__ import annotations
 
 import os
@@ -29,7 +30,10 @@ from services.dashboard.components.order_panel import render_order_panel
 
 # Phase 7C-6: Data providers
 from services.dashboard.providers.portfolio_provider import get_portfolio_summary
-from services.dashboard.providers.system_provider import get_system_resources, get_service_health
+from services.dashboard.providers.system_provider import (
+    get_system_resources,
+    get_service_health,
+)
 from services.dashboard.providers.order_provider import (
     get_execution_adapter,
     get_price_provider,
@@ -39,7 +43,9 @@ from services.dashboard.providers.trade_history_provider import get_trade_histor
 from services.dashboard.providers.log_provider import get_log_provider
 from services.dashboard.providers.alert_provider import get_alert_store
 from services.dashboard.providers.scheduler_provider import get_scheduler_job_provider
-from services.dashboard.providers.strategy_performance_provider import get_strategy_performance_provider
+from services.dashboard.providers.strategy_performance_provider import (
+    get_strategy_performance_provider,
+)
 from services.dashboard.providers.positions_provider import get_positions_data
 from services.dashboard.providers.risk_metrics_provider import get_risk_metrics_data
 from services.dashboard.providers.backtest_provider import get_backtest_data
@@ -57,7 +63,9 @@ from services.dashboard.providers.multi_exchange_provider import (
 )
 from services.dashboard.components.multi_exchange_view import render_multi_exchange_view
 from services.dashboard.components.trade_history import render_trade_history_panel
-from services.dashboard.components.strategy_performance import render_strategy_performance
+from services.dashboard.components.strategy_performance import (
+    render_strategy_performance,
+)
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
 from services.dashboard.components.risk_metrics import render_risk_metrics_panel
 from services.dashboard.components.log_viewer import render_log_viewer
@@ -176,14 +184,14 @@ with tabs[2]:
         st.divider()
         recommendation = get_trading_recommendation()
         rec_color = {
-            'AGGRESSIVE_LONG': '#4CAF50',
-            'LONG': '#8BC34A',
-            'CAUTIOUS_LONG': '#CDDC39',
-            'SELECTIVE': '#FFEB3B',
-            'CAUTIOUS': '#FF9800',
-            'WAIT': '#9E9E9E',
-            'STAY_OUT': '#F44336',
-        }.get(recommendation.get('action', 'WAIT'), '#9E9E9E')
+            "AGGRESSIVE_LONG": "#4CAF50",
+            "LONG": "#8BC34A",
+            "CAUTIOUS_LONG": "#CDDC39",
+            "SELECTIVE": "#FFEB3B",
+            "CAUTIOUS": "#FF9800",
+            "WAIT": "#9E9E9E",
+            "STAY_OUT": "#F44336",
+        }.get(recommendation.get("action", "WAIT"), "#9E9E9E")
 
         st.markdown(
             f"""
@@ -198,7 +206,9 @@ with tabs[2]:
 
     with analytics_subtabs[1]:
         # Real strategy performance from trade history (or demo if unavailable)
-        render_strategy_performance(performance_provider=get_strategy_performance_provider())
+        render_strategy_performance(
+            performance_provider=get_strategy_performance_provider()
+        )
 
     with analytics_subtabs[2]:
         # Real backtest data from BacktestStore (or demo if unavailable)
@@ -209,7 +219,9 @@ with tabs[2]:
         risk_data = get_risk_metrics_data()
         if risk_data:
             returns, equity_curve, dates = risk_data
-            render_risk_metrics_panel(returns=returns, equity_curve=equity_curve, dates=dates)
+            render_risk_metrics_panel(
+                returns=returns, equity_curve=equity_curve, dates=dates
+            )
         else:
             render_risk_metrics_panel()
 

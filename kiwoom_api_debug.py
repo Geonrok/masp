@@ -18,7 +18,7 @@ def get_token():
     data = {
         "grant_type": "client_credentials",
         "appkey": APPKEY,
-        "secretkey": SECRETKEY
+        "secretkey": SECRETKEY,
     }
 
     response = requests.post(url, headers=headers, json=data)
@@ -28,7 +28,7 @@ def get_token():
 
 def test_with_various_headers(token_data):
     """다양한 헤더 조합 테스트"""
-    token = token_data.get('token')
+    token = token_data.get("token")
 
     # 테스트할 엔드포인트 (ka10001: 주식현재가)
     test_cases = [
@@ -37,10 +37,10 @@ def test_with_various_headers(token_data):
             "name": "Bearer 토큰만",
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
-                "Authorization": f"Bearer {token}"
+                "Authorization": f"Bearer {token}",
             },
             "path": "/api/ka10001",
-            "data": {"stk_cd": "005930"}
+            "data": {"stk_cd": "005930"},
         },
         # Case 2: appkey + secretkey 헤더
         {
@@ -49,10 +49,10 @@ def test_with_various_headers(token_data):
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
                 "appkey": APPKEY,
-                "appsecret": SECRETKEY
+                "appsecret": SECRETKEY,
             },
             "path": "/api/ka10001",
-            "data": {"stk_cd": "005930"}
+            "data": {"stk_cd": "005930"},
         },
         # Case 3: tr_id 헤더 추가
         {
@@ -60,31 +60,31 @@ def test_with_various_headers(token_data):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "tr_id": "ka10001"
+                "tr_id": "ka10001",
             },
             "path": "/api/ka10001",
-            "data": {"stk_cd": "005930"}
+            "data": {"stk_cd": "005930"},
         },
         # Case 4: 다른 경로 형식
         {
             "name": "dostk 경로",
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
-                "Authorization": f"Bearer {token}"
+                "Authorization": f"Bearer {token}",
             },
             "path": "/api/dostk/ka10001",
-            "data": {"stk_cd": "005930"}
+            "data": {"stk_cd": "005930"},
         },
         # Case 5: 쿼리 파라미터로
         {
             "name": "GET with params",
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
-                "Authorization": f"Bearer {token}"
+                "Authorization": f"Bearer {token}",
             },
             "path": "/api/ka10001",
             "method": "GET",
-            "params": {"stk_cd": "005930"}
+            "params": {"stk_cd": "005930"},
         },
         # Case 6: custtype 헤더 (개인/법인 구분)
         {
@@ -92,10 +92,10 @@ def test_with_various_headers(token_data):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "custtype": "P"  # P: 개인
+                "custtype": "P",  # P: 개인
             },
             "path": "/api/ka10001",
-            "data": {"stk_cd": "005930"}
+            "data": {"stk_cd": "005930"},
         },
         # Case 7: 한국투자증권 형식 참고
         {
@@ -105,10 +105,10 @@ def test_with_various_headers(token_data):
                 "authorization": f"Bearer {token}",
                 "appkey": APPKEY,
                 "appsecret": SECRETKEY,
-                "tr_id": "FHKST01010100"
+                "tr_id": "FHKST01010100",
             },
             "path": "/uapi/domestic-stock/v1/quotations/inquire-price",
-            "params": {"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": "005930"}
+            "params": {"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": "005930"},
         },
     ]
 
@@ -118,13 +118,17 @@ def test_with_various_headers(token_data):
         print(f"Path: {case['path']}")
 
         url = f"{BASE_URL}{case['path']}"
-        method = case.get('method', 'POST')
+        method = case.get("method", "POST")
 
         try:
             if method == "GET":
-                response = requests.get(url, headers=case['headers'], params=case.get('params'))
+                response = requests.get(
+                    url, headers=case["headers"], params=case.get("params")
+                )
             else:
-                response = requests.post(url, headers=case['headers'], json=case.get('data'))
+                response = requests.post(
+                    url, headers=case["headers"], json=case.get("data")
+                )
 
             print(f"Status: {response.status_code}")
             print(f"Response: {response.text[:500]}")
@@ -146,7 +150,7 @@ def main():
     # 토큰 발급
     token_data = get_token()
 
-    if not token_data.get('token'):
+    if not token_data.get("token"):
         print("토큰 발급 실패!")
         return
 

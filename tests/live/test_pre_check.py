@@ -1,6 +1,7 @@
 """
 Pre-check for live trading tests (v2.2 Final).
 """
+
 from __future__ import annotations
 
 import os
@@ -21,7 +22,9 @@ from libs.adapters.factory import AdapterFactory
 from _live_test_utils import live_test_enabled
 
 if pytest and not live_test_enabled():
-    pytest.skip("Live trading tests disabled (env guard not satisfied)", allow_module_level=True)
+    pytest.skip(
+        "Live trading tests disabled (env guard not satisfied)", allow_module_level=True
+    )
 
 
 def test_pre_check() -> bool:

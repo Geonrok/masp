@@ -1,4 +1,5 @@
 """Holdings management for MASP Dashboard (READ-ONLY)."""
+
 from __future__ import annotations
 
 import logging
@@ -78,11 +79,13 @@ def get_holdings_bithumb() -> List[Dict[str, Any]]:
         holdings = []
         for currency, balance in balances.items():
             if balance > 0:
-                holdings.append({
-                    "currency": currency,
-                    "balance": balance,
-                    "avg_buy_price": None,  # Bithumb API doesn't provide this
-                })
+                holdings.append(
+                    {
+                        "currency": currency,
+                        "balance": balance,
+                        "avg_buy_price": None,  # Bithumb API doesn't provide this
+                    }
+                )
         return holdings
     except Exception as exc:
         logger.warning("Failed to get Bithumb holdings: %s", type(exc).__name__)

@@ -1,4 +1,5 @@
 """Portfolio summary component for asset allocation and metrics."""
+
 from __future__ import annotations
 
 import math
@@ -59,27 +60,28 @@ def _safe_div(num: float, den: float, default: float = 0.0) -> float:
 @dataclass
 class PortfolioPosition:
     """Single position in portfolio."""
+
     symbol: str
     exchange: str
     quantity: float
     avg_price: float
     current_price: float
-    
+
     @property
     def cost(self) -> float:
         """Total cost basis."""
         return _safe_float(self.quantity * self.avg_price)
-    
+
     @property
     def value(self) -> float:
         """Current market value."""
         return _safe_float(self.quantity * self.current_price)
-    
+
     @property
     def pnl(self) -> float:
         """Unrealized PnL."""
         return self.value - self.cost
-    
+
     @property
     def pnl_percent(self) -> float:
         """PnL percentage."""
@@ -89,31 +91,32 @@ class PortfolioPosition:
 @dataclass
 class PortfolioSummary:
     """Aggregated portfolio summary."""
+
     total_cost: float
     total_value: float
     cash_balance: float
     positions: List[PortfolioPosition]
-    
+
     @property
     def total_pnl(self) -> float:
         """Total unrealized PnL."""
         return self.total_value - self.total_cost
-    
+
     @property
     def total_pnl_percent(self) -> float:
         """Total PnL percentage."""
         return _safe_div(self.total_pnl, self.total_cost, 0.0) * 100
-    
+
     @property
     def total_assets(self) -> float:
         """Total assets (positions + cash)."""
         return self.total_value + self.cash_balance
-    
+
     @property
     def cash_ratio(self) -> float:
         """Cash ratio percentage."""
         return _safe_div(self.cash_balance, self.total_assets, 0.0) * 100
-    
+
     @property
     def invested_ratio(self) -> float:
         """Invested ratio percentage."""
@@ -136,7 +139,7 @@ def _get_demo_portfolio() -> PortfolioSummary:
         ("ADA", "bithumb", 3000, 600, 580),
         ("AVAX", "upbit", 15, 40_000, 45_000),
     ]
-    
+
     positions = [
         PortfolioPosition(
             symbol=symbol,
@@ -147,11 +150,11 @@ def _get_demo_portfolio() -> PortfolioSummary:
         )
         for symbol, exchange, qty, avg_price, current_price in demo_positions
     ]
-    
+
     total_cost = sum(p.cost for p in positions)
     total_value = sum(p.value for p in positions)
     cash_balance = 5_000_000  # 5M KRW cash
-    
+
     return PortfolioSummary(
         total_cost=total_cost,
         total_value=total_value,
@@ -211,18 +214,18 @@ def _render_allocation_chart(
     if not data and cash_balance <= 0:
         st.info("No allocation data to display.")
         return
-    
+
     labels = list(data.keys())
     values = list(data.values())
-    
+
     # Add cash if requested
     if show_cash and cash_balance > 0:
         labels.append("CASH")
         values.append(cash_balance)
-    
+
     # Assign colors with wrapping for large label counts
     colors = [CHART_COLORS[i % len(CHART_COLORS)] for i in range(len(labels))]
-    
+
     fig = go.Figure()
     fig.add_trace(
         go.Pie(
@@ -234,7 +237,7 @@ def _render_allocation_chart(
             hole=0.4,  # Donut chart
         )
     )
-    
+
     fig.update_layout(
         title=title,
         template="plotly_dark",
@@ -243,7 +246,7 @@ def _render_allocation_chart(
         showlegend=True,
         legend=dict(orientation="h", yanchor="bottom", y=-0.2),
     )
-    
+
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -319,8 +322,7 @@ def _position_details_content(positions: List[PortfolioPosition]) -> None:
     for i, exchange in enumerate(exchanges, start=1):
         with position_tabs[i]:
             exchange_positions = [
-                p for p in positions
-                if p.exchange.upper() == exchange
+                p for p in positions if p.exchange.upper() == exchange
             ]
             if exchange_positions:
                 # Show exchange summary
@@ -386,6 +388,7 @@ def render_portfolio_summary(
         if st.button("🔄 새로고침", key="portfolio_manual_refresh"):
             # Clear all caches to force fresh data
             from services.dashboard.utils.holdings import clear_holdings_cache
+
             clear_holdings_cache()
             st.rerun()
     with refresh_col3:
@@ -395,6 +398,7 @@ def render_portfolio_summary(
     if auto_refresh:
         try:
             from streamlit_autorefresh import st_autorefresh
+
             # Returns count of refreshes, triggers rerun every interval_ms
             st_autorefresh(
                 interval=int(_AUTO_REFRESH_INTERVAL * 1000),
@@ -421,10 +425,10 @@ def render_portfolio_summary(
     if not portfolio.positions and portfolio.cash_balance <= 0:
         st.info("포트폴리오 데이터가 없습니다.")
         return
-    
+
     # Summary metrics row
     col1, col2, col3, col4 = st.columns(4)
-    
+
     with col1:
         st.metric(
             "총 자산",
@@ -453,7 +457,7 @@ def render_portfolio_summary(
             f"KRW {portfolio.cash_balance:,.0f}",
             delta=f"{portfolio.cash_ratio:.1f}%",
         )
-    
+
     # View mode selector with namespaced key
     selected_view = st.radio(
         "Allocation View",
@@ -462,7 +466,7 @@ def render_portfolio_summary(
         horizontal=True,
         key="ps_allocation_view_mode",
     )
-    
+
     # Allocation chart
     if selected_view == "exchange":
         allocation_data = _aggregate_by_exchange(portfolio.positions)
@@ -480,7 +484,7 @@ def render_portfolio_summary(
             cash_balance=portfolio.cash_balance,
             show_cash=True,
         )
-    
+
     # Position details table with exchange tabs (using fragment for fast tab switching)
     st.subheader("포지션 상세")
     _render_position_details_fragment(portfolio.positions)

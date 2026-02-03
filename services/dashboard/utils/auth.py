@@ -5,6 +5,7 @@ Security features:
 - Session idle timeout
 - Token rotation detection
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -22,6 +23,7 @@ _SESSION_KEY = "masp_auth_state"
 @dataclass(frozen=True)
 class AuthState:
     """Session auth state (stores only token fingerprint)."""
+
     token_fp: str
     last_activity_ts: float
 

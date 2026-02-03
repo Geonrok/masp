@@ -1,4 +1,5 @@
 """Common LIVE mode condition checking."""
+
 from __future__ import annotations
 
 import logging

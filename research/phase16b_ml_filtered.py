@@ -3,11 +3,13 @@
 Phase 16b: ML-Filtered Vol Profile + Alternative Labels
 Memory-efficient version: process one symbol at a time, no .copy()
 """
+
 import json, gc
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
@@ -16,12 +18,14 @@ from sklearn.preprocessing import StandardScaler
 
 try:
     import xgboost as xgb
+
     HAS_XGB = True
 except:
     HAS_XGB = False
 
 try:
     import lightgbm as lgb
+
     HAS_LGB = True
 except:
     HAS_LGB = False
@@ -38,27 +42,32 @@ def load_ohlcv(symbol, timeframe="1h"):
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path)
-    for col in ['datetime', 'timestamp', 'date']:
+    for col in ["datetime", "timestamp", "date"]:
         if col in df.columns:
-            df['datetime'] = pd.to_datetime(df[col])
+            df["datetime"] = pd.to_datetime(df[col])
             break
-    return df.sort_values('datetime').reset_index(drop=True)
+    return df.sort_values("datetime").reset_index(drop=True)
 
 
 def calc_atr(high, low, close, period=14):
-    tr = np.maximum(high - low,
-         np.maximum(np.abs(high - np.roll(close, 1)),
-                    np.abs(low - np.roll(close, 1))))
+    tr = np.maximum(
+        high - low,
+        np.maximum(np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))),
+    )
     tr[0] = high[0] - low[0]
     return pd.Series(tr).rolling(period).mean().values
 
 
 def build_features_array(df):
     """Build features as numpy array to save memory."""
-    close = df['close'].values.astype(np.float64)
-    high = df['high'].values.astype(np.float64)
-    low = df['low'].values.astype(np.float64)
-    vol = df['volume'].values.astype(np.float64) if 'volume' in df.columns else np.ones(len(df))
+    close = df["close"].values.astype(np.float64)
+    high = df["high"].values.astype(np.float64)
+    low = df["low"].values.astype(np.float64)
+    vol = (
+        df["volume"].values.astype(np.float64)
+        if "volume" in df.columns
+        else np.ones(len(df))
+    )
     n = len(df)
 
     features = []
@@ -69,20 +78,20 @@ def build_features_array(df):
         ret = np.full(n, np.nan)
         ret[p:] = close[p:] / close[:-p] - 1
         features.append(ret)
-        names.append(f'ret_{p}')
+        names.append(f"ret_{p}")
 
     # MA ratios
     cs = pd.Series(close)
     for p in [20, 50, 200]:
         ma = cs.rolling(p).mean().values
         features.append(close / (ma + 1e-10) - 1)
-        names.append(f'ma_{p}')
+        names.append(f"ma_{p}")
 
     # EMA trend
     ema_f = cs.ewm(span=50, adjust=False).mean().values
     ema_s = cs.ewm(span=200, adjust=False).mean().values
     features.append(ema_f / (ema_s + 1e-10) - 1)
-    names.append('ema_ratio')
+    names.append("ema_ratio")
 
     # Donchian position
     hs = pd.Series(high)
@@ -90,15 +99,15 @@ def build_features_array(df):
     h48 = hs.rolling(48).max().values
     l48 = ls.rolling(48).min().values
     features.append((close - l48) / (h48 - l48 + 1e-10))
-    names.append('donchian_pos')
+    names.append("donchian_pos")
 
     # ATR ratio
     atr = calc_atr(high, low, close, 14)
     features.append(atr / (close + 1e-10))
-    names.append('atr_ratio')
+    names.append("atr_ratio")
     atr_avg = pd.Series(atr).rolling(48).mean().values
     features.append(atr / (atr_avg + 1e-10))
-    names.append('atr_exp')
+    names.append("atr_exp")
 
     # RSI
     delta = np.diff(close, prepend=close[0])
@@ -108,43 +117,56 @@ def build_features_array(df):
     avg_loss = pd.Series(loss).rolling(14).mean().values
     rs = avg_gain / (avg_loss + 1e-10)
     features.append(100 - 100 / (1 + rs))
-    names.append('rsi')
+    names.append("rsi")
 
     # Bollinger %B
     ma20 = cs.rolling(20).mean().values
     std20 = cs.rolling(20).std().values
-    features.append((close - (ma20 - 2*std20)) / (4*std20 + 1e-10))
-    names.append('bb_pctb')
+    features.append((close - (ma20 - 2 * std20)) / (4 * std20 + 1e-10))
+    names.append("bb_pctb")
 
     # Volume z-score
     vs = pd.Series(vol)
     vol_ma = vs.rolling(48).mean().values
     vol_std = vs.rolling(48).std().values
     features.append((vol - vol_ma) / (vol_std + 1e-10))
-    names.append('vol_z')
+    names.append("vol_z")
 
     # VWAP ratio
-    vwap = pd.Series(close * vol).rolling(48).sum().values / (pd.Series(vol).rolling(48).sum().values + 1e-10)
+    vwap = pd.Series(close * vol).rolling(48).sum().values / (
+        pd.Series(vol).rolling(48).sum().values + 1e-10
+    )
     features.append(close / (vwap + 1e-10) - 1)
-    names.append('vwap_ratio')
+    names.append("vwap_ratio")
 
     # Realized vol ratio
     rets = pd.Series(close).pct_change()
     rv24 = rets.rolling(24).std().values
     rv168 = rets.rolling(168).std().values
     features.append(rv24 / (rv168 + 1e-10))
-    names.append('vol_ratio')
+    names.append("vol_ratio")
 
     X = np.column_stack(features)
     return X, names
 
 
-def ml_filtered_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
-                          forward_bars=24, threshold=0.005, prob_threshold=0.50):
+def ml_filtered_signals(
+    df,
+    model_type="xgb",
+    train_bars=4320,
+    test_bars=720,
+    forward_bars=24,
+    threshold=0.005,
+    prob_threshold=0.50,
+):
     """Vol Profile + ML filter. Memory efficient."""
-    close = df['close'].astype(float)
-    high = df['high'].astype(float)
-    vol = df['volume'].astype(float) if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"].astype(float)
+    high = df["high"].astype(float)
+    vol = (
+        df["volume"].astype(float)
+        if "volume" in df.columns
+        else pd.Series(1.0, index=df.index)
+    )
 
     # Rule-based signals
     vwap = (close * vol).rolling(48).sum() / (vol.rolling(48).sum() + 1e-10)
@@ -159,7 +181,9 @@ def ml_filtered_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
 
     # Labels
     fwd_ret = np.full(n, np.nan)
-    fwd_ret[:n-forward_bars] = close.values[forward_bars:] / close.values[:n-forward_bars] - 1
+    fwd_ret[: n - forward_bars] = (
+        close.values[forward_bars:] / close.values[: n - forward_bars] - 1
+    )
     labels = (fwd_ret > threshold).astype(int)
 
     signals = np.zeros(n)
@@ -169,12 +193,12 @@ def ml_filtered_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
         # Valid training indices (no NaN in features or labels)
         train_mask = np.all(np.isfinite(X[:i]), axis=1) & np.isfinite(fwd_ret[:i])
         train_mask[:200] = False  # skip warmup
-        train_mask[max(0,i-forward_bars):i] = False  # no future leak
+        train_mask[max(0, i - forward_bars) : i] = False  # no future leak
         train_idx = np.where(train_mask)[0]
 
         if len(train_idx) < 500:
             # Fallback to rule-based
-            for j in range(i, min(i+test_bars, n)):
+            for j in range(i, min(i + test_bars, n)):
                 if rule_signals[j]:
                     signals[j] = 1
             i += test_bars
@@ -194,21 +218,38 @@ def ml_filtered_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
         spw = neg / pos
 
         try:
-            if model_type == 'xgb' and HAS_XGB:
+            if model_type == "xgb" and HAS_XGB:
                 model = xgb.XGBClassifier(
-                    n_estimators=100, max_depth=4, learning_rate=0.05,
-                    subsample=0.8, colsample_bytree=0.8,
-                    scale_pos_weight=spw, random_state=42, verbosity=0,
-                    use_label_encoder=False, eval_metric='logloss')
-            elif model_type == 'lgb' and HAS_LGB:
+                    n_estimators=100,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    scale_pos_weight=spw,
+                    random_state=42,
+                    verbosity=0,
+                    use_label_encoder=False,
+                    eval_metric="logloss",
+                )
+            elif model_type == "lgb" and HAS_LGB:
                 model = lgb.LGBMClassifier(
-                    n_estimators=100, max_depth=4, learning_rate=0.05,
-                    subsample=0.8, colsample_bytree=0.8,
-                    scale_pos_weight=spw, random_state=42, verbosity=-1)
+                    n_estimators=100,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    scale_pos_weight=spw,
+                    random_state=42,
+                    verbosity=-1,
+                )
             else:
                 model = RandomForestClassifier(
-                    n_estimators=100, max_depth=6,
-                    class_weight='balanced', random_state=42, n_jobs=-1)
+                    n_estimators=100,
+                    max_depth=6,
+                    class_weight="balanced",
+                    random_state=42,
+                    n_jobs=-1,
+                )
 
             model.fit(X_train_s, y_train)
 
@@ -230,7 +271,7 @@ def ml_filtered_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
             gc.collect()
 
         except Exception:
-            for j in range(i, min(i+test_bars, n)):
+            for j in range(i, min(i + test_bars, n)):
                 if rule_signals[j]:
                     signals[j] = 1
 
@@ -239,15 +280,24 @@ def ml_filtered_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
     return signals
 
 
-def pure_ml_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
-                      forward_bars=24, threshold=0.005, prob_threshold=0.55):
+def pure_ml_signals(
+    df,
+    model_type="xgb",
+    train_bars=4320,
+    test_bars=720,
+    forward_bars=24,
+    threshold=0.005,
+    prob_threshold=0.55,
+):
     """Pure ML signals (no rule-based filter)."""
-    close = df['close'].astype(float)
+    close = df["close"].astype(float)
     X, _ = build_features_array(df)
     n = len(df)
 
     fwd_ret = np.full(n, np.nan)
-    fwd_ret[:n-forward_bars] = close.values[forward_bars:] / close.values[:n-forward_bars] - 1
+    fwd_ret[: n - forward_bars] = (
+        close.values[forward_bars:] / close.values[: n - forward_bars] - 1
+    )
     labels = (fwd_ret > threshold).astype(int)
 
     signals = np.zeros(n)
@@ -256,7 +306,7 @@ def pure_ml_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
     while i + test_bars <= n:
         train_mask = np.all(np.isfinite(X[:i]), axis=1) & np.isfinite(fwd_ret[:i])
         train_mask[:200] = False
-        train_mask[max(0,i-forward_bars):i] = False
+        train_mask[max(0, i - forward_bars) : i] = False
         train_idx = np.where(train_mask)[0]
 
         if len(train_idx) < 500:
@@ -277,21 +327,38 @@ def pure_ml_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
         spw = neg / pos
 
         try:
-            if model_type == 'xgb' and HAS_XGB:
+            if model_type == "xgb" and HAS_XGB:
                 model = xgb.XGBClassifier(
-                    n_estimators=100, max_depth=4, learning_rate=0.05,
-                    subsample=0.8, colsample_bytree=0.8,
-                    scale_pos_weight=spw, random_state=42, verbosity=0,
-                    use_label_encoder=False, eval_metric='logloss')
-            elif model_type == 'lgb' and HAS_LGB:
+                    n_estimators=100,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    scale_pos_weight=spw,
+                    random_state=42,
+                    verbosity=0,
+                    use_label_encoder=False,
+                    eval_metric="logloss",
+                )
+            elif model_type == "lgb" and HAS_LGB:
                 model = lgb.LGBMClassifier(
-                    n_estimators=100, max_depth=4, learning_rate=0.05,
-                    subsample=0.8, colsample_bytree=0.8,
-                    scale_pos_weight=spw, random_state=42, verbosity=-1)
+                    n_estimators=100,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    scale_pos_weight=spw,
+                    random_state=42,
+                    verbosity=-1,
+                )
             else:
                 model = RandomForestClassifier(
-                    n_estimators=100, max_depth=6,
-                    class_weight='balanced', random_state=42, n_jobs=-1)
+                    n_estimators=100,
+                    max_depth=6,
+                    class_weight="balanced",
+                    random_state=42,
+                    n_jobs=-1,
+                )
 
             model.fit(X_train_s, y_train)
 
@@ -316,17 +383,24 @@ def pure_ml_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
     return signals
 
 
-def simulate(df, signals, position_pct=0.02, max_bars=72,
-             atr_stop=3.0, profit_target_atr=8.0, slippage=0.0003):
+def simulate(
+    df,
+    signals,
+    position_pct=0.02,
+    max_bars=72,
+    atr_stop=3.0,
+    profit_target_atr=8.0,
+    slippage=0.0003,
+):
     capital = 1.0
     position = 0
     entry_price = 0
     bars_held = 0
     trades = []
 
-    close = df['close'].values
-    high = df['high'].values
-    low = df['low'].values
+    close = df["close"].values
+    high = df["high"].values
+    low = df["low"].values
     atr_vals = calc_atr(high, low, close, 14)
 
     for i in range(len(df)):
@@ -372,29 +446,35 @@ def simulate(df, signals, position_pct=0.02, max_bars=72,
     gp = sum(t for t in trades if t > 0)
     gl = abs(sum(t for t in trades if t < 0))
     return {
-        'total_return': capital - 1,
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(trades),
-        'trades': trades,
+        "total_return": capital - 1,
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(trades),
+        "trades": trades,
     }
 
 
 def check_criteria(r):
     c = {
-        'sharpe_gt_1': r.get('sharpe', 0) > 1.0,
-        'max_dd_lt_25': r.get('max_drawdown', -1) > -0.25,
-        'win_rate_gt_45': r.get('win_rate', 0) > 0.45,
-        'profit_factor_gt_1_5': r.get('profit_factor', 0) > 1.5,
-        'wfa_efficiency_gt_50': r.get('wfa_efficiency', 0) > 50,
-        'trade_count_gt_100': r.get('trade_count', 0) > 100,
+        "sharpe_gt_1": r.get("sharpe", 0) > 1.0,
+        "max_dd_lt_25": r.get("max_drawdown", -1) > -0.25,
+        "win_rate_gt_45": r.get("win_rate", 0) > 0.45,
+        "profit_factor_gt_1_5": r.get("profit_factor", 0) > 1.5,
+        "wfa_efficiency_gt_50": r.get("wfa_efficiency", 0) > 50,
+        "trade_count_gt_100": r.get("trade_count", 0) > 100,
     }
     return c, sum(v for v in c.values())
 
 
-def run_portfolio(all_data, signal_func, signal_kwargs, max_positions=10,
-                   test_bars=720, position_scale=5.0):
-    exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+def run_portfolio(
+    all_data,
+    signal_func,
+    signal_kwargs,
+    max_positions=10,
+    test_bars=720,
+    position_scale=5.0,
+):
+    exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     oos_data = {}
     for symbol in all_data:
@@ -433,7 +513,7 @@ def run_portfolio(all_data, signal_func, signal_kwargs, max_positions=10,
         for symbol, df in oos_data.items():
             if len(df) <= i:
                 continue
-            vol = df['close'].iloc[:i].pct_change().rolling(168).std().iloc[-1]
+            vol = df["close"].iloc[:i].pct_change().rolling(168).std().iloc[-1]
             if np.isnan(vol) or vol == 0:
                 vol = 0.01
             scored.append((symbol, vol))
@@ -444,16 +524,22 @@ def run_portfolio(all_data, signal_func, signal_kwargs, max_positions=10,
             df = oos_data[symbol]
             if i + test_bars > len(df):
                 continue
-            test_sigs = symbol_signals[symbol][i:i + test_bars]
-            test_df = df.iloc[i:i + test_bars].reset_index(drop=True)
+            test_sigs = symbol_signals[symbol][i : i + test_bars]
+            test_df = df.iloc[i : i + test_bars].reset_index(drop=True)
             ann_vol = vol * np.sqrt(24 * 365)
             position_pct = min(0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05)
             position_pct *= position_scale
-            r = simulate(test_df, test_sigs, position_pct,
-                       exit_params['max_bars'], exit_params['atr_stop'],
-                       exit_params['profit_target_atr'], 0.0003)
-            period_pnl += r['total_return']
-            all_trades.extend(r['trades'])
+            r = simulate(
+                test_df,
+                test_sigs,
+                position_pct,
+                exit_params["max_bars"],
+                exit_params["atr_stop"],
+                exit_params["profit_target_atr"],
+                0.0003,
+            )
+            period_pnl += r["total_return"]
+            all_trades.extend(r["trades"])
 
         period_returns.append(period_pnl)
         equity.append(equity[-1] * (1 + period_pnl))
@@ -472,14 +558,16 @@ def run_portfolio(all_data, signal_func, signal_kwargs, max_positions=10,
     sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
 
     return {
-        'total_return': float(eq[-1] - 1),
-        'max_drawdown': float(dd.min()),
-        'sharpe': float(sharpe),
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(all_trades),
-        'periods': len(period_returns),
-        'wfa_efficiency': sum(1 for r in period_returns if r > 0) / len(period_returns) * 100,
+        "total_return": float(eq[-1] - 1),
+        "max_drawdown": float(dd.min()),
+        "sharpe": float(sharpe),
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(all_trades),
+        "periods": len(period_returns),
+        "wfa_efficiency": sum(1 for r in period_returns if r > 0)
+        / len(period_returns)
+        * 100,
     }
 
 
@@ -508,33 +596,38 @@ def main():
     print("=" * 60)
 
     configs = [
-        ('C_xgb_p045', 'xgb', 0.45),
-        ('C_xgb_p050', 'xgb', 0.50),
-        ('C_xgb_p055', 'xgb', 0.55),
-        ('C_lgb_p045', 'lgb', 0.45),
-        ('C_lgb_p050', 'lgb', 0.50),
-        ('C_lgb_p055', 'lgb', 0.55),
-        ('C_rf_p045', 'rf', 0.45),
-        ('C_rf_p050', 'rf', 0.50),
+        ("C_xgb_p045", "xgb", 0.45),
+        ("C_xgb_p050", "xgb", 0.50),
+        ("C_xgb_p055", "xgb", 0.55),
+        ("C_lgb_p045", "lgb", 0.45),
+        ("C_lgb_p050", "lgb", 0.50),
+        ("C_lgb_p055", "lgb", 0.55),
+        ("C_rf_p045", "rf", 0.45),
+        ("C_rf_p050", "rf", 0.50),
     ]
 
     for name, model_type, prob_thresh in configs:
-        if model_type == 'xgb' and not HAS_XGB:
+        if model_type == "xgb" and not HAS_XGB:
             continue
-        if model_type == 'lgb' and not HAS_LGB:
+        if model_type == "lgb" and not HAS_LGB:
             continue
 
         print(f"\n  {name}:")
-        r = run_portfolio(all_data, ml_filtered_signals,
-                          {'model_type': model_type, 'prob_threshold': prob_thresh},
-                          position_scale=5.0)
+        r = run_portfolio(
+            all_data,
+            ml_filtered_signals,
+            {"model_type": model_type, "prob_threshold": prob_thresh},
+            position_scale=5.0,
+        )
         if r:
             c, p = check_criteria(r)
             all_results.append((name, p, r))
             fails = [k for k, v in c.items() if not v]
-            print(f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                  f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-                  f"PF={r['profit_factor']:.2f} T={r['trade_count']}")
+            print(
+                f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+                f"PF={r['profit_factor']:.2f} T={r['trade_count']}"
+            )
             if fails:
                 print(f"    FAILS: {', '.join(fails)}")
         gc.collect()
@@ -548,25 +641,34 @@ def main():
 
     if HAS_XGB:
         label_configs = [
-            ('D_fwd12_thr003', 12, 0.003, 0.55),
-            ('D_fwd48_thr010', 48, 0.010, 0.55),
-            ('D_fwd24_thr002', 24, 0.002, 0.55),
-            ('D_fwd24_thr010', 24, 0.010, 0.55),
+            ("D_fwd12_thr003", 12, 0.003, 0.55),
+            ("D_fwd48_thr010", 48, 0.010, 0.55),
+            ("D_fwd24_thr002", 24, 0.002, 0.55),
+            ("D_fwd24_thr010", 24, 0.010, 0.55),
         ]
 
         for name, fwd, thr, prob in label_configs:
             print(f"\n  {name} (fwd={fwd}h, thr={thr*100:.1f}%):")
-            r = run_portfolio(all_data, pure_ml_signals,
-                              {'model_type': 'xgb', 'forward_bars': fwd,
-                               'threshold': thr, 'prob_threshold': prob},
-                              position_scale=5.0)
+            r = run_portfolio(
+                all_data,
+                pure_ml_signals,
+                {
+                    "model_type": "xgb",
+                    "forward_bars": fwd,
+                    "threshold": thr,
+                    "prob_threshold": prob,
+                },
+                position_scale=5.0,
+            )
             if r:
                 c, p = check_criteria(r)
                 all_results.append((name, p, r))
                 fails = [k for k, v in c.items() if not v]
-                print(f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                      f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-                      f"PF={r['profit_factor']:.2f} T={r['trade_count']}")
+                print(
+                    f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                    f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+                    f"PF={r['profit_factor']:.2f} T={r['trade_count']}"
+                )
                 if fails:
                     print(f"    FAILS: {', '.join(fails)}")
             gc.collect()
@@ -577,23 +679,32 @@ def main():
         print("=" * 60)
 
         alt_configs = [
-            ('E_xgb_filt_fwd12', 12, 0.003, 0.50),
-            ('E_xgb_filt_fwd48', 48, 0.010, 0.50),
+            ("E_xgb_filt_fwd12", 12, 0.003, 0.50),
+            ("E_xgb_filt_fwd48", 48, 0.010, 0.50),
         ]
 
         for name, fwd, thr, prob in alt_configs:
             print(f"\n  {name}:")
-            r = run_portfolio(all_data, ml_filtered_signals,
-                              {'model_type': 'xgb', 'forward_bars': fwd,
-                               'threshold': thr, 'prob_threshold': prob},
-                              position_scale=5.0)
+            r = run_portfolio(
+                all_data,
+                ml_filtered_signals,
+                {
+                    "model_type": "xgb",
+                    "forward_bars": fwd,
+                    "threshold": thr,
+                    "prob_threshold": prob,
+                },
+                position_scale=5.0,
+            )
             if r:
                 c, p = check_criteria(r)
                 all_results.append((name, p, r))
                 fails = [k for k, v in c.items() if not v]
-                print(f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                      f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-                      f"PF={r['profit_factor']:.2f} T={r['trade_count']}")
+                print(
+                    f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                    f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+                    f"PF={r['profit_factor']:.2f} T={r['trade_count']}"
+                )
                 if fails:
                     print(f"    FAILS: {', '.join(fails)}")
             gc.collect()
@@ -601,7 +712,7 @@ def main():
     # -----------------------------------------------------------------
     # FINAL
     # -----------------------------------------------------------------
-    all_results.sort(key=lambda x: (-x[1], -x[2].get('sharpe', 0)))
+    all_results.sort(key=lambda x: (-x[1], -x[2].get("sharpe", 0)))
 
     print(f"\n\n{'=' * 70}")
     print("FINAL RANKING - ALL ML STRATEGIES (Phase 16a + 16b)")
@@ -616,40 +727,51 @@ def main():
         fails = [k for k, v in c.items() if not v]
         fail_str = f"  FAILS: {', '.join(fails)}" if fails else ""
         print(f"  {i+1}. [{passed}/6] {name}")
-        print(f"     Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
-              f"DD={r['max_drawdown']*100:.1f}%  WR={r['win_rate']*100:.0f}%  "
-              f"PF={r['profit_factor']:.2f}  WFA={r['wfa_efficiency']:.0f}%  T={r['trade_count']}{fail_str}")
+        print(
+            f"     Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
+            f"DD={r['max_drawdown']*100:.1f}%  WR={r['win_rate']*100:.0f}%  "
+            f"PF={r['profit_factor']:.2f}  WFA={r['wfa_efficiency']:.0f}%  T={r['trade_count']}{fail_str}"
+        )
 
     six_six = [(n, r) for n, p, r in all_results if p == 6]
     if six_six:
         print(f"\n*** {len(six_six)} ML configs passed 6/6! ***")
         for name, r in six_six:
-            print(f"  {name}: Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}%")
-        best = max(six_six, key=lambda x: x[1]['sharpe'])
-        if best[1]['sharpe'] > 2.52:
-            print(f"\n  → ML BEATS Vol Profile baseline (Sharpe {best[1]['sharpe']:.2f} > 2.52)!")
+            print(
+                f"  {name}: Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}%"
+            )
+        best = max(six_six, key=lambda x: x[1]["sharpe"])
+        if best[1]["sharpe"] > 2.52:
+            print(
+                f"\n  → ML BEATS Vol Profile baseline (Sharpe {best[1]['sharpe']:.2f} > 2.52)!"
+            )
         else:
             print(f"\n  → Vol Profile baseline still better (Sharpe 2.52)")
     else:
-        print(f"\n*** No ML config passed 6/6. Vol Profile (Sharpe=2.52) remains best. ***")
+        print(
+            f"\n*** No ML config passed 6/6. Vol Profile (Sharpe=2.52) remains best. ***"
+        )
 
     save_data = {
-        'timestamp': datetime.now().isoformat(),
-        'total_tested': len(all_results),
-        'six_six_count': len(six_six) if six_six else 0,
-        'results': [
-            {'name': n, 'passed': int(p),
-             'sharpe': float(r.get('sharpe', 0)),
-             'return': float(r.get('total_return', 0)),
-             'max_dd': float(r.get('max_drawdown', 0)),
-             'win_rate': float(r.get('win_rate', 0)),
-             'pf': float(r.get('profit_factor', 0)),
-             'trades': int(r.get('trade_count', 0))}
+        "timestamp": datetime.now().isoformat(),
+        "total_tested": len(all_results),
+        "six_six_count": len(six_six) if six_six else 0,
+        "results": [
+            {
+                "name": n,
+                "passed": int(p),
+                "sharpe": float(r.get("sharpe", 0)),
+                "return": float(r.get("total_return", 0)),
+                "max_dd": float(r.get("max_drawdown", 0)),
+                "win_rate": float(r.get("win_rate", 0)),
+                "pf": float(r.get("profit_factor", 0)),
+                "trades": int(r.get("trade_count", 0)),
+            }
             for n, p, r in all_results
         ],
-        'phase16a_summary': 'All pure ML failed (1-3/6). XGB/LGB/RF/LR/Ensemble tested.',
+        "phase16a_summary": "All pure ML failed (1-3/6). XGB/LGB/RF/LR/Ensemble tested.",
     }
-    with open(RESULTS_PATH / "phase16b_ml_report.json", 'w') as f:
+    with open(RESULTS_PATH / "phase16b_ml_report.json", "w") as f:
         json.dump(save_data, f, indent=2, default=str)
 
     print(f"\nSaved to {RESULTS_PATH / 'phase16b_ml_report.json'}")

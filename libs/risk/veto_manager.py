@@ -168,9 +168,7 @@ class VetoManager:
         )
         return result
 
-    def _check_market_structure(
-        self, ohlcv: pd.DataFrame, side: str
-    ) -> VetoResult:
+    def _check_market_structure(self, ohlcv: pd.DataFrame, side: str) -> VetoResult:
         """Check market structure conditions (ADX, CI)."""
         high = ohlcv["high"].values
         low = ohlcv["low"].values
@@ -207,9 +205,7 @@ class VetoManager:
             details={"adx": current_adx, "ci": current_ci},
         )
 
-    def _check_on_chain(
-        self, inflow_data: pd.Series, side: str
-    ) -> VetoResult:
+    def _check_on_chain(self, inflow_data: pd.Series, side: str) -> VetoResult:
         """Check on-chain conditions (exchange inflow)."""
         if len(inflow_data) < self.config.inflow_lookback:
             return VetoResult(can_trade=True, reason="Insufficient inflow data")
@@ -231,7 +227,10 @@ class VetoManager:
                 can_trade=False,
                 veto_level=VetoLevel.ON_CHAIN,
                 reason=f"Inflow Z={zscore:.2f} > {self.config.inflow_zscore_threshold} (sell pressure)",
-                details={"zscore": zscore, "threshold": self.config.inflow_zscore_threshold},
+                details={
+                    "zscore": zscore,
+                    "threshold": self.config.inflow_zscore_threshold,
+                },
             )
 
         # Low inflow Z-score = accumulation (bad for shorts)
@@ -240,7 +239,10 @@ class VetoManager:
                 can_trade=False,
                 veto_level=VetoLevel.ON_CHAIN,
                 reason=f"Inflow Z={zscore:.2f} < -{self.config.inflow_zscore_threshold} (accumulation)",
-                details={"zscore": zscore, "threshold": -self.config.inflow_zscore_threshold},
+                details={
+                    "zscore": zscore,
+                    "threshold": -self.config.inflow_zscore_threshold,
+                },
             )
 
         return VetoResult(
@@ -372,9 +374,9 @@ def calculate_adx(
     plus_di = np.zeros(n)
     minus_di = np.zeros(n)
 
-    atr[period] = np.mean(tr[1:period + 1])
-    plus_di[period] = np.mean(plus_dm[1:period + 1])
-    minus_di[period] = np.mean(minus_dm[1:period + 1])
+    atr[period] = np.mean(tr[1 : period + 1])
+    plus_di[period] = np.mean(plus_dm[1 : period + 1])
+    minus_di[period] = np.mean(minus_dm[1 : period + 1])
 
     for i in range(period + 1, n):
         atr[i] = (atr[i - 1] * (period - 1) + tr[i]) / period
@@ -398,7 +400,7 @@ def calculate_adx(
 
     # ADX (smoothed DX)
     adx = np.full(n, np.nan)
-    adx[2 * period - 1] = np.mean(dx[period:2 * period])
+    adx[2 * period - 1] = np.mean(dx[period : 2 * period])
 
     for i in range(2 * period, n):
         adx[i] = (adx[i - 1] * (period - 1) + dx[i]) / period
@@ -450,9 +452,9 @@ def calculate_choppiness_index(
     log_period = np.log10(period)
 
     for i in range(period - 1, n):
-        tr_sum = np.sum(tr[i - period + 1:i + 1])
-        high_max = np.max(high[i - period + 1:i + 1])
-        low_min = np.min(low[i - period + 1:i + 1])
+        tr_sum = np.sum(tr[i - period + 1 : i + 1])
+        high_max = np.max(high[i - period + 1 : i + 1])
+        low_min = np.min(low[i - period + 1 : i + 1])
 
         range_val = high_max - low_min
         if range_val > 0 and tr_sum > 0:

@@ -1,4 +1,5 @@
 """Price refresh utilities with TTL cache."""
+
 from __future__ import annotations
 
 import time
@@ -11,6 +12,7 @@ import streamlit as st
 @dataclass
 class PriceCache:
     """Cached price data with timestamp."""
+
     prices: Dict[str, float]
     updated_at: float
 

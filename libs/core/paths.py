@@ -3,7 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 
 
-def find_repo_root(start: Path, marker: str = "pyproject.toml", max_up: int = 6) -> Path:
+def find_repo_root(
+    start: Path, marker: str = "pyproject.toml", max_up: int = 6
+) -> Path:
     """
     Find repository root by searching upward for a marker file (default: pyproject.toml).
 

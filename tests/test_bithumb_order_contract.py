@@ -14,19 +14,24 @@ class TestBithumbOrderContract:
     @pytest.fixture
     def mock_config(self):
         config = MagicMock()
-        config.bithumb_api_key.get_secret_value.return_value = "test_api_key_12345678901234567890"
-        config.bithumb_secret_key.get_secret_value.return_value = "test_secret_key_1234567890123456"
+        config.bithumb_api_key.get_secret_value.return_value = (
+            "test_api_key_12345678901234567890"
+        )
+        config.bithumb_secret_key.get_secret_value.return_value = (
+            "test_secret_key_1234567890123456"
+        )
         config.is_kill_switch_active.return_value = False
         config.max_order_value_krw = 1_000_000
         return config
 
     def test_buy_calls_api_v2_with_krw_price(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.post_order.return_value = {"uuid": "order_1"}
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
             adapter.get_current_price = MagicMock(return_value=50_000_000)
 
@@ -42,52 +47,57 @@ class TestBithumbOrderContract:
             assert "volume" not in call_kwargs
 
     def test_buy_rejects_ambiguous_inputs_both_none(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_api.return_value = MagicMock()
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             with pytest.raises(ValueError, match="BUY requires exactly one of"):
                 adapter.place_order("BTC/KRW", "BUY")
 
     def test_buy_rejects_ambiguous_inputs_both_set(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_api.return_value = MagicMock()
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             with pytest.raises(ValueError, match="not both"):
                 adapter.place_order("BTC/KRW", "BUY", units=0.01, amount_krw=50000)
 
     def test_sell_requires_units(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_api.return_value = MagicMock()
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             with pytest.raises(ValueError, match="SELL requires units"):
                 adapter.place_order("BTC/KRW", "SELL")
 
     def test_sell_rejects_amount_krw(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_api.return_value = MagicMock()
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             with pytest.raises(ValueError, match="SELL does not accept amount_krw"):
                 adapter.place_order("BTC/KRW", "SELL", units=0.01, amount_krw=50000)
 
     def test_sell_calls_api_v2_with_units(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.post_order.return_value = {"uuid": "order_2"}
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
             adapter.get_current_price = MagicMock(return_value=50_000_000)
 
@@ -101,11 +111,12 @@ class TestBithumbOrderContract:
             assert call_kwargs["volume"] == f"{test_units:.8f}"
 
     def test_minimum_order_value_check(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
             adapter.get_current_price = MagicMock(return_value=50_000_000)
 
@@ -119,11 +130,12 @@ class TestBithumbOrderContract:
     def test_kill_switch_blocks_order(self, mock_config):
         mock_config.is_kill_switch_active.return_value = True
 
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             result = adapter.place_order("BTC/KRW", "BUY", units=0.001)
@@ -139,19 +151,24 @@ class TestOrderIdTracking:
     @pytest.fixture
     def mock_config(self):
         config = MagicMock()
-        config.bithumb_api_key.get_secret_value.return_value = "test_api_key_12345678901234567890"
-        config.bithumb_secret_key.get_secret_value.return_value = "test_secret_key_1234567890123456"
+        config.bithumb_api_key.get_secret_value.return_value = (
+            "test_api_key_12345678901234567890"
+        )
+        config.bithumb_secret_key.get_secret_value.return_value = (
+            "test_secret_key_1234567890123456"
+        )
         config.is_kill_switch_active.return_value = False
         config.max_order_value_krw = 10_000_000
         return config
 
     def test_order_id_from_uuid_response(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.post_order.return_value = {"uuid": "order_12345"}
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
             adapter.get_current_price = MagicMock(return_value=50_000_000)
 
@@ -161,12 +178,13 @@ class TestOrderIdTracking:
             assert result.order_id != "BTC/KRW"
 
     def test_order_id_handles_none_response(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.post_order.return_value = None
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
             adapter.get_current_price = MagicMock(return_value=50_000_000)
 
@@ -181,14 +199,15 @@ class TestStrategyRunnerBithumbIntegration:
 
     def test_runner_calculates_quantity_correctly(self):
         import os
+
         os.environ["MASP_ENABLE_LIVE_TRADING"] = "0"
 
         from services.strategy_runner import StrategyRunner
 
         runner = StrategyRunner(
-            strategy_name='kama_tsmom_gate',
-            exchange='bithumb',
-            symbols=['BTC/KRW'],
+            strategy_name="kama_tsmom_gate",
+            exchange="bithumb",
+            symbols=["BTC/KRW"],
             position_size_krw=10000,
         )
 
@@ -200,7 +219,7 @@ class TestOHLCVDataSorting:
     """OHLCV sorting behavior."""
 
     def test_ohlcv_is_sorted_by_timestamp(self):
-        with patch('libs.adapters.real_bithumb_spot.pybithumb') as mock_pybithumb:
+        with patch("libs.adapters.real_bithumb_spot.pybithumb") as mock_pybithumb:
             import pandas as pd
             from datetime import datetime, timedelta
 
@@ -209,17 +228,21 @@ class TestOHLCVDataSorting:
                 datetime.now(),
                 datetime.now() - timedelta(days=1),
             ]
-            mock_df = pd.DataFrame({
-                'open': [100, 102, 101],
-                'high': [105, 107, 106],
-                'low': [95, 97, 96],
-                'close': [101, 103, 102],
-                'volume': [1000, 1200, 1100],
-            }, index=pd.DatetimeIndex(dates))
+            mock_df = pd.DataFrame(
+                {
+                    "open": [100, 102, 101],
+                    "high": [105, 107, 106],
+                    "low": [95, 97, 96],
+                    "close": [101, 103, 102],
+                    "volume": [1000, 1200, 1100],
+                },
+                index=pd.DatetimeIndex(dates),
+            )
 
             mock_pybithumb.get_ohlcv.return_value = mock_df
 
             from libs.adapters.real_bithumb_spot import BithumbSpotMarketData
+
             market_data = BithumbSpotMarketData()
 
             result = market_data.get_ohlcv("BTC/KRW", limit=3)
@@ -234,14 +257,18 @@ class TestOrderStatusTracking:
     @pytest.fixture
     def mock_config(self):
         config = MagicMock()
-        config.bithumb_api_key.get_secret_value.return_value = "test_api_key_12345678901234567890"
-        config.bithumb_secret_key.get_secret_value.return_value = "test_secret_key_1234567890123456"
+        config.bithumb_api_key.get_secret_value.return_value = (
+            "test_api_key_12345678901234567890"
+        )
+        config.bithumb_secret_key.get_secret_value.return_value = (
+            "test_secret_key_1234567890123456"
+        )
         config.is_kill_switch_active.return_value = False
         config.max_order_value_krw = 10_000_000
         return config
 
     def test_get_order_status_parses_response(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_order.return_value = {
                 "uuid": "order_123",
@@ -261,6 +288,7 @@ class TestOrderStatusTracking:
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             status = adapter.get_order_status("order_123")
@@ -273,12 +301,13 @@ class TestOrderStatusTracking:
             assert status.fill_ratio == 1.0
 
     def test_get_order_status_returns_none_on_error(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_order.side_effect = Exception("Network error")
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             status = adapter.get_order_status("order_123")
@@ -286,7 +315,7 @@ class TestOrderStatusTracking:
             assert status is None
 
     def test_order_status_properties(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_api.return_value = MagicMock()
 
             from libs.adapters.real_bithumb_execution import OrderStatus, OrderState
@@ -354,7 +383,7 @@ class TestOrderStatusTracking:
             assert canceled_status.fill_ratio == 0.0
 
     def test_get_open_orders(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_orders.return_value = [
                 {
@@ -387,6 +416,7 @@ class TestOrderStatusTracking:
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             orders = adapter.get_open_orders()
@@ -396,12 +426,13 @@ class TestOrderStatusTracking:
             assert orders[1].fill_ratio == 0.5
 
     def test_get_recent_orders_with_filter(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_orders.return_value = []
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             adapter.get_recent_orders(symbol="BTC/KRW", limit=10, states=["done"])
@@ -419,24 +450,39 @@ class TestPositionSync:
     @pytest.fixture
     def mock_config(self):
         config = MagicMock()
-        config.bithumb_api_key.get_secret_value.return_value = "test_api_key_12345678901234567890"
-        config.bithumb_secret_key.get_secret_value.return_value = "test_secret_key_1234567890123456"
+        config.bithumb_api_key.get_secret_value.return_value = (
+            "test_api_key_12345678901234567890"
+        )
+        config.bithumb_secret_key.get_secret_value.return_value = (
+            "test_secret_key_1234567890123456"
+        )
         config.is_kill_switch_active.return_value = False
         config.max_order_value_krw = 10_000_000
         return config
 
     def test_sync_positions_basic(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_accounts.return_value = [
                 {"currency": "KRW", "balance": "1000000", "locked": "0"},
-                {"currency": "BTC", "balance": "0.01", "locked": "0.001", "avg_buy_price": "50000000"},
-                {"currency": "ETH", "balance": "0.5", "locked": "0", "avg_buy_price": "3000000"},
+                {
+                    "currency": "BTC",
+                    "balance": "0.01",
+                    "locked": "0.001",
+                    "avg_buy_price": "50000000",
+                },
+                {
+                    "currency": "ETH",
+                    "balance": "0.5",
+                    "locked": "0",
+                    "avg_buy_price": "3000000",
+                },
                 {"currency": "DOGE", "balance": "0.000001", "locked": "0"},  # Too small
             ]
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             positions = adapter.sync_positions()
@@ -451,15 +497,26 @@ class TestPositionSync:
             assert positions["BTC/KRW"]["avg_buy_price"] == 50000000
 
     def test_sync_positions_with_filter(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_accounts.return_value = [
-                {"currency": "BTC", "balance": "0.01", "locked": "0", "avg_buy_price": "50000000"},
-                {"currency": "ETH", "balance": "0.5", "locked": "0", "avg_buy_price": "3000000"},
+                {
+                    "currency": "BTC",
+                    "balance": "0.01",
+                    "locked": "0",
+                    "avg_buy_price": "50000000",
+                },
+                {
+                    "currency": "ETH",
+                    "balance": "0.5",
+                    "locked": "0",
+                    "avg_buy_price": "3000000",
+                },
             ]
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             positions = adapter.sync_positions(["BTC/KRW"])
@@ -469,14 +526,20 @@ class TestPositionSync:
             assert "ETH/KRW" not in positions
 
     def test_get_position_single(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_accounts.return_value = [
-                {"currency": "BTC", "balance": "0.05", "locked": "0", "avg_buy_price": "45000000"},
+                {
+                    "currency": "BTC",
+                    "balance": "0.05",
+                    "locked": "0",
+                    "avg_buy_price": "45000000",
+                },
             ]
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             position = adapter.get_position("BTC/KRW")
@@ -486,15 +549,21 @@ class TestPositionSync:
             assert position["avg_buy_price"] == 45000000
 
     def test_get_position_value(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_accounts.return_value = [
-                {"currency": "BTC", "balance": "0.1", "locked": "0", "avg_buy_price": "50000000"},
+                {
+                    "currency": "BTC",
+                    "balance": "0.1",
+                    "locked": "0",
+                    "avg_buy_price": "50000000",
+                },
             ]
             mock_instance.get_ticker.return_value = [{"trade_price": 55000000}]
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             value = adapter.get_position_value("BTC/KRW")
@@ -502,15 +571,21 @@ class TestPositionSync:
             assert value == 5500000  # 0.1 * 55,000,000
 
     def test_get_pnl_calculation(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_accounts.return_value = [
-                {"currency": "BTC", "balance": "0.1", "locked": "0", "avg_buy_price": "50000000"},
+                {
+                    "currency": "BTC",
+                    "balance": "0.1",
+                    "locked": "0",
+                    "avg_buy_price": "50000000",
+                },
             ]
             mock_instance.get_ticker.return_value = [{"trade_price": 55000000}]
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             pnl = adapter.get_pnl("BTC/KRW")
@@ -525,16 +600,22 @@ class TestPositionSync:
             assert abs(pnl["unrealized_pnl_pct"] - 10.0) < 0.01  # +10%
 
     def test_get_total_portfolio_value(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_accounts.return_value = [
                 {"currency": "KRW", "balance": "1000000", "locked": "0"},
-                {"currency": "BTC", "balance": "0.1", "locked": "0", "avg_buy_price": "50000000"},
+                {
+                    "currency": "BTC",
+                    "balance": "0.1",
+                    "locked": "0",
+                    "avg_buy_price": "50000000",
+                },
             ]
             mock_instance.get_ticker.return_value = [{"trade_price": 55000000}]
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             portfolio = adapter.get_total_portfolio_value()
@@ -551,17 +632,22 @@ class TestRetryAndRecovery:
     @pytest.fixture
     def mock_config(self):
         config = MagicMock()
-        config.bithumb_api_key.get_secret_value.return_value = "test_api_key_12345678901234567890"
-        config.bithumb_secret_key.get_secret_value.return_value = "test_secret_key_1234567890123456"
+        config.bithumb_api_key.get_secret_value.return_value = (
+            "test_api_key_12345678901234567890"
+        )
+        config.bithumb_secret_key.get_secret_value.return_value = (
+            "test_secret_key_1234567890123456"
+        )
         config.is_kill_switch_active.return_value = False
         config.max_order_value_krw = 10_000_000
         return config
 
     def test_retry_operation_succeeds_after_failures(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_api.return_value = MagicMock()
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             # Operation that fails twice then succeeds
@@ -585,10 +671,11 @@ class TestRetryAndRecovery:
             assert call_count == 3
 
     def test_retry_operation_raises_after_max_retries(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_api.return_value = MagicMock()
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             def always_fails():
@@ -603,10 +690,11 @@ class TestRetryAndRecovery:
                 )
 
     def test_retry_operation_non_retryable_exception(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_api.return_value = MagicMock()
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             def value_error():
@@ -622,7 +710,7 @@ class TestRetryAndRecovery:
                 )
 
     def test_calculate_backoff_with_jitter(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_api.return_value = MagicMock()
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
@@ -638,7 +726,7 @@ class TestRetryAndRecovery:
             assert 3.2 <= delay_2 <= 4.8
 
     def test_safe_cancel_order_already_filled(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_order.return_value = {
                 "uuid": "order_123",
@@ -656,6 +744,7 @@ class TestRetryAndRecovery:
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             # Should return False since order is already filled
@@ -665,7 +754,7 @@ class TestRetryAndRecovery:
             mock_instance.cancel_order.assert_not_called()
 
     def test_safe_cancel_order_already_canceled(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_order.return_value = {
                 "uuid": "order_123",
@@ -683,6 +772,7 @@ class TestRetryAndRecovery:
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             result = adapter.safe_cancel_order("order_123")
@@ -691,7 +781,7 @@ class TestRetryAndRecovery:
             mock_instance.cancel_order.assert_not_called()
 
     def test_recover_from_connection_error(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_accounts.return_value = [
                 {"currency": "KRW", "balance": "1000000"}
@@ -699,6 +789,7 @@ class TestRetryAndRecovery:
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             error = ConnectionError("Network error")
@@ -710,7 +801,7 @@ class TestRetryAndRecovery:
             assert result["action"] == "connection_restored"
 
     def test_recover_from_error_with_order_id(self, mock_config):
-        with patch('libs.adapters.real_bithumb_execution.BithumbAPIV2') as mock_api:
+        with patch("libs.adapters.real_bithumb_execution.BithumbAPIV2") as mock_api:
             mock_instance = MagicMock()
             mock_instance.get_order.return_value = {
                 "uuid": "order_123",
@@ -728,6 +819,7 @@ class TestRetryAndRecovery:
             mock_api.return_value = mock_instance
 
             from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
+
             adapter = BithumbExecutionAdapter(mock_config)
 
             error = ValueError("Some error")
@@ -751,7 +843,9 @@ class TestBithumbAPIV2Orders:
         mock_response.raise_for_status = MagicMock()
         session.get.return_value = mock_response
 
-        client = BithumbAPIV2("access_key_12345678", "secret_key_12345678", session=session)
+        client = BithumbAPIV2(
+            "access_key_12345678", "secret_key_12345678", session=session
+        )
         result = client.get_orders(market="KRW-BTC", states=["wait", "watch"])
 
         assert result == []
@@ -769,7 +863,9 @@ class TestBithumbAPIV2Orders:
         mock_response.raise_for_status = MagicMock()
         session.get.return_value = mock_response
 
-        client = BithumbAPIV2("access_key_12345678", "secret_key_12345678", session=session)
+        client = BithumbAPIV2(
+            "access_key_12345678", "secret_key_12345678", session=session
+        )
         result = client.get_orders_chance("KRW-BTC")
 
         assert result["bid_fee"] == "0.0025"

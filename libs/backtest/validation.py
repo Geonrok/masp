@@ -114,7 +114,9 @@ class WalkForwardOptimizer:
             train_start = all_dates[start_idx]
             train_end = all_dates[start_idx + train_days - 1]
             test_start = all_dates[start_idx + train_days]
-            test_end_idx = min(start_idx + train_days + test_days - 1, len(all_dates) - 1)
+            test_end_idx = min(
+                start_idx + train_days + test_days - 1, len(all_dates) - 1
+            )
             test_end = all_dates[test_end_idx]
 
             # Filter data for train period
@@ -137,16 +139,18 @@ class WalkForwardOptimizer:
             oos_returns = strategy_func(test_data, best_params)
             oos_return = float(np.sum(oos_returns)) if len(oos_returns) > 0 else 0
 
-            result.periods.append({
-                "period": period_num,
-                "train_start": train_start,
-                "train_end": train_end,
-                "test_start": test_start,
-                "test_end": test_end,
-                "is_return": is_return,
-                "oos_return": oos_return,
-                "params": best_params,
-            })
+            result.periods.append(
+                {
+                    "period": period_num,
+                    "train_start": train_start,
+                    "train_end": train_end,
+                    "test_start": test_start,
+                    "test_end": test_end,
+                    "is_return": is_return,
+                    "oos_return": oos_return,
+                    "params": best_params,
+                }
+            )
 
             result.is_returns.append(is_return)
             result.oos_returns.append(oos_return)
@@ -160,7 +164,9 @@ class WalkForwardOptimizer:
             is_arr = np.array(result.is_returns)
 
             if np.std(oos_arr) > 0:
-                result.oos_sharpe = np.mean(oos_arr) / np.std(oos_arr) * np.sqrt(4)  # Quarterly
+                result.oos_sharpe = (
+                    np.mean(oos_arr) / np.std(oos_arr) * np.sqrt(4)
+                )  # Quarterly
 
             if np.std(is_arr) > 0:
                 result.is_sharpe = np.mean(is_arr) / np.std(is_arr) * np.sqrt(4)
@@ -330,13 +336,15 @@ class CPCVValidator:
                     fold_returns.append(fold_return)
                     fold_sharpes.append(fold_sharpe)
 
-                    result.fold_results.append({
-                        "fold": test_fold,
-                        "test_start": test_dates[0],
-                        "test_end": test_dates[-1],
-                        "return": fold_return,
-                        "sharpe": fold_sharpe,
-                    })
+                    result.fold_results.append(
+                        {
+                            "fold": test_fold,
+                            "test_start": test_dates[0],
+                            "test_end": test_dates[-1],
+                            "return": fold_return,
+                            "sharpe": fold_sharpe,
+                        }
+                    )
             except Exception as e:
                 logger.debug("[CPCV] Fold %d failed: %s", test_fold, e)
                 continue
@@ -506,9 +514,7 @@ class DeflatedSharpeRatio:
 
         # Haircut percentage
         haircut_pct = (
-            (raw_sharpe - deflated_sharpe) / raw_sharpe * 100
-            if raw_sharpe != 0
-            else 0
+            (raw_sharpe - deflated_sharpe) / raw_sharpe * 100 if raw_sharpe != 0 else 0
         )
 
         result = DSRResult(
@@ -595,7 +601,9 @@ def validate_strategy(
 
     # Deflated Sharpe Ratio
     # Combine all OOS returns for DSR calculation
-    all_returns = np.array(wfo_result.oos_returns) if wfo_result.oos_returns else np.array([])
+    all_returns = (
+        np.array(wfo_result.oos_returns) if wfo_result.oos_returns else np.array([])
+    )
 
     if len(all_returns) >= 4:  # Need minimum samples
         dsr = DeflatedSharpeRatio()

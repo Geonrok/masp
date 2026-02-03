@@ -306,7 +306,9 @@ def validate_order_params(
 
     # Validate symbol format
     if "/" not in symbol and "_" not in symbol:
-        logger.warning("Symbol '%s' doesn't contain separator. May need normalization.", symbol)
+        logger.warning(
+            "Symbol '%s' doesn't contain separator. May need normalization.", symbol
+        )
 
     return {
         "symbol": symbol,
@@ -417,9 +419,7 @@ class KillSwitchMixin:
             RuntimeError: If kill switch is active
         """
         if self._is_kill_switch_active():
-            raise RuntimeError(
-                f"Kill switch is active. Cannot execute {operation}."
-            )
+            raise RuntimeError(f"Kill switch is active. Cannot execute {operation}.")
 
 
 class OrderValidationMixin:

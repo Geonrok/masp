@@ -1,4 +1,5 @@
 """Notification services for MASP."""
+
 from libs.notifications.telegram import (
     TelegramNotifier,
     format_trade_message,

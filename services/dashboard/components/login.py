@@ -1,4 +1,5 @@
 """Login component for MASP dashboard."""
+
 from __future__ import annotations
 
 import hmac

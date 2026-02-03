@@ -386,8 +386,7 @@ class FilteredStrategy(StrategyWrapper):
 
         if not symbols:
             return [
-                Decision(s, Action.SKIP, notes="Filtered out")
-                for s in context.symbols
+                Decision(s, Action.SKIP, notes="Filtered out") for s in context.symbols
             ]
 
         # Execute with filtered symbols
@@ -432,11 +431,13 @@ class CooldownStrategy(StrategyWrapper):
                 last_trade = self._last_trade.get(decision.symbol)
                 if last_trade and (now - last_trade) < self.cooldown:
                     remaining = self.cooldown - (now - last_trade)
-                    filtered.append(Decision(
-                        symbol=decision.symbol,
-                        action=Action.HOLD,
-                        notes=f"Cooldown: {remaining.seconds}s remaining",
-                    ))
+                    filtered.append(
+                        Decision(
+                            symbol=decision.symbol,
+                            action=Action.HOLD,
+                            notes=f"Cooldown: {remaining.seconds}s remaining",
+                        )
+                    )
                     continue
 
                 # Record trade time
@@ -452,9 +453,7 @@ class LoggingStrategy(StrategyWrapper):
 
     def execute(self, context: StrategyContext) -> List[Decision]:
         """Execute with logging."""
-        logger.info(
-            f"[{self.name}] Executing for {len(context.symbols)} symbols"
-        )
+        logger.info(f"[{self.name}] Executing for {len(context.symbols)} symbols")
 
         start = datetime.now()
         decisions = self._strategy.execute(context)

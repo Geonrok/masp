@@ -24,7 +24,9 @@ from libs.risk.veto_manager import (
 )
 
 
-def create_mock_ohlcv(n_days: int = 100, trend: str = "up", seed: int = 42) -> pd.DataFrame:
+def create_mock_ohlcv(
+    n_days: int = 100, trend: str = "up", seed: int = 42
+) -> pd.DataFrame:
     """Create mock OHLCV data."""
     np.random.seed(seed)
 
@@ -38,13 +40,15 @@ def create_mock_ohlcv(n_days: int = 100, trend: str = "up", seed: int = 42) -> p
     returns = np.random.randn(n_days) * 0.02 + drift
     close = 100 * np.cumprod(1 + returns)
 
-    df = pd.DataFrame({
-        "open": close * (1 + np.random.randn(n_days) * 0.005),
-        "high": close * (1 + np.abs(np.random.randn(n_days) * 0.01)),
-        "low": close * (1 - np.abs(np.random.randn(n_days) * 0.01)),
-        "close": close,
-        "volume": np.random.uniform(1e6, 1e7, n_days),
-    })
+    df = pd.DataFrame(
+        {
+            "open": close * (1 + np.random.randn(n_days) * 0.005),
+            "high": close * (1 + np.abs(np.random.randn(n_days) * 0.01)),
+            "low": close * (1 - np.abs(np.random.randn(n_days) * 0.01)),
+            "close": close,
+            "volume": np.random.uniform(1e6, 1e7, n_days),
+        }
+    )
 
     return df
 

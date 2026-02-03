@@ -1,6 +1,7 @@
 """
 KAMA-TSMOM-Gate strategy tests.
 """
+
 import os
 import sys
 
@@ -28,9 +29,7 @@ def main() -> bool:
 
     ks = KAMA_series(prices, 5)
     assert abs(kama5 - float(ks[-1])) < 1e-9, f"KAMA mismatch: {kama5} vs {ks[-1]}"
-    print(
-        f"  KAMA consistency: KAMA()={kama5:.6f} == KAMA_series()[-1]={ks[-1]:.6f} ✓"
-    )
+    print(f"  KAMA consistency: KAMA()={kama5:.6f} == KAMA_series()[-1]={ks[-1]:.6f} ✓")
 
     long_prices = list(range(100, 200))
     tsmom = TSMOM(long_prices, 90)

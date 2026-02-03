@@ -14,6 +14,7 @@ Data sources (E:/data/crypto_ohlcv):
 - Funding Rate (2023-2025)
 - VIX
 """
+
 from __future__ import annotations
 
 import argparse
@@ -43,6 +44,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BacktestConfig:
     """Backtest configuration."""
+
     initial_capital: float = 10000.0
     start_date: str = "2020-01-01"
     end_date: Optional[str] = None
@@ -60,6 +62,7 @@ class BacktestConfig:
 @dataclass
 class AlternativeData:
     """Alternative data for enhanced signals."""
+
     fear_greed: Optional[pd.DataFrame] = None
     funding_rate: Dict[str, pd.DataFrame] = field(default_factory=dict)
     vix: Optional[pd.DataFrame] = None
@@ -112,7 +115,9 @@ class LocalDataLoader:
             df = pd.read_csv(file_path, parse_dates=["timestamp"])
             df = df.set_index("timestamp")
             df = df.rename(columns={"close": "value"})
-            logger.info(f"Loaded Fear & Greed: {len(df)} records ({df.index[0]} to {df.index[-1]})")
+            logger.info(
+                f"Loaded Fear & Greed: {len(df)} records ({df.index[0]} to {df.index[-1]})"
+            )
             return df
 
         logger.warning("Fear & Greed data not found")
@@ -171,10 +176,10 @@ class HybridStrategy:
         self.adx_range_threshold = 20  # Below = RANGE regime
 
         # Fear & Greed thresholds (only trade at extremes)
-        self.fg_extreme_fear = 25    # Contrarian buy signal
-        self.fg_extreme_greed = 75   # Contrarian sell signal
-        self.fg_no_trade_low = 35    # No trade zone
-        self.fg_no_trade_high = 65   # No trade zone
+        self.fg_extreme_fear = 25  # Contrarian buy signal
+        self.fg_extreme_greed = 75  # Contrarian sell signal
+        self.fg_no_trade_low = 35  # No trade zone
+        self.fg_no_trade_high = 65  # No trade zone
 
         # RSI thresholds (for mean-reversion)
         self.rsi_oversold = 30
@@ -192,9 +197,12 @@ class HybridStrategy:
         low = df["low"].values
         close = df["close"].values
 
-        tr = np.maximum(high - low,
-                       np.maximum(np.abs(high - np.roll(close, 1)),
-                                 np.abs(low - np.roll(close, 1))))
+        tr = np.maximum(
+            high - low,
+            np.maximum(
+                np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))
+            ),
+        )
         tr[0] = high[0] - low[0]
         atr = pd.Series(tr).rolling(self.supertrend_period).mean().values
 
@@ -206,17 +214,25 @@ class HybridStrategy:
         direction = np.ones(len(close))
 
         for i in range(1, len(close)):
-            if close[i] > upper_band[i-1]:
+            if close[i] > upper_band[i - 1]:
                 direction[i] = 1
-            elif close[i] < lower_band[i-1]:
+            elif close[i] < lower_band[i - 1]:
                 direction[i] = -1
             else:
-                direction[i] = direction[i-1]
+                direction[i] = direction[i - 1]
 
             if direction[i] == 1:
-                supertrend[i] = max(lower_band[i], supertrend[i-1]) if direction[i-1] == 1 else lower_band[i]
+                supertrend[i] = (
+                    max(lower_band[i], supertrend[i - 1])
+                    if direction[i - 1] == 1
+                    else lower_band[i]
+                )
             else:
-                supertrend[i] = min(upper_band[i], supertrend[i-1]) if direction[i-1] == -1 else upper_band[i]
+                supertrend[i] = (
+                    min(upper_band[i], supertrend[i - 1])
+                    if direction[i - 1] == -1
+                    else upper_band[i]
+                )
 
         return supertrend, direction
 
@@ -227,7 +243,7 @@ class HybridStrategy:
         mult = 2 / (period + 1)
 
         for i in range(1, len(data)):
-            ema[i] = (data[i] - ema[i-1]) * mult + ema[i-1]
+            ema[i] = (data[i] - ema[i - 1]) * mult + ema[i - 1]
 
         return ema
 
@@ -237,9 +253,12 @@ class HybridStrategy:
         low = df["low"].values
         close = df["close"].values
 
-        tr = np.maximum(high - low,
-                       np.maximum(np.abs(high - np.roll(close, 1)),
-                                 np.abs(low - np.roll(close, 1))))
+        tr = np.maximum(
+            high - low,
+            np.maximum(
+                np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))
+            ),
+        )
         tr[0] = high[0] - low[0]
 
         return pd.Series(tr).rolling(period).mean().values
@@ -254,16 +273,24 @@ class HybridStrategy:
         minus_dm = np.zeros(len(high))
 
         for i in range(1, len(high)):
-            up_move = high[i] - high[i-1]
-            down_move = low[i-1] - low[i]
+            up_move = high[i] - high[i - 1]
+            down_move = low[i - 1] - low[i]
 
             plus_dm[i] = up_move if (up_move > down_move and up_move > 0) else 0
             minus_dm[i] = down_move if (down_move > up_move and down_move > 0) else 0
 
         atr = self.calculate_atr(df, period)
 
-        plus_di = 100 * pd.Series(plus_dm).rolling(period).mean().values / np.maximum(atr, 1e-10)
-        minus_di = 100 * pd.Series(minus_dm).rolling(period).mean().values / np.maximum(atr, 1e-10)
+        plus_di = (
+            100
+            * pd.Series(plus_dm).rolling(period).mean().values
+            / np.maximum(atr, 1e-10)
+        )
+        minus_di = (
+            100
+            * pd.Series(minus_dm).rolling(period).mean().values
+            / np.maximum(atr, 1e-10)
+        )
 
         dx = 100 * np.abs(plus_di - minus_di) / np.maximum(plus_di + minus_di, 1e-10)
         adx = pd.Series(dx).rolling(period).mean().values
@@ -359,7 +386,11 @@ class HybridStrategy:
                 funding_signal = "LOW"  # Too many shorts
 
         # Build reasons list
-        reasons = [f"Regime={regime}", f"ADX={current_adx:.1f}", f"RSI={current_rsi:.1f}"]
+        reasons = [
+            f"Regime={regime}",
+            f"ADX={current_adx:.1f}",
+            f"RSI={current_rsi:.1f}",
+        ]
 
         if fear_greed is not None:
             reasons.append(f"FG={fear_greed:.0f}({fg_zone})")
@@ -555,11 +586,15 @@ class HybridBacktester:
         mask = fg.index.date <= date
         if mask.any():
             idx = fg.index[mask][-1]
-            return fg.loc[idx, "value"] if "value" in fg.columns else fg.loc[idx].iloc[0]
+            return (
+                fg.loc[idx, "value"] if "value" in fg.columns else fg.loc[idx].iloc[0]
+            )
 
         return None
 
-    def get_funding_rate_at(self, symbol: str, timestamp: pd.Timestamp) -> Optional[float]:
+    def get_funding_rate_at(
+        self, symbol: str, timestamp: pd.Timestamp
+    ) -> Optional[float]:
         """Get funding rate at timestamp."""
         if symbol not in self.alt_data.funding_rate:
             return None
@@ -594,7 +629,11 @@ class HybridBacktester:
         logger.info("=" * 60)
 
         start_dt = pd.Timestamp(self.config.start_date)
-        end_dt = pd.Timestamp(self.config.end_date) if self.config.end_date else pd.Timestamp.now()
+        end_dt = (
+            pd.Timestamp(self.config.end_date)
+            if self.config.end_date
+            else pd.Timestamp.now()
+        )
 
         if "BTCUSDT" not in self.data_4h:
             logger.error("BTC data required")
@@ -660,7 +699,9 @@ class HybridBacktester:
 
                         # Take profit at 3x ATR gain
                         take_profit = pos["entry_price"] + pos["atr"] * 3.0
-                        profit_pct = (current_price - pos["entry_price"]) / pos["entry_price"]
+                        profit_pct = (current_price - pos["entry_price"]) / pos[
+                            "entry_price"
+                        ]
 
                         # Breakeven after 1.5% profit
                         if profit_pct > 0.015:
@@ -678,23 +719,32 @@ class HybridBacktester:
 
                         if exit_signal:
                             exit_price = current_price * (1 - self.config.slippage_pct)
-                            pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"] * pos["leverage"]
-                            pnl_usd = pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                            pnl_pct = (
+                                (exit_price - pos["entry_price"])
+                                / pos["entry_price"]
+                                * pos["leverage"]
+                            )
+                            pnl_usd = (
+                                pos["size"] * pnl_pct
+                                - pos["size"] * self.config.commission_pct * 2
+                            )
 
                             capital += pnl_usd
 
-                            self.trade_log.append({
-                                "symbol": symbol,
-                                "side": "LONG",
-                                "entry_time": pos["entry_time"],
-                                "entry_price": pos["entry_price"],
-                                "exit_time": current_time,
-                                "exit_price": exit_price,
-                                "pnl_pct": pnl_pct,
-                                "pnl_usd": pnl_usd,
-                                "exit_reason": exit_reason,
-                                "regime": pos.get("regime", "UNKNOWN"),
-                            })
+                            self.trade_log.append(
+                                {
+                                    "symbol": symbol,
+                                    "side": "LONG",
+                                    "entry_time": pos["entry_time"],
+                                    "entry_price": pos["entry_price"],
+                                    "exit_time": current_time,
+                                    "exit_price": exit_price,
+                                    "pnl_pct": pnl_pct,
+                                    "pnl_usd": pnl_usd,
+                                    "exit_reason": exit_reason,
+                                    "regime": pos.get("regime", "UNKNOWN"),
+                                }
+                            )
 
                             stats["trades_closed"] += 1
                             if pnl_usd > 0:
@@ -710,7 +760,9 @@ class HybridBacktester:
 
                         trailing_stop = pos["lowest"] + pos["atr"] * pos["stop_mult"]
                         take_profit = pos["entry_price"] - pos["atr"] * 3.0
-                        profit_pct = (pos["entry_price"] - current_price) / pos["entry_price"]
+                        profit_pct = (pos["entry_price"] - current_price) / pos[
+                            "entry_price"
+                        ]
 
                         if profit_pct > 0.015:
                             trailing_stop = min(trailing_stop, pos["entry_price"])
@@ -727,23 +779,32 @@ class HybridBacktester:
 
                         if exit_signal:
                             exit_price = current_price * (1 + self.config.slippage_pct)
-                            pnl_pct = (pos["entry_price"] - exit_price) / pos["entry_price"] * pos["leverage"]
-                            pnl_usd = pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                            pnl_pct = (
+                                (pos["entry_price"] - exit_price)
+                                / pos["entry_price"]
+                                * pos["leverage"]
+                            )
+                            pnl_usd = (
+                                pos["size"] * pnl_pct
+                                - pos["size"] * self.config.commission_pct * 2
+                            )
 
                             capital += pnl_usd
 
-                            self.trade_log.append({
-                                "symbol": symbol,
-                                "side": "SHORT",
-                                "entry_time": pos["entry_time"],
-                                "entry_price": pos["entry_price"],
-                                "exit_time": current_time,
-                                "exit_price": exit_price,
-                                "pnl_pct": pnl_pct,
-                                "pnl_usd": pnl_usd,
-                                "exit_reason": exit_reason,
-                                "regime": pos.get("regime", "UNKNOWN"),
-                            })
+                            self.trade_log.append(
+                                {
+                                    "symbol": symbol,
+                                    "side": "SHORT",
+                                    "entry_time": pos["entry_time"],
+                                    "entry_price": pos["entry_price"],
+                                    "exit_time": current_time,
+                                    "exit_price": exit_price,
+                                    "pnl_pct": pnl_pct,
+                                    "pnl_usd": pnl_usd,
+                                    "exit_reason": exit_reason,
+                                    "regime": pos.get("regime", "UNKNOWN"),
+                                }
+                            )
 
                             stats["trades_closed"] += 1
                             if pnl_usd > 0:
@@ -755,7 +816,10 @@ class HybridBacktester:
                             continue
 
                 # Generate new signal
-                if symbol not in positions and len(positions) < self.config.max_positions:
+                if (
+                    symbol not in positions
+                    and len(positions) < self.config.max_positions
+                ):
                     signal_result = self.strategy.generate_signal(
                         df_4h_current,
                         fear_greed=fear_greed,
@@ -778,8 +842,16 @@ class HybridBacktester:
                             stats["range_trades"] += 1
 
                         # Drawdown-adjusted position sizing
-                        peak_capital = max(self.equity_curve) if self.equity_curve else self.config.initial_capital
-                        current_dd = (capital - peak_capital) / peak_capital if peak_capital > 0 else 0
+                        peak_capital = (
+                            max(self.equity_curve)
+                            if self.equity_curve
+                            else self.config.initial_capital
+                        )
+                        current_dd = (
+                            (capital - peak_capital) / peak_capital
+                            if peak_capital > 0
+                            else 0
+                        )
 
                         dd_mult = 1.0
                         if current_dd < -0.20:
@@ -791,11 +863,16 @@ class HybridBacktester:
 
                         entry_price = signal_result["price"]
                         if signal_result["signal"] == "LONG":
-                            entry_price *= (1 + self.config.slippage_pct)
+                            entry_price *= 1 + self.config.slippage_pct
                         else:
-                            entry_price *= (1 - self.config.slippage_pct)
+                            entry_price *= 1 - self.config.slippage_pct
 
-                        position_size = capital * self.config.position_size_pct * signal_result["position_mult"] * dd_mult
+                        position_size = (
+                            capital
+                            * self.config.position_size_pct
+                            * signal_result["position_mult"]
+                            * dd_mult
+                        )
 
                         positions[symbol] = {
                             "side": signal_result["signal"],
@@ -823,14 +900,20 @@ class HybridBacktester:
             portfolio_value = capital
             for symbol, pos in positions.items():
                 if symbol in self.data_4h:
-                    current_price = self.data_4h[symbol].loc[
-                        self.data_4h[symbol].index <= current_time
-                    ]["close"].iloc[-1]
+                    current_price = (
+                        self.data_4h[symbol]
+                        .loc[self.data_4h[symbol].index <= current_time]["close"]
+                        .iloc[-1]
+                    )
 
                     if pos["side"] == "LONG":
-                        unrealized = (current_price - pos["entry_price"]) / pos["entry_price"]
+                        unrealized = (current_price - pos["entry_price"]) / pos[
+                            "entry_price"
+                        ]
                     else:
-                        unrealized = (pos["entry_price"] - current_price) / pos["entry_price"]
+                        unrealized = (pos["entry_price"] - current_price) / pos[
+                            "entry_price"
+                        ]
 
                     unrealized *= pos["leverage"]
                     portfolio_value += pos["size"] * unrealized
@@ -843,24 +926,36 @@ class HybridBacktester:
                 exit_price = self.data_4h[symbol].iloc[-1]["close"]
 
                 if pos["side"] == "LONG":
-                    pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"] * pos["leverage"]
+                    pnl_pct = (
+                        (exit_price - pos["entry_price"])
+                        / pos["entry_price"]
+                        * pos["leverage"]
+                    )
                 else:
-                    pnl_pct = (pos["entry_price"] - exit_price) / pos["entry_price"] * pos["leverage"]
+                    pnl_pct = (
+                        (pos["entry_price"] - exit_price)
+                        / pos["entry_price"]
+                        * pos["leverage"]
+                    )
 
-                pnl_usd = pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                pnl_usd = (
+                    pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                )
                 capital += pnl_usd
 
-                self.trade_log.append({
-                    "symbol": symbol,
-                    "side": pos["side"],
-                    "entry_time": pos["entry_time"],
-                    "entry_price": pos["entry_price"],
-                    "exit_time": timestamps[-1],
-                    "exit_price": exit_price,
-                    "pnl_pct": pnl_pct,
-                    "pnl_usd": pnl_usd,
-                    "exit_reason": "backtest_end",
-                })
+                self.trade_log.append(
+                    {
+                        "symbol": symbol,
+                        "side": pos["side"],
+                        "entry_time": pos["entry_time"],
+                        "entry_price": pos["entry_price"],
+                        "exit_time": timestamps[-1],
+                        "exit_price": exit_price,
+                        "pnl_pct": pnl_pct,
+                        "pnl_usd": pnl_usd,
+                        "exit_reason": "backtest_end",
+                    }
+                )
 
                 stats["trades_closed"] += 1
                 if pnl_usd > 0:
@@ -877,14 +972,20 @@ class HybridBacktester:
         if len(equity) < 2:
             return {"error": "Insufficient data"}
 
-        total_return = (equity[-1] - self.config.initial_capital) / self.config.initial_capital
+        total_return = (
+            equity[-1] - self.config.initial_capital
+        ) / self.config.initial_capital
 
         n_candles = len(equity) - 1
         n_years = n_candles / (252 * 6)
         annualized_return = (1 + total_return) ** (1 / max(n_years, 0.1)) - 1
 
         returns = np.diff(equity) / equity[:-1]
-        sharpe = np.mean(returns) / np.std(returns) * np.sqrt(252 * 6) if np.std(returns) > 0 else 0
+        sharpe = (
+            np.mean(returns) / np.std(returns) * np.sqrt(252 * 6)
+            if np.std(returns) > 0
+            else 0
+        )
 
         peak = np.maximum.accumulate(equity)
         drawdown = (equity - peak) / peak
@@ -895,8 +996,12 @@ class HybridBacktester:
 
         if self.trade_log:
             gross_profit = sum(t["pnl_usd"] for t in self.trade_log if t["pnl_usd"] > 0)
-            gross_loss = abs(sum(t["pnl_usd"] for t in self.trade_log if t["pnl_usd"] < 0))
-            profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
+            gross_loss = abs(
+                sum(t["pnl_usd"] for t in self.trade_log if t["pnl_usd"] < 0)
+            )
+            profit_factor = (
+                gross_profit / gross_loss if gross_loss > 0 else float("inf")
+            )
         else:
             profit_factor = 0
 
@@ -919,7 +1024,9 @@ class HybridBacktester:
             "total_trades": total_trades,
             "wins": stats["wins"],
             "losses": stats["losses"],
-            "avg_trade_pnl": np.mean([t["pnl_pct"] for t in self.trade_log]) if self.trade_log else 0,
+            "avg_trade_pnl": (
+                np.mean([t["pnl_pct"] for t in self.trade_log]) if self.trade_log else 0
+            ),
             "long_signals": stats["long_signals"],
             "short_signals": stats["short_signals"],
             "trend_trades": stats["trend_trades"],
@@ -960,8 +1067,10 @@ def run_period_analysis(config: BacktestConfig) -> Dict[str, Dict]:
             result = backtester.run()
             if "error" not in result:
                 results[label] = result
-                logger.info(f"\n{label}: Return={result['total_return']*100:.1f}%, MDD={result['max_drawdown']*100:.1f}%, "
-                           f"WinRate={result['win_rate']*100:.1f}%, Trades={result['total_trades']}")
+                logger.info(
+                    f"\n{label}: Return={result['total_return']*100:.1f}%, MDD={result['max_drawdown']*100:.1f}%, "
+                    f"WinRate={result['win_rate']*100:.1f}%, Trades={result['total_trades']}"
+                )
 
     return results
 
@@ -1001,10 +1110,12 @@ def main():
         logger.info("PERIOD ANALYSIS SUMMARY")
         logger.info("=" * 60)
         for period, result in period_results.items():
-            logger.info(f"{period}: Return={result['total_return']*100:+.1f}%, "
-                       f"MDD={result['max_drawdown']*100:.1f}%, "
-                       f"WinRate={result['win_rate']*100:.1f}%, "
-                       f"Trades={result['total_trades']}")
+            logger.info(
+                f"{period}: Return={result['total_return']*100:+.1f}%, "
+                f"MDD={result['max_drawdown']*100:.1f}%, "
+                f"WinRate={result['win_rate']*100:.1f}%, "
+                f"Trades={result['total_trades']}"
+            )
         return 0
 
     backtester = HybridBacktester(config)
@@ -1039,16 +1150,18 @@ def main():
     logger.info("vs TARGETS")
     logger.info("=" * 60)
     logger.info(f"  Win Rate: {results['win_rate']*100:.1f}% (target: 48-52%)")
-    logger.info(f"  Annual Return: {results['annualized_return']*100:.1f}% (target: 25-45%)")
+    logger.info(
+        f"  Annual Return: {results['annualized_return']*100:.1f}% (target: 25-45%)"
+    )
     logger.info(f"  Max MDD: {results['max_drawdown']*100:.1f}% (target: < 25%)")
 
     # Target check
     targets_met = 0
-    if 0.48 <= results['win_rate'] <= 0.52:
+    if 0.48 <= results["win_rate"] <= 0.52:
         targets_met += 1
-    if results['annualized_return'] >= 0.25:
+    if results["annualized_return"] >= 0.25:
         targets_met += 1
-    if results['max_drawdown'] >= -0.25:
+    if results["max_drawdown"] >= -0.25:
         targets_met += 1
 
     logger.info(f"\n  Targets Met: {targets_met}/3")

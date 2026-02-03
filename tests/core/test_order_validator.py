@@ -53,10 +53,13 @@ class TestPositionLimits:
         assert limits.max_position_pct == 0.20
         assert limits.max_total_positions == 10
 
-    @patch.dict(os.environ, {
-        "MASP_MAX_POSITION_PCT": "0.15",
-        "MASP_MAX_TOTAL_POSITIONS": "30",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "MASP_MAX_POSITION_PCT": "0.15",
+            "MASP_MAX_TOTAL_POSITIONS": "30",
+        },
+    )
     def test_from_env(self):
         """Test loading limits from environment."""
         limits = PositionLimits.from_env()
@@ -98,7 +101,9 @@ class TestOrderValidator:
 
     def test_init_usdt(self, mock_config, default_limits):
         """Test initialization with USDT."""
-        validator = OrderValidator(mock_config, limits=default_limits, quote_currency="USDT")
+        validator = OrderValidator(
+            mock_config, limits=default_limits, quote_currency="USDT"
+        )
         assert validator.quote_currency == "USDT"
 
     def test_kill_switch_blocks(self, mock_config, default_limits):

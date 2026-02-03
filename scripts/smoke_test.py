@@ -36,8 +36,7 @@ def fail(msg):
 def step1_compile():
     log("Step 1: Compile check")
     r = subprocess.run(
-        [sys.executable, "-m", "compileall", "-q", "libs", "apps"],
-        capture_output=True
+        [sys.executable, "-m", "compileall", "-q", "libs", "apps"], capture_output=True
     )
     if r.returncode != 0:
         fail("Compile failed")
@@ -55,10 +54,7 @@ def step2_import():
         "from apps.api_server.main import app; "
         "print('OK')"
     )
-    r = subprocess.run(
-        [sys.executable, "-c", code],
-        capture_output=True, text=True
-    )
+    r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     if r.returncode != 0:
         fail(f"Import failed: {r.stderr[:200]}")
         return False
@@ -77,7 +73,9 @@ def step3_services():
     for svc in services:
         r = subprocess.run(
             [sys.executable, "-m", f"apps.{svc}", "--once"],
-            capture_output=True, text=True, timeout=60
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
         if r.returncode != 0:
             fail(f"{svc} failed: {r.stderr[:100]}")

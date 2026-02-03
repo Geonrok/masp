@@ -121,7 +121,9 @@ class DrawdownGuard:
         self.trade_history.clear()
         self.is_halted = False
         self.halt_reason = None
-        logger.info(f"[DrawdownGuard] Initialized with capital: {starting_capital:,.0f}")
+        logger.info(
+            f"[DrawdownGuard] Initialized with capital: {starting_capital:,.0f}"
+        )
 
     def record_trade(self, symbol: str, pnl: float, side: str = "buy") -> None:
         """Record a completed trade."""
@@ -145,9 +147,7 @@ class DrawdownGuard:
         now = datetime.now(self.tz)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        daily_pnl = sum(
-            t.pnl for t in self.trade_history if t.timestamp >= today_start
-        )
+        daily_pnl = sum(t.pnl for t in self.trade_history if t.timestamp >= today_start)
         return daily_pnl
 
     def _get_weekly_pnl(self) -> float:
@@ -159,9 +159,7 @@ class DrawdownGuard:
             hour=0, minute=0, second=0, microsecond=0
         )
 
-        weekly_pnl = sum(
-            t.pnl for t in self.trade_history if t.timestamp >= week_start
-        )
+        weekly_pnl = sum(t.pnl for t in self.trade_history if t.timestamp >= week_start)
         return weekly_pnl
 
     def _get_current_drawdown(self) -> float:
@@ -251,8 +249,13 @@ class DrawdownGuard:
             )
 
         # Check warning thresholds
-        daily_warning = daily_pnl < 0 and abs(daily_pnl) >= daily_limit_abs * self.warning_threshold
-        weekly_warning = weekly_pnl < 0 and abs(weekly_pnl) >= weekly_limit_abs * self.warning_threshold
+        daily_warning = (
+            daily_pnl < 0 and abs(daily_pnl) >= daily_limit_abs * self.warning_threshold
+        )
+        weekly_warning = (
+            weekly_pnl < 0
+            and abs(weekly_pnl) >= weekly_limit_abs * self.warning_threshold
+        )
         dd_warning = current_dd >= self.max_drawdown_limit * self.warning_threshold
 
         if daily_warning or weekly_warning or dd_warning:
@@ -260,7 +263,9 @@ class DrawdownGuard:
             if daily_warning:
                 warnings.append(f"daily loss at {abs(daily_pnl)/daily_limit_abs:.0%}")
             if weekly_warning:
-                warnings.append(f"weekly loss at {abs(weekly_pnl)/weekly_limit_abs:.0%}")
+                warnings.append(
+                    f"weekly loss at {abs(weekly_pnl)/weekly_limit_abs:.0%}"
+                )
             if dd_warning:
                 warnings.append(f"drawdown at {current_dd/self.max_drawdown_limit:.0%}")
 

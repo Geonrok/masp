@@ -1,4 +1,5 @@
 """System status data provider - connects psutil to system_status component."""
+
 from __future__ import annotations
 
 import logging

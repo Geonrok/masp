@@ -1,6 +1,7 @@
 """
 Open order cleanup for live tests (v2.2 Final).
 """
+
 from __future__ import annotations
 
 import time
@@ -38,7 +39,9 @@ def list_open_orders(
                 created_at = order.get("created_at", "")
                 if created_at:
                     try:
-                        order_time = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                        order_time = datetime.fromisoformat(
+                            created_at.replace("Z", "+00:00")
+                        )
                         order_time_utc = order_time.astimezone(timezone.utc)
                         if order_time_utc >= since_utc:
                             filtered.append(order)
@@ -68,7 +71,9 @@ def cancel_all_open_orders(
             if hasattr(execution, "cancel_all_orders"):
                 bulk_result = execution.cancel_all_orders(market)
             else:
-                bulk_result = execution._request("DELETE", "/orders/open", params={"market": market}, is_order=True)
+                bulk_result = execution._request(
+                    "DELETE", "/orders/open", params={"market": market}, is_order=True
+                )
             if bulk_result is not None:
                 result["bulk_success"] = True
                 result["cancelled"] = len(open_orders)
@@ -106,6 +111,6 @@ def verify_no_open_orders(
         if last_count == 0:
             print("✅ No open orders remaining")
             return True
-        time.sleep(backoff * (2 ** attempt))
+        time.sleep(backoff * (2**attempt))
     print(f"⚠️ Open orders remaining: {last_count}")
     return False

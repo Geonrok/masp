@@ -1,4 +1,5 @@
 """Upbit symbol list utilities with caching."""
+
 from __future__ import annotations
 
 import logging

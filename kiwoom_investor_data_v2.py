@@ -29,28 +29,38 @@ async def download_stock_foreign_data(api, ticker, name):
 
         if response.return_code == 0 and response.body:
             body = response.body
-            if 'stk_frgnr' in body:
-                data = body['stk_frgnr']
+            if "stk_frgnr" in body:
+                data = body["stk_frgnr"]
                 if isinstance(data, list) and len(data) > 0:
                     all_data.extend(data)
                     print(f"  첫 조회: {len(data)}건")
 
                     # 연속조회
                     cont_count = 0
-                    while response.cont_yn == 'Y' and response.next_key and cont_count < 50:
+                    while (
+                        response.cont_yn == "Y"
+                        and response.next_key
+                        and cont_count < 50
+                    ):
                         await asyncio.sleep(0.3)
                         response = await api.request(
                             "ka10008",
                             {"stk_cd": ticker},
                             cont_yn="Y",
-                            next_key=response.next_key
+                            next_key=response.next_key,
                         )
-                        if response.return_code == 0 and response.body and 'stk_frgnr' in response.body:
-                            new_data = response.body['stk_frgnr']
+                        if (
+                            response.return_code == 0
+                            and response.body
+                            and "stk_frgnr" in response.body
+                        ):
+                            new_data = response.body["stk_frgnr"]
                             if isinstance(new_data, list) and len(new_data) > 0:
                                 all_data.extend(new_data)
                                 cont_count += 1
-                                print(f"  연속조회 {cont_count}: {len(new_data)}건 (누적 {len(all_data)}건)")
+                                print(
+                                    f"  연속조회 {cont_count}: {len(new_data)}건 (누적 {len(all_data)}건)"
+                                )
                             else:
                                 break
                         else:
@@ -59,14 +69,15 @@ async def download_stock_foreign_data(api, ticker, name):
     except Exception as e:
         print(f"  오류: {e}")
         import traceback
+
         traceback.print_exc()
 
     if all_data:
         df = pd.DataFrame(all_data)
-        df['ticker'] = ticker
-        df['name'] = name
+        df["ticker"] = ticker
+        df["name"] = name
         filename = f"{SAVE_PATH}/{ticker}_foreign.csv"
-        df.to_csv(filename, index=False, encoding='utf-8-sig')
+        df.to_csv(filename, index=False, encoding="utf-8-sig")
         print(f"  저장: {filename} ({len(df)}건)")
         return df
 
@@ -98,18 +109,20 @@ async def download_market_investor_ranking(api, ranking_type="foreign_buy"):
                 body = response.body
                 # 응답 키 확인
                 data = None
-                if 'output' in body:
-                    data = body['output']
+                if "output" in body:
+                    data = body["output"]
                 else:
                     # 다른 키에서 데이터 찾기
                     for key in body.keys():
-                        if key not in ['return_code', 'return_msg'] and isinstance(body[key], list):
+                        if key not in ["return_code", "return_msg"] and isinstance(
+                            body[key], list
+                        ):
                             data = body[key]
                             break
 
                 if isinstance(data, list) and len(data) > 0:
                     for item in data:
-                        item['market'] = mkt_name
+                        item["market"] = mkt_name
                     all_data.extend(data)
                     print(f"  {mkt_name}: {len(data)}건")
                 else:
@@ -123,7 +136,7 @@ async def download_market_investor_ranking(api, ranking_type="foreign_buy"):
     if all_data:
         df = pd.DataFrame(all_data)
         filename = f"{SAVE_PATH}/{ranking_type}_ranking.csv"
-        df.to_csv(filename, index=False, encoding='utf-8-sig')
+        df.to_csv(filename, index=False, encoding="utf-8-sig")
         print(f"  저장: {filename} ({len(df)}건)")
         return df
 
@@ -137,21 +150,22 @@ async def download_daily_chart(api, ticker, name):
     all_data = []
 
     try:
-        response = await api.request("ka10081", {
-            "stk_cd": ticker,
-            "base_dt": "00000000",
-            "upd_stkpc_tp": "1"  # 수정주가
-        })
+        response = await api.request(
+            "ka10081",
+            {"stk_cd": ticker, "base_dt": "00000000", "upd_stkpc_tp": "1"},  # 수정주가
+        )
 
         if response.return_code == 0 and response.body:
             body = response.body
             # output 키 또는 다른 리스트 키에서 데이터 찾기
             data = None
-            if 'output' in body:
-                data = body['output']
+            if "output" in body:
+                data = body["output"]
             else:
                 for key in body.keys():
-                    if key not in ['return_code', 'return_msg'] and isinstance(body[key], list):
+                    if key not in ["return_code", "return_msg"] and isinstance(
+                        body[key], list
+                    ):
                         data = body[key]
                         break
 
@@ -161,26 +175,31 @@ async def download_daily_chart(api, ticker, name):
 
                 # 연속조회
                 cont_count = 0
-                while response.cont_yn == 'Y' and response.next_key and cont_count < 20:
+                while response.cont_yn == "Y" and response.next_key and cont_count < 20:
                     await asyncio.sleep(0.3)
                     response = await api.request(
                         "ka10081",
                         {"stk_cd": ticker, "base_dt": "00000000", "upd_stkpc_tp": "1"},
                         cont_yn="Y",
-                        next_key=response.next_key
+                        next_key=response.next_key,
                     )
                     if response.return_code == 0 and response.body:
                         new_body = response.body
-                        new_data = new_body.get('output')
+                        new_data = new_body.get("output")
                         if not new_data:
                             for key in new_body.keys():
-                                if key not in ['return_code', 'return_msg'] and isinstance(new_body[key], list):
+                                if key not in [
+                                    "return_code",
+                                    "return_msg",
+                                ] and isinstance(new_body[key], list):
                                     new_data = new_body[key]
                                     break
                         if isinstance(new_data, list) and len(new_data) > 0:
                             all_data.extend(new_data)
                             cont_count += 1
-                            print(f"  연속조회 {cont_count}: {len(new_data)}건 (누적 {len(all_data)}건)")
+                            print(
+                                f"  연속조회 {cont_count}: {len(new_data)}건 (누적 {len(all_data)}건)"
+                            )
                         else:
                             break
                     else:
@@ -191,10 +210,10 @@ async def download_daily_chart(api, ticker, name):
 
     if all_data:
         df = pd.DataFrame(all_data)
-        df['ticker'] = ticker
-        df['name'] = name
+        df["ticker"] = ticker
+        df["name"] = name
         filename = f"{SAVE_PATH}/{ticker}_daily.csv"
-        df.to_csv(filename, index=False, encoding='utf-8-sig')
+        df.to_csv(filename, index=False, encoding="utf-8-sig")
         print(f"  저장: {filename} ({len(df)}건)")
         return df
 
@@ -225,28 +244,28 @@ async def main():
 
         # 코스닥 주요 종목
         kosdaq_tickers = [
-            ('247540', '에코프로비엠'),
-            ('196170', '알테오젠'),
-            ('263750', '펄어비스'),
-            ('086520', '에코프로'),
-            ('042700', '한미반도체'),
-            ('028300', 'HLB'),
-            ('293490', '카카오게임즈'),
-            ('091990', '셀트리온헬스케어'),
-            ('068270', '셀트리온제약'),
-            ('251270', '넷마블'),
+            ("247540", "에코프로비엠"),
+            ("196170", "알테오젠"),
+            ("263750", "펄어비스"),
+            ("086520", "에코프로"),
+            ("042700", "한미반도체"),
+            ("028300", "HLB"),
+            ("293490", "카카오게임즈"),
+            ("091990", "셀트리온헬스케어"),
+            ("068270", "셀트리온제약"),
+            ("251270", "넷마블"),
         ]
 
         # 코스피 주요 종목
         kospi_tickers = [
-            ('005930', '삼성전자'),
-            ('000660', 'SK하이닉스'),
-            ('035720', '카카오'),
-            ('005380', '현대차'),
-            ('051910', 'LG화학'),
-            ('006400', '삼성SDI'),
-            ('207940', '삼성바이오로직스'),
-            ('373220', 'LG에너지솔루션'),
+            ("005930", "삼성전자"),
+            ("000660", "SK하이닉스"),
+            ("035720", "카카오"),
+            ("005380", "현대차"),
+            ("051910", "LG화학"),
+            ("006400", "삼성SDI"),
+            ("207940", "삼성바이오로직스"),
+            ("373220", "LG에너지솔루션"),
         ]
 
         all_tickers = kosdaq_tickers + kospi_tickers
@@ -308,6 +327,7 @@ async def main():
     except Exception as e:
         print(f"오류: {e}")
         import traceback
+
         traceback.print_exc()
 
     finally:

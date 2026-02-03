@@ -14,6 +14,7 @@ import pytz
 
 class EventType(str, Enum):
     """Standard event types for the platform."""
+
     RUN_STARTED = "RUN_STARTED"
     RUN_FINISHED = "RUN_FINISHED"
     SIGNAL_DECISION = "SIGNAL_DECISION"
@@ -25,6 +26,7 @@ class EventType(str, Enum):
 
 class Severity(str, Enum):
     """Event severity levels."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -37,26 +39,29 @@ class Event(BaseModel):
     Standard event model - SSOT for all platform events.
     All events share these common fields.
     """
+
     model_config = ConfigDict()
 
     event_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     ts_utc: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    ts_kst: datetime = Field(default_factory=lambda: datetime.now(pytz.timezone("Asia/Seoul")))
-    
+    ts_kst: datetime = Field(
+        default_factory=lambda: datetime.now(pytz.timezone("Asia/Seoul"))
+    )
+
     asset_class: str
     strategy_id: Optional[str] = None
     run_id: str
     symbol: Optional[str] = None
-    
+
     severity: Severity = Severity.INFO
     event_type: EventType
-    
+
     payload: dict[str, Any] = Field(default_factory=dict)
-    
+
     @field_serializer("ts_utc", "ts_kst")
     def _serialize_timestamp(self, value: datetime) -> str:
         return value.isoformat()
-    
+
     def to_dict(self) -> dict:
         """Convert event to dictionary for storage."""
         return {
@@ -78,7 +83,7 @@ class EventLogger:
     Event logger that emits standardized events.
     Provides helper methods for each event type.
     """
-    
+
     def __init__(
         self,
         asset_class: str,
@@ -91,20 +96,20 @@ class EventLogger:
         self.event_store = event_store
         self.default_strategy_id = default_strategy_id
         self._kst = pytz.timezone("Asia/Seoul")
-    
+
     def _now_utc(self) -> datetime:
         """Get current UTC time."""
         return datetime.now(timezone.utc)
-    
+
     def _now_kst(self) -> datetime:
         """Get current KST time."""
         return datetime.now(self._kst)
-    
+
     def _emit(self, event: Event) -> Event:
         """Emit an event to the store."""
         self.event_store.write_event(event)
         return event
-    
+
     def emit_run_started(
         self,
         config_version: str,
@@ -129,7 +134,7 @@ class EventLogger:
             payload=payload,
         )
         return self._emit(event)
-    
+
     def emit_run_finished(
         self,
         status: str,  # "success" or "fail"
@@ -156,7 +161,7 @@ class EventLogger:
             payload=payload,
         )
         return self._emit(event)
-    
+
     def emit_signal_decision(
         self,
         strategy_id: str,
@@ -185,7 +190,7 @@ class EventLogger:
             payload=payload,
         )
         return self._emit(event)
-    
+
     def emit_order_attempt(
         self,
         strategy_id: str,
@@ -217,7 +222,7 @@ class EventLogger:
             payload=payload,
         )
         return self._emit(event)
-    
+
     def emit_fill_update(
         self,
         strategy_id: str,
@@ -249,7 +254,7 @@ class EventLogger:
             payload=payload,
         )
         return self._emit(event)
-    
+
     def emit_error(
         self,
         error_message: str,
@@ -278,7 +283,7 @@ class EventLogger:
             payload=payload,
         )
         return self._emit(event)
-    
+
     def emit_heartbeat(
         self,
         build_version: str,
@@ -303,4 +308,3 @@ class EventLogger:
             payload=payload,
         )
         return self._emit(event)
-

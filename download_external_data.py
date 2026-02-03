@@ -12,11 +12,13 @@ import numpy as np
 
 try:
     import yfinance as yf
+
     print("yfinance 설치됨")
 except ImportError:
     print("yfinance 설치 필요: pip install yfinance")
     import subprocess
-    subprocess.run(['pip', 'install', 'yfinance', '-q'])
+
+    subprocess.run(["pip", "install", "yfinance", "-q"])
     import yfinance as yf
 
 DATA_DIR = "E:/투자/data/kosdaq_futures/"
@@ -33,10 +35,10 @@ def download_data():
     end_date = "2026-02-01"
 
     tickers = {
-        'SPY': 'spy_daily.parquet',      # S&P500 ETF
-        'QQQ': 'qqq_daily.parquet',      # NASDAQ ETF
-        '^VIX': 'vix_daily.parquet',     # VIX
-        'USDKRW=X': 'usdkrw_daily.parquet',  # USD/KRW
+        "SPY": "spy_daily.parquet",  # S&P500 ETF
+        "QQQ": "qqq_daily.parquet",  # NASDAQ ETF
+        "^VIX": "vix_daily.parquet",  # VIX
+        "USDKRW=X": "usdkrw_daily.parquet",  # USD/KRW
     }
 
     for ticker, filename in tickers.items():
@@ -49,7 +51,9 @@ def download_data():
                     data.columns = data.columns.get_level_values(0)
 
                 data.to_parquet(DATA_DIR + filename)
-                print(f"  저장: {filename}, {len(data)} rows, {data.index.min()} ~ {data.index.max()}")
+                print(
+                    f"  저장: {filename}, {len(data)} rows, {data.index.min()} ~ {data.index.max()}"
+                )
             else:
                 print(f"  데이터 없음: {ticker}")
         except Exception as e:

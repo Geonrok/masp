@@ -6,6 +6,7 @@ Entry:
 Exit:
     Gate fail or (KAMA fail and TSMOM fail).
 """
+
 import logging
 from datetime import datetime
 from typing import List, Dict, Optional

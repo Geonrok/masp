@@ -10,11 +10,13 @@ B. DVOL 변화율 기반: 급등/급락 시 역행
 C. DVOL + Vol Profile 복합: 기존 전략에 DVOL 필터 추가
 D. DVOL 레짐 전환: 변동성 수축→확장 전환점 포착
 """
+
 import json
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
@@ -30,11 +32,17 @@ FUNDING_PER_8H = 0.0001
 def load_dvol():
     """Load BTC DVOL daily data"""
     df = pd.read_csv(DVOL_PATH, skiprows=1)
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.sort_values('date').reset_index(drop=True)
-    df = df.rename(columns={'close': 'dvol_close', 'open': 'dvol_open',
-                            'high': 'dvol_high', 'low': 'dvol_low'})
-    return df[['date', 'dvol_open', 'dvol_high', 'dvol_low', 'dvol_close']]
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date").reset_index(drop=True)
+    df = df.rename(
+        columns={
+            "close": "dvol_close",
+            "open": "dvol_open",
+            "high": "dvol_high",
+            "low": "dvol_low",
+        }
+    )
+    return df[["date", "dvol_open", "dvol_high", "dvol_low", "dvol_close"]]
 
 
 def load_ohlcv(symbol, timeframe="1h"):
@@ -42,17 +50,18 @@ def load_ohlcv(symbol, timeframe="1h"):
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path)
-    for col in ['datetime', 'timestamp', 'date']:
+    for col in ["datetime", "timestamp", "date"]:
         if col in df.columns:
-            df['datetime'] = pd.to_datetime(df[col])
+            df["datetime"] = pd.to_datetime(df[col])
             break
-    return df.sort_values('datetime').reset_index(drop=True)
+    return df.sort_values("datetime").reset_index(drop=True)
 
 
 def calc_atr(high, low, close, period=14):
-    tr = np.maximum(high - low,
-         np.maximum(np.abs(high - np.roll(close, 1)),
-                    np.abs(low - np.roll(close, 1))))
+    tr = np.maximum(
+        high - low,
+        np.maximum(np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))),
+    )
     tr[0] = high[0] - low[0]
     return pd.Series(tr).rolling(period).mean().values
 
@@ -60,12 +69,12 @@ def calc_atr(high, low, close, period=14):
 def merge_dvol_to_hourly(df_hourly, dvol_daily):
     """Merge daily DVOL into hourly data by date"""
     df_hourly = df_hourly.copy()
-    df_hourly['date'] = df_hourly['datetime'].dt.date
+    df_hourly["date"] = df_hourly["datetime"].dt.date
     dvol_daily = dvol_daily.copy()
-    dvol_daily['date'] = dvol_daily['date'].dt.date
-    merged = df_hourly.merge(dvol_daily, on='date', how='left')
+    dvol_daily["date"] = dvol_daily["date"].dt.date
+    merged = df_hourly.merge(dvol_daily, on="date", how="left")
     # Forward fill DVOL for dates without data
-    for col in ['dvol_close', 'dvol_open', 'dvol_high', 'dvol_low']:
+    for col in ["dvol_close", "dvol_open", "dvol_high", "dvol_low"]:
         if col in merged.columns:
             merged[col] = merged[col].ffill()
     return merged
@@ -76,27 +85,34 @@ def merge_dvol_to_hourly(df_hourly, dvol_daily):
 # ============================================================
 def strat_dvol_low_vol_entry(df, dvol_thresh_low=40, lookback=48):
     """Enter long when DVOL < threshold (low fear = trending market)"""
-    close = df['close']
-    high = df['high']
-    dvol = df['dvol_close'] if 'dvol_close' in df.columns else pd.Series(50, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    dvol = (
+        df["dvol_close"]
+        if "dvol_close" in df.columns
+        else pd.Series(50, index=df.index)
+    )
 
     upper = high.rolling(lookback).max().shift(1)
     ema_f = close.ewm(span=50, adjust=False).mean()
     ema_s = close.ewm(span=200, adjust=False).mean()
 
     signals = np.where(
-        (close > upper) & (ema_f > ema_s) & (dvol < dvol_thresh_low),
-        1, 0
+        (close > upper) & (ema_f > ema_s) & (dvol < dvol_thresh_low), 1, 0
     )
     return signals
 
 
 def strat_dvol_high_vol_avoid(df, dvol_thresh_high=70, lookback=48):
     """Vol Profile but skip entries when DVOL > threshold (too volatile)"""
-    close = df['close']
-    high = df['high']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
-    dvol = df['dvol_close'] if 'dvol_close' in df.columns else pd.Series(50, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
+    dvol = (
+        df["dvol_close"]
+        if "dvol_close" in df.columns
+        else pd.Series(50, index=df.index)
+    )
 
     vwap = (close * vol).rolling(lookback).sum() / (vol.rolling(lookback).sum() + 1e-10)
     upper = high.rolling(lookback).max().shift(1)
@@ -104,8 +120,12 @@ def strat_dvol_high_vol_avoid(df, dvol_thresh_high=70, lookback=48):
     ema_s = close.ewm(span=200, adjust=False).mean()
 
     signals = np.where(
-        (close > upper) & (close > vwap * 1.01) & (ema_f > ema_s) & (dvol < dvol_thresh_high),
-        1, 0
+        (close > upper)
+        & (close > vwap * 1.01)
+        & (ema_f > ema_s)
+        & (dvol < dvol_thresh_high),
+        1,
+        0,
     )
     return signals
 
@@ -115,9 +135,13 @@ def strat_dvol_high_vol_avoid(df, dvol_thresh_high=70, lookback=48):
 # ============================================================
 def strat_dvol_spike_contrarian(df, dvol_change_thresh=-5, lookback=48):
     """Enter long after DVOL drops sharply (vol crush = rally signal)"""
-    close = df['close']
-    high = df['high']
-    dvol = df['dvol_close'] if 'dvol_close' in df.columns else pd.Series(50, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    dvol = (
+        df["dvol_close"]
+        if "dvol_close" in df.columns
+        else pd.Series(50, index=df.index)
+    )
     dvol_change = dvol - dvol.shift(24)  # 24h change in DVOL
 
     upper = high.rolling(lookback).max().shift(1)
@@ -125,16 +149,19 @@ def strat_dvol_spike_contrarian(df, dvol_change_thresh=-5, lookback=48):
     ema_s = close.ewm(span=200, adjust=False).mean()
 
     signals = np.where(
-        (close > upper) & (ema_f > ema_s) & (dvol_change < dvol_change_thresh),
-        1, 0
+        (close > upper) & (ema_f > ema_s) & (dvol_change < dvol_change_thresh), 1, 0
     )
     return signals
 
 
 def strat_dvol_mean_reversion(df, dvol_zscore_thresh=2.0, lookback=48):
     """Enter long when DVOL z-score is extremely high (fear = buy opportunity)"""
-    close = df['close']
-    dvol = df['dvol_close'] if 'dvol_close' in df.columns else pd.Series(50, index=df.index)
+    close = df["close"]
+    dvol = (
+        df["dvol_close"]
+        if "dvol_close" in df.columns
+        else pd.Series(50, index=df.index)
+    )
 
     # DVOL z-score over 30-day rolling window (30*24 = 720 bars)
     dvol_ma = dvol.rolling(720).mean()
@@ -145,10 +172,7 @@ def strat_dvol_mean_reversion(df, dvol_zscore_thresh=2.0, lookback=48):
     ema_s = close.ewm(span=200, adjust=False).mean()
 
     # High DVOL z-score = extreme fear → contrarian long
-    signals = np.where(
-        (dvol_z > dvol_zscore_thresh) & (ema_f > ema_s),
-        1, 0
-    )
+    signals = np.where((dvol_z > dvol_zscore_thresh) & (ema_f > ema_s), 1, 0)
     return signals
 
 
@@ -157,10 +181,14 @@ def strat_dvol_mean_reversion(df, dvol_zscore_thresh=2.0, lookback=48):
 # ============================================================
 def strat_vol_profile_dvol_filter(df, dvol_max=80, lookback=48):
     """Vol Profile Breakout + DVOL filter (skip extreme vol)"""
-    close = df['close']
-    high = df['high']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
-    dvol = df['dvol_close'] if 'dvol_close' in df.columns else pd.Series(50, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
+    dvol = (
+        df["dvol_close"]
+        if "dvol_close" in df.columns
+        else pd.Series(50, index=df.index)
+    )
 
     vwap = (close * vol).rolling(lookback).sum() / (vol.rolling(lookback).sum() + 1e-10)
     upper = high.rolling(lookback).max().shift(1)
@@ -169,17 +197,22 @@ def strat_vol_profile_dvol_filter(df, dvol_max=80, lookback=48):
 
     signals = np.where(
         (close > upper) & (close > vwap * 1.01) & (ema_f > ema_s) & (dvol < dvol_max),
-        1, 0
+        1,
+        0,
     )
     return signals
 
 
 def strat_vol_profile_dvol_regime(df, lookback=48):
     """Vol Profile + DVOL regime: tighter stops in high vol, wider in low vol"""
-    close = df['close']
-    high = df['high']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
-    dvol = df['dvol_close'] if 'dvol_close' in df.columns else pd.Series(50, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
+    dvol = (
+        df["dvol_close"]
+        if "dvol_close" in df.columns
+        else pd.Series(50, index=df.index)
+    )
 
     vwap = (close * vol).rolling(lookback).sum() / (vol.rolling(lookback).sum() + 1e-10)
     upper = high.rolling(lookback).max().shift(1)
@@ -188,8 +221,7 @@ def strat_vol_profile_dvol_regime(df, lookback=48):
 
     # Signal = 1 (low vol regime) or 2 (high vol regime) for different exit params
     base = (close > upper) & (close > vwap * 1.01) & (ema_f > ema_s)
-    signals = np.where(base & (dvol < 50), 1,
-              np.where(base & (dvol >= 50), 2, 0))
+    signals = np.where(base & (dvol < 50), 1, np.where(base & (dvol >= 50), 2, 0))
     return signals
 
 
@@ -198,9 +230,13 @@ def strat_vol_profile_dvol_regime(df, lookback=48):
 # ============================================================
 def strat_dvol_contraction_breakout(df, lookback=48):
     """Enter when DVOL contracts to low then price breaks out (vol squeeze)"""
-    close = df['close']
-    high = df['high']
-    dvol = df['dvol_close'] if 'dvol_close' in df.columns else pd.Series(50, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    dvol = (
+        df["dvol_close"]
+        if "dvol_close" in df.columns
+        else pd.Series(50, index=df.index)
+    )
 
     upper = high.rolling(lookback).max().shift(1)
     ema_f = close.ewm(span=50, adjust=False).mean()
@@ -210,18 +246,19 @@ def strat_dvol_contraction_breakout(df, lookback=48):
     dvol_pct = dvol.rolling(1440).rank(pct=True)
 
     # Low DVOL percentile (<30%) + breakout = vol squeeze breakout
-    signals = np.where(
-        (close > upper) & (ema_f > ema_s) & (dvol_pct < 0.3),
-        1, 0
-    )
+    signals = np.where((close > upper) & (ema_f > ema_s) & (dvol_pct < 0.3), 1, 0)
     return signals
 
 
 def strat_dvol_falling(df, lookback=48):
     """Enter when DVOL is falling (5-day MA declining) + breakout"""
-    close = df['close']
-    high = df['high']
-    dvol = df['dvol_close'] if 'dvol_close' in df.columns else pd.Series(50, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    dvol = (
+        df["dvol_close"]
+        if "dvol_close" in df.columns
+        else pd.Series(50, index=df.index)
+    )
 
     upper = high.rolling(lookback).max().shift(1)
     ema_f = close.ewm(span=50, adjust=False).mean()
@@ -230,27 +267,31 @@ def strat_dvol_falling(df, lookback=48):
     dvol_ma5 = dvol.rolling(120).mean()  # 5-day MA of DVOL
     dvol_falling = dvol_ma5 < dvol_ma5.shift(24)  # declining over 24h
 
-    signals = np.where(
-        (close > upper) & (ema_f > ema_s) & dvol_falling,
-        1, 0
-    )
+    signals = np.where((close > upper) & (ema_f > ema_s) & dvol_falling, 1, 0)
     return signals
 
 
 # ============================================================
 # Simulation & Portfolio
 # ============================================================
-def simulate(df, signals, position_pct=0.02, max_bars=72,
-             atr_stop=3.0, profit_target_atr=8.0, slippage=0.0003):
+def simulate(
+    df,
+    signals,
+    position_pct=0.02,
+    max_bars=72,
+    atr_stop=3.0,
+    profit_target_atr=8.0,
+    slippage=0.0003,
+):
     capital = 1.0
     position = 0
     entry_price = 0
     bars_held = 0
     trades = []
 
-    close = df['close'].values
-    high = df['high'].values
-    low = df['low'].values
+    close = df["close"].values
+    high = df["high"].values
+    low = df["low"].values
     atr_vals = calc_atr(high, low, close, 14)
 
     for i in range(len(df)):
@@ -297,31 +338,38 @@ def simulate(df, signals, position_pct=0.02, max_bars=72,
     gp = sum(t for t in trades if t > 0)
     gl = abs(sum(t for t in trades if t < 0))
     return {
-        'total_return': capital - 1,
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(trades),
-        'trades': trades,
+        "total_return": capital - 1,
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(trades),
+        "trades": trades,
     }
 
 
 def check_criteria(r):
     c = {
-        'sharpe_gt_1': r.get('sharpe', 0) > 1.0,
-        'max_dd_lt_25': r.get('max_drawdown', -1) > -0.25,
-        'win_rate_gt_45': r.get('win_rate', 0) > 0.45,
-        'profit_factor_gt_1_5': r.get('profit_factor', 0) > 1.5,
-        'wfa_efficiency_gt_50': r.get('wfa_efficiency', 0) > 50,
-        'trade_count_gt_100': r.get('trade_count', 0) > 100,
+        "sharpe_gt_1": r.get("sharpe", 0) > 1.0,
+        "max_dd_lt_25": r.get("max_drawdown", -1) > -0.25,
+        "win_rate_gt_45": r.get("win_rate", 0) > 0.45,
+        "profit_factor_gt_1_5": r.get("profit_factor", 0) > 1.5,
+        "wfa_efficiency_gt_50": r.get("wfa_efficiency", 0) > 50,
+        "trade_count_gt_100": r.get("trade_count", 0) > 100,
     }
     return c, sum(v for v in c.values())
 
 
-def run_portfolio_oos(all_data, dvol_daily, strat_fn, strat_name,
-                      max_positions=10, test_bars=720,
-                      exit_params=None, position_scale=5.0):
+def run_portfolio_oos(
+    all_data,
+    dvol_daily,
+    strat_fn,
+    strat_name,
+    max_positions=10,
+    test_bars=720,
+    exit_params=None,
+    position_scale=5.0,
+):
     if exit_params is None:
-        exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+        exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     # Prepare OOS data with DVOL merged
     oos_data = {}
@@ -332,7 +380,7 @@ def run_portfolio_oos(all_data, dvol_daily, strat_fn, strat_name,
         if len(oos_df) > 2000:
             # Merge DVOL
             oos_merged = merge_dvol_to_hourly(oos_df, dvol_daily)
-            if oos_merged['dvol_close'].notna().sum() > 1000:
+            if oos_merged["dvol_close"].notna().sum() > 1000:
                 oos_data[symbol] = oos_merged
 
     if not oos_data:
@@ -351,7 +399,7 @@ def run_portfolio_oos(all_data, dvol_daily, strat_fn, strat_name,
         for symbol, df in oos_data.items():
             if len(df) <= i:
                 continue
-            vol = df['close'].iloc[:i].pct_change().rolling(168).std().iloc[-1]
+            vol = df["close"].iloc[:i].pct_change().rolling(168).std().iloc[-1]
             if np.isnan(vol) or vol == 0:
                 vol = 0.01
             scored.append((symbol, vol))
@@ -362,18 +410,24 @@ def run_portfolio_oos(all_data, dvol_daily, strat_fn, strat_name,
             df = oos_data[symbol]
             if i + test_bars > len(df):
                 continue
-            full = df.iloc[:i + test_bars]
+            full = df.iloc[: i + test_bars]
             sigs = strat_fn(full)
-            test_sigs = sigs[i:i + test_bars]
-            test_df = df.iloc[i:i + test_bars].copy().reset_index(drop=True)
+            test_sigs = sigs[i : i + test_bars]
+            test_df = df.iloc[i : i + test_bars].copy().reset_index(drop=True)
             ann_vol = vol * np.sqrt(24 * 365)
             position_pct = min(0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05)
             position_pct *= position_scale
-            r = simulate(test_df, test_sigs, position_pct,
-                       exit_params['max_bars'], exit_params['atr_stop'],
-                       exit_params['profit_target_atr'], 0.0003)
-            period_pnl += r['total_return']
-            all_trades.extend(r['trades'])
+            r = simulate(
+                test_df,
+                test_sigs,
+                position_pct,
+                exit_params["max_bars"],
+                exit_params["atr_stop"],
+                exit_params["profit_target_atr"],
+                0.0003,
+            )
+            period_pnl += r["total_return"]
+            all_trades.extend(r["trades"])
 
         period_returns.append(period_pnl)
         equity.append(equity[-1] * (1 + period_pnl))
@@ -393,14 +447,16 @@ def run_portfolio_oos(all_data, dvol_daily, strat_fn, strat_name,
     sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
 
     return {
-        'total_return': float(equity_arr[-1] - 1),
-        'max_drawdown': float(dd.min()),
-        'sharpe': float(sharpe),
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(all_trades),
-        'periods': len(period_returns),
-        'wfa_efficiency': sum(1 for r in period_returns if r > 0) / len(period_returns) * 100,
+        "total_return": float(equity_arr[-1] - 1),
+        "max_drawdown": float(dd.min()),
+        "sharpe": float(sharpe),
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(all_trades),
+        "periods": len(period_returns),
+        "wfa_efficiency": sum(1 for r in period_returns if r > 0)
+        / len(period_returns)
+        * 100,
     }
 
 
@@ -413,8 +469,12 @@ def main():
     # Load DVOL
     dvol = load_dvol()
     print(f"DVOL data: {dvol['date'].min()} to {dvol['date'].max()} ({len(dvol)} days)")
-    print(f"DVOL range: {dvol['dvol_close'].min():.1f} - {dvol['dvol_close'].max():.1f}")
-    print(f"DVOL mean: {dvol['dvol_close'].mean():.1f}, median: {dvol['dvol_close'].median():.1f}\n")
+    print(
+        f"DVOL range: {dvol['dvol_close'].min():.1f} - {dvol['dvol_close'].max():.1f}"
+    )
+    print(
+        f"DVOL mean: {dvol['dvol_close'].mean():.1f}, median: {dvol['dvol_close'].median():.1f}\n"
+    )
 
     # Load hourly data
     all_path = DATA_ROOT / "binance_futures_1h"
@@ -426,52 +486,83 @@ def main():
             all_data[symbol] = df
     print(f"Loaded {len(all_data)} symbols\n")
 
-    exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+    exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     strategies = {
         # A: Level-based
-        'A1_low_vol_entry_40': lambda df: strat_dvol_low_vol_entry(df, dvol_thresh_low=40),
-        'A2_low_vol_entry_50': lambda df: strat_dvol_low_vol_entry(df, dvol_thresh_low=50),
-        'A3_low_vol_entry_60': lambda df: strat_dvol_low_vol_entry(df, dvol_thresh_low=60),
-        'A4_high_vol_avoid_70': lambda df: strat_dvol_high_vol_avoid(df, dvol_thresh_high=70),
-        'A5_high_vol_avoid_80': lambda df: strat_dvol_high_vol_avoid(df, dvol_thresh_high=80),
-        'A6_high_vol_avoid_90': lambda df: strat_dvol_high_vol_avoid(df, dvol_thresh_high=90),
+        "A1_low_vol_entry_40": lambda df: strat_dvol_low_vol_entry(
+            df, dvol_thresh_low=40
+        ),
+        "A2_low_vol_entry_50": lambda df: strat_dvol_low_vol_entry(
+            df, dvol_thresh_low=50
+        ),
+        "A3_low_vol_entry_60": lambda df: strat_dvol_low_vol_entry(
+            df, dvol_thresh_low=60
+        ),
+        "A4_high_vol_avoid_70": lambda df: strat_dvol_high_vol_avoid(
+            df, dvol_thresh_high=70
+        ),
+        "A5_high_vol_avoid_80": lambda df: strat_dvol_high_vol_avoid(
+            df, dvol_thresh_high=80
+        ),
+        "A6_high_vol_avoid_90": lambda df: strat_dvol_high_vol_avoid(
+            df, dvol_thresh_high=90
+        ),
         # B: Change-based
-        'B1_spike_contrarian_m5': lambda df: strat_dvol_spike_contrarian(df, dvol_change_thresh=-5),
-        'B2_spike_contrarian_m3': lambda df: strat_dvol_spike_contrarian(df, dvol_change_thresh=-3),
-        'B3_mean_reversion_z2': lambda df: strat_dvol_mean_reversion(df, dvol_zscore_thresh=2.0),
-        'B4_mean_reversion_z1.5': lambda df: strat_dvol_mean_reversion(df, dvol_zscore_thresh=1.5),
+        "B1_spike_contrarian_m5": lambda df: strat_dvol_spike_contrarian(
+            df, dvol_change_thresh=-5
+        ),
+        "B2_spike_contrarian_m3": lambda df: strat_dvol_spike_contrarian(
+            df, dvol_change_thresh=-3
+        ),
+        "B3_mean_reversion_z2": lambda df: strat_dvol_mean_reversion(
+            df, dvol_zscore_thresh=2.0
+        ),
+        "B4_mean_reversion_z1.5": lambda df: strat_dvol_mean_reversion(
+            df, dvol_zscore_thresh=1.5
+        ),
         # C: Composite with Vol Profile
-        'C1_vp_dvol_max70': lambda df: strat_vol_profile_dvol_filter(df, dvol_max=70),
-        'C2_vp_dvol_max80': lambda df: strat_vol_profile_dvol_filter(df, dvol_max=80),
-        'C3_vp_dvol_max90': lambda df: strat_vol_profile_dvol_filter(df, dvol_max=90),
+        "C1_vp_dvol_max70": lambda df: strat_vol_profile_dvol_filter(df, dvol_max=70),
+        "C2_vp_dvol_max80": lambda df: strat_vol_profile_dvol_filter(df, dvol_max=80),
+        "C3_vp_dvol_max90": lambda df: strat_vol_profile_dvol_filter(df, dvol_max=90),
         # D: Regime transition
-        'D1_contraction_bkout': lambda df: strat_dvol_contraction_breakout(df),
-        'D2_dvol_falling': lambda df: strat_dvol_falling(df),
+        "D1_contraction_bkout": lambda df: strat_dvol_contraction_breakout(df),
+        "D2_dvol_falling": lambda df: strat_dvol_falling(df),
     }
 
-    print(f"{'Strategy':<30} {'Pass':>4} {'Sharpe':>7} {'Return':>8} {'MaxDD':>7} {'WR':>5} {'PF':>6} {'WFA':>5} {'T':>5}")
+    print(
+        f"{'Strategy':<30} {'Pass':>4} {'Sharpe':>7} {'Return':>8} {'MaxDD':>7} {'WR':>5} {'PF':>6} {'WFA':>5} {'T':>5}"
+    )
     print("-" * 85)
 
     all_results = []
     for name, fn in strategies.items():
-        r = run_portfolio_oos(all_data, dvol, fn, name,
-                              max_positions=10, test_bars=720,
-                              exit_params=exit_params, position_scale=5.0)
+        r = run_portfolio_oos(
+            all_data,
+            dvol,
+            fn,
+            name,
+            max_positions=10,
+            test_bars=720,
+            exit_params=exit_params,
+            position_scale=5.0,
+        )
         if r:
             c, p = check_criteria(r)
             all_results.append((name, p, r))
             fails = [k for k, v in c.items() if not v]
-            print(f"  {name:<28} [{p}/6] {r['sharpe']:>6.2f} {r['total_return']*100:>+7.1f}% "
-                  f"{r['max_drawdown']*100:>6.1f}% {r['win_rate']*100:>4.0f}% "
-                  f"{r['profit_factor']:>5.2f} {r['wfa_efficiency']:>4.0f}% {r['trade_count']:>4}")
+            print(
+                f"  {name:<28} [{p}/6] {r['sharpe']:>6.2f} {r['total_return']*100:>+7.1f}% "
+                f"{r['max_drawdown']*100:>6.1f}% {r['win_rate']*100:>4.0f}% "
+                f"{r['profit_factor']:>5.2f} {r['wfa_efficiency']:>4.0f}% {r['trade_count']:>4}"
+            )
             if fails:
                 print(f"    FAILS: {', '.join(fails)}")
         else:
             print(f"  {name:<28} NO DATA (DVOL date range mismatch)")
 
     # Summary
-    all_results.sort(key=lambda x: (-x[1], -x[2].get('sharpe', 0)))
+    all_results.sort(key=lambda x: (-x[1], -x[2].get("sharpe", 0)))
 
     print(f"\n{'=' * 70}")
     print("SUMMARY")
@@ -481,11 +572,13 @@ def main():
     if six_six:
         print("\n6/6 PASSED:")
         for name, p, r in six_six:
-            print(f"  {name}: Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                  f"DD={r['max_drawdown']*100:.1f}%")
+            print(
+                f"  {name}: Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                f"DD={r['max_drawdown']*100:.1f}%"
+            )
 
         # Compare vs Vol Profile baseline (Sharpe 2.52)
-        better = [(n, r) for n, p, r in six_six if r['sharpe'] > 2.52]
+        better = [(n, r) for n, p, r in six_six if r["sharpe"] > 2.52]
         if better:
             print(f"\n*** BEATS VOL PROFILE (Sharpe > 2.52) ***")
             for name, r in better:

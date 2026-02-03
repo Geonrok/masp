@@ -9,6 +9,7 @@ Final Breakout Strategy - Production Ready
 3. 포트폴리오 분산 (최대 5개 동시 포지션)
 4. 엄격한 리스크 관리
 """
+
 from __future__ import annotations
 
 import logging
@@ -20,7 +21,7 @@ import random
 import numpy as np
 import pandas as pd
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 
@@ -54,7 +55,7 @@ class DataLoader:
         if not fp.exists():
             return pd.DataFrame()
         df = pd.read_csv(fp)
-        for col in ['datetime', 'timestamp', 'date']:
+        for col in ["datetime", "timestamp", "date"]:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col])
                 df = df.set_index(col).sort_index()
@@ -64,7 +65,9 @@ class DataLoader:
 
 
 def atr(h: pd.Series, l: pd.Series, c: pd.Series, p: int) -> pd.Series:
-    tr = pd.concat([h - l, abs(h - c.shift(1)), abs(l - c.shift(1))], axis=1).max(axis=1)
+    tr = pd.concat([h - l, abs(h - c.shift(1)), abs(l - c.shift(1))], axis=1).max(
+        axis=1
+    )
     return tr.rolling(p).mean()
 
 
@@ -86,15 +89,15 @@ class FinalBreakoutStrategy:
         self.trend_ema = 100
         self.atr_stop = 2.0
         self.position_pct = 0.02  # Kelly 기준 2%
-        self.max_positions = 5    # 동시 최대 포지션
-        self.max_bars = 48        # 최대 보유 기간 (8일)
+        self.max_positions = 5  # 동시 최대 포지션
+        self.max_bars = 48  # 최대 보유 기간 (8일)
 
     def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
         """신호 생성"""
-        close = df['close']
-        high = df['high']
-        low = df['low']
-        volume = df['volume']
+        close = df["close"]
+        high = df["high"]
+        low = df["low"]
+        volume = df["volume"]
 
         # Donchian Channel
         high_max = high.rolling(self.lookback).max().shift(1)
@@ -115,16 +118,17 @@ class FinalBreakoutStrategy:
         short_signal = (close < low_min) & vol_ok & downtrend
 
         result = pd.DataFrame(index=df.index)
-        result['signal'] = 0
-        result.loc[long_signal, 'signal'] = 1
-        result.loc[short_signal, 'signal'] = -1
-        result['stop'] = atr_val * self.atr_stop
+        result["signal"] = 0
+        result.loc[long_signal, "signal"] = 1
+        result.loc[short_signal, "signal"] = -1
+        result["stop"] = atr_val * self.atr_stop
 
         return result
 
 
-def backtest_single(df: pd.DataFrame, strategy: FinalBreakoutStrategy,
-                    cost: CostModel) -> Dict:
+def backtest_single(
+    df: pd.DataFrame, strategy: FinalBreakoutStrategy, cost: CostModel
+) -> Dict:
     """단일 심볼 백테스트"""
     if len(df) < 300:
         return None
@@ -137,48 +141,45 @@ def backtest_single(df: pd.DataFrame, strategy: FinalBreakoutStrategy,
     trades = []
     equity = [capital]
 
-    test_start = df.index.get_indexer([pd.Timestamp("2023-01-01")], method='nearest')[0]
+    test_start = df.index.get_indexer([pd.Timestamp("2023-01-01")], method="nearest")[0]
     test_start = max(test_start, 30)
 
     for i in range(test_start, len(df)):
-        price = df['close'].iloc[i]
-        sig = signals['signal'].iloc[i]
-        stop = signals['stop'].iloc[i]
+        price = df["close"].iloc[i]
+        sig = signals["signal"].iloc[i]
+        stop = signals["stop"].iloc[i]
 
         if position:
-            bars = i - position['idx']
+            bars = i - position["idx"]
 
             # Exit conditions
-            if position['dir'] == 1:
-                stop_hit = price < position['entry'] - position['stop']
+            if position["dir"] == 1:
+                stop_hit = price < position["entry"] - position["stop"]
             else:
-                stop_hit = price > position['entry'] + position['stop']
+                stop_hit = price > position["entry"] + position["stop"]
 
-            reverse = (position['dir'] == 1 and sig == -1) or \
-                     (position['dir'] == -1 and sig == 1)
+            reverse = (position["dir"] == 1 and sig == -1) or (
+                position["dir"] == -1 and sig == 1
+            )
             timeout = bars >= strategy.max_bars
 
             if stop_hit or reverse or timeout:
-                gross = (price / position['entry'] - 1) * position['dir']
+                gross = (price / position["entry"] - 1) * position["dir"]
                 net = gross - cost.total_cost(bars)
-                pnl = position['value'] * net
+                pnl = position["value"] * net
 
-                trades.append({
-                    'pnl': pnl,
-                    'pct': net,
-                    'bars': bars
-                })
+                trades.append({"pnl": pnl, "pct": net, "bars": bars})
                 capital += pnl
                 position = None
 
         if not position and sig != 0 and capital > 0:
             value = capital * strategy.position_pct  # Kelly 기준
             position = {
-                'entry': price,
-                'dir': sig,
-                'idx': i,
-                'value': value,
-                'stop': stop
+                "entry": price,
+                "dir": sig,
+                "idx": i,
+                "value": value,
+                "stop": stop,
             }
 
         equity.append(max(capital, 0))
@@ -186,7 +187,7 @@ def backtest_single(df: pd.DataFrame, strategy: FinalBreakoutStrategy,
     if len(trades) < 5:
         return None
 
-    pnls = [t['pnl'] for t in trades]
+    pnls = [t["pnl"] for t in trades]
     eq = pd.Series(equity)
     mdd = ((eq - eq.expanding().max()) / eq.expanding().max()).min() * 100
 
@@ -196,17 +197,21 @@ def backtest_single(df: pd.DataFrame, strategy: FinalBreakoutStrategy,
     pf = gp / gl if gl > 0 else (999 if gp > 0 else 0)
 
     return {
-        'pf': min(pf, 999),
-        'ret': (capital / init - 1) * 100,
-        'wr': wins / len(trades) * 100,
-        'mdd': mdd,
-        'trades': len(trades),
-        'trade_pcts': [t['pct'] for t in trades]
+        "pf": min(pf, 999),
+        "ret": (capital / init - 1) * 100,
+        "wr": wins / len(trades) * 100,
+        "mdd": mdd,
+        "trades": len(trades),
+        "trade_pcts": [t["pct"] for t in trades],
     }
 
 
-def backtest_portfolio(loader: DataLoader, symbols: List[str],
-                       strategy: FinalBreakoutStrategy, cost: CostModel) -> Dict:
+def backtest_portfolio(
+    loader: DataLoader,
+    symbols: List[str],
+    strategy: FinalBreakoutStrategy,
+    cost: CostModel,
+) -> Dict:
     """
     포트폴리오 백테스트
     - 여러 심볼 동시 거래
@@ -248,7 +253,9 @@ def backtest_portfolio(loader: DataLoader, symbols: List[str],
     trades = []
     equity = [capital]
 
-    test_start = all_dates.index(min(d for d in all_dates if d >= pd.Timestamp("2023-01-01")))
+    test_start = all_dates.index(
+        min(d for d in all_dates if d >= pd.Timestamp("2023-01-01"))
+    )
     test_start = max(test_start, 30)
 
     for i in range(test_start, len(all_dates)):
@@ -260,31 +267,26 @@ def backtest_portfolio(loader: DataLoader, symbols: List[str],
                 continue
 
             pos = positions[sym]
-            price = dfs[sym].loc[date, 'close']
-            bars = i - pos['idx']
+            price = dfs[sym].loc[date, "close"]
+            bars = i - pos["idx"]
 
-            sig = signals[sym].loc[date, 'signal'] if date in signals[sym].index else 0
+            sig = signals[sym].loc[date, "signal"] if date in signals[sym].index else 0
 
             # Exit
-            if pos['dir'] == 1:
-                stop_hit = price < pos['entry'] - pos['stop']
+            if pos["dir"] == 1:
+                stop_hit = price < pos["entry"] - pos["stop"]
             else:
-                stop_hit = price > pos['entry'] + pos['stop']
+                stop_hit = price > pos["entry"] + pos["stop"]
 
-            reverse = (pos['dir'] == 1 and sig == -1) or (pos['dir'] == -1 and sig == 1)
+            reverse = (pos["dir"] == 1 and sig == -1) or (pos["dir"] == -1 and sig == 1)
             timeout = bars >= strategy.max_bars
 
             if stop_hit or reverse or timeout:
-                gross = (price / pos['entry'] - 1) * pos['dir']
+                gross = (price / pos["entry"] - 1) * pos["dir"]
                 net = gross - cost.total_cost(bars)
-                pnl = pos['value'] * net
+                pnl = pos["value"] * net
 
-                trades.append({
-                    'symbol': sym,
-                    'pnl': pnl,
-                    'pct': net,
-                    'bars': bars
-                })
+                trades.append({"symbol": sym, "pnl": pnl, "pct": net, "bars": bars})
                 capital += pnl
                 del positions[sym]
 
@@ -296,18 +298,18 @@ def backtest_portfolio(loader: DataLoader, symbols: List[str],
                 if date not in signals[sym].index:
                     continue
 
-                sig = signals[sym].loc[date, 'signal']
+                sig = signals[sym].loc[date, "signal"]
                 if sig != 0 and capital > 0:
-                    price = dfs[sym].loc[date, 'close']
-                    stop = signals[sym].loc[date, 'stop']
+                    price = dfs[sym].loc[date, "close"]
+                    stop = signals[sym].loc[date, "stop"]
                     value = capital * strategy.position_pct
 
                     positions[sym] = {
-                        'entry': price,
-                        'dir': sig,
-                        'idx': i,
-                        'value': value,
-                        'stop': stop
+                        "entry": price,
+                        "dir": sig,
+                        "idx": i,
+                        "value": value,
+                        "stop": stop,
                     }
 
                     if len(positions) >= strategy.max_positions:
@@ -318,7 +320,7 @@ def backtest_portfolio(loader: DataLoader, symbols: List[str],
     if len(trades) < 10:
         return None
 
-    pnls = [t['pnl'] for t in trades]
+    pnls = [t["pnl"] for t in trades]
     eq = pd.Series(equity)
     mdd = ((eq - eq.expanding().max()) / eq.expanding().max()).min() * 100
 
@@ -328,13 +330,13 @@ def backtest_portfolio(loader: DataLoader, symbols: List[str],
     pf = gp / gl if gl > 0 else 999
 
     return {
-        'pf': min(pf, 999),
-        'ret': (capital / init - 1) * 100,
-        'wr': wins / len(trades) * 100,
-        'mdd': mdd,
-        'trades': len(trades),
-        'symbols_traded': len(set(t['symbol'] for t in trades)),
-        'trade_pcts': [t['pct'] for t in trades]
+        "pf": min(pf, 999),
+        "ret": (capital / init - 1) * 100,
+        "wr": wins / len(trades) * 100,
+        "mdd": mdd,
+        "trades": len(trades),
+        "symbols_traded": len(set(t["symbol"] for t in trades)),
+        "trade_pcts": [t["pct"] for t in trades],
     }
 
 
@@ -369,16 +371,16 @@ def monte_carlo(trade_pcts: List[float], n_sim: int = 5000) -> Dict:
     mdds = np.array(mdds)
 
     return {
-        'mean': (np.mean(finals) / 10000 - 1) * 100,
-        'median': (np.median(finals) / 10000 - 1) * 100,
-        'p5': (np.percentile(finals, 5) / 10000 - 1) * 100,
-        'p25': (np.percentile(finals, 25) / 10000 - 1) * 100,
-        'p75': (np.percentile(finals, 75) / 10000 - 1) * 100,
-        'p95': (np.percentile(finals, 95) / 10000 - 1) * 100,
-        'prob_profit': (finals > 10000).mean() * 100,
-        'prob_loss_10': (finals < 9000).mean() * 100,
-        'mean_mdd': np.mean(mdds) * 100,
-        'worst_mdd': np.max(mdds) * 100
+        "mean": (np.mean(finals) / 10000 - 1) * 100,
+        "median": (np.median(finals) / 10000 - 1) * 100,
+        "p5": (np.percentile(finals, 5) / 10000 - 1) * 100,
+        "p25": (np.percentile(finals, 25) / 10000 - 1) * 100,
+        "p75": (np.percentile(finals, 75) / 10000 - 1) * 100,
+        "p95": (np.percentile(finals, 95) / 10000 - 1) * 100,
+        "prob_profit": (finals > 10000).mean() * 100,
+        "prob_loss_10": (finals < 9000).mean() * 100,
+        "mean_mdd": np.mean(mdds) * 100,
+        "worst_mdd": np.max(mdds) * 100,
     }
 
 
@@ -395,9 +397,21 @@ def main():
 
     # 선별된 심볼 (이전 테스트에서 PF > 1.1)
     selected_symbols = [
-        'XLMUSDT', 'DOGEUSDT', 'ALGOUSDT', 'GMTUSDT', 'VETUSDT',
-        'INJUSDT', 'SOLUSDT', 'ETHUSDT', 'GALAUSDT', 'AVAXUSDT',
-        'MANAUSDT', 'SANDUSDT', 'RUNEUSDT', 'FILUSDT', 'ICPUSDT'
+        "XLMUSDT",
+        "DOGEUSDT",
+        "ALGOUSDT",
+        "GMTUSDT",
+        "VETUSDT",
+        "INJUSDT",
+        "SOLUSDT",
+        "ETHUSDT",
+        "GALAUSDT",
+        "AVAXUSDT",
+        "MANAUSDT",
+        "SANDUSDT",
+        "RUNEUSDT",
+        "FILUSDT",
+        "ICPUSDT",
     ]
 
     # =========================================================================
@@ -417,27 +431,31 @@ def main():
 
         result = backtest_single(df, strategy, cost)
         if result:
-            result['symbol'] = sym
+            result["symbol"] = sym
             results.append(result)
-            all_trades.extend(result['trade_pcts'])
+            all_trades.extend(result["trade_pcts"])
 
     if results:
         df_r = pd.DataFrame(results)
-        profitable = (df_r['pf'] > 1.0).sum()
+        profitable = (df_r["pf"] > 1.0).sum()
 
         logger.info(f"\n[개별 심볼 결과]")
         logger.info(f"  테스트: {len(results)}개")
-        logger.info(f"  수익: {profitable}/{len(results)} ({profitable/len(results)*100:.1f}%)")
+        logger.info(
+            f"  수익: {profitable}/{len(results)} ({profitable/len(results)*100:.1f}%)"
+        )
         logger.info(f"  평균 PF: {df_r[df_r['pf'] < 999]['pf'].mean():.2f}")
         logger.info(f"  평균 수익률: {df_r['ret'].mean():.1f}%")
         logger.info(f"  평균 MDD: {df_r['mdd'].mean():.1f}%")
 
         logger.info(f"\n{'Symbol':<12} {'PF':>8} {'Return':>10} {'WR':>8} {'MDD':>10}")
         logger.info("-" * 55)
-        for _, r in df_r.sort_values('pf', ascending=False).iterrows():
-            status = "PASS" if r['pf'] > 1.0 else "FAIL"
-            logger.info(f"[{status}] {r['symbol']:<8} {r['pf']:>8.2f} {r['ret']:>9.1f}% "
-                       f"{r['wr']:>7.1f}% {r['mdd']:>9.1f}%")
+        for _, r in df_r.sort_values("pf", ascending=False).iterrows():
+            status = "PASS" if r["pf"] > 1.0 else "FAIL"
+            logger.info(
+                f"[{status}] {r['symbol']:<8} {r['pf']:>8.2f} {r['ret']:>9.1f}% "
+                f"{r['wr']:>7.1f}% {r['mdd']:>9.1f}%"
+            )
 
     # =========================================================================
     # 2. 포트폴리오 테스트
@@ -457,7 +475,7 @@ def main():
         logger.info(f"  승률: {port_result['wr']:.1f}%")
         logger.info(f"  MDD: {port_result['mdd']:.1f}%")
 
-        all_trades = port_result['trade_pcts']
+        all_trades = port_result["trade_pcts"]
 
     # =========================================================================
     # 3. Monte Carlo
@@ -498,23 +516,35 @@ def main():
 
     if results:
         df_r = pd.DataFrame(results)
-        c1 = (df_r['pf'] > 1.0).sum() / len(df_r) * 100 >= 60
-        c2 = df_r[df_r['pf'] < 999]['pf'].mean() >= 1.1
-        c3 = df_r['ret'].mean() > 0
+        c1 = (df_r["pf"] > 1.0).sum() / len(df_r) * 100 >= 60
+        c2 = df_r[df_r["pf"] < 999]["pf"].mean() >= 1.1
+        c3 = df_r["ret"].mean() > 0
 
-        logger.info(f"\n  [{'PASS' if c1 else 'FAIL'}] 수익 심볼 >= 60%: {(df_r['pf'] > 1.0).sum() / len(df_r) * 100:.1f}%")
-        logger.info(f"  [{'PASS' if c2 else 'FAIL'}] 평균 PF >= 1.1: {df_r[df_r['pf'] < 999]['pf'].mean():.2f}")
-        logger.info(f"  [{'PASS' if c3 else 'FAIL'}] 평균 수익률 > 0%: {df_r['ret'].mean():.1f}%")
+        logger.info(
+            f"\n  [{'PASS' if c1 else 'FAIL'}] 수익 심볼 >= 60%: {(df_r['pf'] > 1.0).sum() / len(df_r) * 100:.1f}%"
+        )
+        logger.info(
+            f"  [{'PASS' if c2 else 'FAIL'}] 평균 PF >= 1.1: {df_r[df_r['pf'] < 999]['pf'].mean():.2f}"
+        )
+        logger.info(
+            f"  [{'PASS' if c3 else 'FAIL'}] 평균 수익률 > 0%: {df_r['ret'].mean():.1f}%"
+        )
         criteria = [c1, c2, c3]
 
     if mc:
-        c4 = mc['prob_profit'] >= 60
-        c5 = mc['p5'] >= -10
-        c6 = mc['mean_mdd'] <= 20
+        c4 = mc["prob_profit"] >= 60
+        c5 = mc["p5"] >= -10
+        c6 = mc["mean_mdd"] <= 20
 
-        logger.info(f"  [{'PASS' if c4 else 'FAIL'}] MC 수익 확률 >= 60%: {mc['prob_profit']:.1f}%")
-        logger.info(f"  [{'PASS' if c5 else 'FAIL'}] MC 5% 백분위 >= -10%: {mc['p5']:.1f}%")
-        logger.info(f"  [{'PASS' if c6 else 'FAIL'}] MC 평균 MDD <= 20%: {mc['mean_mdd']:.1f}%")
+        logger.info(
+            f"  [{'PASS' if c4 else 'FAIL'}] MC 수익 확률 >= 60%: {mc['prob_profit']:.1f}%"
+        )
+        logger.info(
+            f"  [{'PASS' if c5 else 'FAIL'}] MC 5% 백분위 >= -10%: {mc['p5']:.1f}%"
+        )
+        logger.info(
+            f"  [{'PASS' if c6 else 'FAIL'}] MC 평균 MDD <= 20%: {mc['mean_mdd']:.1f}%"
+        )
         criteria.extend([c4, c5, c6])
 
     passed = sum(criteria)

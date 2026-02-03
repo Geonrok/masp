@@ -1,4 +1,5 @@
 """Tests for risk metrics component."""
+
 from __future__ import annotations
 
 import math

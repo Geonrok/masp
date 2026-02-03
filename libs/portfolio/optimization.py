@@ -42,7 +42,9 @@ class OptimizationConstraints:
     target_return: Optional[float] = None  # Target return for mean-variance
     max_volatility: Optional[float] = None  # Maximum portfolio volatility
     strategy_groups: Optional[Dict[str, List[int]]] = None  # Groups for sector limits
-    group_limits: Optional[Dict[str, Tuple[float, float]]] = None  # (min, max) per group
+    group_limits: Optional[Dict[str, Tuple[float, float]]] = (
+        None  # (min, max) per group
+    )
     allow_short: bool = False  # Allow negative weights
     sum_to_one: bool = True  # Weights must sum to 1
 
@@ -150,9 +152,9 @@ class PortfolioOptimizer:
         """Calculate return statistics and covariance matrix."""
         # Build returns matrix
         min_len = min(len(s.returns) for s in self.strategies)
-        self.returns_matrix = np.column_stack([
-            s.returns[-min_len:] for s in self.strategies
-        ])
+        self.returns_matrix = np.column_stack(
+            [s.returns[-min_len:] for s in self.strategies]
+        )
 
         # Mean returns (annualized)
         self.mean_returns = np.mean(self.returns_matrix, axis=0) * 252
@@ -258,7 +260,7 @@ class PortfolioOptimizer:
         div_ratio = weighted_vol / port_vol if port_vol > 0 else 1.0
 
         # Effective N (Herfindahl index inverse)
-        effective_n = 1.0 / float(np.sum(weights ** 2)) if np.any(weights > 0) else 0.0
+        effective_n = 1.0 / float(np.sum(weights**2)) if np.any(weights > 0) else 0.0
 
         return OptimizationResult(
             weights=weights,
@@ -374,10 +376,13 @@ class PortfolioOptimizer:
 
         # Add target return constraint
         cons = self._get_scipy_constraints(constraints)
-        cons.append({
-            "type": "eq",
-            "fun": lambda w: np.dot(w, self.mean_returns) - constraints.target_return,
-        })
+        cons.append(
+            {
+                "type": "eq",
+                "fun": lambda w: np.dot(w, self.mean_returns)
+                - constraints.target_return,
+            }
+        )
 
         result = optimize.minimize(
             portfolio_variance,
@@ -537,7 +542,7 @@ class PortfolioOptimizer:
             alpha = 1 - var_left / (var_left + var_right)
 
             w[left] *= alpha
-            w[right] *= (1 - alpha)
+            w[right] *= 1 - alpha
 
             # Recurse
             _allocate(left, w)
@@ -569,32 +574,40 @@ class PortfolioOptimizer:
         cons = []
 
         if constraints.sum_to_one:
-            cons.append({
-                "type": "eq",
-                "fun": lambda w: np.sum(w) - 1.0,
-            })
+            cons.append(
+                {
+                    "type": "eq",
+                    "fun": lambda w: np.sum(w) - 1.0,
+                }
+            )
 
         if constraints.max_volatility is not None:
-            cons.append({
-                "type": "ineq",
-                "fun": lambda w: constraints.max_volatility - np.sqrt(
-                    np.dot(w.T, np.dot(self.cov_matrix, w))
-                ),
-            })
+            cons.append(
+                {
+                    "type": "ineq",
+                    "fun": lambda w: constraints.max_volatility
+                    - np.sqrt(np.dot(w.T, np.dot(self.cov_matrix, w))),
+                }
+            )
 
         # Group constraints
         if constraints.strategy_groups and constraints.group_limits:
             for group_name, indices in constraints.strategy_groups.items():
                 if group_name in constraints.group_limits:
                     min_limit, max_limit = constraints.group_limits[group_name]
-                    cons.append({
-                        "type": "ineq",
-                        "fun": lambda w, idx=indices: np.sum(w[idx]) - min_limit,
-                    })
-                    cons.append({
-                        "type": "ineq",
-                        "fun": lambda w, idx=indices, mx=max_limit: mx - np.sum(w[idx]),
-                    })
+                    cons.append(
+                        {
+                            "type": "ineq",
+                            "fun": lambda w, idx=indices: np.sum(w[idx]) - min_limit,
+                        }
+                    )
+                    cons.append(
+                        {
+                            "type": "ineq",
+                            "fun": lambda w, idx=indices, mx=max_limit: mx
+                            - np.sum(w[idx]),
+                        }
+                    )
 
         return cons
 

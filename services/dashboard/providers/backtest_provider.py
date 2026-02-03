@@ -1,4 +1,5 @@
 """Backtest provider - connects BacktestStore to backtest_viewer component."""
+
 from __future__ import annotations
 
 import logging

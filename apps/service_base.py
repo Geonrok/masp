@@ -41,10 +41,10 @@ class StrategyService:
             config_path=config_path,
             overrides=overrides,
         )
-        
+
         # Phase 1 준비: real mode 검증 (fail-fast, 항상 호출)
         self.config.validate_real_mode_requirements()
-        
+
         # Phase 1 준비: adapter_mode=mock이면 자동으로 dry_run=True
         if self.config.adapter_mode == "mock":
             self.config.dry_run = True
@@ -68,7 +68,7 @@ class StrategyService:
         """Check if kill switch file exists. Returns True if should terminate."""
         if not self.config.kill_switch_file:
             return False
-        
+
         kill_switch_path = Path(self.config.kill_switch_file)
         if kill_switch_path.exists():
             print(f"[KILL-SWITCH] File detected: {kill_switch_path}")
@@ -81,7 +81,7 @@ class StrategyService:
         if self._check_kill_switch():
             print("[Service] Kill-switch activated, aborting run")
             return
-        
+
         run_id = self.run_manager.generate_run_id()
         run_ctx = RunContext(run_id=run_id, asset_class=self.asset_class.value)
         run_ctx.start()
@@ -104,7 +104,6 @@ class StrategyService:
                     "kill_switch_enabled": (self.config.kill_switch_file is not None),
                 },
             )
-
 
             market_data = self.market_adapter.get_quotes(self.config.symbols)
 
@@ -129,8 +128,13 @@ class StrategyService:
                         )
                         run_ctx.increment_decisions()
 
-                        if self.config.paper_mode and decision.action in (Action.BUY, Action.SELL):
-                            self._emit_mock_order(logger, strategy.strategy_id, decision, market_data)
+                        if self.config.paper_mode and decision.action in (
+                            Action.BUY,
+                            Action.SELL,
+                        ):
+                            self._emit_mock_order(
+                                logger, strategy.strategy_id, decision, market_data
+                            )
 
                 except Exception as e:
                     logger.emit_error(

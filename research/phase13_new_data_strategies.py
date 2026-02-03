@@ -19,11 +19,13 @@ These features approximate order flow using volume + price action.
 
 NEW APPROACH: Volume-enhanced strategies on full 1H dataset (257 symbols, multi-year)
 """
+
 import json
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
@@ -41,17 +43,18 @@ def load_ohlcv(symbol, timeframe="1h"):
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path)
-    for col in ['datetime', 'timestamp', 'date']:
+    for col in ["datetime", "timestamp", "date"]:
         if col in df.columns:
-            df['datetime'] = pd.to_datetime(df[col])
+            df["datetime"] = pd.to_datetime(df[col])
             break
-    return df.sort_values('datetime').reset_index(drop=True)
+    return df.sort_values("datetime").reset_index(drop=True)
 
 
 def calc_atr(high, low, close, period=14):
-    tr = np.maximum(high - low,
-         np.maximum(np.abs(high - np.roll(close, 1)),
-                    np.abs(low - np.roll(close, 1))))
+    tr = np.maximum(
+        high - low,
+        np.maximum(np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))),
+    )
     tr[0] = high[0] - low[0]
     return pd.Series(tr).rolling(period).mean().values
 
@@ -60,11 +63,12 @@ def calc_atr(high, low, close, period=14):
 # STRATEGY VARIANTS: Volume-Enhanced
 # =============================================================================
 
+
 def strat_volume_breakout(df, lookback=48, vol_mult=2.0):
     """Breakout + volume spike: price breaks high AND volume > 2x average"""
-    close = df['close']
-    high = df['high']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
 
     upper = high.rolling(lookback).max().shift(1)
     ema_f = close.ewm(span=50, adjust=False).mean()
@@ -78,8 +82,8 @@ def strat_volume_breakout(df, lookback=48, vol_mult=2.0):
 
 def strat_obv_trend(df, lookback=48):
     """On-Balance Volume trend: OBV making new highs = bullish"""
-    close = df['close']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
 
     # OBV
     obv = (np.sign(close.diff()) * vol).cumsum()
@@ -88,8 +92,10 @@ def strat_obv_trend(df, lookback=48):
     ema_s = close.ewm(span=200, adjust=False).mean()
 
     # Price breakout + OBV breakout
-    price_upper = close.rolling(lookback).max().shift(1) * close.rolling(lookback).max().shift(1)
-    upper = df['high'].rolling(lookback).max().shift(1)
+    price_upper = close.rolling(lookback).max().shift(1) * close.rolling(
+        lookback
+    ).max().shift(1)
+    upper = df["high"].rolling(lookback).max().shift(1)
 
     signals = np.where((close > upper) & (obv > obv_upper) & (ema_f > ema_s), 1, 0)
     return signals
@@ -97,9 +103,9 @@ def strat_obv_trend(df, lookback=48):
 
 def strat_vwap_breakout(df, lookback=48):
     """VWAP breakout: price > VWAP + breakout"""
-    close = df['close']
-    high = df['high']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
 
     # Rolling VWAP
     vwap = (close * vol).rolling(lookback).sum() / (vol.rolling(lookback).sum() + 1e-10)
@@ -113,10 +119,10 @@ def strat_vwap_breakout(df, lookback=48):
 
 def strat_mfi_breakout(df, lookback=48, mfi_thresh=80):
     """Money Flow Index breakout: MFI confirms buying pressure"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
 
     # Typical price
     tp = (high + low + close) / 3
@@ -138,15 +144,17 @@ def strat_mfi_breakout(df, lookback=48, mfi_thresh=80):
     atr_avg = atr.rolling(lookback).mean()
     expanding = atr > atr_avg * 1.0
 
-    signals = np.where((close > upper) & (mfi > mfi_thresh) & (ema_f > ema_s) & expanding, 1, 0)
+    signals = np.where(
+        (close > upper) & (mfi > mfi_thresh) & (ema_f > ema_s) & expanding, 1, 0
+    )
     return signals
 
 
 def strat_volume_profile(df, lookback=48):
     """Volume Profile: breakout above high-volume price level"""
-    close = df['close']
-    high = df['high']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
 
     # Estimate POC (Point of Control) as VWAP
     vwap = (close * vol).rolling(lookback).sum() / (vol.rolling(lookback).sum() + 1e-10)
@@ -162,10 +170,10 @@ def strat_volume_profile(df, lookback=48):
 
 def strat_cmf_breakout(df, lookback=48):
     """Chaikin Money Flow breakout: CMF > 0.1 = accumulation"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
 
     # CMF
     mfm = ((close - low) - (high - close)) / (high - low + 1e-10)
@@ -182,9 +190,9 @@ def strat_cmf_breakout(df, lookback=48):
 
 def strat_relative_volume(df, lookback=48, rvol_thresh=1.5):
     """Relative Volume: trade when volume is 1.5x+ above average"""
-    close = df['close']
-    high = df['high']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
 
     upper = high.rolling(lookback).max().shift(1)
     ema_f = close.ewm(span=50, adjust=False).mean()
@@ -202,17 +210,25 @@ def strat_relative_volume(df, lookback=48, rvol_thresh=1.5):
 # SIMULATION + VALIDATION (same as Phase 9/10)
 # =============================================================================
 
-def simulate(df, signals, position_pct=0.02, max_bars=72,
-             atr_stop=3.0, profit_target_atr=8.0, slippage=0.0003):
+
+def simulate(
+    df,
+    signals,
+    position_pct=0.02,
+    max_bars=72,
+    atr_stop=3.0,
+    profit_target_atr=8.0,
+    slippage=0.0003,
+):
     capital = 1.0
     position = 0
     entry_price = 0
     bars_held = 0
     trades = []
 
-    close = df['close'].values
-    high = df['high'].values
-    low = df['low'].values
+    close = df["close"].values
+    high = df["high"].values
+    low = df["low"].values
     atr_vals = calc_atr(high, low, close, 14)
 
     for i in range(len(df)):
@@ -259,30 +275,36 @@ def simulate(df, signals, position_pct=0.02, max_bars=72,
     gp = sum(t for t in trades if t > 0)
     gl = abs(sum(t for t in trades if t < 0))
     return {
-        'total_return': capital - 1,
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(trades),
-        'trades': trades,
+        "total_return": capital - 1,
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(trades),
+        "trades": trades,
     }
 
 
 def check_criteria(r):
     c = {
-        'sharpe_gt_1': r.get('sharpe', 0) > 1.0,
-        'max_dd_lt_25': r.get('max_drawdown', -1) > -0.25,
-        'win_rate_gt_45': r.get('win_rate', 0) > 0.45,
-        'profit_factor_gt_1_5': r.get('profit_factor', 0) > 1.5,
-        'wfa_efficiency_gt_50': r.get('wfa_efficiency', 0) > 50,
-        'trade_count_gt_100': r.get('trade_count', 0) > 100,
+        "sharpe_gt_1": r.get("sharpe", 0) > 1.0,
+        "max_dd_lt_25": r.get("max_drawdown", -1) > -0.25,
+        "win_rate_gt_45": r.get("win_rate", 0) > 0.45,
+        "profit_factor_gt_1_5": r.get("profit_factor", 0) > 1.5,
+        "wfa_efficiency_gt_50": r.get("wfa_efficiency", 0) > 50,
+        "trade_count_gt_100": r.get("trade_count", 0) > 100,
     }
     return c, sum(v for v in c.values())
 
 
-def run_true_oos(strategy_fn, all_data, max_positions=10, test_bars=720,
-                 exit_params=None, position_scale=3.0):
+def run_true_oos(
+    strategy_fn,
+    all_data,
+    max_positions=10,
+    test_bars=720,
+    exit_params=None,
+    position_scale=3.0,
+):
     if exit_params is None:
-        exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+        exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     oos_data = {}
     for symbol in all_data:
@@ -308,7 +330,7 @@ def run_true_oos(strategy_fn, all_data, max_positions=10, test_bars=720,
         for symbol, df in oos_data.items():
             if len(df) <= i:
                 continue
-            vol = df['close'].iloc[:i].pct_change().rolling(168).std().iloc[-1]
+            vol = df["close"].iloc[:i].pct_change().rolling(168).std().iloc[-1]
             if np.isnan(vol) or vol == 0:
                 vol = 0.01
             scored.append((symbol, vol))
@@ -320,20 +342,26 @@ def run_true_oos(strategy_fn, all_data, max_positions=10, test_bars=720,
             df = oos_data[symbol]
             if i + test_bars > len(df):
                 continue
-            full = df.iloc[:i + test_bars]
+            full = df.iloc[: i + test_bars]
             sigs = strategy_fn(full)
-            test_sigs = sigs[i:i + test_bars]
-            test_df = df.iloc[i:i + test_bars].copy().reset_index(drop=True)
+            test_sigs = sigs[i : i + test_bars]
+            test_df = df.iloc[i : i + test_bars].copy().reset_index(drop=True)
 
             ann_vol = vol * np.sqrt(24 * 365)
             position_pct = min(0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05)
             position_pct *= position_scale
 
-            r = simulate(test_df, test_sigs, position_pct,
-                       exit_params['max_bars'], exit_params['atr_stop'],
-                       exit_params['profit_target_atr'], 0.0003)
-            period_pnl += r['total_return']
-            all_trades.extend(r['trades'])
+            r = simulate(
+                test_df,
+                test_sigs,
+                position_pct,
+                exit_params["max_bars"],
+                exit_params["atr_stop"],
+                exit_params["profit_target_atr"],
+                0.0003,
+            )
+            period_pnl += r["total_return"]
+            all_trades.extend(r["trades"])
 
         period_returns.append(period_pnl)
         equity.append(equity[-1] * (1 + period_pnl))
@@ -353,14 +381,16 @@ def run_true_oos(strategy_fn, all_data, max_positions=10, test_bars=720,
     sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
 
     return {
-        'total_return': float(equity_arr[-1] - 1),
-        'max_drawdown': float(dd.min()),
-        'sharpe': float(sharpe),
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(all_trades),
-        'periods': len(period_returns),
-        'wfa_efficiency': sum(1 for r in period_returns if r > 0) / len(period_returns) * 100,
+        "total_return": float(equity_arr[-1] - 1),
+        "max_drawdown": float(dd.min()),
+        "sharpe": float(sharpe),
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(all_trades),
+        "periods": len(period_returns),
+        "wfa_efficiency": sum(1 for r in period_returns if r > 0)
+        / len(period_returns)
+        * 100,
     }
 
 
@@ -380,53 +410,60 @@ def main():
             all_data[symbol] = df
     print(f"Loaded {len(all_data)} symbols\n")
 
-    exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+    exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     # Test all volume-enhanced strategies
     strategies = {
-        'vol_breakout_2x': lambda df: strat_volume_breakout(df, 48, 2.0),
-        'vol_breakout_1.5x': lambda df: strat_volume_breakout(df, 48, 1.5),
-        'obv_trend': lambda df: strat_obv_trend(df, 48),
-        'vwap_breakout': lambda df: strat_vwap_breakout(df, 48),
-        'mfi_breakout_80': lambda df: strat_mfi_breakout(df, 48, 80),
-        'mfi_breakout_60': lambda df: strat_mfi_breakout(df, 48, 60),
-        'vol_profile': lambda df: strat_volume_profile(df, 48),
-        'cmf_breakout': lambda df: strat_cmf_breakout(df, 48),
-        'rvol_1.5x': lambda df: strat_relative_volume(df, 48, 1.5),
-        'rvol_2.0x': lambda df: strat_relative_volume(df, 48, 2.0),
+        "vol_breakout_2x": lambda df: strat_volume_breakout(df, 48, 2.0),
+        "vol_breakout_1.5x": lambda df: strat_volume_breakout(df, 48, 1.5),
+        "obv_trend": lambda df: strat_obv_trend(df, 48),
+        "vwap_breakout": lambda df: strat_vwap_breakout(df, 48),
+        "mfi_breakout_80": lambda df: strat_mfi_breakout(df, 48, 80),
+        "mfi_breakout_60": lambda df: strat_mfi_breakout(df, 48, 60),
+        "vol_profile": lambda df: strat_volume_profile(df, 48),
+        "cmf_breakout": lambda df: strat_cmf_breakout(df, 48),
+        "rvol_1.5x": lambda df: strat_relative_volume(df, 48, 1.5),
+        "rvol_2.0x": lambda df: strat_relative_volume(df, 48, 2.0),
     }
 
     # Test with different position configs
     configs = [
-        {'max_pos': 10, 'test_bars': 720, 'scale': 3.0},
-        {'max_pos': 15, 'test_bars': 360, 'scale': 3.0},
-        {'max_pos': 10, 'test_bars': 720, 'scale': 5.0},
+        {"max_pos": 10, "test_bars": 720, "scale": 3.0},
+        {"max_pos": 15, "test_bars": 360, "scale": 3.0},
+        {"max_pos": 10, "test_bars": 720, "scale": 5.0},
     ]
 
     all_results = []
 
     for strat_name, strat_fn in strategies.items():
         for cfg in configs:
-            config_name = f"{strat_name}_pos{cfg['max_pos']}_rb{cfg['test_bars']}_s{cfg['scale']}"
+            config_name = (
+                f"{strat_name}_pos{cfg['max_pos']}_rb{cfg['test_bars']}_s{cfg['scale']}"
+            )
             print(f"  {config_name}...", end=" ", flush=True)
 
-            r = run_true_oos(strat_fn, all_data,
-                            max_positions=cfg['max_pos'],
-                            test_bars=cfg['test_bars'],
-                            exit_params=exit_params,
-                            position_scale=cfg['scale'])
+            r = run_true_oos(
+                strat_fn,
+                all_data,
+                max_positions=cfg["max_pos"],
+                test_bars=cfg["test_bars"],
+                exit_params=exit_params,
+                position_scale=cfg["scale"],
+            )
             if r:
                 c, p = check_criteria(r)
-                r['criteria_passed'] = p
+                r["criteria_passed"] = p
                 all_results.append((config_name, p, r))
-                print(f"[{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                      f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-                      f"PF={r['profit_factor']:.2f} T={r['trade_count']}")
+                print(
+                    f"[{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                    f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+                    f"PF={r['profit_factor']:.2f} T={r['trade_count']}"
+                )
             else:
                 print("SKIP")
 
     # Sort and display
-    all_results.sort(key=lambda x: (-x[1], -x[2].get('sharpe', 0)))
+    all_results.sort(key=lambda x: (-x[1], -x[2].get("sharpe", 0)))
 
     print(f"\n\n{'=' * 70}")
     print("PHASE 13 RESULTS - TOP 15")
@@ -435,9 +472,11 @@ def main():
     for i, (name, passed, r) in enumerate(all_results[:15]):
         c, _ = check_criteria(r)
         print(f"\n  {i+1}. [{passed}/6] {name}")
-        print(f"     Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
-              f"DD={r['max_drawdown']*100:.1f}%  WR={r['win_rate']*100:.0f}%  "
-              f"PF={r['profit_factor']:.2f}  WFA={r['wfa_efficiency']:.0f}%  T={r['trade_count']}")
+        print(
+            f"     Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
+            f"DD={r['max_drawdown']*100:.1f}%  WR={r['win_rate']*100:.0f}%  "
+            f"PF={r['profit_factor']:.2f}  WFA={r['wfa_efficiency']:.0f}%  T={r['trade_count']}"
+        )
         fails = [k for k, v in c.items() if not v]
         if fails:
             print(f"     FAILS: {', '.join(fails)}")
@@ -446,7 +485,9 @@ def main():
     if six_six:
         print(f"\n*** {len(six_six)} configs passed 6/6! ***")
         for name, r in six_six:
-            print(f"  {name}: Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}%")
+            print(
+                f"  {name}: Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}%"
+            )
     else:
         print(f"\nNo 6/6. Best: {all_results[0][1]}/6" if all_results else "No results")
 
@@ -458,7 +499,9 @@ def main():
     if all_results:
         best = all_results[0]
         print(f"  Best new: [{best[1]}/6] {best[0]}")
-        print(f"    Sharpe={best[2]['sharpe']:.2f}  Ret={best[2]['total_return']*100:+.1f}%")
+        print(
+            f"    Sharpe={best[2]['sharpe']:.2f}  Ret={best[2]['total_return']*100:+.1f}%"
+        )
         if best[1] >= 6:
             print("  → New strategy matches or beats baseline!")
         else:
@@ -466,23 +509,26 @@ def main():
 
     # Save
     save_data = {
-        'timestamp': datetime.now().isoformat(),
-        'strategies_tested': len(strategies),
-        'configs_per_strategy': len(configs),
-        'total_tested': len(all_results),
-        'six_six_count': len(six_six) if six_six else 0,
-        'top_10': [
-            {'config': n, 'passed': int(p),
-             'sharpe': float(r.get('sharpe', 0)),
-             'return': float(r.get('total_return', 0)),
-             'max_dd': float(r.get('max_drawdown', 0)),
-             'win_rate': float(r.get('win_rate', 0)),
-             'pf': float(r.get('profit_factor', 0)),
-             'trades': int(r.get('trade_count', 0))}
+        "timestamp": datetime.now().isoformat(),
+        "strategies_tested": len(strategies),
+        "configs_per_strategy": len(configs),
+        "total_tested": len(all_results),
+        "six_six_count": len(six_six) if six_six else 0,
+        "top_10": [
+            {
+                "config": n,
+                "passed": int(p),
+                "sharpe": float(r.get("sharpe", 0)),
+                "return": float(r.get("total_return", 0)),
+                "max_dd": float(r.get("max_drawdown", 0)),
+                "win_rate": float(r.get("win_rate", 0)),
+                "pf": float(r.get("profit_factor", 0)),
+                "trades": int(r.get("trade_count", 0)),
+            }
             for n, p, r in all_results[:10]
         ],
     }
-    with open(RESULTS_PATH / "phase13_report.json", 'w') as f:
+    with open(RESULTS_PATH / "phase13_report.json", "w") as f:
         json.dump(save_data, f, indent=2, default=str)
 
     print(f"\nSaved to {RESULTS_PATH / 'phase13_report.json'}")

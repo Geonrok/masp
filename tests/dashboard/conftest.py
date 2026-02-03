@@ -1,4 +1,5 @@
 """Test helpers for dashboard modules."""
+
 from __future__ import annotations
 
 import sys

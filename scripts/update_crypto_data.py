@@ -23,15 +23,16 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 
 
-def update_upbit_data(symbols: Optional[List[str]] = None, days_back: int = 200) -> Dict[str, int]:
+def update_upbit_data(
+    symbols: Optional[List[str]] = None, days_back: int = 200
+) -> Dict[str, int]:
     """
     Update Upbit OHLCV data.
 
@@ -88,10 +89,14 @@ def update_upbit_data(symbols: Optional[List[str]] = None, days_back: int = 200)
                 if not new_data.empty:
                     # Append new data
                     combined = pd.concat([existing, new_data], ignore_index=True)
-                    combined = combined.sort_values("date").drop_duplicates(subset=["date"])
+                    combined = combined.sort_values("date").drop_duplicates(
+                        subset=["date"]
+                    )
                     combined.to_csv(csv_path, index=False)
                     results[symbol] = len(new_data)
-                    logger.info(f"[Upbit] {symbol}: +{len(new_data)} rows (total: {len(combined)})")
+                    logger.info(
+                        f"[Upbit] {symbol}: +{len(new_data)} rows (total: {len(combined)})"
+                    )
                 else:
                     results[symbol] = 0
             else:
@@ -112,9 +117,7 @@ def update_upbit_data(symbols: Optional[List[str]] = None, days_back: int = 200)
 
 
 def update_binance_data(
-    symbols: Optional[List[str]] = None,
-    days_back: int = 200,
-    market_type: str = "spot"
+    symbols: Optional[List[str]] = None, days_back: int = 200, market_type: str = "spot"
 ) -> Dict[str, int]:
     """
     Update Binance OHLCV data.
@@ -166,8 +169,12 @@ def update_binance_data(
                 continue
 
             # Convert to DataFrame
-            df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
-            df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms").dt.strftime("%Y-%m-%d")
+            df = pd.DataFrame(
+                ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"]
+            )
+            df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms").dt.strftime(
+                "%Y-%m-%d"
+            )
 
             # Load existing data
             csv_path = binance_dir / f"{symbol}.csv"
@@ -183,10 +190,14 @@ def update_binance_data(
                 if not new_data.empty:
                     # Append new data
                     combined = pd.concat([existing, new_data], ignore_index=True)
-                    combined = combined.sort_values("timestamp").drop_duplicates(subset=["timestamp"])
+                    combined = combined.sort_values("timestamp").drop_duplicates(
+                        subset=["timestamp"]
+                    )
                     combined.to_csv(csv_path, index=False)
                     results[symbol] = len(new_data)
-                    logger.info(f"[Binance] {symbol}: +{len(new_data)} rows (total: {len(combined)})")
+                    logger.info(
+                        f"[Binance] {symbol}: +{len(new_data)} rows (total: {len(combined)})"
+                    )
                 else:
                     results[symbol] = 0
             else:
@@ -238,7 +249,9 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Update crypto OHLCV data")
-    parser.add_argument("--exchange", choices=["upbit", "binance", "all"], default="all")
+    parser.add_argument(
+        "--exchange", choices=["upbit", "binance", "all"], default="all"
+    )
     parser.add_argument("--symbols", nargs="+", help="Specific symbols to update")
     parser.add_argument("--days", type=int, default=60, help="Days to fetch")
     parser.add_argument("--summary", action="store_true", help="Show data summary only")
@@ -262,13 +275,19 @@ def main():
         results = update_upbit_data(symbols=args.symbols, days_back=args.days)
         updated = sum(v for v in results.values() if v > 0)
         total_updated += updated
-        print(f"\n[Upbit] Updated {updated} rows across {len([v for v in results.values() if v > 0])} symbols")
+        print(
+            f"\n[Upbit] Updated {updated} rows across {len([v for v in results.values() if v > 0])} symbols"
+        )
 
     if args.exchange in ["binance", "all"]:
-        results = update_binance_data(symbols=args.symbols, days_back=args.days, market_type="spot")
+        results = update_binance_data(
+            symbols=args.symbols, days_back=args.days, market_type="spot"
+        )
         updated = sum(v for v in results.values() if v > 0)
         total_updated += updated
-        print(f"\n[Binance Spot] Updated {updated} rows across {len([v for v in results.values() if v > 0])} symbols")
+        print(
+            f"\n[Binance Spot] Updated {updated} rows across {len([v for v in results.values() if v > 0])} symbols"
+        )
 
     print(f"\n=== Total: {total_updated} rows updated ===")
 
@@ -278,7 +297,9 @@ def main():
     for folder in ["upbit_1d", "binance_spot_1d"]:
         if folder in summary:
             info = summary[folder]
-            print(f"{folder}: {info['files']} files, {info['min_date']} ~ {info['max_date']}")
+            print(
+                f"{folder}: {info['files']} files, {info['min_date']} ~ {info['max_date']}"
+            )
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@
 - 메타데이터 및 일별 수익률 저장
 - 결과 목록 조회 및 비교
 """
+
 from __future__ import annotations
 
 import json
@@ -122,7 +123,9 @@ class BacktestStore:
     def _get_strategy_dir(self, strategy_name: str) -> Path:
         """전략 디렉토리 경로."""
         # 파일 시스템 안전한 이름으로 변환
-        safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in strategy_name)
+        safe_name = "".join(
+            c if c.isalnum() or c in "-_" else "_" for c in strategy_name
+        )
         strategy_dir = self.store_dir / safe_name
         strategy_dir.mkdir(parents=True, exist_ok=True)
         return strategy_dir
@@ -197,16 +200,20 @@ class BacktestStore:
                         with open(file_path, "r", encoding="utf-8") as f:
                             data = json.load(f)
 
-                        backtests.append({
-                            "backtest_id": data.get("backtest_id", file_path.stem),
-                            "strategy_name": data.get("strategy_name", strategy_dir.name),
-                            "created_at": data.get("created_at", ""),
-                            "start_date": data.get("start_date", ""),
-                            "end_date": data.get("end_date", ""),
-                            "total_return": data.get("total_return", 0),
-                            "sharpe_ratio": data.get("sharpe_ratio", 0),
-                            "max_drawdown": data.get("max_drawdown", 0),
-                        })
+                        backtests.append(
+                            {
+                                "backtest_id": data.get("backtest_id", file_path.stem),
+                                "strategy_name": data.get(
+                                    "strategy_name", strategy_dir.name
+                                ),
+                                "created_at": data.get("created_at", ""),
+                                "start_date": data.get("start_date", ""),
+                                "end_date": data.get("end_date", ""),
+                                "total_return": data.get("total_return", 0),
+                                "sharpe_ratio": data.get("sharpe_ratio", 0),
+                                "max_drawdown": data.get("max_drawdown", 0),
+                            }
+                        )
                     except Exception as e:
                         logger.debug("[BacktestStore] Skip file %s: %s", file_path, e)
         except Exception as e:
@@ -228,7 +235,9 @@ class BacktestStore:
         all_backtests = self.list_backtests()
         return [b for b in all_backtests if b.get("strategy_name") == strategy_name]
 
-    def get_latest(self, strategy_name: Optional[str] = None) -> Optional[BacktestResult]:
+    def get_latest(
+        self, strategy_name: Optional[str] = None
+    ) -> Optional[BacktestResult]:
         """최신 백테스트 결과 조회.
 
         Args:

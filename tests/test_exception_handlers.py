@@ -100,6 +100,7 @@ class TestSafeExecute:
 
     def test_exception_returns_default(self):
         """Test that exception returns default value."""
+
         def failing():
             raise ValueError("error")
 
@@ -108,6 +109,7 @@ class TestSafeExecute:
 
     def test_reraise_option(self):
         """Test reraise option."""
+
         def failing():
             raise ValueError("error")
 
@@ -116,6 +118,7 @@ class TestSafeExecute:
 
     def test_with_arguments(self):
         """Test with function arguments."""
+
         def add(a, b):
             return a + b
 

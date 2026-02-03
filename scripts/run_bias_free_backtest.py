@@ -30,15 +30,16 @@ from libs.strategy.integrated_strategy import (
 )
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 
 
-def load_exchange_data(exchange: str, timeframe: str = "1d", min_days: int = 100) -> dict:
+def load_exchange_data(
+    exchange: str, timeframe: str = "1d", min_days: int = 100
+) -> dict:
     """
     Load OHLCV data from exchange folder.
 
@@ -135,7 +136,9 @@ def run_backtest(
     min_date = min(all_dates)
     max_date = max(all_dates)
 
-    print(f"Data Range: {min_date.strftime('%Y-%m-%d')} ~ {max_date.strftime('%Y-%m-%d')}")
+    print(
+        f"Data Range: {min_date.strftime('%Y-%m-%d')} ~ {max_date.strftime('%Y-%m-%d')}"
+    )
     print(f"Symbols: {len(data)}")
     print()
 
@@ -179,10 +182,16 @@ def run_backtest(
 
         if m.total_return < 0:
             print("NOTE: Negative returns confirm the Look-Ahead Bias hypothesis.")
-            print("      The original +133% was due to Day T signal -> Day T execution.")
-            print("      Correct methodology (Day T signal -> Day T+1 execution) shows reality.")
+            print(
+                "      The original +133% was due to Day T signal -> Day T execution."
+            )
+            print(
+                "      Correct methodology (Day T signal -> Day T+1 execution) shows reality."
+            )
         elif m.total_return < 0.1:  # Less than 10%
-            print("NOTE: Much lower returns than original confirms bias was significant.")
+            print(
+                "NOTE: Much lower returns than original confirms bias was significant."
+            )
 
         print()
 
@@ -198,24 +207,16 @@ def main():
         "--exchange",
         choices=["upbit", "binance_spot", "binance_futures"],
         default="upbit",
-        help="Exchange to test"
+        help="Exchange to test",
     )
     parser.add_argument(
-        "--validate",
-        action="store_true",
-        help="Run WFO/CPCV/DSR validation"
+        "--validate", action="store_true", help="Run WFO/CPCV/DSR validation"
     )
     parser.add_argument(
-        "--min-days",
-        type=int,
-        default=100,
-        help="Minimum days required per symbol"
+        "--min-days", type=int, default=100, help="Minimum days required per symbol"
     )
     parser.add_argument(
-        "--capital",
-        type=float,
-        default=10000.0,
-        help="Initial capital"
+        "--capital", type=float, default=10000.0, help="Initial capital"
     )
 
     args = parser.parse_args()

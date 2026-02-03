@@ -36,13 +36,16 @@ def create_mock_data(n_days: int = 300, n_symbols: int = 5, seed: int = 42) -> d
         returns = np.random.randn(n_days) * 0.02 + 0.0002
         prices = base_price * np.cumprod(1 + returns)
 
-        df = pd.DataFrame({
-            "open": prices * (1 + np.random.randn(n_days) * 0.001),
-            "high": prices * (1 + np.abs(np.random.randn(n_days) * 0.01)),
-            "low": prices * (1 - np.abs(np.random.randn(n_days) * 0.01)),
-            "close": prices,
-            "volume": np.random.uniform(1e6, 1e7, n_days),
-        }, index=dates)
+        df = pd.DataFrame(
+            {
+                "open": prices * (1 + np.random.randn(n_days) * 0.001),
+                "high": prices * (1 + np.abs(np.random.randn(n_days) * 0.01)),
+                "low": prices * (1 - np.abs(np.random.randn(n_days) * 0.01)),
+                "close": prices,
+                "volume": np.random.uniform(1e6, 1e7, n_days),
+            },
+            index=dates,
+        )
 
         data[symbol] = df
 

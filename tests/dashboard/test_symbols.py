@@ -1,4 +1,5 @@
 """Tests for symbol format utilities."""
+
 from services.dashboard.utils.symbols import (
     convert_symbols_to_dashboard,
     dashboard_to_upbit,

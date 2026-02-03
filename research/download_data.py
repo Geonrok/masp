@@ -5,6 +5,7 @@ Download free data for strategy testing:
 2. Binance trade data: aggregate trades from data.binance.vision
 3. Deribit options OHLCV from CryptoDataDownload
 """
+
 import os
 import io
 import zipfile
@@ -12,7 +13,8 @@ import time
 from pathlib import Path
 from datetime import datetime, timedelta
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
@@ -20,11 +22,13 @@ import numpy as np
 # Use project HTTP wrapper if available, else requests
 try:
     from libs.adapters.resilient_client import ResilientClient
+
     session = ResilientClient()
 except Exception:
     import requests
+
     session = requests.Session()
-    session.headers.update({'User-Agent': 'Mozilla/5.0 CryptoResearch/1.0'})
+    session.headers.update({"User-Agent": "Mozilla/5.0 CryptoResearch/1.0"})
 
 DATA_ROOT = Path("E:/data")
 SOCIAL_DIR = DATA_ROOT / "social_sentiment"
@@ -45,18 +49,20 @@ def download_fear_greed_full():
     try:
         resp = session.get(url, timeout=30)
         data = resp.json()
-        records = data.get('data', [])
+        records = data.get("data", [])
         print(f"  Downloaded {len(records)} days")
 
         rows = []
         for r in records:
-            rows.append({
-                'datetime': pd.to_datetime(int(r['timestamp']), unit='s'),
-                'fear_greed_value': int(r['value']),
-                'classification': r['value_classification'],
-            })
+            rows.append(
+                {
+                    "datetime": pd.to_datetime(int(r["timestamp"]), unit="s"),
+                    "fear_greed_value": int(r["value"]),
+                    "classification": r["value_classification"],
+                }
+            )
 
-        df = pd.DataFrame(rows).sort_values('datetime').reset_index(drop=True)
+        df = pd.DataFrame(rows).sort_values("datetime").reset_index(drop=True)
         path = SOCIAL_DIR / "fear_greed_full.csv"
         df.to_csv(path, index=False)
         print(f"  Saved to {path}")
@@ -107,10 +113,20 @@ def download_binance_aggr_trades(symbol="BTCUSDT", months=24):
             with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
                 csv_name = zf.namelist()[0]
                 with zf.open(csv_name) as f:
-                    df = pd.read_csv(f, header=None,
-                                    names=['agg_trade_id', 'price', 'quantity',
-                                           'first_trade_id', 'last_trade_id',
-                                           'timestamp', 'is_buyer_maker', 'is_best_match'])
+                    df = pd.read_csv(
+                        f,
+                        header=None,
+                        names=[
+                            "agg_trade_id",
+                            "price",
+                            "quantity",
+                            "first_trade_id",
+                            "last_trade_id",
+                            "timestamp",
+                            "is_buyer_maker",
+                            "is_best_match",
+                        ],
+                    )
                     df.to_csv(csv_path, index=False)
                     print(f"{len(df):,} trades")
                     all_dfs.append(csv_path)
@@ -138,13 +154,13 @@ def build_trade_features(symbol="BTCUSDT"):
     for f in sorted(symbol_dir.glob("*.csv")):
         try:
             df = pd.read_csv(f)
-            if 'timestamp' in df.columns:
+            if "timestamp" in df.columns:
                 # Handle both ms and us timestamps
-                ts = df['timestamp']
+                ts = df["timestamp"]
                 if ts.iloc[0] > 1e15:  # microseconds
-                    df['datetime'] = pd.to_datetime(ts, unit='us')
+                    df["datetime"] = pd.to_datetime(ts, unit="us")
                 else:
-                    df['datetime'] = pd.to_datetime(ts, unit='ms')
+                    df["datetime"] = pd.to_datetime(ts, unit="ms")
                 all_chunks.append(df)
         except Exception as e:
             print(f"  Error reading {f.name}: {e}")
@@ -155,46 +171,53 @@ def build_trade_features(symbol="BTCUSDT"):
 
     print(f"  Loaded {len(all_chunks)} monthly files")
     trades = pd.concat(all_chunks, ignore_index=True)
-    trades = trades.sort_values('datetime').reset_index(drop=True)
+    trades = trades.sort_values("datetime").reset_index(drop=True)
     print(f"  Total trades: {len(trades):,}")
     print(f"  Date range: {trades['datetime'].min()} to {trades['datetime'].max()}")
 
     # Resample to hourly
-    trades.set_index('datetime', inplace=True)
-    trades['price'] = trades['price'].astype(float)
-    trades['quantity'] = trades['quantity'].astype(float)
-    trades['usd_volume'] = trades['price'] * trades['quantity']
-    trades['is_buyer_maker'] = trades['is_buyer_maker'].astype(bool)
+    trades.set_index("datetime", inplace=True)
+    trades["price"] = trades["price"].astype(float)
+    trades["quantity"] = trades["quantity"].astype(float)
+    trades["usd_volume"] = trades["price"] * trades["quantity"]
+    trades["is_buyer_maker"] = trades["is_buyer_maker"].astype(bool)
 
     hourly = pd.DataFrame()
-    hourly['close'] = trades['price'].resample('1h').last()
-    hourly['open'] = trades['price'].resample('1h').first()
-    hourly['high'] = trades['price'].resample('1h').max()
-    hourly['low'] = trades['price'].resample('1h').min()
-    hourly['volume'] = trades['quantity'].resample('1h').sum()
-    hourly['usd_volume'] = trades['usd_volume'].resample('1h').sum()
-    hourly['trade_count'] = trades['price'].resample('1h').count()
+    hourly["close"] = trades["price"].resample("1h").last()
+    hourly["open"] = trades["price"].resample("1h").first()
+    hourly["high"] = trades["price"].resample("1h").max()
+    hourly["low"] = trades["price"].resample("1h").min()
+    hourly["volume"] = trades["quantity"].resample("1h").sum()
+    hourly["usd_volume"] = trades["usd_volume"].resample("1h").sum()
+    hourly["trade_count"] = trades["price"].resample("1h").count()
 
     # Buy/sell volume
-    buy_trades = trades[~trades['is_buyer_maker']]
-    sell_trades = trades[trades['is_buyer_maker']]
-    hourly['buy_volume'] = buy_trades['quantity'].resample('1h').sum()
-    hourly['sell_volume'] = sell_trades['quantity'].resample('1h').sum()
-    hourly['buy_volume'] = hourly['buy_volume'].fillna(0)
-    hourly['sell_volume'] = hourly['sell_volume'].fillna(0)
+    buy_trades = trades[~trades["is_buyer_maker"]]
+    sell_trades = trades[trades["is_buyer_maker"]]
+    hourly["buy_volume"] = buy_trades["quantity"].resample("1h").sum()
+    hourly["sell_volume"] = sell_trades["quantity"].resample("1h").sum()
+    hourly["buy_volume"] = hourly["buy_volume"].fillna(0)
+    hourly["sell_volume"] = hourly["sell_volume"].fillna(0)
 
     # Derived features
-    hourly['buy_sell_ratio'] = hourly['buy_volume'] / (hourly['sell_volume'] + 1e-10)
-    hourly['buy_pct'] = hourly['buy_volume'] / (hourly['buy_volume'] + hourly['sell_volume'] + 1e-10)
-    hourly['avg_trade_size'] = hourly['usd_volume'] / (hourly['trade_count'] + 1e-10)
+    hourly["buy_sell_ratio"] = hourly["buy_volume"] / (hourly["sell_volume"] + 1e-10)
+    hourly["buy_pct"] = hourly["buy_volume"] / (
+        hourly["buy_volume"] + hourly["sell_volume"] + 1e-10
+    )
+    hourly["avg_trade_size"] = hourly["usd_volume"] / (hourly["trade_count"] + 1e-10)
 
     # Large trade detection (trades > mean + 2*std)
-    trades['is_large'] = trades['usd_volume'] > trades['usd_volume'].rolling(1000, min_periods=100).mean() + \
-                          2 * trades['usd_volume'].rolling(1000, min_periods=100).std()
-    hourly['large_trade_count'] = trades['is_large'].resample('1h').sum()
-    hourly['large_trade_pct'] = hourly['large_trade_count'] / (hourly['trade_count'] + 1e-10)
+    trades["is_large"] = (
+        trades["usd_volume"]
+        > trades["usd_volume"].rolling(1000, min_periods=100).mean()
+        + 2 * trades["usd_volume"].rolling(1000, min_periods=100).std()
+    )
+    hourly["large_trade_count"] = trades["is_large"].resample("1h").sum()
+    hourly["large_trade_pct"] = hourly["large_trade_count"] / (
+        hourly["trade_count"] + 1e-10
+    )
 
-    hourly = hourly.dropna(subset=['close']).reset_index()
+    hourly = hourly.dropna(subset=["close"]).reset_index()
     path = SOCIAL_DIR / f"{symbol}_trade_features_1h.csv"
     hourly.to_csv(path, index=False)
     print(f"  Saved hourly features: {len(hourly)} rows to {path}")
@@ -211,8 +234,8 @@ def download_options_data():
 
     # CryptoDataDownload Deribit DVOL (volatility index)
     urls = {
-        'deribit_btc_dvol': 'https://www.cryptodatadownload.com/cdd/Deribit_BTCDVOL_1h.csv',
-        'deribit_eth_dvol': 'https://www.cryptodatadownload.com/cdd/Deribit_ETHDVOL_1h.csv',
+        "deribit_btc_dvol": "https://www.cryptodatadownload.com/cdd/Deribit_BTCDVOL_1h.csv",
+        "deribit_eth_dvol": "https://www.cryptodatadownload.com/cdd/Deribit_ETHDVOL_1h.csv",
     }
 
     for name, url in urls.items():
@@ -226,15 +249,15 @@ def download_options_data():
             resp = session.get(url, timeout=30)
             if resp.status_code == 200:
                 # Skip the first line (header comment)
-                lines = resp.text.split('\n')
+                lines = resp.text.split("\n")
                 # Find the actual header
                 start = 0
                 for i, line in enumerate(lines):
-                    if 'date' in line.lower() or 'unix' in line.lower():
+                    if "date" in line.lower() or "unix" in line.lower():
                         start = i
                         break
-                content = '\n'.join(lines[start:])
-                with open(path, 'w') as f:
+                content = "\n".join(lines[start:])
+                with open(path, "w") as f:
                     f.write(content)
                 df = pd.read_csv(path)
                 print(f"{len(df)} rows")
@@ -254,11 +277,11 @@ def main():
     fgi = download_fear_greed_full()
 
     # 2. Binance aggregate trades (BTC, ETH - last 24 months)
-    for symbol in ['BTCUSDT', 'ETHUSDT']:
+    for symbol in ["BTCUSDT", "ETHUSDT"]:
         download_binance_aggr_trades(symbol, months=24)
 
     # 3. Build trade features
-    for symbol in ['BTCUSDT', 'ETHUSDT']:
+    for symbol in ["BTCUSDT", "ETHUSDT"]:
         build_trade_features(symbol)
 
     # 4. Options data

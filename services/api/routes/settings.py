@@ -3,6 +3,7 @@ Settings API routes for API key management.
 Secure storage with HMAC hashing + FileLock.
 Phase 3B-v3: Blocking I/O fix + Atomic replace.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -132,7 +133,9 @@ def list_api_keys():
 
         created_raw = data.get("created_at")
         try:
-            created_at = datetime.fromisoformat(created_raw) if created_raw else datetime.now()
+            created_at = (
+                datetime.fromisoformat(created_raw) if created_raw else datetime.now()
+            )
         except ValueError:
             created_at = datetime.now()
 

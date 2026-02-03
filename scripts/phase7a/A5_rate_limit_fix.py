@@ -1,4 +1,5 @@
 ﻿import time
+
 print("=== A5: Rate Limit 테스트 (get_quote 사용) ===")
 
 from libs.adapters.factory import AdapterFactory
@@ -12,7 +13,7 @@ for ex, sym in tests:
     errors = 0
     rate_limit_hit = False
     t0 = time.time()
-    
+
     for i in range(N):
         try:
             md.get_quote(sym)
@@ -24,7 +25,7 @@ for ex, sym in tests:
                 rate_limit_hit = True
                 break
         time.sleep(SLEEP)
-    
+
     dt = time.time() - t0
     if not rate_limit_hit:
         if errors == 0:

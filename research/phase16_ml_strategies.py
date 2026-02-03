@@ -24,11 +24,13 @@ CRITICAL: To prevent lookahead bias:
 - Model trained on training window, predict on test window
 - Walk-forward: retrain every 720 bars (30 days)
 """
+
 import json
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
@@ -38,12 +40,14 @@ from sklearn.preprocessing import StandardScaler
 
 try:
     import xgboost as xgb
+
     HAS_XGB = True
 except ImportError:
     HAS_XGB = False
 
 try:
     import lightgbm as lgb
+
     HAS_LGB = True
 except ImportError:
     HAS_LGB = False
@@ -61,17 +65,18 @@ def load_ohlcv(symbol, timeframe="1h"):
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path)
-    for col in ['datetime', 'timestamp', 'date']:
+    for col in ["datetime", "timestamp", "date"]:
         if col in df.columns:
-            df['datetime'] = pd.to_datetime(df[col])
+            df["datetime"] = pd.to_datetime(df[col])
             break
-    return df.sort_values('datetime').reset_index(drop=True)
+    return df.sort_values("datetime").reset_index(drop=True)
 
 
 def calc_atr(high, low, close, period=14):
-    tr = np.maximum(high - low,
-         np.maximum(np.abs(high - np.roll(close, 1)),
-                    np.abs(low - np.roll(close, 1))))
+    tr = np.maximum(
+        high - low,
+        np.maximum(np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))),
+    )
     tr[0] = high[0] - low[0]
     return pd.Series(tr).rolling(period).mean().values
 
@@ -80,46 +85,53 @@ def calc_atr(high, low, close, period=14):
 # FEATURE ENGINEERING
 # =============================================================================
 
+
 def build_features(df):
     """Build ML features from OHLCV data. No future information."""
-    close = df['close'].astype(float)
-    high = df['high'].astype(float)
-    low = df['low'].astype(float)
-    vol = df['volume'].astype(float) if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"].astype(float)
+    high = df["high"].astype(float)
+    low = df["low"].astype(float)
+    vol = (
+        df["volume"].astype(float)
+        if "volume" in df.columns
+        else pd.Series(1.0, index=df.index)
+    )
 
     feat = pd.DataFrame(index=df.index)
 
     # Returns
     for p in [1, 4, 12, 24, 48, 72, 168]:
-        feat[f'ret_{p}'] = close.pct_change(p)
+        feat[f"ret_{p}"] = close.pct_change(p)
 
     # MA ratios
     for p in [10, 20, 50, 100, 200]:
         ma = close.rolling(p).mean()
-        feat[f'ma_ratio_{p}'] = close / (ma + 1e-10) - 1
+        feat[f"ma_ratio_{p}"] = close / (ma + 1e-10) - 1
 
     # EMA ratios
     ema_f = close.ewm(span=50, adjust=False).mean()
     ema_s = close.ewm(span=200, adjust=False).mean()
-    feat['ema_50_200_ratio'] = ema_f / (ema_s + 1e-10) - 1
-    feat['ema_trend'] = (ema_f > ema_s).astype(int)
+    feat["ema_50_200_ratio"] = ema_f / (ema_s + 1e-10) - 1
+    feat["ema_trend"] = (ema_f > ema_s).astype(int)
 
     # Donchian position
     for p in [24, 48, 72]:
         h = high.rolling(p).max()
         l = low.rolling(p).min()
-        feat[f'donchian_pos_{p}'] = (close - l) / (h - l + 1e-10)
+        feat[f"donchian_pos_{p}"] = (close - l) / (h - l + 1e-10)
 
     # ATR-based
-    atr_vals = pd.Series(calc_atr(high.values, low.values, close.values, 14), index=df.index)
-    feat['atr_ratio'] = atr_vals / (close + 1e-10)
+    atr_vals = pd.Series(
+        calc_atr(high.values, low.values, close.values, 14), index=df.index
+    )
+    feat["atr_ratio"] = atr_vals / (close + 1e-10)
     atr_avg = atr_vals.rolling(48).mean()
-    feat['atr_expansion'] = atr_vals / (atr_avg + 1e-10)
+    feat["atr_expansion"] = atr_vals / (atr_avg + 1e-10)
 
     # Volatility
     for p in [24, 48, 168]:
-        feat[f'vol_realized_{p}'] = close.pct_change().rolling(p).std()
-    feat['vol_ratio'] = feat['vol_realized_24'] / (feat['vol_realized_168'] + 1e-10)
+        feat[f"vol_realized_{p}"] = close.pct_change().rolling(p).std()
+    feat["vol_ratio"] = feat["vol_realized_24"] / (feat["vol_realized_168"] + 1e-10)
 
     # RSI
     for rsi_p in [14, 28]:
@@ -127,42 +139,42 @@ def build_features(df):
         gain = delta.where(delta > 0, 0).rolling(rsi_p).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(rsi_p).mean()
         rs = gain / (loss + 1e-10)
-        feat[f'rsi_{rsi_p}'] = 100 - 100 / (1 + rs)
+        feat[f"rsi_{rsi_p}"] = 100 - 100 / (1 + rs)
 
     # Bollinger %B
     for p in [20, 50]:
         ma = close.rolling(p).mean()
         std = close.rolling(p).std()
-        feat[f'bb_pct_b_{p}'] = (close - (ma - 2 * std)) / (4 * std + 1e-10)
+        feat[f"bb_pct_b_{p}"] = (close - (ma - 2 * std)) / (4 * std + 1e-10)
 
     # MACD proxy
     ema12 = close.ewm(span=12, adjust=False).mean()
     ema26 = close.ewm(span=26, adjust=False).mean()
     macd = ema12 - ema26
     signal = macd.ewm(span=9, adjust=False).mean()
-    feat['macd_hist'] = (macd - signal) / (close + 1e-10)
+    feat["macd_hist"] = (macd - signal) / (close + 1e-10)
 
     # Volume features
     vol_ma = vol.rolling(48).mean()
-    feat['vol_zscore'] = (vol - vol_ma) / (vol.rolling(48).std() + 1e-10)
+    feat["vol_zscore"] = (vol - vol_ma) / (vol.rolling(48).std() + 1e-10)
     vwap = (close * vol).rolling(48).sum() / (vol.rolling(48).sum() + 1e-10)
-    feat['vwap_ratio'] = close / (vwap + 1e-10) - 1
+    feat["vwap_ratio"] = close / (vwap + 1e-10) - 1
 
     # OBV slope
     obv = (np.sign(close.diff()) * vol).cumsum()
-    feat['obv_slope'] = obv.diff(24) / (vol_ma * 24 + 1e-10)
+    feat["obv_slope"] = obv.diff(24) / (vol_ma * 24 + 1e-10)
 
     # ROC (Rate of Change)
     for p in [12, 24, 48]:
-        feat[f'roc_{p}'] = close.pct_change(p)
+        feat[f"roc_{p}"] = close.pct_change(p)
 
     # High-Low range ratio
-    feat['hl_ratio'] = (high - low) / (close + 1e-10)
-    feat['hl_ratio_ma'] = feat['hl_ratio'].rolling(48).mean()
+    feat["hl_ratio"] = (high - low) / (close + 1e-10)
+    feat["hl_ratio_ma"] = feat["hl_ratio"].rolling(48).mean()
 
     # Candle body ratio
-    opn = df['open'].astype(float) if 'open' in df.columns else close.shift(1)
-    feat['body_ratio'] = (close - opn) / (high - low + 1e-10)
+    opn = df["open"].astype(float) if "open" in df.columns else close.shift(1)
+    feat["body_ratio"] = (close - opn) / (high - low + 1e-10)
 
     return feat
 
@@ -172,7 +184,7 @@ def build_labels(df, forward_bars=24, threshold=0.005):
     Label: 1 if forward return > threshold (go long), 0 otherwise.
     Using 24-bar (1 day) forward return.
     """
-    close = df['close'].astype(float)
+    close = df["close"].astype(float)
     fwd_ret = close.shift(-forward_bars) / close - 1
     labels = (fwd_ret > threshold).astype(int)
     return labels
@@ -182,8 +194,16 @@ def build_labels(df, forward_bars=24, threshold=0.005):
 # ML SIGNAL GENERATION (Walk-Forward)
 # =============================================================================
 
-def ml_walk_forward_signals(df, model_type='xgb', train_bars=4320, test_bars=720,
-                             forward_bars=24, threshold=0.005, prob_threshold=0.55):
+
+def ml_walk_forward_signals(
+    df,
+    model_type="xgb",
+    train_bars=4320,
+    test_bars=720,
+    forward_bars=24,
+    threshold=0.005,
+    prob_threshold=0.55,
+):
     """
     Walk-forward ML signal generation.
     Train on [0:i], predict on [i:i+test_bars], slide forward.
@@ -227,29 +247,41 @@ def ml_walk_forward_signals(df, model_type='xgb', train_bars=4320, test_bars=720
 
         # Train model
         try:
-            if model_type == 'xgb' and HAS_XGB:
+            if model_type == "xgb" and HAS_XGB:
                 model = xgb.XGBClassifier(
-                    n_estimators=100, max_depth=4, learning_rate=0.05,
-                    subsample=0.8, colsample_bytree=0.8,
+                    n_estimators=100,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
                     scale_pos_weight=scale_pos_weight,
-                    random_state=42, verbosity=0,
-                    use_label_encoder=False, eval_metric='logloss'
+                    random_state=42,
+                    verbosity=0,
+                    use_label_encoder=False,
+                    eval_metric="logloss",
                 )
-            elif model_type == 'lgb' and HAS_LGB:
+            elif model_type == "lgb" and HAS_LGB:
                 model = lgb.LGBMClassifier(
-                    n_estimators=100, max_depth=4, learning_rate=0.05,
-                    subsample=0.8, colsample_bytree=0.8,
+                    n_estimators=100,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
                     scale_pos_weight=scale_pos_weight,
-                    random_state=42, verbosity=-1
+                    random_state=42,
+                    verbosity=-1,
                 )
-            elif model_type == 'rf':
+            elif model_type == "rf":
                 model = RandomForestClassifier(
-                    n_estimators=100, max_depth=6,
-                    class_weight='balanced', random_state=42, n_jobs=-1
+                    n_estimators=100,
+                    max_depth=6,
+                    class_weight="balanced",
+                    random_state=42,
+                    n_jobs=-1,
                 )
-            elif model_type == 'lr':
+            elif model_type == "lr":
                 model = LogisticRegression(
-                    class_weight='balanced', random_state=42, max_iter=1000
+                    class_weight="balanced", random_state=42, max_iter=1000
                 )
             else:
                 i += test_bars
@@ -258,7 +290,7 @@ def ml_walk_forward_signals(df, model_type='xgb', train_bars=4320, test_bars=720
             model.fit(X_train_scaled, y_train)
 
             # Predict on test window
-            test_feat = features.iloc[i:i + test_bars].copy()
+            test_feat = features.iloc[i : i + test_bars].copy()
             valid_test = test_feat.dropna().index
             if len(valid_test) > 0:
                 X_test = test_feat.loc[valid_test, feature_cols].values
@@ -277,8 +309,14 @@ def ml_walk_forward_signals(df, model_type='xgb', train_bars=4320, test_bars=720
     return signals
 
 
-def ml_ensemble_signals(df, train_bars=4320, test_bars=720,
-                         forward_bars=24, threshold=0.005, prob_threshold=0.55):
+def ml_ensemble_signals(
+    df,
+    train_bars=4320,
+    test_bars=720,
+    forward_bars=24,
+    threshold=0.005,
+    prob_threshold=0.55,
+):
     """
     Ensemble: average probabilities from XGB + LGB + RF, then threshold.
     """
@@ -315,26 +353,49 @@ def ml_ensemble_signals(df, train_bars=4320, test_bars=720,
 
         models = []
         if HAS_XGB:
-            models.append(xgb.XGBClassifier(
-                n_estimators=100, max_depth=4, learning_rate=0.05,
-                subsample=0.8, colsample_bytree=0.8,
-                scale_pos_weight=spw, random_state=42, verbosity=0,
-                use_label_encoder=False, eval_metric='logloss'))
+            models.append(
+                xgb.XGBClassifier(
+                    n_estimators=100,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    scale_pos_weight=spw,
+                    random_state=42,
+                    verbosity=0,
+                    use_label_encoder=False,
+                    eval_metric="logloss",
+                )
+            )
         if HAS_LGB:
-            models.append(lgb.LGBMClassifier(
-                n_estimators=100, max_depth=4, learning_rate=0.05,
-                subsample=0.8, colsample_bytree=0.8,
-                scale_pos_weight=spw, random_state=42, verbosity=-1))
-        models.append(RandomForestClassifier(
-            n_estimators=100, max_depth=6,
-            class_weight='balanced', random_state=42, n_jobs=-1))
+            models.append(
+                lgb.LGBMClassifier(
+                    n_estimators=100,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    scale_pos_weight=spw,
+                    random_state=42,
+                    verbosity=-1,
+                )
+            )
+        models.append(
+            RandomForestClassifier(
+                n_estimators=100,
+                max_depth=6,
+                class_weight="balanced",
+                random_state=42,
+                n_jobs=-1,
+            )
+        )
 
         try:
             all_probs = []
             for model in models:
                 model.fit(X_train_scaled, y_train)
 
-                test_feat = features.iloc[i:i + test_bars].copy()
+                test_feat = features.iloc[i : i + test_bars].copy()
                 valid_test = test_feat.dropna().index
                 if len(valid_test) > 0:
                     X_test = test_feat.loc[valid_test, feature_cols].values
@@ -361,17 +422,25 @@ def ml_ensemble_signals(df, train_bars=4320, test_bars=720,
 # SIMULATION (same as previous phases)
 # =============================================================================
 
-def simulate(df, signals, position_pct=0.02, max_bars=72,
-             atr_stop=3.0, profit_target_atr=8.0, slippage=0.0003):
+
+def simulate(
+    df,
+    signals,
+    position_pct=0.02,
+    max_bars=72,
+    atr_stop=3.0,
+    profit_target_atr=8.0,
+    slippage=0.0003,
+):
     capital = 1.0
     position = 0
     entry_price = 0
     bars_held = 0
     trades = []
 
-    close = df['close'].values
-    high = df['high'].values
-    low = df['low'].values
+    close = df["close"].values
+    high = df["high"].values
+    low = df["low"].values
     atr_vals = calc_atr(high, low, close, 14)
 
     for i in range(len(df)):
@@ -418,22 +487,22 @@ def simulate(df, signals, position_pct=0.02, max_bars=72,
     gp = sum(t for t in trades if t > 0)
     gl = abs(sum(t for t in trades if t < 0))
     return {
-        'total_return': capital - 1,
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(trades),
-        'trades': trades,
+        "total_return": capital - 1,
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(trades),
+        "trades": trades,
     }
 
 
 def check_criteria(r):
     c = {
-        'sharpe_gt_1': r.get('sharpe', 0) > 1.0,
-        'max_dd_lt_25': r.get('max_drawdown', -1) > -0.25,
-        'win_rate_gt_45': r.get('win_rate', 0) > 0.45,
-        'profit_factor_gt_1_5': r.get('profit_factor', 0) > 1.5,
-        'wfa_efficiency_gt_50': r.get('wfa_efficiency', 0) > 50,
-        'trade_count_gt_100': r.get('trade_count', 0) > 100,
+        "sharpe_gt_1": r.get("sharpe", 0) > 1.0,
+        "max_dd_lt_25": r.get("max_drawdown", -1) > -0.25,
+        "win_rate_gt_45": r.get("win_rate", 0) > 0.45,
+        "profit_factor_gt_1_5": r.get("profit_factor", 0) > 1.5,
+        "wfa_efficiency_gt_50": r.get("wfa_efficiency", 0) > 50,
+        "trade_count_gt_100": r.get("trade_count", 0) > 100,
     }
     return c, sum(v for v in c.values())
 
@@ -442,14 +511,22 @@ def check_criteria(r):
 # PORTFOLIO TRUE OOS
 # =============================================================================
 
-def run_ml_portfolio_oos(all_data, model_type='xgb', max_positions=10,
-                          test_bars=720, position_scale=5.0,
-                          forward_bars=24, threshold=0.005, prob_threshold=0.55):
+
+def run_ml_portfolio_oos(
+    all_data,
+    model_type="xgb",
+    max_positions=10,
+    test_bars=720,
+    position_scale=5.0,
+    forward_bars=24,
+    threshold=0.005,
+    prob_threshold=0.55,
+):
     """
     TRUE OOS portfolio test with ML signals.
     ML models are trained per-symbol using walk-forward.
     """
-    exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+    exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     # OOS on last 40%
     oos_data = {}
@@ -464,22 +541,30 @@ def run_ml_portfolio_oos(all_data, model_type='xgb', max_positions=10,
         return None
 
     # Pre-compute ML signals for each symbol (walk-forward within OOS)
-    print(f"    Computing ML signals for {len(oos_data)} symbols...", end=" ", flush=True)
+    print(
+        f"    Computing ML signals for {len(oos_data)} symbols...", end=" ", flush=True
+    )
     symbol_signals = {}
     for sym_idx, (symbol, df) in enumerate(oos_data.items()):
-        if model_type == 'ensemble':
-            sigs = ml_ensemble_signals(df, train_bars=min(4320, len(df) // 3),
-                                        test_bars=test_bars,
-                                        forward_bars=forward_bars,
-                                        threshold=threshold,
-                                        prob_threshold=prob_threshold)
+        if model_type == "ensemble":
+            sigs = ml_ensemble_signals(
+                df,
+                train_bars=min(4320, len(df) // 3),
+                test_bars=test_bars,
+                forward_bars=forward_bars,
+                threshold=threshold,
+                prob_threshold=prob_threshold,
+            )
         else:
-            sigs = ml_walk_forward_signals(df, model_type=model_type,
-                                            train_bars=min(4320, len(df) // 3),
-                                            test_bars=test_bars,
-                                            forward_bars=forward_bars,
-                                            threshold=threshold,
-                                            prob_threshold=prob_threshold)
+            sigs = ml_walk_forward_signals(
+                df,
+                model_type=model_type,
+                train_bars=min(4320, len(df) // 3),
+                test_bars=test_bars,
+                forward_bars=forward_bars,
+                threshold=threshold,
+                prob_threshold=prob_threshold,
+            )
         symbol_signals[symbol] = sigs
         if (sym_idx + 1) % 50 == 0:
             print(f"{sym_idx+1}", end=" ", flush=True)
@@ -500,7 +585,7 @@ def run_ml_portfolio_oos(all_data, model_type='xgb', max_positions=10,
         for symbol, df in oos_data.items():
             if len(df) <= i:
                 continue
-            vol = df['close'].iloc[:i].pct_change().rolling(168).std().iloc[-1]
+            vol = df["close"].iloc[:i].pct_change().rolling(168).std().iloc[-1]
             if np.isnan(vol) or vol == 0:
                 vol = 0.01
             scored.append((symbol, vol))
@@ -511,16 +596,22 @@ def run_ml_portfolio_oos(all_data, model_type='xgb', max_positions=10,
             df = oos_data[symbol]
             if i + test_bars > len(df):
                 continue
-            test_sigs = symbol_signals[symbol][i:i + test_bars]
-            test_df = df.iloc[i:i + test_bars].copy().reset_index(drop=True)
+            test_sigs = symbol_signals[symbol][i : i + test_bars]
+            test_df = df.iloc[i : i + test_bars].copy().reset_index(drop=True)
             ann_vol = vol * np.sqrt(24 * 365)
             position_pct = min(0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05)
             position_pct *= position_scale
-            r = simulate(test_df, test_sigs, position_pct,
-                       exit_params['max_bars'], exit_params['atr_stop'],
-                       exit_params['profit_target_atr'], 0.0003)
-            period_pnl += r['total_return']
-            all_trades.extend(r['trades'])
+            r = simulate(
+                test_df,
+                test_sigs,
+                position_pct,
+                exit_params["max_bars"],
+                exit_params["atr_stop"],
+                exit_params["profit_target_atr"],
+                0.0003,
+            )
+            period_pnl += r["total_return"]
+            all_trades.extend(r["trades"])
 
         period_returns.append(period_pnl)
         equity.append(equity[-1] * (1 + period_pnl))
@@ -540,16 +631,18 @@ def run_ml_portfolio_oos(all_data, model_type='xgb', max_positions=10,
     sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
 
     return {
-        'total_return': float(equity_arr[-1] - 1),
-        'max_drawdown': float(dd.min()),
-        'sharpe': float(sharpe),
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(all_trades),
-        'periods': len(period_returns),
-        'wfa_efficiency': sum(1 for r in period_returns if r > 0) / len(period_returns) * 100,
-        'period_returns': period_returns,
-        'all_trades': all_trades,
+        "total_return": float(equity_arr[-1] - 1),
+        "max_drawdown": float(dd.min()),
+        "sharpe": float(sharpe),
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(all_trades),
+        "periods": len(period_returns),
+        "wfa_efficiency": sum(1 for r in period_returns if r > 0)
+        / len(period_returns)
+        * 100,
+        "period_returns": period_returns,
+        "all_trades": all_trades,
     }
 
 
@@ -557,15 +650,17 @@ def run_ml_portfolio_oos(all_data, model_type='xgb', max_positions=10,
 # ML-ENHANCED RULE-BASED: Use ML as filter on top of Vol Profile
 # =============================================================================
 
-def ml_filtered_vol_profile_signals(df, model_type='xgb', train_bars=4320,
-                                      test_bars=720, prob_threshold=0.50):
+
+def ml_filtered_vol_profile_signals(
+    df, model_type="xgb", train_bars=4320, test_bars=720, prob_threshold=0.50
+):
     """
     Vol Profile breakout entry, but only if ML model agrees (prob > threshold).
     This combines rule-based signal quality with ML confirmation.
     """
-    close = df['close']
-    high = df['high']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
     vwap = (close * vol).rolling(48).sum() / (vol.rolling(48).sum() + 1e-10)
     upper = high.rolling(48).max().shift(1)
     ema_f = close.ewm(span=50, adjust=False).mean()
@@ -608,25 +703,42 @@ def ml_filtered_vol_profile_signals(df, model_type='xgb', train_bars=4320,
         spw = neg_count / pos_count
 
         try:
-            if model_type == 'xgb' and HAS_XGB:
+            if model_type == "xgb" and HAS_XGB:
                 model = xgb.XGBClassifier(
-                    n_estimators=100, max_depth=4, learning_rate=0.05,
-                    subsample=0.8, colsample_bytree=0.8,
-                    scale_pos_weight=spw, random_state=42, verbosity=0,
-                    use_label_encoder=False, eval_metric='logloss')
-            elif model_type == 'lgb' and HAS_LGB:
+                    n_estimators=100,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    scale_pos_weight=spw,
+                    random_state=42,
+                    verbosity=0,
+                    use_label_encoder=False,
+                    eval_metric="logloss",
+                )
+            elif model_type == "lgb" and HAS_LGB:
                 model = lgb.LGBMClassifier(
-                    n_estimators=100, max_depth=4, learning_rate=0.05,
-                    subsample=0.8, colsample_bytree=0.8,
-                    scale_pos_weight=spw, random_state=42, verbosity=-1)
+                    n_estimators=100,
+                    max_depth=4,
+                    learning_rate=0.05,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    scale_pos_weight=spw,
+                    random_state=42,
+                    verbosity=-1,
+                )
             else:
                 model = RandomForestClassifier(
-                    n_estimators=100, max_depth=6,
-                    class_weight='balanced', random_state=42, n_jobs=-1)
+                    n_estimators=100,
+                    max_depth=6,
+                    class_weight="balanced",
+                    random_state=42,
+                    n_jobs=-1,
+                )
 
             model.fit(X_train_scaled, y_train)
 
-            test_feat = features.iloc[i:i + test_bars].copy()
+            test_feat = features.iloc[i : i + test_bars].copy()
             valid_test = test_feat.dropna().index
             if len(valid_test) > 0:
                 X_test = test_feat.loc[valid_test, feature_cols].values
@@ -649,10 +761,16 @@ def ml_filtered_vol_profile_signals(df, model_type='xgb', train_bars=4320,
     return signals
 
 
-def run_ml_filtered_portfolio(all_data, model_type='xgb', max_positions=10,
-                               test_bars=720, position_scale=5.0, prob_threshold=0.50):
+def run_ml_filtered_portfolio(
+    all_data,
+    model_type="xgb",
+    max_positions=10,
+    test_bars=720,
+    position_scale=5.0,
+    prob_threshold=0.50,
+):
     """Portfolio OOS with ML-filtered Vol Profile signals."""
-    exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+    exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     oos_data = {}
     for symbol in all_data:
@@ -665,13 +783,20 @@ def run_ml_filtered_portfolio(all_data, model_type='xgb', max_positions=10,
     if not oos_data:
         return None
 
-    print(f"    Computing ML-filtered signals for {len(oos_data)} symbols...", end=" ", flush=True)
+    print(
+        f"    Computing ML-filtered signals for {len(oos_data)} symbols...",
+        end=" ",
+        flush=True,
+    )
     symbol_signals = {}
     for sym_idx, (symbol, df) in enumerate(oos_data.items()):
-        sigs = ml_filtered_vol_profile_signals(df, model_type=model_type,
-                                                 train_bars=min(4320, len(df) // 3),
-                                                 test_bars=test_bars,
-                                                 prob_threshold=prob_threshold)
+        sigs = ml_filtered_vol_profile_signals(
+            df,
+            model_type=model_type,
+            train_bars=min(4320, len(df) // 3),
+            test_bars=test_bars,
+            prob_threshold=prob_threshold,
+        )
         symbol_signals[symbol] = sigs
         if (sym_idx + 1) % 50 == 0:
             print(f"{sym_idx+1}", end=" ", flush=True)
@@ -691,7 +816,7 @@ def run_ml_filtered_portfolio(all_data, model_type='xgb', max_positions=10,
         for symbol, df in oos_data.items():
             if len(df) <= i:
                 continue
-            vol = df['close'].iloc[:i].pct_change().rolling(168).std().iloc[-1]
+            vol = df["close"].iloc[:i].pct_change().rolling(168).std().iloc[-1]
             if np.isnan(vol) or vol == 0:
                 vol = 0.01
             scored.append((symbol, vol))
@@ -702,16 +827,22 @@ def run_ml_filtered_portfolio(all_data, model_type='xgb', max_positions=10,
             df = oos_data[symbol]
             if i + test_bars > len(df):
                 continue
-            test_sigs = symbol_signals[symbol][i:i + test_bars]
-            test_df = df.iloc[i:i + test_bars].copy().reset_index(drop=True)
+            test_sigs = symbol_signals[symbol][i : i + test_bars]
+            test_df = df.iloc[i : i + test_bars].copy().reset_index(drop=True)
             ann_vol = vol * np.sqrt(24 * 365)
             position_pct = min(0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05)
             position_pct *= position_scale
-            r = simulate(test_df, test_sigs, position_pct,
-                       exit_params['max_bars'], exit_params['atr_stop'],
-                       exit_params['profit_target_atr'], 0.0003)
-            period_pnl += r['total_return']
-            all_trades.extend(r['trades'])
+            r = simulate(
+                test_df,
+                test_sigs,
+                position_pct,
+                exit_params["max_bars"],
+                exit_params["atr_stop"],
+                exit_params["profit_target_atr"],
+                0.0003,
+            )
+            period_pnl += r["total_return"]
+            all_trades.extend(r["trades"])
 
         period_returns.append(period_pnl)
         equity.append(equity[-1] * (1 + period_pnl))
@@ -731,16 +862,18 @@ def run_ml_filtered_portfolio(all_data, model_type='xgb', max_positions=10,
     sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
 
     return {
-        'total_return': float(equity_arr[-1] - 1),
-        'max_drawdown': float(dd.min()),
-        'sharpe': float(sharpe),
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(all_trades),
-        'periods': len(period_returns),
-        'wfa_efficiency': sum(1 for r in period_returns if r > 0) / len(period_returns) * 100,
-        'period_returns': period_returns,
-        'all_trades': all_trades,
+        "total_return": float(equity_arr[-1] - 1),
+        "max_drawdown": float(dd.min()),
+        "sharpe": float(sharpe),
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(all_trades),
+        "periods": len(period_returns),
+        "wfa_efficiency": sum(1 for r in period_returns if r > 0)
+        / len(period_returns)
+        * 100,
+        "period_returns": period_returns,
+        "all_trades": all_trades,
     }
 
 
@@ -773,25 +906,28 @@ def main():
 
     ml_models = []
     if HAS_XGB:
-        ml_models.append(('xgb', 'XGBoost'))
+        ml_models.append(("xgb", "XGBoost"))
     if HAS_LGB:
-        ml_models.append(('lgb', 'LightGBM'))
-    ml_models.extend([('rf', 'Random Forest'), ('lr', 'Logistic Regression')])
+        ml_models.append(("lgb", "LightGBM"))
+    ml_models.extend([("rf", "Random Forest"), ("lr", "Logistic Regression")])
 
     for model_key, model_name in ml_models:
         for prob_thresh in [0.55, 0.60]:
             config_name = f"A_{model_key}_prob{prob_thresh}"
             print(f"\n  {config_name} ({model_name}):")
 
-            r = run_ml_portfolio_oos(all_data, model_type=model_key,
-                                      prob_threshold=prob_thresh)
+            r = run_ml_portfolio_oos(
+                all_data, model_type=model_key, prob_threshold=prob_thresh
+            )
             if r:
                 c, p = check_criteria(r)
                 all_results.append((config_name, p, r))
                 fails = [k for k, v in c.items() if not v]
-                print(f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                      f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-                      f"PF={r['profit_factor']:.2f} T={r['trade_count']}")
+                print(
+                    f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                    f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+                    f"PF={r['profit_factor']:.2f} T={r['trade_count']}"
+                )
                 if fails:
                     print(f"    FAILS: {', '.join(fails)}")
             else:
@@ -808,15 +944,18 @@ def main():
         config_name = f"B_ensemble_prob{prob_thresh}"
         print(f"\n  {config_name}:")
 
-        r = run_ml_portfolio_oos(all_data, model_type='ensemble',
-                                  prob_threshold=prob_thresh)
+        r = run_ml_portfolio_oos(
+            all_data, model_type="ensemble", prob_threshold=prob_thresh
+        )
         if r:
             c, p = check_criteria(r)
             all_results.append((config_name, p, r))
             fails = [k for k, v in c.items() if not v]
-            print(f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                  f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-                  f"PF={r['profit_factor']:.2f} T={r['trade_count']}")
+            print(
+                f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+                f"PF={r['profit_factor']:.2f} T={r['trade_count']}"
+            )
             if fails:
                 print(f"    FAILS: {', '.join(fails)}")
 
@@ -829,25 +968,28 @@ def main():
 
     filter_models = []
     if HAS_XGB:
-        filter_models.append(('xgb', 'XGBoost'))
+        filter_models.append(("xgb", "XGBoost"))
     if HAS_LGB:
-        filter_models.append(('lgb', 'LightGBM'))
-    filter_models.append(('rf', 'Random Forest'))
+        filter_models.append(("lgb", "LightGBM"))
+    filter_models.append(("rf", "Random Forest"))
 
     for model_key, model_name in filter_models:
         for prob_thresh in [0.45, 0.50, 0.55]:
             config_name = f"C_{model_key}_filter_prob{prob_thresh}"
             print(f"\n  {config_name} ({model_name}):")
 
-            r = run_ml_filtered_portfolio(all_data, model_type=model_key,
-                                           prob_threshold=prob_thresh)
+            r = run_ml_filtered_portfolio(
+                all_data, model_type=model_key, prob_threshold=prob_thresh
+            )
             if r:
                 c, p = check_criteria(r)
                 all_results.append((config_name, p, r))
                 fails = [k for k, v in c.items() if not v]
-                print(f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                      f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-                      f"PF={r['profit_factor']:.2f} T={r['trade_count']}")
+                print(
+                    f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                    f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+                    f"PF={r['profit_factor']:.2f} T={r['trade_count']}"
+                )
                 if fails:
                     print(f"    FAILS: {', '.join(fails)}")
 
@@ -862,31 +1004,45 @@ def main():
         # Shorter forward window (12 bars = 12 hours)
         config_name = "D_xgb_fwd12_thr003"
         print(f"\n  {config_name}:")
-        r = run_ml_portfolio_oos(all_data, model_type='xgb',
-                                  forward_bars=12, threshold=0.003, prob_threshold=0.55)
+        r = run_ml_portfolio_oos(
+            all_data,
+            model_type="xgb",
+            forward_bars=12,
+            threshold=0.003,
+            prob_threshold=0.55,
+        )
         if r:
             c, p = check_criteria(r)
             all_results.append((config_name, p, r))
-            print(f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                  f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-                  f"PF={r['profit_factor']:.2f} T={r['trade_count']}")
+            print(
+                f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+                f"PF={r['profit_factor']:.2f} T={r['trade_count']}"
+            )
 
         # Longer forward window (48 bars = 2 days)
         config_name = "D_xgb_fwd48_thr010"
         print(f"\n  {config_name}:")
-        r = run_ml_portfolio_oos(all_data, model_type='xgb',
-                                  forward_bars=48, threshold=0.010, prob_threshold=0.55)
+        r = run_ml_portfolio_oos(
+            all_data,
+            model_type="xgb",
+            forward_bars=48,
+            threshold=0.010,
+            prob_threshold=0.55,
+        )
         if r:
             c, p = check_criteria(r)
             all_results.append((config_name, p, r))
-            print(f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                  f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
-                  f"PF={r['profit_factor']:.2f} T={r['trade_count']}")
+            print(
+                f"    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% "
+                f"PF={r['profit_factor']:.2f} T={r['trade_count']}"
+            )
 
     # -----------------------------------------------------------------
     # FINAL RANKING
     # -----------------------------------------------------------------
-    all_results.sort(key=lambda x: (-x[1], -x[2].get('sharpe', 0)))
+    all_results.sort(key=lambda x: (-x[1], -x[2].get("sharpe", 0)))
 
     print(f"\n\n{'=' * 70}")
     print("FINAL RANKING - ALL ML STRATEGIES")
@@ -897,20 +1053,24 @@ def main():
         fails = [k for k, v in c.items() if not v]
         fail_str = f"  FAILS: {', '.join(fails)}" if fails else ""
         print(f"  {i+1}. [{passed}/6] {name}")
-        print(f"     Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
-              f"DD={r['max_drawdown']*100:.1f}%  WR={r['win_rate']*100:.0f}%  "
-              f"PF={r['profit_factor']:.2f}  WFA={r['wfa_efficiency']:.0f}%  T={r['trade_count']}{fail_str}")
+        print(
+            f"     Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
+            f"DD={r['max_drawdown']*100:.1f}%  WR={r['win_rate']*100:.0f}%  "
+            f"PF={r['profit_factor']:.2f}  WFA={r['wfa_efficiency']:.0f}%  T={r['trade_count']}{fail_str}"
+        )
 
     six_six = [(n, r) for n, p, r in all_results if p == 6]
     print(f"\n*** {len(six_six)} ML configs passed 6/6 ***")
     if six_six:
         for name, r in six_six:
-            print(f"  {name}: Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}%")
+            print(
+                f"  {name}: Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}%"
+            )
 
-        best_ml = max(six_six, key=lambda x: x[1]['sharpe'])
+        best_ml = max(six_six, key=lambda x: x[1]["sharpe"])
         print(f"\n  Best ML: {best_ml[0]} Sharpe={best_ml[1]['sharpe']:.2f}")
         print(f"  Baseline Vol Profile: Sharpe=2.52")
-        if best_ml[1]['sharpe'] > 2.52:
+        if best_ml[1]["sharpe"] > 2.52:
             print("  → ML BEATS BASELINE!")
         else:
             print("  → Baseline still better")
@@ -918,7 +1078,9 @@ def main():
         print("  None. ML does not beat rule-based Vol Profile.")
         best_result = all_results[0] if all_results else None
         if best_result:
-            print(f"  Best ML: [{best_result[1]}/6] {best_result[0]} Sharpe={best_result[2]['sharpe']:.2f}")
+            print(
+                f"  Best ML: [{best_result[1]}/6] {best_result[0]} Sharpe={best_result[2]['sharpe']:.2f}"
+            )
 
     # Correlation check for ensemble potential
     if six_six:
@@ -929,21 +1091,24 @@ def main():
 
     # Save
     save_data = {
-        'timestamp': datetime.now().isoformat(),
-        'total_tested': len(all_results),
-        'six_six_count': len(six_six),
-        'results': [
-            {'name': n, 'passed': int(p),
-             'sharpe': float(r.get('sharpe', 0)),
-             'return': float(r.get('total_return', 0)),
-             'max_dd': float(r.get('max_drawdown', 0)),
-             'win_rate': float(r.get('win_rate', 0)),
-             'pf': float(r.get('profit_factor', 0)),
-             'trades': int(r.get('trade_count', 0))}
+        "timestamp": datetime.now().isoformat(),
+        "total_tested": len(all_results),
+        "six_six_count": len(six_six),
+        "results": [
+            {
+                "name": n,
+                "passed": int(p),
+                "sharpe": float(r.get("sharpe", 0)),
+                "return": float(r.get("total_return", 0)),
+                "max_dd": float(r.get("max_drawdown", 0)),
+                "win_rate": float(r.get("win_rate", 0)),
+                "pf": float(r.get("profit_factor", 0)),
+                "trades": int(r.get("trade_count", 0)),
+            }
             for n, p, r in all_results
         ],
     }
-    with open(RESULTS_PATH / "phase16_ml_report.json", 'w') as f:
+    with open(RESULTS_PATH / "phase16_ml_report.json", "w") as f:
         json.dump(save_data, f, indent=2, default=str)
 
     print(f"\nSaved to {RESULTS_PATH / 'phase16_ml_report.json'}")

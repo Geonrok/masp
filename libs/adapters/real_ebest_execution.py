@@ -89,6 +89,7 @@ class EbestSpotExecution(ExecutionAdapter):
             loop = asyncio.get_running_loop()
             # Already in async context - use thread
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 # Reset API state for new thread/loop
                 self._api = None
@@ -111,6 +112,7 @@ class EbestSpotExecution(ExecutionAdapter):
 
         try:
             from ebest import OpenApi
+
             self._api = OpenApi()
             success = await self._api.login(self._app_key, self._app_secret)
             if success:
@@ -121,7 +123,9 @@ class EbestSpotExecution(ExecutionAdapter):
                 logger.error("[eBest] Login failed")
                 return False
         except ImportError:
-            logger.error("[eBest] 'ebest' package not installed. Run: pip install ebest")
+            logger.error(
+                "[eBest] 'ebest' package not installed. Run: pip install ebest"
+            )
             return False
         except Exception as e:
             logger.error(f"[eBest] Login error: {e}")
@@ -169,16 +173,16 @@ class EbestSpotExecution(ExecutionAdapter):
 
             data = {
                 "CSPAT00600InBlock1": {
-                    "AcntNo": self._account_no,           # Account number
-                    "InptPwd": self._account_pwd,         # Transaction password
-                    "IsuNo": symbol,                      # Stock code (A + 6 digits, e.g., A005930)
-                    "OrdQty": int(quantity),              # 주문수량
-                    "OrdPrc": order_price,                # 주문가격
-                    "BnsTpCode": bns_tp_code,             # 매매구분
-                    "OrdprcPtnCode": ordprc_ptn_code,     # 호가유형
-                    "MgntrnCode": "000",                  # 신용거래코드
-                    "LoanDt": "",                         # 대출일
-                    "OrdCndiTpCode": "0",                 # 주문조건
+                    "AcntNo": self._account_no,  # Account number
+                    "InptPwd": self._account_pwd,  # Transaction password
+                    "IsuNo": symbol,  # Stock code (A + 6 digits, e.g., A005930)
+                    "OrdQty": int(quantity),  # 주문수량
+                    "OrdPrc": order_price,  # 주문가격
+                    "BnsTpCode": bns_tp_code,  # 매매구분
+                    "OrdprcPtnCode": ordprc_ptn_code,  # 호가유형
+                    "MgntrnCode": "000",  # 신용거래코드
+                    "LoanDt": "",  # 대출일
+                    "OrdCndiTpCode": "0",  # 주문조건
                 }
             }
 
@@ -198,10 +202,16 @@ class EbestSpotExecution(ExecutionAdapter):
                 )
 
             # ResponseValue has .body attribute containing the parsed JSON
-            body = result.body if hasattr(result, 'body') else result
-            out_block = body.get("CSPAT00600OutBlock2", {}) if isinstance(body, dict) else {}
+            body = result.body if hasattr(result, "body") else result
+            out_block = (
+                body.get("CSPAT00600OutBlock2", {}) if isinstance(body, dict) else {}
+            )
             if not out_block:
-                error_msg = body.get("rsp_msg", "Unknown error") if isinstance(body, dict) else "Unknown error"
+                error_msg = (
+                    body.get("rsp_msg", "Unknown error")
+                    if isinstance(body, dict)
+                    else "Unknown error"
+                )
                 return OrderResult(
                     success=False,
                     symbol=symbol,
@@ -301,11 +311,11 @@ class EbestSpotExecution(ExecutionAdapter):
             # CSPAT00800: 현물 취소 주문
             data = {
                 "CSPAT00800InBlock1": {
-                    "OrgOrdNo": int(order_id),            # 원주문번호
-                    "AcntNo": self._account_no,           # 계좌번호
-                    "InptPwd": "",                        # 입력비밀번호
+                    "OrgOrdNo": int(order_id),  # 원주문번호
+                    "AcntNo": self._account_no,  # 계좌번호
+                    "InptPwd": "",  # 입력비밀번호
                     "IsuNo": f"A{symbol}" if symbol else "",  # 종목코드
-                    "OrdQty": 0,                          # 취소수량 (0=전량)
+                    "OrdQty": 0,  # 취소수량 (0=전량)
                 }
             }
 
@@ -315,13 +325,19 @@ class EbestSpotExecution(ExecutionAdapter):
                 return False
 
             # ResponseValue has .body attribute containing the parsed JSON
-            body = result.body if hasattr(result, 'body') else result
-            out_block = body.get("CSPAT00800OutBlock2", {}) if isinstance(body, dict) else {}
+            body = result.body if hasattr(result, "body") else result
+            out_block = (
+                body.get("CSPAT00800OutBlock2", {}) if isinstance(body, dict) else {}
+            )
             if out_block and out_block.get("OrdNo"):
                 logger.info(f"[eBest] Order {order_id} cancelled")
                 return True
 
-            error_msg = body.get("rsp_msg", "Unknown error") if isinstance(body, dict) else "Unknown error"
+            error_msg = (
+                body.get("rsp_msg", "Unknown error")
+                if isinstance(body, dict)
+                else "Unknown error"
+            )
             logger.error(f"[eBest] Cancel order failed: {error_msg}")
             return False
 
@@ -355,8 +371,8 @@ class EbestSpotExecution(ExecutionAdapter):
                     "accno": self._account_no,
                     "expcode": "",
                     "chegession": "0",  # 0=전체
-                    "medession": "0",   # 0=전체
-                    "sortgb": "1",      # 1=주문번호순
+                    "medession": "0",  # 0=전체
+                    "sortgb": "1",  # 1=주문번호순
                     "cts_ordno": "",
                 }
             }
@@ -366,7 +382,7 @@ class EbestSpotExecution(ExecutionAdapter):
                 return None
 
             # ResponseValue has .body attribute containing the parsed JSON
-            body = result.body if hasattr(result, 'body') else result
+            body = result.body if hasattr(result, "body") else result
             out_block = body.get("t0425OutBlock1", []) if isinstance(body, dict) else []
             for order in out_block:
                 if str(order.get("ordno", "")) == order_id:
@@ -422,10 +438,10 @@ class EbestSpotExecution(ExecutionAdapter):
                 "t0424InBlock": {
                     "accno": self._account_no,
                     "passwd": "",
-                    "prcgb": "1",      # 1=평가금액
+                    "prcgb": "1",  # 1=평가금액
                     "chegession": "2",  # 2=체결기준
                     "dangession": "0",  # 0=정상
-                    "charge": "1",      # 1=제비용포함
+                    "charge": "1",  # 1=제비용포함
                     "cts_expcode": "",
                 }
             }
@@ -435,18 +451,22 @@ class EbestSpotExecution(ExecutionAdapter):
                 return None
 
             # ResponseValue has .body attribute containing the parsed JSON
-            body = result.body if hasattr(result, 'body') else result
+            body = result.body if hasattr(result, "body") else result
 
             # If asking for KRW (cash), return available buying power
             if asset.upper() == "KRW":
-                out_block = body.get("t0424OutBlock", {}) if isinstance(body, dict) else {}
+                out_block = (
+                    body.get("t0424OutBlock", {}) if isinstance(body, dict) else {}
+                )
                 # mamt = available buying power (tradable cash)
                 # sunamt = total net assets (includes stock valuation)
                 available_cash = float(out_block.get("mamt", 0))
                 return available_cash
 
             # If asking for a specific stock, find it in holdings
-            out_block1 = body.get("t0424OutBlock1", []) if isinstance(body, dict) else []
+            out_block1 = (
+                body.get("t0424OutBlock1", []) if isinstance(body, dict) else []
+            )
             for holding in out_block1:
                 if holding.get("expcode", "") == asset:
                     return float(holding.get("janqty", 0))  # 잔고수량
@@ -505,29 +525,35 @@ class EbestSpotExecution(ExecutionAdapter):
                 return []
 
             # ResponseValue has .body attribute containing the parsed JSON
-            body = result.body if hasattr(result, 'body') else result
+            body = result.body if hasattr(result, "body") else result
             balances = []
 
             # Cash balance
             out_block = body.get("t0424OutBlock", {}) if isinstance(body, dict) else {}
-            balances.append({
-                "currency": "KRW",
-                "balance": float(out_block.get("sunamt", 0)),
-                "available": float(out_block.get("mamt", 0)),  # 매수가능금액
-            })
+            balances.append(
+                {
+                    "currency": "KRW",
+                    "balance": float(out_block.get("sunamt", 0)),
+                    "available": float(out_block.get("mamt", 0)),  # 매수가능금액
+                }
+            )
 
             # Stock holdings
-            out_block1 = body.get("t0424OutBlock1", []) if isinstance(body, dict) else []
+            out_block1 = (
+                body.get("t0424OutBlock1", []) if isinstance(body, dict) else []
+            )
             for holding in out_block1:
-                balances.append({
-                    "currency": holding.get("expcode", ""),
-                    "name": holding.get("hname", ""),
-                    "balance": float(holding.get("janqty", 0)),
-                    "avg_price": float(holding.get("pamt", 0)),  # 평균단가
-                    "current_price": float(holding.get("price", 0)),
-                    "eval_amount": float(holding.get("appamt", 0)),  # 평가금액
-                    "profit_loss": float(holding.get("dtsuik", 0)),  # 평가손익
-                })
+                balances.append(
+                    {
+                        "currency": holding.get("expcode", ""),
+                        "name": holding.get("hname", ""),
+                        "balance": float(holding.get("janqty", 0)),
+                        "avg_price": float(holding.get("pamt", 0)),  # 평균단가
+                        "current_price": float(holding.get("price", 0)),
+                        "eval_amount": float(holding.get("appamt", 0)),  # 평가금액
+                        "profit_loss": float(holding.get("dtsuik", 0)),  # 평가손익
+                    }
+                )
 
             return balances
 

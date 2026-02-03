@@ -67,9 +67,7 @@ class TestThreadSafeDict:
                 except Exception as e:
                     errors.append(e)
 
-        threads = [
-            threading.Thread(target=writer) for _ in range(5)
-        ] + [
+        threads = [threading.Thread(target=writer) for _ in range(5)] + [
             threading.Thread(target=reader) for _ in range(5)
         ]
 
@@ -243,7 +241,7 @@ class TestLRUCache:
         stats = cache.stats
         assert stats["hits"] == 2
         assert stats["misses"] == 1
-        assert stats["hit_rate"] == pytest.approx(2/3)
+        assert stats["hit_rate"] == pytest.approx(2 / 3)
 
 
 class TestNamedLockManager:
@@ -347,8 +345,7 @@ class TestSynchronizedDecorator:
             execution_order.append(f"end_{id}")
 
         threads = [
-            threading.Thread(target=critical_section, args=(i,))
-            for i in range(3)
+            threading.Thread(target=critical_section, args=(i,)) for i in range(3)
         ]
 
         for t in threads:
@@ -437,10 +434,7 @@ class TestThreadLocalState:
             time.sleep(0.01)
             results[thread_id] = state.get()["value"]
 
-        threads = [
-            threading.Thread(target=worker, args=(i,))
-            for i in range(5)
-        ]
+        threads = [threading.Thread(target=worker, args=(i,)) for i in range(5)]
 
         for t in threads:
             t.start()

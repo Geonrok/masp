@@ -1,4 +1,5 @@
 """Log provider - connects application logs to log_viewer component."""
+
 from __future__ import annotations
 
 import logging
@@ -113,7 +114,9 @@ def _parse_log_line(line: str) -> Optional[LogEntry]:
         if match:
             groups = match.groupdict()
             timestamp_str = groups.get("timestamp", "")
-            timestamp = _parse_timestamp(timestamp_str) if timestamp_str else datetime.now()
+            timestamp = (
+                _parse_timestamp(timestamp_str) if timestamp_str else datetime.now()
+            )
 
             return LogEntry(
                 timestamp=timestamp,
@@ -157,9 +160,7 @@ def _find_log_files(log_dir: str, max_files: int = 10) -> List[Path]:
     return unique_files[:max_files]
 
 
-def _read_log_file(
-    file_path: Path, max_lines: int = 1000
-) -> List[LogEntry]:
+def _read_log_file(file_path: Path, max_lines: int = 1000) -> List[LogEntry]:
     """Read log entries from a file.
 
     Args:

@@ -4,6 +4,7 @@ Multi-Exchange Coordinator - 멀티 거래소 데이터 통합
 - 거래소 간 가격 비교
 - Failover 지원
 """
+
 from __future__ import annotations
 
 import logging
@@ -66,7 +67,9 @@ class MultiExchangeQuote:
         if self.best_bid and self.best_ask:
             mid_price = (self.best_bid[1] + self.best_ask[1]) / 2
             if mid_price > 0:
-                self.spread_pct = (self.best_ask[1] - self.best_bid[1]) / mid_price * 100
+                self.spread_pct = (
+                    (self.best_ask[1] - self.best_bid[1]) / mid_price * 100
+                )
 
     def get_arbitrage_opportunity(self) -> Optional[Dict[str, Any]]:
         """Check for arbitrage opportunity (buy at one exchange, sell at another).
@@ -96,7 +99,10 @@ class MultiExchangeQuote:
         """Convert to dictionary."""
         return {
             "symbol": self.symbol,
-            "quotes": {k: {"bid": v.bid, "ask": v.ask, "last": v.last} for k, v in self.quotes.items()},
+            "quotes": {
+                k: {"bid": v.bid, "ask": v.ask, "last": v.last}
+                for k, v in self.quotes.items()
+            },
             "best_bid": self.best_bid,
             "best_ask": self.best_ask,
             "spread_pct": self.spread_pct,
@@ -144,7 +150,9 @@ class MultiExchangeCoordinator:
                     "[MultiExchange] Failed to init adapter %s: %s", exchange_name, e
                 )
 
-    def get_quote(self, symbol: str, exchange: Optional[str] = None) -> Optional[MarketQuote]:
+    def get_quote(
+        self, symbol: str, exchange: Optional[str] = None
+    ) -> Optional[MarketQuote]:
         """Get quote from a specific exchange or first available.
 
         Args:
@@ -160,8 +168,15 @@ class MultiExchangeCoordinator:
                 try:
                     return adapter.get_quote(symbol)
                 except Exception as e:
-                    logger.warning("[MultiExchange] Quote failed for %s on %s: %s", symbol, exchange, e)
-                    self.registry.update_status(exchange, ExchangeStatus.DEGRADED, error=True)
+                    logger.warning(
+                        "[MultiExchange] Quote failed for %s on %s: %s",
+                        symbol,
+                        exchange,
+                        e,
+                    )
+                    self.registry.update_status(
+                        exchange, ExchangeStatus.DEGRADED, error=True
+                    )
             return None
 
         # Try all exchanges, return first success
@@ -203,15 +218,17 @@ class MultiExchangeCoordinator:
                 return exchange, quote, latency
             except Exception as e:
                 latency = (time.time() - start) * 1000
-                logger.warning("[MultiExchange] Fetch failed for %s on %s: %s", symbol, exchange, e)
-                self.registry.update_status(exchange, ExchangeStatus.DEGRADED, latency, error=True)
+                logger.warning(
+                    "[MultiExchange] Fetch failed for %s on %s: %s", symbol, exchange, e
+                )
+                self.registry.update_status(
+                    exchange, ExchangeStatus.DEGRADED, latency, error=True
+                )
                 return exchange, None, latency
 
         # Parallel fetch
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = {
-                executor.submit(fetch_quote, ex): ex for ex in target_exchanges
-            }
+            futures = {executor.submit(fetch_quote, ex): ex for ex in target_exchanges}
 
             for future in as_completed(futures, timeout=self.timeout):
                 try:
@@ -220,7 +237,9 @@ class MultiExchangeCoordinator:
                         result.add_quote(exchange, quote)
                 except Exception as e:
                     exchange = futures[future]
-                    logger.warning("[MultiExchange] Future failed for %s: %s", exchange, e)
+                    logger.warning(
+                        "[MultiExchange] Future failed for %s: %s", exchange, e
+                    )
 
         self._last_quotes[symbol] = result
         return result
@@ -319,7 +338,11 @@ class MultiExchangeCoordinator:
                 "ask": quote.ask,
                 "mid": mid_price,
                 "last": quote.last,
-                "spread_pct": (quote.ask - quote.bid) / quote.bid * 100 if quote.bid and quote.ask else 0,
+                "spread_pct": (
+                    (quote.ask - quote.bid) / quote.bid * 100
+                    if quote.bid and quote.ask
+                    else 0
+                ),
             }
 
         # Find min/max prices
@@ -354,7 +377,9 @@ class MultiExchangeCoordinator:
                 result[exchange_name] = {
                     "display_name": info.display_name,
                     "status": info.status.value,
-                    "last_check": info.last_check.isoformat() if info.last_check else None,
+                    "last_check": (
+                        info.last_check.isoformat() if info.last_check else None
+                    ),
                     "latency_ms": info.latency_ms,
                     "error_count": info.error_count,
                     "adapter_available": exchange_name in self._adapters,

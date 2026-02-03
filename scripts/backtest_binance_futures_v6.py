@@ -18,6 +18,7 @@ Requirements:
     - libs/strategies/binance_futures_v6.py
     - libs/strategies/indicators.py
 """
+
 from __future__ import annotations
 
 import argparse
@@ -60,14 +61,21 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BacktestConfig:
     """Backtest configuration."""
+
     initial_capital: float = 10000.0  # USDT
     start_date: str = "2022-01-01"
     end_date: Optional[str] = None  # None = today
 
     # Symbols to test
-    symbols: List[str] = field(default_factory=lambda: [
-        "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
-    ])
+    symbols: List[str] = field(
+        default_factory=lambda: [
+            "BTCUSDT",
+            "ETHUSDT",
+            "BNBUSDT",
+            "SOLUSDT",
+            "XRPUSDT",
+        ]
+    )
 
     # Timeframes
     higher_tf: str = "1d"
@@ -88,6 +96,7 @@ class BacktestConfig:
 @dataclass
 class BacktestResult:
     """Backtest results."""
+
     total_return: float = 0.0
     annualized_return: float = 0.0
     sharpe_ratio: float = 0.0
@@ -124,9 +133,18 @@ class BacktestResult:
             "total_trades": self.total_trades,
             "avg_trade_pnl": f"{self.avg_trade_pnl * 100:.2f}%",
             "regime_breakdown": {
-                "bull": {"trades": self.bull_trades, "win_rate": f"{self.bull_win_rate * 100:.1f}%"},
-                "neutral": {"trades": self.neutral_trades, "win_rate": f"{self.neutral_win_rate * 100:.1f}%"},
-                "bear": {"trades": self.bear_trades, "win_rate": f"{self.bear_win_rate * 100:.1f}%"},
+                "bull": {
+                    "trades": self.bull_trades,
+                    "win_rate": f"{self.bull_win_rate * 100:.1f}%",
+                },
+                "neutral": {
+                    "trades": self.neutral_trades,
+                    "win_rate": f"{self.neutral_win_rate * 100:.1f}%",
+                },
+                "bear": {
+                    "trades": self.bear_trades,
+                    "win_rate": f"{self.bear_win_rate * 100:.1f}%",
+                },
             },
         }
 
@@ -178,7 +196,9 @@ class BinanceDataFetcher:
         all_data = []
         current_start = start_ts
 
-        logger.info(f"Fetching {symbol} {interval} data from {start_date} to {end_date or 'now'}...")
+        logger.info(
+            f"Fetching {symbol} {interval} data from {start_date} to {end_date or 'now'}..."
+        )
 
         while current_start < end_ts:
             try:
@@ -215,11 +235,23 @@ class BinanceDataFetcher:
             return pd.DataFrame()
 
         # Convert to DataFrame
-        df = pd.DataFrame(all_data, columns=[
-            "timestamp", "open", "high", "low", "close", "volume",
-            "close_time", "quote_volume", "trades", "taker_buy_base",
-            "taker_buy_quote", "ignore"
-        ])
+        df = pd.DataFrame(
+            all_data,
+            columns=[
+                "timestamp",
+                "open",
+                "high",
+                "low",
+                "close",
+                "volume",
+                "close_time",
+                "quote_volume",
+                "trades",
+                "taker_buy_base",
+                "taker_buy_quote",
+                "ignore",
+            ],
+        )
 
         df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
         df = df.set_index("timestamp")
@@ -304,24 +336,26 @@ class BinanceFuturesV6Backtester:
         logger.info(f"Data fetched for {len(self.data_4h)} symbols")
         return len(self.data_4h) > 0
 
-    def _calculate_btc_metrics(self, btc_df: pd.DataFrame, idx: int) -> Dict[str, float]:
+    def _calculate_btc_metrics(
+        self, btc_df: pd.DataFrame, idx: int
+    ) -> Dict[str, float]:
         """Calculate BTC metrics for regime detection."""
         if idx < 200:
             return {
                 "price": btc_df["close"].iloc[idx],
                 "ema_200": btc_df["close"].iloc[idx],
-                "52w_high": btc_df["close"].iloc[:idx+1].max(),
+                "52w_high": btc_df["close"].iloc[: idx + 1].max(),
                 "change_24h": 0.0,
             }
 
-        close = btc_df["close"].values[:idx+1]
+        close = btc_df["close"].values[: idx + 1]
 
         # 200 EMA
         ema_200 = self._ema(close, 200)[-1]
 
         # 52-week high (approximately 365 daily candles)
         lookback = min(365, idx)
-        high_52w = btc_df["high"].iloc[idx-lookback:idx+1].max()
+        high_52w = btc_df["high"].iloc[idx - lookback : idx + 1].max()
 
         # 24h change (6 x 4H candles = 24h)
         if idx >= 6:
@@ -409,7 +443,7 @@ class BinanceFuturesV6Backtester:
                 df_1d = self.data_1d[symbol]
 
                 # Get data up to current time (no look-ahead)
-                df_4h_current = df_4h.iloc[:i+1].copy()
+                df_4h_current = df_4h.iloc[: i + 1].copy()
 
                 # Find corresponding 1D data
                 current_date = current_time.date()
@@ -429,28 +463,43 @@ class BinanceFuturesV6Backtester:
 
                 # DEBUG: Track signal reasons
                 reason_key = signal.reason[:50] if signal.reason else "unknown"
-                signal_stats["by_reason"][reason_key] = signal_stats["by_reason"].get(reason_key, 0) + 1
+                signal_stats["by_reason"][reason_key] = (
+                    signal_stats["by_reason"].get(reason_key, 0) + 1
+                )
 
                 # Handle exits
                 if symbol in positions:
                     pos = positions[symbol]
 
-                    if signal.signal_type in [SignalType.EXIT_LONG, SignalType.EXIT_SHORT]:
+                    if signal.signal_type in [
+                        SignalType.EXIT_LONG,
+                        SignalType.EXIT_SHORT,
+                    ]:
                         # Execute exit
                         exit_price = df_4h.iloc[i]["close"]
-                        exit_price *= (1 - self.config.slippage_pct) if pos["side"] == "LONG" else (1 + self.config.slippage_pct)
+                        exit_price *= (
+                            (1 - self.config.slippage_pct)
+                            if pos["side"] == "LONG"
+                            else (1 + self.config.slippage_pct)
+                        )
 
                         # Calculate PnL
                         if pos["side"] == "LONG":
-                            pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"]
+                            pnl_pct = (exit_price - pos["entry_price"]) / pos[
+                                "entry_price"
+                            ]
                         else:
-                            pnl_pct = (pos["entry_price"] - exit_price) / pos["entry_price"]
+                            pnl_pct = (pos["entry_price"] - exit_price) / pos[
+                                "entry_price"
+                            ]
 
                         pnl_pct *= pos["leverage"]
                         pnl_usd = pos["size"] * pnl_pct
 
                         # Apply commission
-                        commission = pos["size"] * self.config.commission_pct * 2  # Entry + exit
+                        commission = (
+                            pos["size"] * self.config.commission_pct * 2
+                        )  # Entry + exit
                         pnl_usd -= commission
 
                         capital += pnl_usd
@@ -463,19 +512,23 @@ class BinanceFuturesV6Backtester:
                             regime_trades[regime_at_entry]["losses"] += 1
 
                         # Log trade
-                        self.trade_log.append({
-                            "symbol": symbol,
-                            "side": pos["side"],
-                            "entry_time": pos["entry_time"],
-                            "entry_price": pos["entry_price"],
-                            "exit_time": current_time,
-                            "exit_price": exit_price,
-                            "pnl_pct": pnl_pct,
-                            "pnl_usd": pnl_usd,
-                            "regime": regime_at_entry.value,
-                        })
+                        self.trade_log.append(
+                            {
+                                "symbol": symbol,
+                                "side": pos["side"],
+                                "entry_time": pos["entry_time"],
+                                "entry_price": pos["entry_price"],
+                                "exit_time": current_time,
+                                "exit_price": exit_price,
+                                "pnl_pct": pnl_pct,
+                                "pnl_usd": pnl_usd,
+                                "regime": regime_at_entry.value,
+                            }
+                        )
 
-                        logger.info(f"[DEBUG] EXIT: {symbol} {pos['side']} @ {exit_price:.2f}, pnl={pnl_pct*100:.2f}%, reason={signal.reason[:50]}")
+                        logger.info(
+                            f"[DEBUG] EXIT: {symbol} {pos['side']} @ {exit_price:.2f}, pnl={pnl_pct*100:.2f}%, reason={signal.reason[:50]}"
+                        )
 
                         del positions[symbol]
                         self.strategy.close_position(symbol, signal)
@@ -484,17 +537,30 @@ class BinanceFuturesV6Backtester:
 
                 # Handle entries
                 if signal.signal_type in [SignalType.LONG, SignalType.SHORT]:
-                    if symbol not in positions and len(positions) < self.strategy.config.max_positions:
+                    if (
+                        symbol not in positions
+                        and len(positions) < self.strategy.config.max_positions
+                    ):
                         # Execute entry
                         entry_price = df_4h.iloc[i]["close"]
-                        entry_price *= (1 + self.config.slippage_pct) if signal.signal_type == SignalType.LONG else (1 - self.config.slippage_pct)
+                        entry_price *= (
+                            (1 + self.config.slippage_pct)
+                            if signal.signal_type == SignalType.LONG
+                            else (1 - self.config.slippage_pct)
+                        )
 
                         # Position size from strategy
                         position_size = signal.position_size or (capital * 0.1)
-                        position_size = min(position_size, capital * 0.2)  # Max 20% per position
+                        position_size = min(
+                            position_size, capital * 0.2
+                        )  # Max 20% per position
 
                         positions[symbol] = {
-                            "side": "LONG" if signal.signal_type == SignalType.LONG else "SHORT",
+                            "side": (
+                                "LONG"
+                                if signal.signal_type == SignalType.LONG
+                                else "SHORT"
+                            ),
                             "entry_price": entry_price,
                             "entry_time": current_time,
                             "size": position_size,
@@ -506,7 +572,9 @@ class BinanceFuturesV6Backtester:
                         self.strategy.open_position(symbol, signal)
                         signal_stats["positions_opened"] += 1
                         signal_stats["entries"] += 1
-                        logger.info(f"[DEBUG] ENTRY: {symbol} {positions[symbol]['side']} @ {entry_price:.2f}, regime={current_regime.value}")
+                        logger.info(
+                            f"[DEBUG] ENTRY: {symbol} {positions[symbol]['side']} @ {entry_price:.2f}, regime={current_regime.value}"
+                        )
 
             # Mark-to-market
             portfolio_value = capital
@@ -514,21 +582,27 @@ class BinanceFuturesV6Backtester:
                 if symbol in self.data_4h:
                     current_price = self.data_4h[symbol].iloc[i]["close"]
                     if pos["side"] == "LONG":
-                        unrealized_pnl = (current_price - pos["entry_price"]) / pos["entry_price"]
+                        unrealized_pnl = (current_price - pos["entry_price"]) / pos[
+                            "entry_price"
+                        ]
                     else:
-                        unrealized_pnl = (pos["entry_price"] - current_price) / pos["entry_price"]
+                        unrealized_pnl = (pos["entry_price"] - current_price) / pos[
+                            "entry_price"
+                        ]
                     unrealized_pnl *= pos["leverage"]
                     portfolio_value += pos["size"] * unrealized_pnl
 
             self.equity_curve.append(portfolio_value)
 
             # Log regime
-            self.regime_log.append({
-                "time": current_time,
-                "regime": current_regime.value,
-                "btc_price": btc_metrics["price"],
-                "portfolio_value": portfolio_value,
-            })
+            self.regime_log.append(
+                {
+                    "time": current_time,
+                    "regime": current_regime.value,
+                    "btc_price": btc_metrics["price"],
+                    "portfolio_value": portfolio_value,
+                }
+            )
 
         # DEBUG: Print signal statistics
         logger.info("=" * 60)
@@ -540,9 +614,15 @@ class BinanceFuturesV6Backtester:
         logger.info(f"Positions still open: {len(positions)}")
         logger.info("")
         logger.info("Signal reasons breakdown (top 15):")
-        sorted_reasons = sorted(signal_stats["by_reason"].items(), key=lambda x: -x[1])[:15]
+        sorted_reasons = sorted(signal_stats["by_reason"].items(), key=lambda x: -x[1])[
+            :15
+        ]
         for reason, count in sorted_reasons:
-            pct = count / signal_stats["total_candles"] * 100 if signal_stats["total_candles"] > 0 else 0
+            pct = (
+                count / signal_stats["total_candles"] * 100
+                if signal_stats["total_candles"] > 0
+                else 0
+            )
             logger.info(f"  {reason}: {count} ({pct:.1f}%)")
 
         # Close any remaining positions at end of backtest
@@ -552,7 +632,11 @@ class BinanceFuturesV6Backtester:
             for symbol, pos in list(positions.items()):
                 if symbol in self.data_4h:
                     exit_price = self.data_4h[symbol].iloc[-1]["close"]
-                    exit_price *= (1 - self.config.slippage_pct) if pos["side"] == "LONG" else (1 + self.config.slippage_pct)
+                    exit_price *= (
+                        (1 - self.config.slippage_pct)
+                        if pos["side"] == "LONG"
+                        else (1 + self.config.slippage_pct)
+                    )
 
                     if pos["side"] == "LONG":
                         pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"]
@@ -565,18 +649,20 @@ class BinanceFuturesV6Backtester:
                     pnl_usd -= commission
                     capital += pnl_usd
 
-                    self.trade_log.append({
-                        "symbol": symbol,
-                        "side": pos["side"],
-                        "entry_time": pos["entry_time"],
-                        "entry_price": pos["entry_price"],
-                        "exit_time": timestamps[-1],
-                        "exit_price": exit_price,
-                        "pnl_pct": pnl_pct,
-                        "pnl_usd": pnl_usd,
-                        "regime": pos["regime"].value,
-                        "reason": "End of backtest",
-                    })
+                    self.trade_log.append(
+                        {
+                            "symbol": symbol,
+                            "side": pos["side"],
+                            "entry_time": pos["entry_time"],
+                            "entry_price": pos["entry_price"],
+                            "exit_time": timestamps[-1],
+                            "exit_price": exit_price,
+                            "pnl_pct": pnl_pct,
+                            "pnl_usd": pnl_usd,
+                            "regime": pos["regime"].value,
+                            "reason": "End of backtest",
+                        }
+                    )
 
                     regime_at_entry = pos["regime"]
                     if pnl_usd > 0:
@@ -584,7 +670,9 @@ class BinanceFuturesV6Backtester:
                     else:
                         regime_trades[regime_at_entry]["losses"] += 1
 
-                    logger.info(f"  {symbol} {pos['side']}: entry={pos['entry_price']:.2f} exit={exit_price:.2f} pnl={pnl_pct*100:.2f}%")
+                    logger.info(
+                        f"  {symbol} {pos['side']}: entry={pos['entry_price']:.2f} exit={exit_price:.2f} pnl={pnl_pct*100:.2f}%"
+                    )
 
                     del positions[symbol]
 
@@ -599,7 +687,9 @@ class BinanceFuturesV6Backtester:
         equity = np.array(self.equity_curve)
 
         # Total return
-        total_return = (equity[-1] - self.config.initial_capital) / self.config.initial_capital
+        total_return = (
+            equity[-1] - self.config.initial_capital
+        ) / self.config.initial_capital
 
         # Daily returns (approximation: each 4H candle)
         returns = np.diff(equity) / equity[:-1]
@@ -609,7 +699,9 @@ class BinanceFuturesV6Backtester:
         n_candles = len(returns)
         n_years = n_candles / candles_per_year if n_candles > 0 else 1
 
-        annualized_return = (1 + total_return) ** (1 / n_years) - 1 if n_years > 0 else 0
+        annualized_return = (
+            (1 + total_return) ** (1 / n_years) - 1 if n_years > 0 else 0
+        )
 
         # Sharpe ratio
         if len(returns) > 1 and np.std(returns) > 0:
@@ -641,7 +733,9 @@ class BinanceFuturesV6Backtester:
 
             gross_profit = sum(p for p in trade_pnls if p > 0)
             gross_loss = abs(sum(p for p in trade_pnls if p < 0))
-            profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
+            profit_factor = (
+                gross_profit / gross_loss if gross_loss > 0 else float("inf")
+            )
 
             avg_trade = np.mean(trade_pnls)
         else:
@@ -665,11 +759,14 @@ class BinanceFuturesV6Backtester:
             profit_factor=profit_factor,
             total_trades=len(self.trade_log),
             avg_trade_pnl=avg_trade,
-            bull_trades=regime_trades[MarketRegime.BULL]["wins"] + regime_trades[MarketRegime.BULL]["losses"],
+            bull_trades=regime_trades[MarketRegime.BULL]["wins"]
+            + regime_trades[MarketRegime.BULL]["losses"],
             bull_win_rate=calc_win_rate(regime_trades[MarketRegime.BULL]),
-            neutral_trades=regime_trades[MarketRegime.NEUTRAL]["wins"] + regime_trades[MarketRegime.NEUTRAL]["losses"],
+            neutral_trades=regime_trades[MarketRegime.NEUTRAL]["wins"]
+            + regime_trades[MarketRegime.NEUTRAL]["losses"],
             neutral_win_rate=calc_win_rate(regime_trades[MarketRegime.NEUTRAL]),
-            bear_trades=regime_trades[MarketRegime.BEAR]["wins"] + regime_trades[MarketRegime.BEAR]["losses"],
+            bear_trades=regime_trades[MarketRegime.BEAR]["wins"]
+            + regime_trades[MarketRegime.BEAR]["losses"],
             bear_win_rate=calc_win_rate(regime_trades[MarketRegime.BEAR]),
             equity_curve=self.equity_curve,
             trade_log=self.trade_log,
@@ -685,7 +782,7 @@ class BinanceFuturesV6Backtester:
         multiplier = 2 / (period + 1)
 
         for i in range(1, len(data)):
-            ema[i] = (data[i] - ema[i-1]) * multiplier + ema[i-1]
+            ema[i] = (data[i] - ema[i - 1]) * multiplier + ema[i - 1]
 
         return ema
 
@@ -704,7 +801,11 @@ def run_walk_forward_analysis(config: BacktestConfig) -> Dict[str, Any]:
 
     # Parse dates
     start = datetime.strptime(config.start_date, "%Y-%m-%d")
-    end = datetime.strptime(config.end_date, "%Y-%m-%d") if config.end_date else datetime.now()
+    end = (
+        datetime.strptime(config.end_date, "%Y-%m-%d")
+        if config.end_date
+        else datetime.now()
+    )
 
     is_days = config.wfa_in_sample_days
     oos_days = config.wfa_out_sample_days
@@ -715,7 +816,9 @@ def run_walk_forward_analysis(config: BacktestConfig) -> Dict[str, Any]:
         is_end = current_start + timedelta(days=is_days)
         oos_end = is_end + timedelta(days=oos_days)
 
-        logger.info(f"WFA Period: IS {current_start.date()} to {is_end.date()}, OOS {is_end.date()} to {oos_end.date()}")
+        logger.info(
+            f"WFA Period: IS {current_start.date()} to {is_end.date()}, OOS {is_end.date()} to {oos_end.date()}"
+        )
 
         # Run OOS backtest
         oos_config = BacktestConfig(
@@ -728,14 +831,16 @@ def run_walk_forward_analysis(config: BacktestConfig) -> Dict[str, Any]:
         backtester = BinanceFuturesV6Backtester(oos_config)
         if backtester.fetch_data():
             result = backtester.run()
-            results.append({
-                "period": f"{is_end.date()} to {oos_end.date()}",
-                "return": result.total_return,
-                "sharpe": result.sharpe_ratio,
-                "mdd": result.max_drawdown,
-                "win_rate": result.win_rate,
-                "trades": result.total_trades,
-            })
+            results.append(
+                {
+                    "period": f"{is_end.date()} to {oos_end.date()}",
+                    "return": result.total_return,
+                    "sharpe": result.sharpe_ratio,
+                    "mdd": result.max_drawdown,
+                    "win_rate": result.win_rate,
+                    "trades": result.total_trades,
+                }
+            )
 
         current_start += timedelta(days=oos_days)
 
@@ -763,19 +868,26 @@ def run_walk_forward_analysis(config: BacktestConfig) -> Dict[str, Any]:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Binance Futures v6 Strategy Backtester")
-    parser.add_argument("--symbols", type=str, default="BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT",
-                       help="Comma-separated list of symbols")
-    parser.add_argument("--start", type=str, default="2022-01-01",
-                       help="Start date (YYYY-MM-DD)")
-    parser.add_argument("--end", type=str, default=None,
-                       help="End date (YYYY-MM-DD), defaults to today")
-    parser.add_argument("--capital", type=float, default=10000.0,
-                       help="Initial capital in USDT")
-    parser.add_argument("--leverage", type=int, default=5,
-                       help="Leverage (default: 5)")
-    parser.add_argument("--wfa", action="store_true",
-                       help="Run Walk-Forward Analysis")
+    parser = argparse.ArgumentParser(
+        description="Binance Futures v6 Strategy Backtester"
+    )
+    parser.add_argument(
+        "--symbols",
+        type=str,
+        default="BTCUSDT,ETHUSDT,BNBUSDT,SOLUSDT,XRPUSDT",
+        help="Comma-separated list of symbols",
+    )
+    parser.add_argument(
+        "--start", type=str, default="2022-01-01", help="Start date (YYYY-MM-DD)"
+    )
+    parser.add_argument(
+        "--end", type=str, default=None, help="End date (YYYY-MM-DD), defaults to today"
+    )
+    parser.add_argument(
+        "--capital", type=float, default=10000.0, help="Initial capital in USDT"
+    )
+    parser.add_argument("--leverage", type=int, default=5, help="Leverage (default: 5)")
+    parser.add_argument("--wfa", action="store_true", help="Run Walk-Forward Analysis")
 
     args = parser.parse_args()
 

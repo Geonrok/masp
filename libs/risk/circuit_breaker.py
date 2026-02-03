@@ -80,13 +80,16 @@ class CircuitBreakerConfig:
             max_drawdown_pct=float(os.getenv("MASP_MAX_DRAWDOWN_PCT", "0.10")),
             warning_drawdown_pct=float(os.getenv("MASP_WARNING_DRAWDOWN_PCT", "0.05")),
             max_daily_loss_pct=float(os.getenv("MASP_MAX_DAILY_LOSS_PCT", "0.03")),
-            warning_daily_loss_pct=float(os.getenv("MASP_WARNING_DAILY_LOSS_PCT", "0.02")),
+            warning_daily_loss_pct=float(
+                os.getenv("MASP_WARNING_DAILY_LOSS_PCT", "0.02")
+            ),
             max_consecutive_losses=int(os.getenv("MASP_MAX_CONSECUTIVE_LOSSES", "5")),
             cooldown_minutes=int(os.getenv("MASP_CIRCUIT_COOLDOWN_MIN", "60")),
             recovery_check_minutes=int(os.getenv("MASP_RECOVERY_CHECK_MIN", "15")),
             auto_recover=os.getenv("MASP_AUTO_RECOVER", "0") == "1",
             kill_switch_file=os.getenv("MASP_KILL_SWITCH_FILE"),
-            create_kill_switch_on_trigger=os.getenv("MASP_CREATE_KILL_SWITCH", "1") == "1",
+            create_kill_switch_on_trigger=os.getenv("MASP_CREATE_KILL_SWITCH", "1")
+            == "1",
         )
 
 
@@ -195,7 +198,9 @@ class CircuitBreaker:
             # Calculate daily loss
             if self.state.daily_start_equity > 0:
                 daily_loss = self.state.daily_start_equity - equity
-                self.state.daily_loss_pct = max(0, daily_loss / self.state.daily_start_equity)
+                self.state.daily_loss_pct = max(
+                    0, daily_loss / self.state.daily_start_equity
+                )
             else:
                 self.state.daily_loss_pct = 0.0
 
@@ -288,7 +293,9 @@ class CircuitBreaker:
         # Send notification
         if self.config.notify_on_trigger and self.config.notification_callback:
             try:
-                self.config.notification_callback("circuit_breaker_triggered", trigger_info)
+                self.config.notification_callback(
+                    "circuit_breaker_triggered", trigger_info
+                )
             except Exception as e:
                 logger.error("[CircuitBreaker] Notification failed: %s", e)
 
@@ -401,8 +408,12 @@ class CircuitBreaker:
         return {
             "state": self.state.state.value,
             "is_trading_allowed": self.is_trading_allowed(),
-            "trigger_reason": self.state.trigger_reason.value if self.state.trigger_reason else None,
-            "trigger_time": self.state.trigger_time.isoformat() if self.state.trigger_time else None,
+            "trigger_reason": (
+                self.state.trigger_reason.value if self.state.trigger_reason else None
+            ),
+            "trigger_time": (
+                self.state.trigger_time.isoformat() if self.state.trigger_time else None
+            ),
             "metrics": {
                 "current_equity": self.state.current_equity,
                 "peak_equity": self.state.peak_equity,

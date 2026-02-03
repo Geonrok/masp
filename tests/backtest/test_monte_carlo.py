@@ -73,7 +73,9 @@ class TestMonteCarloSimulatorBootstrap:
 
     def test_simulate_from_returns_structure(self, simulator, positive_returns):
         """Test result structure from bootstrap simulation."""
-        result = simulator.simulate_from_returns(positive_returns, initial_capital=1000000)
+        result = simulator.simulate_from_returns(
+            positive_returns, initial_capital=1000000
+        )
 
         assert isinstance(result, MonteCarloResult)
         assert result.config.n_simulations == 1000

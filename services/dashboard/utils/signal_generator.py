@@ -1,4 +1,5 @@
 """Signal generator for MASP Dashboard with fallback support."""
+
 from __future__ import annotations
 
 import logging
@@ -51,7 +52,9 @@ def _load_market_adapter(exchange: str, force_demo: bool):
 class _MockStrategy:
     """Mock strategy for demo mode."""
 
-    def generate_signal(self, symbol: str, ohlcv: List[Dict[str, Any]] | None = None) -> Dict[str, Any]:
+    def generate_signal(
+        self, symbol: str, ohlcv: List[Dict[str, Any]] | None = None
+    ) -> Dict[str, Any]:
         """Generate mock signal for a symbol."""
         data = ohlcv or []
         result = self.calculate_signal(data)
@@ -214,7 +217,9 @@ class SignalGenerator:
                 try:
                     result = self.strategy.generate_signal(symbol)
                 except TypeError:
-                    logger.debug("generate_signal(symbol) failed, trying (symbol, ohlcv)")
+                    logger.debug(
+                        "generate_signal(symbol) failed, trying (symbol, ohlcv)"
+                    )
                     ohlcv = self._get_ohlcv_safe(symbol)
                     if ohlcv:
                         try:
@@ -287,7 +292,9 @@ def get_cached_signals(
     return [generator.generate_signal(symbol) for symbol in symbols]
 
 
-def get_signal_generator_status(exchange: str, allow_live: bool = True) -> Dict[str, Any]:
+def get_signal_generator_status(
+    exchange: str, allow_live: bool = True
+) -> Dict[str, Any]:
     """Get status of signal generator components."""
     generator = SignalGenerator(exchange, allow_live=allow_live)
     return {

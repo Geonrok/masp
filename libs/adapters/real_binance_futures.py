@@ -9,6 +9,7 @@ Features:
 - Position management
 - Leverage and margin type control
 """
+
 from __future__ import annotations
 
 import logging
@@ -51,7 +52,7 @@ class BinanceFuturesMarketData(MarketDataAdapter):
         self.testnet = testnet
         logger.info(
             "[BinanceFutures] MarketData initialized (%s)",
-            "testnet" if testnet else "live"
+            "testnet" if testnet else "live",
         )
 
     def _convert_symbol(self, symbol: str) -> str:
@@ -65,7 +66,7 @@ class BinanceFuturesMarketData(MarketDataAdapter):
         """Convert 'BTCUSDT' -> 'BTC/USDT:PERP'."""
         for quote in ["USDT", "BUSD"]:
             if binance_symbol.endswith(quote):
-                base = binance_symbol[:-len(quote)]
+                base = binance_symbol[: -len(quote)]
                 return f"{base}/{quote}:PERP"
         return binance_symbol
 
@@ -113,14 +114,16 @@ class BinanceFuturesMarketData(MarketDataAdapter):
 
             result = []
             for k in klines:
-                result.append(OHLCV(
-                    timestamp=datetime.fromtimestamp(k[0] / 1000).isoformat(),
-                    open=float(k[1]),
-                    high=float(k[2]),
-                    low=float(k[3]),
-                    close=float(k[4]),
-                    volume=float(k[5]),
-                ))
+                result.append(
+                    OHLCV(
+                        timestamp=datetime.fromtimestamp(k[0] / 1000).isoformat(),
+                        open=float(k[1]),
+                        high=float(k[2]),
+                        low=float(k[3]),
+                        close=float(k[4]),
+                        volume=float(k[5]),
+                    )
+                )
             return result
         except Exception as e:
             logger.error("[BinanceFutures] Failed to get OHLCV for %s: %s", symbol, e)
@@ -137,7 +140,9 @@ class BinanceFuturesMarketData(MarketDataAdapter):
                 "asks": [[float(p), float(q)] for p, q in data.get("asks", [])],
             }
         except Exception as e:
-            logger.error("[BinanceFutures] Failed to get orderbook for %s: %s", symbol, e)
+            logger.error(
+                "[BinanceFutures] Failed to get orderbook for %s: %s", symbol, e
+            )
             return None
 
     def is_market_open(self) -> bool:
@@ -150,7 +155,10 @@ class BinanceFuturesMarketData(MarketDataAdapter):
             info = self.api.get_exchange_info()
             symbols = []
             for s in info.get("symbols", []):
-                if s.get("status") == "TRADING" and s.get("contractType") == "PERPETUAL":
+                if (
+                    s.get("status") == "TRADING"
+                    and s.get("contractType") == "PERPETUAL"
+                ):
                     symbols.append(f"{s['baseAsset']}/{s['quoteAsset']}:PERP")
             return symbols
         except Exception as e:
@@ -161,6 +169,7 @@ class BinanceFuturesMarketData(MarketDataAdapter):
 @dataclass
 class BinanceFuturesOrderResult(OrderResult):
     """Extended order result for Binance Futures."""
+
     client_order_id: Optional[str] = None
     executed_qty: float = 0.0
     avg_price: float = 0.0
@@ -230,10 +239,14 @@ class BinanceFuturesExecution(ExecutionAdapter):
         try:
             self.api.set_leverage(binance_symbol, target_leverage)
             self._leverage_cache[binance_symbol] = target_leverage
-            logger.info("[BinanceFutures] Leverage set: %s -> %dx", symbol, target_leverage)
+            logger.info(
+                "[BinanceFutures] Leverage set: %s -> %dx", symbol, target_leverage
+            )
             return target_leverage
         except Exception as e:
-            logger.warning("[BinanceFutures] Failed to set leverage for %s: %s", symbol, e)
+            logger.warning(
+                "[BinanceFutures] Failed to set leverage for %s: %s", symbol, e
+            )
             return self.default_leverage
 
     def place_order(
@@ -288,7 +301,9 @@ class BinanceFuturesExecution(ExecutionAdapter):
                     quantity = amount_krw / mark_price
                     logger.info(
                         "[BinanceFutures] Calculated qty: %.6f from %.2f USDT @ %.2f",
-                        quantity, amount_krw, mark_price
+                        quantity,
+                        amount_krw,
+                        mark_price,
                     )
 
             if not quantity:
@@ -325,7 +340,9 @@ class BinanceFuturesExecution(ExecutionAdapter):
                 status=status_map.get(result.get("status", ""), "UNKNOWN"),
                 message=f"Order {result.get('status')}",
                 executed_qty=float(result.get("executedQty", 0)),
-                avg_price=float(result.get("avgPrice", 0)) if result.get("avgPrice") else 0,
+                avg_price=(
+                    float(result.get("avgPrice", 0)) if result.get("avgPrice") else 0
+                ),
                 reduce_only=reduce_only,
             )
 
@@ -402,7 +419,7 @@ class BinanceFuturesExecution(ExecutionAdapter):
         """Convert 'BTCUSDT' -> 'BTC/USDT:PERP'."""
         for quote in ["USDT", "BUSD"]:
             if binance_symbol.endswith(quote):
-                base = binance_symbol[:-len(quote)]
+                base = binance_symbol[: -len(quote)]
                 return f"{base}/{quote}:PERP"
         return binance_symbol
 
@@ -425,7 +442,9 @@ class BinanceFuturesExecution(ExecutionAdapter):
                 "quantity": float(result.get("origQty", 0)),
                 "executed_qty": float(result.get("executedQty", 0)),
                 "price": float(result.get("price", 0)),
-                "avg_price": float(result.get("avgPrice", 0)) if result.get("avgPrice") else 0,
+                "avg_price": (
+                    float(result.get("avgPrice", 0)) if result.get("avgPrice") else 0
+                ),
             }
         except Exception as e:
             logger.error("[BinanceFutures] Get order status failed: %s", e)

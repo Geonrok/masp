@@ -1,6 +1,7 @@
 """
 Rate limit utilities tests (sync + async).
 """
+
 from __future__ import annotations
 
 import asyncio

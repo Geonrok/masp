@@ -115,7 +115,9 @@ class TestMetricsRegistry:
         assert ticker_stats["count"] == 2
         assert ticker_stats["avg"] == 125
 
-        balance_stats = registry.get_histogram("latency", labels={"endpoint": "/balance"})
+        balance_stats = registry.get_histogram(
+            "latency", labels={"endpoint": "/balance"}
+        )
         assert balance_stats["count"] == 1
 
     def test_custom_histogram_buckets(self):
@@ -339,14 +341,20 @@ class TestHealthChecker:
         """Test checking all components."""
         checker = HealthChecker()
 
-        checker.register("db", lambda: ComponentHealth(
-            name="db",
-            status=HealthStatus.HEALTHY,
-        ))
-        checker.register("cache", lambda: ComponentHealth(
-            name="cache",
-            status=HealthStatus.HEALTHY,
-        ))
+        checker.register(
+            "db",
+            lambda: ComponentHealth(
+                name="db",
+                status=HealthStatus.HEALTHY,
+            ),
+        )
+        checker.register(
+            "cache",
+            lambda: ComponentHealth(
+                name="cache",
+                status=HealthStatus.HEALTHY,
+            ),
+        )
 
         result = checker.check_all()
 
@@ -358,15 +366,21 @@ class TestHealthChecker:
         """Test degraded overall status."""
         checker = HealthChecker()
 
-        checker.register("healthy", lambda: ComponentHealth(
-            name="healthy",
-            status=HealthStatus.HEALTHY,
-        ))
-        checker.register("degraded", lambda: ComponentHealth(
-            name="degraded",
-            status=HealthStatus.DEGRADED,
-            message="Slow response",
-        ))
+        checker.register(
+            "healthy",
+            lambda: ComponentHealth(
+                name="healthy",
+                status=HealthStatus.HEALTHY,
+            ),
+        )
+        checker.register(
+            "degraded",
+            lambda: ComponentHealth(
+                name="degraded",
+                status=HealthStatus.DEGRADED,
+                message="Slow response",
+            ),
+        )
 
         result = checker.check_all()
         assert result["status"] == "degraded"
@@ -375,15 +389,21 @@ class TestHealthChecker:
         """Test unhealthy overall status."""
         checker = HealthChecker()
 
-        checker.register("healthy", lambda: ComponentHealth(
-            name="healthy",
-            status=HealthStatus.HEALTHY,
-        ))
-        checker.register("unhealthy", lambda: ComponentHealth(
-            name="unhealthy",
-            status=HealthStatus.UNHEALTHY,
-            message="Connection failed",
-        ))
+        checker.register(
+            "healthy",
+            lambda: ComponentHealth(
+                name="healthy",
+                status=HealthStatus.HEALTHY,
+            ),
+        )
+        checker.register(
+            "unhealthy",
+            lambda: ComponentHealth(
+                name="unhealthy",
+                status=HealthStatus.UNHEALTHY,
+                message="Connection failed",
+            ),
+        )
 
         result = checker.check_all()
         assert result["status"] == "unhealthy"
@@ -405,10 +425,13 @@ class TestHealthChecker:
         """Test unregistering a health check."""
         checker = HealthChecker()
 
-        checker.register("temp", lambda: ComponentHealth(
-            name="temp",
-            status=HealthStatus.HEALTHY,
-        ))
+        checker.register(
+            "temp",
+            lambda: ComponentHealth(
+                name="temp",
+                status=HealthStatus.HEALTHY,
+            ),
+        )
         checker.unregister("temp")
 
         result = checker.check("temp")
@@ -418,12 +441,15 @@ class TestHealthChecker:
         """Test component health with details."""
         checker = HealthChecker()
 
-        checker.register("detailed", lambda: ComponentHealth(
-            name="detailed",
-            status=HealthStatus.HEALTHY,
-            message="All good",
-            details={"latency_ms": 50, "connections": 10},
-        ))
+        checker.register(
+            "detailed",
+            lambda: ComponentHealth(
+                name="detailed",
+                status=HealthStatus.HEALTHY,
+                message="All good",
+                details={"latency_ms": 50, "connections": 10},
+            ),
+        )
 
         result = checker.check_all()
         assert result["components"]["detailed"]["details"]["latency_ms"] == 50
@@ -478,8 +504,7 @@ class TestThreadSafety:
                 registry.increment("concurrent_counter")
 
         threads = [
-            threading.Thread(target=increment_counter)
-            for _ in range(num_threads)
+            threading.Thread(target=increment_counter) for _ in range(num_threads)
         ]
 
         for t in threads:
@@ -502,10 +527,7 @@ class TestThreadSafety:
             for i in range(timings_per_thread):
                 registry.record_timing("concurrent_timing", float(i))
 
-        threads = [
-            threading.Thread(target=record_timings)
-            for _ in range(num_threads)
-        ]
+        threads = [threading.Thread(target=record_timings) for _ in range(num_threads)]
 
         for t in threads:
             t.start()

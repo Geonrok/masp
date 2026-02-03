@@ -85,9 +85,7 @@ class HealthServer:
         """GET /health/ready - 200/503."""
         try:
             status = self._scheduler_status_fn()
-            is_ready = status.get("running", False) and status.get(
-                "initialized", False
-            )
+            is_ready = status.get("running", False) and status.get("initialized", False)
 
             if is_ready:
                 return web.json_response({"status": "ready"}, status=200)

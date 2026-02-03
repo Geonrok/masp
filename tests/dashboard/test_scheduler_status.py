@@ -1,4 +1,5 @@
 """Tests for scheduler status component."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -228,7 +229,9 @@ def test_format_relative_time_past():
 
     ref = datetime(2026, 1, 15, 12, 0, 0)
 
-    assert _format_relative_time(ref - timedelta(seconds=30), reference=ref) == "30s ago"
+    assert (
+        _format_relative_time(ref - timedelta(seconds=30), reference=ref) == "30s ago"
+    )
     assert _format_relative_time(ref - timedelta(minutes=5), reference=ref) == "5m ago"
     assert _format_relative_time(ref - timedelta(hours=3), reference=ref) == "3h ago"
     assert _format_relative_time(ref - timedelta(days=2), reference=ref) == "2d ago"
@@ -377,10 +380,16 @@ def test_filter_jobs_by_status():
 
     jobs = [
         ScheduledJob(
-            job_id="1", name="Running", job_type=JobType.STRATEGY, status=JobStatus.RUNNING
+            job_id="1",
+            name="Running",
+            job_type=JobType.STRATEGY,
+            status=JobStatus.RUNNING,
         ),
         ScheduledJob(
-            job_id="2", name="Failed", job_type=JobType.STRATEGY, status=JobStatus.FAILED
+            job_id="2",
+            name="Failed",
+            job_type=JobType.STRATEGY,
+            status=JobStatus.FAILED,
         ),
         ScheduledJob(
             job_id="3",

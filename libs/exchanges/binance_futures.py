@@ -2,6 +2,7 @@
 Binance Futures Adapter (ccxt-based).
 Supports testnet and production.
 """
+
 from __future__ import annotations
 
 import logging
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BinanceFuturesConfig:
     """Binance Futures adapter config."""
+
     api_key: str
     secret_key: str
     testnet: bool = True
@@ -27,6 +29,7 @@ class BinanceFuturesConfig:
 @dataclass
 class OrderResult:
     """Order result."""
+
     order_id: str
     symbol: str
     side: str
@@ -146,9 +149,13 @@ class BinanceFuturesAdapter:
                 "side": "LONG" if pos["side"] == "long" else "SHORT",
                 "size": abs(float(pos["contracts"])),
                 "entry_price": float(pos["entryPrice"]) if pos["entryPrice"] else 0,
-                "unrealized_pnl": float(pos["unrealizedPnl"]) if pos["unrealizedPnl"] else 0,
+                "unrealized_pnl": (
+                    float(pos["unrealizedPnl"]) if pos["unrealizedPnl"] else 0
+                ),
                 "leverage": int(pos["leverage"]) if pos["leverage"] else 1,
-                "liquidation_price": float(pos["liquidationPrice"]) if pos["liquidationPrice"] else 0,
+                "liquidation_price": (
+                    float(pos["liquidationPrice"]) if pos["liquidationPrice"] else 0
+                ),
             }
             for pos in positions
             if abs(float(pos.get("contracts", 0))) > 0
@@ -192,7 +199,13 @@ class BinanceFuturesAdapter:
             raw=order,
         )
 
-        logger.info("[BINANCE] Market order: %s %s %s @ %s", side.upper(), amount, symbol, result.price)
+        logger.info(
+            "[BINANCE] Market order: %s %s %s @ %s",
+            side.upper(),
+            amount,
+            symbol,
+            result.price,
+        )
         return result
 
     async def create_limit_order(
@@ -227,7 +240,9 @@ class BinanceFuturesAdapter:
             raw=order,
         )
 
-        logger.info("[BINANCE] Limit order: %s %s %s @ %s", side.upper(), amount, symbol, price)
+        logger.info(
+            "[BINANCE] Limit order: %s %s %s @ %s", side.upper(), amount, symbol, price
+        )
         return result
 
     async def cancel_order(self, symbol: str, order_id: str) -> bool:

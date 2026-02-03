@@ -36,14 +36,16 @@ def create_mock_data(n_days: int = 200, n_symbols: int = 5, seed: int = 42) -> d
         returns = np.random.randn(n_days) * 0.02
         prices = base_price * np.cumprod(1 + returns)
 
-        df = pd.DataFrame({
-            "date": dates,
-            "open": prices * (1 + np.random.randn(n_days) * 0.001),
-            "high": prices * (1 + np.abs(np.random.randn(n_days) * 0.01)),
-            "low": prices * (1 - np.abs(np.random.randn(n_days) * 0.01)),
-            "close": prices,
-            "volume": np.random.uniform(1e6, 1e7, n_days),
-        })
+        df = pd.DataFrame(
+            {
+                "date": dates,
+                "open": prices * (1 + np.random.randn(n_days) * 0.001),
+                "high": prices * (1 + np.abs(np.random.randn(n_days) * 0.01)),
+                "low": prices * (1 - np.abs(np.random.randn(n_days) * 0.01)),
+                "close": prices,
+                "volume": np.random.uniform(1e6, 1e7, n_days),
+            }
+        )
 
         data[symbol] = df
 
@@ -119,25 +121,29 @@ class TestBiasFreeBacktester:
 
         # BTC prices
         btc_prices = np.linspace(100, 200, 200)  # Uptrend
-        data["BTC"] = pd.DataFrame({
-            "date": dates,
-            "open": btc_prices,
-            "high": btc_prices * 1.01,
-            "low": btc_prices * 0.99,
-            "close": btc_prices,
-            "volume": np.ones(200) * 1e7,
-        })
+        data["BTC"] = pd.DataFrame(
+            {
+                "date": dates,
+                "open": btc_prices,
+                "high": btc_prices * 1.01,
+                "low": btc_prices * 0.99,
+                "close": btc_prices,
+                "volume": np.ones(200) * 1e7,
+            }
+        )
 
         # Test symbol with known pattern
         test_prices = np.linspace(100, 150, 200)
-        data["TEST"] = pd.DataFrame({
-            "date": dates,
-            "open": test_prices,
-            "high": test_prices * 1.01,
-            "low": test_prices * 0.99,
-            "close": test_prices,
-            "volume": np.ones(200) * 1e7,
-        })
+        data["TEST"] = pd.DataFrame(
+            {
+                "date": dates,
+                "open": test_prices,
+                "high": test_prices * 1.01,
+                "low": test_prices * 0.99,
+                "close": test_prices,
+                "volume": np.ones(200) * 1e7,
+            }
+        )
 
         metrics = backtester.run(data)
 

@@ -4,7 +4,6 @@ from pathlib import Path
 import re
 import sys
 
-
 REPO = Path(__file__).resolve().parents[1]
 
 
@@ -64,11 +63,11 @@ def main() -> int:
         # Check for specific concatenation patterns (same line only)
         if "echo.echo" in s:
             fail(f"{p.name}: contains 'echo.echo' (likely missing newlines)")
-        
+
         # Check each line for concatenation patterns
         for line in s.splitlines():
             # pushd and echo on same line
-            if re.search(r'pushd.*echo', line, flags=re.IGNORECASE):
+            if re.search(r"pushd.*echo", line, flags=re.IGNORECASE):
                 fail(f"{p.name}: 'pushd ... echo' on same line")
             # %CD% and echo concatenated
             if "%CD%echo" in line:

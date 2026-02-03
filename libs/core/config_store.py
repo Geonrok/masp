@@ -83,9 +83,7 @@ class ConfigStore:
                 )
                 try:
                     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    backup_path = self._path.with_name(
-                        self._path.name + f".bad.{ts}"
-                    )
+                    backup_path = self._path.with_name(self._path.name + f".bad.{ts}")
                     shutil.copy2(self._path, backup_path)
                     logger.error(
                         "[ConfigStore] Corrupted config backed up to: %s", backup_path
@@ -99,9 +97,7 @@ class ConfigStore:
                 )
                 try:
                     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    backup_path = self._path.with_name(
-                        self._path.name + f".bad.{ts}"
-                    )
+                    backup_path = self._path.with_name(self._path.name + f".bad.{ts}")
                     shutil.copy2(self._path, backup_path)
                     logger.error(
                         "[ConfigStore] Corrupted config backed up to: %s", backup_path
@@ -123,9 +119,7 @@ class ConfigStore:
                         )
                         return
             except Exception as exc:
-                logger.warning(
-                    "[ConfigStore] Bootstrap from schedule failed: %s", exc
-                )
+                logger.warning("[ConfigStore] Bootstrap from schedule failed: %s", exc)
 
         self._atomic_write(self._default_data())
 
@@ -180,9 +174,7 @@ class ConfigStore:
                 old_backup.unlink()
                 logger.info("[ConfigStore] Removed old backup: %s", old_backup)
             except Exception as exc:
-                logger.warning(
-                    "[ConfigStore] Failed to remove %s: %s", old_backup, exc
-                )
+                logger.warning("[ConfigStore] Failed to remove %s: %s", old_backup, exc)
 
     def update_exchange_atomic(self, name: str, updates: dict) -> bool:
         """

@@ -20,6 +20,7 @@ Signal Scoring System:
 
 Target: Profit Factor > 1.3 for real-world viability
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,7 +57,7 @@ class BacktestConfig:
     leverage: int = 3
     max_positions: int = 2
     position_size_pct: float = 0.15  # Base position size
-    min_score_long: int = 3   # Minimum score for LONG
+    min_score_long: int = 3  # Minimum score for LONG
     min_score_short: int = -3  # Maximum score for SHORT
 
 
@@ -73,7 +74,7 @@ class MultiSignalDataLoader:
 
         for file_path in [
             self.data_root / folder / f"{symbol}.csv",
-            self.data_root / folder / f"{symbol.replace('USDT', '')}.csv"
+            self.data_root / folder / f"{symbol.replace('USDT', '')}.csv",
         ]:
             if file_path.exists():
                 df = pd.read_csv(file_path)
@@ -195,7 +196,7 @@ class MultiSignalStrategy:
 
         # Funding rate thresholds (daily aggregated)
         self.funding_negative = -0.0003  # Negative = shorts paying longs
-        self.funding_positive = 0.001    # High positive = longs paying shorts
+        self.funding_positive = 0.001  # High positive = longs paying shorts
 
         # RSI thresholds
         self.rsi_oversold = 30
@@ -212,15 +213,18 @@ class MultiSignalStrategy:
         ema[0] = data[0]
         mult = 2 / (period + 1)
         for i in range(1, len(data)):
-            ema[i] = (data[i] - ema[i-1]) * mult + ema[i-1]
+            ema[i] = (data[i] - ema[i - 1]) * mult + ema[i - 1]
         return ema
 
     def calculate_atr(self, df: pd.DataFrame, period: int = 14) -> np.ndarray:
         """Calculate ATR."""
         high, low, close = df["high"].values, df["low"].values, df["close"].values
-        tr = np.maximum(high - low,
-                       np.maximum(np.abs(high - np.roll(close, 1)),
-                                 np.abs(low - np.roll(close, 1))))
+        tr = np.maximum(
+            high - low,
+            np.maximum(
+                np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))
+            ),
+        )
         tr[0] = high[0] - low[0]
         return pd.Series(tr).rolling(period).mean().values
 
@@ -243,7 +247,9 @@ class MultiSignalStrategy:
             return "BEAR"
         return "RANGE"
 
-    def score_fear_greed(self, fg_value: Optional[float], regime: str) -> Tuple[int, str]:
+    def score_fear_greed(
+        self, fg_value: Optional[float], regime: str
+    ) -> Tuple[int, str]:
         """Score based on Fear/Greed Index (contrarian)."""
         if fg_value is None:
             return 0, "no_fg"
@@ -276,7 +282,9 @@ class MultiSignalStrategy:
                 return -1, f"range_greed_{fg_value:.0f}"
             return 0, f"range_neutral_{fg_value:.0f}"
 
-    def score_funding_rate(self, funding: Optional[float], regime: str) -> Tuple[int, str]:
+    def score_funding_rate(
+        self, funding: Optional[float], regime: str
+    ) -> Tuple[int, str]:
         """Score based on Funding Rate."""
         if funding is None:
             return 0, "no_funding"
@@ -332,7 +340,9 @@ class MultiSignalStrategy:
                 return -1, f"range_overbought_{rsi:.0f}"
             return 0, f"range_rsi_{rsi:.0f}"
 
-    def score_trend_strength(self, price: float, ema50: float, ema200: float, regime: str) -> Tuple[int, str]:
+    def score_trend_strength(
+        self, price: float, ema50: float, ema200: float, regime: str
+    ) -> Tuple[int, str]:
         """Score based on trend alignment."""
         ema_bullish = ema50 > ema200
         price_above_ema50 = price > ema50
@@ -554,7 +564,9 @@ class MultiSignalBacktester:
             return self.fear_greed.loc[idx, "value"]
         return None
 
-    def get_funding_rate_at(self, symbol: str, timestamp: pd.Timestamp) -> Optional[float]:
+    def get_funding_rate_at(
+        self, symbol: str, timestamp: pd.Timestamp
+    ) -> Optional[float]:
         """Get daily aggregated funding rate at timestamp."""
         if symbol not in self.funding_rates or self.funding_rates[symbol].empty:
             return None
@@ -589,7 +601,11 @@ class MultiSignalBacktester:
         logger.info("=" * 60)
 
         start_dt = pd.Timestamp(self.config.start_date)
-        end_dt = pd.Timestamp(self.config.end_date) if self.config.end_date else pd.Timestamp.now()
+        end_dt = (
+            pd.Timestamp(self.config.end_date)
+            if self.config.end_date
+            else pd.Timestamp.now()
+        )
 
         if "BTCUSDT" not in self.data_4h:
             return {"error": "BTC data required"}
@@ -611,9 +627,15 @@ class MultiSignalBacktester:
         self.trade_log = []
 
         stats = {
-            "long": 0, "short": 0, "wins": 0, "losses": 0,
-            "bull_trades": 0, "bear_trades": 0, "range_trades": 0,
-            "high_conviction": 0, "low_conviction": 0
+            "long": 0,
+            "short": 0,
+            "wins": 0,
+            "losses": 0,
+            "bull_trades": 0,
+            "bear_trades": 0,
+            "range_trades": 0,
+            "high_conviction": 0,
+            "low_conviction": 0,
         }
 
         for i in range(250, len(timestamps)):
@@ -642,8 +664,12 @@ class MultiSignalBacktester:
                     # Update trailing stop
                     if pos["side"] == "LONG":
                         pos["highest"] = max(pos["highest"], current_price)
-                        trailing = pos["highest"] - pos["atr"] * self.strategy.trail_mult
-                        profit_pct = (current_price - pos["entry_price"]) / pos["entry_price"]
+                        trailing = (
+                            pos["highest"] - pos["atr"] * self.strategy.trail_mult
+                        )
+                        profit_pct = (current_price - pos["entry_price"]) / pos[
+                            "entry_price"
+                        ]
 
                         # Move stop to breakeven after 2% profit
                         if profit_pct > 0.02:
@@ -661,7 +687,9 @@ class MultiSignalBacktester:
                     else:  # SHORT
                         pos["lowest"] = min(pos["lowest"], current_price)
                         trailing = pos["lowest"] + pos["atr"] * self.strategy.trail_mult
-                        profit_pct = (pos["entry_price"] - current_price) / pos["entry_price"]
+                        profit_pct = (pos["entry_price"] - current_price) / pos[
+                            "entry_price"
+                        ]
 
                         if profit_pct > 0.02:
                             trailing = min(trailing, pos["entry_price"])
@@ -676,25 +704,46 @@ class MultiSignalBacktester:
                             exit_signal, exit_reason = True, "fear_exit"
 
                     if exit_signal:
-                        exit_price = current_price * (1 - self.config.slippage_pct) if pos["side"] == "LONG" \
+                        exit_price = (
+                            current_price * (1 - self.config.slippage_pct)
+                            if pos["side"] == "LONG"
                             else current_price * (1 + self.config.slippage_pct)
+                        )
 
                         if pos["side"] == "LONG":
-                            pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"] * pos["leverage"]
+                            pnl_pct = (
+                                (exit_price - pos["entry_price"])
+                                / pos["entry_price"]
+                                * pos["leverage"]
+                            )
                         else:
-                            pnl_pct = (pos["entry_price"] - exit_price) / pos["entry_price"] * pos["leverage"]
+                            pnl_pct = (
+                                (pos["entry_price"] - exit_price)
+                                / pos["entry_price"]
+                                * pos["leverage"]
+                            )
 
-                        pnl_usd = pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                        pnl_usd = (
+                            pos["size"] * pnl_pct
+                            - pos["size"] * self.config.commission_pct * 2
+                        )
                         capital += pnl_usd
 
-                        self.trade_log.append({
-                            "symbol": symbol, "side": pos["side"],
-                            "entry_time": pos["entry_time"], "entry_price": pos["entry_price"],
-                            "exit_time": current_time, "exit_price": exit_price,
-                            "pnl_pct": pnl_pct, "pnl_usd": pnl_usd,
-                            "exit_reason": exit_reason, "regime": pos.get("regime"),
-                            "entry_score": pos.get("entry_score", 0),
-                        })
+                        self.trade_log.append(
+                            {
+                                "symbol": symbol,
+                                "side": pos["side"],
+                                "entry_time": pos["entry_time"],
+                                "entry_price": pos["entry_price"],
+                                "exit_time": current_time,
+                                "exit_price": exit_price,
+                                "pnl_pct": pnl_pct,
+                                "pnl_usd": pnl_usd,
+                                "exit_reason": exit_reason,
+                                "regime": pos.get("regime"),
+                                "entry_score": pos.get("entry_score", 0),
+                            }
+                        )
 
                         if pnl_usd > 0:
                             stats["wins"] += 1
@@ -705,21 +754,40 @@ class MultiSignalBacktester:
                         continue
 
                 # === ENTRY CHECK ===
-                if symbol not in positions and len(positions) < self.config.max_positions:
+                if (
+                    symbol not in positions
+                    and len(positions) < self.config.max_positions
+                ):
                     signal = self.strategy.generate_signal(
                         df_current, fear_greed, funding_rate, vix
                     )
 
                     if signal["signal"] in ["LONG", "SHORT"]:
                         # Drawdown sizing
-                        peak = max(self.equity_curve) if self.equity_curve else self.config.initial_capital
+                        peak = (
+                            max(self.equity_curve)
+                            if self.equity_curve
+                            else self.config.initial_capital
+                        )
                         dd = (capital - peak) / peak if peak > 0 else 0
-                        dd_mult = 0.25 if dd < -0.20 else 0.5 if dd < -0.15 else 0.75 if dd < -0.10 else 1.0
+                        dd_mult = (
+                            0.25
+                            if dd < -0.20
+                            else 0.5 if dd < -0.15 else 0.75 if dd < -0.10 else 1.0
+                        )
 
-                        entry_price = signal["price"] * (1 + self.config.slippage_pct) if signal["signal"] == "LONG" \
+                        entry_price = (
+                            signal["price"] * (1 + self.config.slippage_pct)
+                            if signal["signal"] == "LONG"
                             else signal["price"] * (1 - self.config.slippage_pct)
+                        )
 
-                        size = capital * self.config.position_size_pct * signal["position_mult"] * dd_mult
+                        size = (
+                            capital
+                            * self.config.position_size_pct
+                            * signal["position_mult"]
+                            * dd_mult
+                        )
 
                         positions[symbol] = {
                             "side": signal["signal"],
@@ -767,12 +835,18 @@ class MultiSignalBacktester:
             for symbol, pos in positions.items():
                 if symbol in self.data_4h:
                     curr_df = self.data_4h[symbol]
-                    curr_price = curr_df.loc[curr_df.index <= current_time]["close"].iloc[-1]
+                    curr_price = curr_df.loc[curr_df.index <= current_time][
+                        "close"
+                    ].iloc[-1]
 
                     if pos["side"] == "LONG":
-                        unrealized = (curr_price - pos["entry_price"]) / pos["entry_price"]
+                        unrealized = (curr_price - pos["entry_price"]) / pos[
+                            "entry_price"
+                        ]
                     else:
-                        unrealized = (pos["entry_price"] - curr_price) / pos["entry_price"]
+                        unrealized = (pos["entry_price"] - curr_price) / pos[
+                            "entry_price"
+                        ]
 
                     portfolio_value += pos["size"] * unrealized * pos["leverage"]
 
@@ -783,20 +857,36 @@ class MultiSignalBacktester:
             if symbol in self.data_4h:
                 exit_price = self.data_4h[symbol].iloc[-1]["close"]
                 if pos["side"] == "LONG":
-                    pnl_pct = (exit_price - pos["entry_price"]) / pos["entry_price"] * pos["leverage"]
+                    pnl_pct = (
+                        (exit_price - pos["entry_price"])
+                        / pos["entry_price"]
+                        * pos["leverage"]
+                    )
                 else:
-                    pnl_pct = (pos["entry_price"] - exit_price) / pos["entry_price"] * pos["leverage"]
+                    pnl_pct = (
+                        (pos["entry_price"] - exit_price)
+                        / pos["entry_price"]
+                        * pos["leverage"]
+                    )
 
-                pnl_usd = pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                pnl_usd = (
+                    pos["size"] * pnl_pct - pos["size"] * self.config.commission_pct * 2
+                )
                 capital += pnl_usd
 
-                self.trade_log.append({
-                    "symbol": symbol, "side": pos["side"],
-                    "entry_time": pos["entry_time"], "entry_price": pos["entry_price"],
-                    "exit_time": timestamps[-1], "exit_price": exit_price,
-                    "pnl_pct": pnl_pct, "pnl_usd": pnl_usd,
-                    "exit_reason": "backtest_end",
-                })
+                self.trade_log.append(
+                    {
+                        "symbol": symbol,
+                        "side": pos["side"],
+                        "entry_time": pos["entry_time"],
+                        "entry_price": pos["entry_price"],
+                        "exit_time": timestamps[-1],
+                        "exit_price": exit_price,
+                        "pnl_pct": pnl_pct,
+                        "pnl_usd": pnl_usd,
+                        "exit_reason": "backtest_end",
+                    }
+                )
 
                 if pnl_usd > 0:
                     stats["wins"] += 1
@@ -812,12 +902,18 @@ class MultiSignalBacktester:
         if len(equity) < 2:
             return {"error": "Insufficient data"}
 
-        total_return = (equity[-1] - self.config.initial_capital) / self.config.initial_capital
+        total_return = (
+            equity[-1] - self.config.initial_capital
+        ) / self.config.initial_capital
         n_years = (len(equity) - 1) / (252 * 6)  # 4h candles
         annualized = (1 + total_return) ** (1 / max(n_years, 0.1)) - 1
 
         returns = np.diff(equity) / equity[:-1]
-        sharpe = np.mean(returns) / np.std(returns) * np.sqrt(252 * 6) if np.std(returns) > 0 else 0
+        sharpe = (
+            np.mean(returns) / np.std(returns) * np.sqrt(252 * 6)
+            if np.std(returns) > 0
+            else 0
+        )
 
         peak = np.maximum.accumulate(equity)
         max_dd = np.min((equity - peak) / peak)
@@ -828,7 +924,9 @@ class MultiSignalBacktester:
         # Profit Factor
         if self.trade_log:
             gross_profit = sum(t["pnl_usd"] for t in self.trade_log if t["pnl_usd"] > 0)
-            gross_loss = abs(sum(t["pnl_usd"] for t in self.trade_log if t["pnl_usd"] < 0))
+            gross_loss = abs(
+                sum(t["pnl_usd"] for t in self.trade_log if t["pnl_usd"] < 0)
+            )
             pf = gross_profit / gross_loss if gross_loss > 0 else float("inf")
 
             avg_win = gross_profit / stats["wins"] if stats["wins"] > 0 else 0
@@ -850,11 +948,23 @@ class MultiSignalBacktester:
                 exit_reasons[r]["wins"] += 1
 
         # High vs Low conviction analysis
-        high_conv_trades = [t for t in self.trade_log if abs(t.get("entry_score", 0)) >= 4]
-        low_conv_trades = [t for t in self.trade_log if abs(t.get("entry_score", 0)) < 4]
+        high_conv_trades = [
+            t for t in self.trade_log if abs(t.get("entry_score", 0)) >= 4
+        ]
+        low_conv_trades = [
+            t for t in self.trade_log if abs(t.get("entry_score", 0)) < 4
+        ]
 
-        high_conv_wr = sum(1 for t in high_conv_trades if t["pnl_usd"] > 0) / len(high_conv_trades) if high_conv_trades else 0
-        low_conv_wr = sum(1 for t in low_conv_trades if t["pnl_usd"] > 0) / len(low_conv_trades) if low_conv_trades else 0
+        high_conv_wr = (
+            sum(1 for t in high_conv_trades if t["pnl_usd"] > 0) / len(high_conv_trades)
+            if high_conv_trades
+            else 0
+        )
+        low_conv_wr = (
+            sum(1 for t in low_conv_trades if t["pnl_usd"] > 0) / len(low_conv_trades)
+            if low_conv_trades
+            else 0
+        )
 
         return {
             "total_return": total_return,
@@ -907,17 +1017,21 @@ def run_parameter_sweep(config: BacktestConfig) -> Dict[str, Dict]:
             if "error" not in res:
                 label = f"score_{min_score}"
                 results[label] = res
-                logger.info(f"\n{label}: Return={res['total_return']*100:+.1f}%, "
-                           f"MDD={res['max_drawdown']*100:.1f}%, "
-                           f"WR={res['win_rate']*100:.1f}%, "
-                           f"PF={res['profit_factor']:.2f}, "
-                           f"Trades={res['total_trades']}")
+                logger.info(
+                    f"\n{label}: Return={res['total_return']*100:+.1f}%, "
+                    f"MDD={res['max_drawdown']*100:.1f}%, "
+                    f"WR={res['win_rate']*100:.1f}%, "
+                    f"PF={res['profit_factor']:.2f}, "
+                    f"Trades={res['total_trades']}"
+                )
 
     return results
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Multi-Signal Strategy Backtester (v10)")
+    parser = argparse.ArgumentParser(
+        description="Multi-Signal Strategy Backtester (v10)"
+    )
     parser.add_argument("--symbols", type=str, default="BTCUSDT,ETHUSDT")
     parser.add_argument("--start", type=str, default="2020-01-01")
     parser.add_argument("--end", type=str, default=None)
@@ -954,10 +1068,12 @@ def main():
         logger.info("PARAMETER SWEEP SUMMARY")
         logger.info("=" * 60)
         for label, res in sweep_results.items():
-            logger.info(f"{label}: Return={res['total_return']*100:+.1f}%, "
-                       f"PF={res['profit_factor']:.2f}, "
-                       f"WR={res['win_rate']*100:.1f}%, "
-                       f"Trades={res['total_trades']}")
+            logger.info(
+                f"{label}: Return={res['total_return']*100:+.1f}%, "
+                f"PF={res['profit_factor']:.2f}, "
+                f"WR={res['win_rate']*100:.1f}%, "
+                f"Trades={res['total_trades']}"
+            )
         return 0
 
     bt = MultiSignalBacktester(config)
@@ -976,36 +1092,58 @@ def main():
     logger.info(f"  Max DD: {results['max_drawdown']*100:.2f}%")
     logger.info(f"  Win Rate: {results['win_rate']*100:.1f}%")
     logger.info(f"  Profit Factor: {results['profit_factor']:.2f}")
-    logger.info(f"  Trades: {results['total_trades']} (L:{results['long_trades']}/S:{results['short_trades']})")
-    logger.info(f"  By Regime: Bull={results['bull_trades']}, Bear={results['bear_trades']}, Range={results['range_trades']}")
+    logger.info(
+        f"  Trades: {results['total_trades']} (L:{results['long_trades']}/S:{results['short_trades']})"
+    )
+    logger.info(
+        f"  By Regime: Bull={results['bull_trades']}, Bear={results['bear_trades']}, Range={results['range_trades']}"
+    )
     logger.info(f"  Final: ${results['final_capital']:,.2f}")
 
     logger.info("\n  Conviction Analysis:")
-    logger.info(f"    High conviction (score>=4): {results['high_conviction_trades']} trades, WR={results['high_conviction_wr']*100:.1f}%")
-    logger.info(f"    Low conviction (score<4): {results['low_conviction_trades']} trades, WR={results['low_conviction_wr']*100:.1f}%")
+    logger.info(
+        f"    High conviction (score>=4): {results['high_conviction_trades']} trades, WR={results['high_conviction_wr']*100:.1f}%"
+    )
+    logger.info(
+        f"    Low conviction (score<4): {results['low_conviction_trades']} trades, WR={results['low_conviction_wr']*100:.1f}%"
+    )
 
-    logger.info(f"\n  Avg Win: ${results['avg_win']:.2f}, Avg Loss: ${results['avg_loss']:.2f}")
+    logger.info(
+        f"\n  Avg Win: ${results['avg_win']:.2f}, Avg Loss: ${results['avg_loss']:.2f}"
+    )
 
     logger.info("\n  Exit Reasons:")
     for reason, data in results.get("exit_reasons", {}).items():
-        wr = data['wins'] / data['count'] * 100 if data['count'] > 0 else 0
-        logger.info(f"    {reason}: {data['count']} trades, ${data['pnl']:.2f}, WR={wr:.0f}%")
+        wr = data["wins"] / data["count"] * 100 if data["count"] > 0 else 0
+        logger.info(
+            f"    {reason}: {data['count']} trades, ${data['pnl']:.2f}, WR={wr:.0f}%"
+        )
 
     logger.info("\n" + "=" * 60)
     logger.info("TARGET CHECK")
     logger.info("=" * 60)
-    pf_status = "✓" if results['profit_factor'] >= 1.3 else "✗"
-    wr_status = "✓" if 0.48 <= results['win_rate'] <= 0.52 else "✗"
-    mdd_status = "✓" if results['max_drawdown'] >= -0.25 else "✗"
+    pf_status = "✓" if results["profit_factor"] >= 1.3 else "✗"
+    wr_status = "✓" if 0.48 <= results["win_rate"] <= 0.52 else "✗"
+    mdd_status = "✓" if results["max_drawdown"] >= -0.25 else "✗"
 
-    logger.info(f"  [{pf_status}] Profit Factor: {results['profit_factor']:.2f} (target: >= 1.30)")
-    logger.info(f"  [{wr_status}] Win Rate: {results['win_rate']*100:.1f}% (target: 48-52%)")
-    logger.info(f"  [{mdd_status}] Max MDD: {results['max_drawdown']*100:.1f}% (target: < 25%)")
+    logger.info(
+        f"  [{pf_status}] Profit Factor: {results['profit_factor']:.2f} (target: >= 1.30)"
+    )
+    logger.info(
+        f"  [{wr_status}] Win Rate: {results['win_rate']*100:.1f}% (target: 48-52%)"
+    )
+    logger.info(
+        f"  [{mdd_status}] Max MDD: {results['max_drawdown']*100:.1f}% (target: < 25%)"
+    )
 
-    if results['profit_factor'] >= 1.3:
-        logger.info("\n  ** PROFIT FACTOR TARGET MET - Strategy may be viable for live trading **")
+    if results["profit_factor"] >= 1.3:
+        logger.info(
+            "\n  ** PROFIT FACTOR TARGET MET - Strategy may be viable for live trading **"
+        )
     else:
-        logger.info(f"\n  Need PF improvement: {results['profit_factor']:.2f} -> 1.30 ({(1.3 - results['profit_factor'])/results['profit_factor']*100:.1f}% increase needed)")
+        logger.info(
+            f"\n  Need PF improvement: {results['profit_factor']:.2f} -> 1.30 ({(1.3 - results['profit_factor'])/results['profit_factor']*100:.1f}% increase needed)"
+        )
 
     return 0
 

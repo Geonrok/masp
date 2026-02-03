@@ -235,27 +235,31 @@ async def get_alerts(
             try:
                 cat_filter = AlertCategory(category.lower())
             except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid category: {category}")
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid category: {category}"
+                )
 
         sev_filter = None
         if severity:
             try:
                 sev_filter = AlertSeverity(severity.lower())
             except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid severity: {severity}")
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid severity: {severity}"
+                )
 
         # Get alerts
         if active_only:
-            alerts = manager.get_active_alerts(category=cat_filter, min_severity=sev_filter)
+            alerts = manager.get_active_alerts(
+                category=cat_filter, min_severity=sev_filter
+            )
         else:
             alerts = manager.get_alert_history(hours=hours, category=cat_filter)
             if sev_filter:
                 severity_order = list(AlertSeverity)
                 min_idx = severity_order.index(sev_filter)
                 alerts = [
-                    a
-                    for a in alerts
-                    if severity_order.index(a.severity) >= min_idx
+                    a for a in alerts if severity_order.index(a.severity) >= min_idx
                 ]
 
         # Format response
@@ -299,10 +303,14 @@ async def acknowledge_alert(
         from libs.monitoring.alert_manager import get_alert_manager
 
         manager = get_alert_manager()
-        success = manager.acknowledge(request.alert_id, by=request.acknowledged_by or "api")
+        success = manager.acknowledge(
+            request.alert_id, by=request.acknowledged_by or "api"
+        )
 
         if not success:
-            raise HTTPException(status_code=404, detail=f"Alert not found: {request.alert_id}")
+            raise HTTPException(
+                status_code=404, detail=f"Alert not found: {request.alert_id}"
+            )
 
         return {"success": True, "alert_id": request.alert_id}
     except ImportError:

@@ -1,4 +1,5 @@
 """Positions routes."""
+
 from fastapi import APIRouter
 
 from services.api.models.schemas import PositionsResponse

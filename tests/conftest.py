@@ -29,6 +29,7 @@ def reset_global_state():
     # Reset after test completes
     try:
         from libs.core.state_manager import reset_all_state
+
         reset_all_state()
     except ImportError:
         pass  # Module not available yet
@@ -45,6 +46,7 @@ def clean_state():
             pass
     """
     from libs.core.state_manager import reset_all_state
+
     reset_all_state()
     yield
     reset_all_state()

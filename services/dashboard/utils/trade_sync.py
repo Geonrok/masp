@@ -2,6 +2,7 @@
 
 Fetches closed orders from Upbit and Bithumb APIs and imports them into TradeLogger.
 """
+
 from __future__ import annotations
 
 import logging
@@ -21,6 +22,7 @@ def _get_trade_logger():
     """Get TradeLogger instance."""
     try:
         from libs.adapters.trade_logger import TradeLogger
+
         return TradeLogger()
     except Exception as e:
         logger.error(f"Failed to initialize TradeLogger: {e}")
@@ -46,7 +48,11 @@ def _convert_upbit_order_to_trade(order: Dict) -> Optional[Dict]:
 
         # Map side: "bid" -> "BUY", "ask" -> "SELL"
         side_raw = order.get("side", "").lower()
-        side = "BUY" if side_raw == "bid" else "SELL" if side_raw == "ask" else side_raw.upper()
+        side = (
+            "BUY"
+            if side_raw == "bid"
+            else "SELL" if side_raw == "ask" else side_raw.upper()
+        )
 
         # Extract values
         executed_volume = float(order.get("executed_volume", 0) or 0)
@@ -94,7 +100,11 @@ def _convert_bithumb_order_to_trade(order: Dict) -> Optional[Dict]:
 
         # Map side: "bid" -> "BUY", "ask" -> "SELL"
         side_raw = order.get("side", "").lower()
-        side = "BUY" if side_raw == "bid" else "SELL" if side_raw == "ask" else side_raw.upper()
+        side = (
+            "BUY"
+            if side_raw == "bid"
+            else "SELL" if side_raw == "ask" else side_raw.upper()
+        )
 
         # Extract values
         executed_volume = float(order.get("executed_volume", 0) or 0)
@@ -247,7 +257,9 @@ def sync_all_trades(limit_per_exchange: int = 100) -> Dict[str, Any]:
     }
 
     # Sync Bithumb
-    bithumb_synced, bithumb_skipped, bithumb_msg = sync_bithumb_trades(limit_per_exchange)
+    bithumb_synced, bithumb_skipped, bithumb_msg = sync_bithumb_trades(
+        limit_per_exchange
+    )
     results["bithumb"] = {
         "synced": bithumb_synced,
         "skipped": bithumb_skipped,

@@ -19,6 +19,7 @@ Scoring System:
 - Total score determines position sizing and direction
 - Strong consensus = larger position
 """
+
 from __future__ import annotations
 
 import logging
@@ -32,7 +33,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 
@@ -50,14 +51,17 @@ logger = logging.getLogger(__name__)
 def calc_ema(s: pd.Series, p: int) -> pd.Series:
     return s.ewm(span=p, adjust=False).mean()
 
+
 def calc_sma(s: pd.Series, p: int) -> pd.Series:
     return s.rolling(p).mean()
+
 
 def calc_rsi(s: pd.Series, p: int = 14) -> pd.Series:
     d = s.diff()
     g = d.where(d > 0, 0).rolling(p).mean()
     l = (-d.where(d < 0, 0)).rolling(p).mean()
     return 100 - (100 / (1 + g / l.replace(0, np.nan)))
+
 
 def calc_bollinger(s: pd.Series, p: int = 20, std: float = 2.0):
     sma = calc_sma(s, p)
@@ -89,7 +93,9 @@ class MultiFactorDataLoader:
                 elif "timestamp" in df.columns:
                     df["timestamp"] = pd.to_datetime(df["timestamp"])
                     df = df.set_index("timestamp")
-                if all(c in df.columns for c in ["open", "high", "low", "close", "volume"]):
+                if all(
+                    c in df.columns for c in ["open", "high", "low", "close", "volume"]
+                ):
                     df = df[["open", "high", "low", "close", "volume"]].sort_index()
                     self._cache[key] = df
                     return df.copy()
@@ -120,16 +126,20 @@ class MultiFactorDataLoader:
                 elif "timestamp" in df.columns:
                     df["timestamp"] = pd.to_datetime(df["timestamp"])
                     df = df.set_index("timestamp")
-                cols = [c for c in df.columns if 'fund' in c.lower() or 'rate' in c.lower()]
+                cols = [
+                    c for c in df.columns if "fund" in c.lower() or "rate" in c.lower()
+                ]
                 if cols:
                     return df[[cols[0]]].rename(columns={cols[0]: "funding"})
         return pd.DataFrame()
 
     def load_onchain(self) -> pd.DataFrame:
         dfs = []
-        for fn, col in [("btc_active_addresses.csv", "active_addr"),
-                        ("btc_hash_rate.csv", "hash_rate"),
-                        ("btc_tx_count.csv", "tx_count")]:
+        for fn, col in [
+            ("btc_active_addresses.csv", "active_addr"),
+            ("btc_hash_rate.csv", "hash_rate"),
+            ("btc_tx_count.csv", "tx_count"),
+        ]:
             fp = self.root / "onchain" / fn
             if fp.exists():
                 df = pd.read_csv(fp)
@@ -157,8 +167,12 @@ class MultiFactorDataLoader:
 
     def load_macro(self) -> pd.DataFrame:
         dfs = []
-        for fn, col in [("DXY.csv", "dxy"), ("SP500.csv", "sp500"),
-                        ("VIX.csv", "vix"), ("US10Y.csv", "us10y")]:
+        for fn, col in [
+            ("DXY.csv", "dxy"),
+            ("SP500.csv", "sp500"),
+            ("VIX.csv", "vix"),
+            ("US10Y.csv", "us10y"),
+        ]:
             fp = self.root / "macro" / fn
             if fp.exists():
                 df = pd.read_csv(fp)
@@ -181,7 +195,7 @@ class MultiFactorDataLoader:
             elif "date" in df.columns:
                 df["date"] = pd.to_datetime(df["date"])
                 df = df.set_index("date")
-            cols = [c for c in df.columns if 'tvl' in c.lower() or 'value' in c.lower()]
+            cols = [c for c in df.columns if "tvl" in c.lower() or "value" in c.lower()]
             if cols:
                 return df[[cols[0]]].rename(columns={cols[0]: "tvl"})
             if len(df.columns) > 0:
@@ -199,7 +213,9 @@ class MultiFactorDataLoader:
                 elif "timestamp" in df.columns:
                     df["timestamp"] = pd.to_datetime(df["timestamp"])
                     df = df.set_index("timestamp")
-                cols = [c for c in df.columns if 'ratio' in c.lower() or 'long' in c.lower()]
+                cols = [
+                    c for c in df.columns if "ratio" in c.lower() or "long" in c.lower()
+                ]
                 if cols:
                     return df[[cols[0]]].rename(columns={cols[0]: "ls_ratio"})
         return pd.DataFrame()
@@ -215,7 +231,13 @@ class MultiFactorDataLoader:
                 elif "timestamp" in df.columns:
                     df["timestamp"] = pd.to_datetime(df["timestamp"])
                     df = df.set_index("timestamp")
-                cols = [c for c in df.columns if 'oi' in c.lower() or 'interest' in c.lower() or 'value' in c.lower()]
+                cols = [
+                    c
+                    for c in df.columns
+                    if "oi" in c.lower()
+                    or "interest" in c.lower()
+                    or "value" in c.lower()
+                ]
                 if cols:
                     return df[[cols[0]]].rename(columns={cols[0]: "oi"})
         return pd.DataFrame()
@@ -239,24 +261,38 @@ class MultiFactorScorer:
         scores = pd.Series(0.0, index=df.index)
 
         # EMA trend
-        ema20 = calc_ema(df['close'], 20)
-        ema50 = calc_ema(df['close'], 50)
-        ema200 = calc_ema(df['close'], 200)
+        ema20 = calc_ema(df["close"], 20)
+        ema50 = calc_ema(df["close"], 50)
+        ema200 = calc_ema(df["close"], 200)
 
         # EMA alignment score
-        scores += np.where((df['close'] > ema20) & (ema20 > ema50) & (ema50 > ema200), 2,
-                  np.where((df['close'] > ema50) & (ema50 > ema200), 1,
-                  np.where((df['close'] < ema20) & (ema20 < ema50) & (ema50 < ema200), -2,
-                  np.where((df['close'] < ema50) & (ema50 < ema200), -1, 0))))
+        scores += np.where(
+            (df["close"] > ema20) & (ema20 > ema50) & (ema50 > ema200),
+            2,
+            np.where(
+                (df["close"] > ema50) & (ema50 > ema200),
+                1,
+                np.where(
+                    (df["close"] < ema20) & (ema20 < ema50) & (ema50 < ema200),
+                    -2,
+                    np.where((df["close"] < ema50) & (ema50 < ema200), -1, 0),
+                ),
+            ),
+        )
 
         # RSI
-        rsi = calc_rsi(df['close'], 14)
-        scores += np.where(rsi < 30, 1.5, np.where(rsi < 40, 0.5,
-                  np.where(rsi > 70, -1.5, np.where(rsi > 60, -0.5, 0))))
+        rsi = calc_rsi(df["close"], 14)
+        scores += np.where(
+            rsi < 30,
+            1.5,
+            np.where(
+                rsi < 40, 0.5, np.where(rsi > 70, -1.5, np.where(rsi > 60, -0.5, 0))
+            ),
+        )
 
         # Bollinger position
-        bb_upper, bb_mid, bb_lower = calc_bollinger(df['close'])
-        bb_pos = (df['close'] - bb_lower) / (bb_upper - bb_lower + 1e-10)
+        bb_upper, bb_mid, bb_lower = calc_bollinger(df["close"])
+        bb_pos = (df["close"] - bb_lower) / (bb_upper - bb_lower + 1e-10)
         scores += np.where(bb_pos < 0.2, 1, np.where(bb_pos > 0.8, -1, 0))
 
         return scores / 3  # Normalize to roughly -2 to +2
@@ -264,20 +300,36 @@ class MultiFactorScorer:
     def score_fear_greed(self, fg: pd.Series) -> pd.Series:
         """Fear & Greed: Contrarian - buy fear, sell greed"""
         scores = pd.Series(0.0, index=fg.index)
-        scores = np.where(fg < 20, 2,      # Extreme fear = strong buy
-                 np.where(fg < 35, 1,      # Fear = buy
-                 np.where(fg > 80, -2,     # Extreme greed = strong sell
-                 np.where(fg > 65, -1, 0))))  # Greed = sell
+        scores = np.where(
+            fg < 20,
+            2,  # Extreme fear = strong buy
+            np.where(
+                fg < 35,
+                1,  # Fear = buy
+                np.where(
+                    fg > 80, -2, np.where(fg > 65, -1, 0)  # Extreme greed = strong sell
+                ),
+            ),
+        )  # Greed = sell
         return pd.Series(scores, index=fg.index)
 
     def score_funding(self, funding: pd.Series) -> pd.Series:
         """Funding rate: Negative = crowded shorts = bullish"""
         scores = pd.Series(0.0, index=funding.index)
         funding_ma = funding.rolling(6).mean()  # Smooth
-        scores = np.where(funding_ma < -0.001, 2,    # Very negative = strong buy
-                 np.where(funding_ma < -0.0003, 1,   # Negative = buy
-                 np.where(funding_ma > 0.001, -2,    # Very positive = strong sell
-                 np.where(funding_ma > 0.0003, -1, 0))))
+        scores = np.where(
+            funding_ma < -0.001,
+            2,  # Very negative = strong buy
+            np.where(
+                funding_ma < -0.0003,
+                1,  # Negative = buy
+                np.where(
+                    funding_ma > 0.001,
+                    -2,  # Very positive = strong sell
+                    np.where(funding_ma > 0.0003, -1, 0),
+                ),
+            ),
+        )
         return pd.Series(scores, index=funding.index)
 
     def score_btc_correlation(self, df: pd.DataFrame, btc: pd.DataFrame) -> pd.Series:
@@ -286,7 +338,7 @@ class MultiFactorScorer:
         if btc.empty:
             return scores
 
-        btc_close = btc['close'].reindex(df.index, method='ffill')
+        btc_close = btc["close"].reindex(df.index, method="ffill")
         btc_ret = btc_close.pct_change(20)  # 20-bar momentum
         btc_ema50 = calc_ema(btc_close, 50)
         btc_ema200 = calc_ema(btc_close, 200)
@@ -295,10 +347,19 @@ class MultiFactorScorer:
         btc_uptrend = (btc_close > btc_ema50) & (btc_ema50 > btc_ema200)
         btc_downtrend = (btc_close < btc_ema50) & (btc_ema50 < btc_ema200)
 
-        scores = np.where(btc_uptrend & (btc_ret > 0.1), 2,
-                 np.where(btc_uptrend & (btc_ret > 0.03), 1,
-                 np.where(btc_downtrend & (btc_ret < -0.1), -2,
-                 np.where(btc_downtrend & (btc_ret < -0.03), -1, 0))))
+        scores = np.where(
+            btc_uptrend & (btc_ret > 0.1),
+            2,
+            np.where(
+                btc_uptrend & (btc_ret > 0.03),
+                1,
+                np.where(
+                    btc_downtrend & (btc_ret < -0.1),
+                    -2,
+                    np.where(btc_downtrend & (btc_ret < -0.03), -1, 0),
+                ),
+            ),
+        )
         return pd.Series(scores, index=df.index)
 
     def score_onchain(self, onchain: pd.DataFrame, idx: pd.DatetimeIndex) -> pd.Series:
@@ -307,19 +368,23 @@ class MultiFactorScorer:
         if onchain.empty:
             return scores
 
-        onchain = onchain.reindex(idx, method='ffill')
+        onchain = onchain.reindex(idx, method="ffill")
 
-        if 'active_addr' in onchain.columns:
-            addr = onchain['active_addr']
+        if "active_addr" in onchain.columns:
+            addr = onchain["active_addr"]
             addr_ma = addr.rolling(30).mean()
             addr_growth = (addr - addr_ma) / addr_ma
-            scores += np.where(addr_growth > 0.1, 1, np.where(addr_growth < -0.1, -1, 0))
+            scores += np.where(
+                addr_growth > 0.1, 1, np.where(addr_growth < -0.1, -1, 0)
+            )
 
-        if 'hash_rate' in onchain.columns:
-            hr = onchain['hash_rate']
+        if "hash_rate" in onchain.columns:
+            hr = onchain["hash_rate"]
             hr_ma = hr.rolling(30).mean()
             hr_growth = (hr - hr_ma) / hr_ma
-            scores += np.where(hr_growth > 0.05, 0.5, np.where(hr_growth < -0.05, -0.5, 0))
+            scores += np.where(
+                hr_growth > 0.05, 0.5, np.where(hr_growth < -0.05, -0.5, 0)
+            )
 
         return scores
 
@@ -329,14 +394,25 @@ class MultiFactorScorer:
         if gtrends.empty:
             return scores
 
-        gt = gtrends.reindex(idx, method='ffill')
+        gt = gtrends.reindex(idx, method="ffill")
         gt_ma = gt.rolling(4).mean()  # Weekly average
-        gt_pct = gt.rolling(52).apply(lambda x: pd.Series(x).rank(pct=True).iloc[-1] * 100, raw=False)
+        gt_pct = gt.rolling(52).apply(
+            lambda x: pd.Series(x).rank(pct=True).iloc[-1] * 100, raw=False
+        )
 
-        scores = np.where(gt_pct > 90, -1.5,  # Extreme interest = sell
-                 np.where(gt_pct > 75, -0.5,
-                 np.where(gt_pct < 10, 1.5,   # Low interest = buy
-                 np.where(gt_pct < 25, 0.5, 0))))
+        scores = np.where(
+            gt_pct > 90,
+            -1.5,  # Extreme interest = sell
+            np.where(
+                gt_pct > 75,
+                -0.5,
+                np.where(
+                    gt_pct < 10,
+                    1.5,  # Low interest = buy
+                    np.where(gt_pct < 25, 0.5, 0),
+                ),
+            ),
+        )
         return pd.Series(scores, index=idx)
 
     def score_macro(self, macro: pd.DataFrame, idx: pd.DatetimeIndex) -> pd.Series:
@@ -345,28 +421,30 @@ class MultiFactorScorer:
         if macro.empty:
             return scores
 
-        macro = macro.reindex(idx, method='ffill')
+        macro = macro.reindex(idx, method="ffill")
 
         # DXY (inverse - strong dollar = bad for crypto)
-        if 'dxy' in macro.columns:
-            dxy = macro['dxy']
+        if "dxy" in macro.columns:
+            dxy = macro["dxy"]
             dxy_ma = calc_sma(dxy, 50)
-            scores += np.where(dxy < dxy_ma * 0.98, 1,
-                      np.where(dxy > dxy_ma * 1.02, -1, 0))
+            scores += np.where(
+                dxy < dxy_ma * 0.98, 1, np.where(dxy > dxy_ma * 1.02, -1, 0)
+            )
 
         # SP500 (risk-on = good for crypto)
-        if 'sp500' in macro.columns:
-            sp = macro['sp500']
+        if "sp500" in macro.columns:
+            sp = macro["sp500"]
             sp_ma = calc_sma(sp, 50)
-            scores += np.where(sp > sp_ma * 1.02, 0.5,
-                      np.where(sp < sp_ma * 0.98, -0.5, 0))
+            scores += np.where(
+                sp > sp_ma * 1.02, 0.5, np.where(sp < sp_ma * 0.98, -0.5, 0)
+            )
 
         # VIX (high = fear = contrarian buy)
-        if 'vix' in macro.columns:
-            vix = macro['vix']
-            scores += np.where(vix > 30, 1,
-                      np.where(vix > 25, 0.5,
-                      np.where(vix < 15, -0.5, 0)))
+        if "vix" in macro.columns:
+            vix = macro["vix"]
+            scores += np.where(
+                vix > 30, 1, np.where(vix > 25, 0.5, np.where(vix < 15, -0.5, 0))
+            )
 
         return scores
 
@@ -376,14 +454,19 @@ class MultiFactorScorer:
         if tvl.empty:
             return scores
 
-        tvl = tvl.reindex(idx, method='ffill')
+        tvl = tvl.reindex(idx, method="ffill")
         tvl_ma = tvl.rolling(30).mean()
         tvl_growth = (tvl - tvl_ma) / tvl_ma
 
-        scores = np.where(tvl_growth > 0.1, 1,
-                 np.where(tvl_growth > 0.03, 0.5,
-                 np.where(tvl_growth < -0.1, -1,
-                 np.where(tvl_growth < -0.03, -0.5, 0))))
+        scores = np.where(
+            tvl_growth > 0.1,
+            1,
+            np.where(
+                tvl_growth > 0.03,
+                0.5,
+                np.where(tvl_growth < -0.1, -1, np.where(tvl_growth < -0.03, -0.5, 0)),
+            ),
+        )
         return pd.Series(scores, index=idx)
 
     def score_long_short(self, ls: pd.Series) -> pd.Series:
@@ -391,10 +474,17 @@ class MultiFactorScorer:
         scores = pd.Series(0.0, index=ls.index)
         ls_ma = ls.rolling(6).mean()
 
-        scores = np.where(ls_ma > 2.0, -1.5,   # Very crowded longs
-                 np.where(ls_ma > 1.5, -0.5,
-                 np.where(ls_ma < 0.5, 1.5,    # Crowded shorts
-                 np.where(ls_ma < 0.7, 0.5, 0))))
+        scores = np.where(
+            ls_ma > 2.0,
+            -1.5,  # Very crowded longs
+            np.where(
+                ls_ma > 1.5,
+                -0.5,
+                np.where(
+                    ls_ma < 0.5, 1.5, np.where(ls_ma < 0.7, 0.5, 0)  # Crowded shorts
+                ),
+            ),
+        )
         return pd.Series(scores, index=ls.index)
 
     def score_open_interest(self, oi: pd.Series, price: pd.Series) -> pd.Series:
@@ -405,10 +495,19 @@ class MultiFactorScorer:
         price_change = price.pct_change(6)
 
         # Rising OI + rising price = bullish confirmation
-        scores = np.where((oi_change > 0.05) & (price_change > 0.02), 1,
-                 np.where((oi_change > 0.05) & (price_change < -0.02), -1,  # Rising OI + falling price = bearish
-                 np.where((oi_change < -0.05) & (price_change > 0.02), 0.5,  # Falling OI + rising price = short squeeze
-                 0)))
+        scores = np.where(
+            (oi_change > 0.05) & (price_change > 0.02),
+            1,
+            np.where(
+                (oi_change > 0.05) & (price_change < -0.02),
+                -1,  # Rising OI + falling price = bearish
+                np.where(
+                    (oi_change < -0.05) & (price_change > 0.02),
+                    0.5,  # Falling OI + rising price = short squeeze
+                    0,
+                ),
+            ),
+        )
         return pd.Series(scores, index=oi.index)
 
 
@@ -456,7 +555,7 @@ class MultiFactorBacktester:
         base_size = 0.2
 
         for i in range(1, len(df)):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             score = scores.iloc[i] if i < len(scores) else 0
 
             if pd.isna(score):
@@ -495,9 +594,18 @@ class MultiFactorBacktester:
 
         # Close open position
         if position:
-            pnl_pct = (df['close'].iloc[-1] / position.entry_price - 1) * position.direction
+            pnl_pct = (
+                df["close"].iloc[-1] / position.entry_price - 1
+            ) * position.direction
             pnl_pct -= commission * 2
-            position.pnl = capital * base_size * position.size_mult * base_leverage * position.size_mult * pnl_pct
+            position.pnl = (
+                capital
+                * base_size
+                * position.size_mult
+                * base_leverage
+                * position.size_mult
+                * pnl_pct
+            )
             trades.append(position)
             capital += position.pnl
 
@@ -517,7 +625,15 @@ class MultiFactorBacktester:
 
         avg_score = scores.abs().mean()
 
-        return Result(symbol, min(pf, 999), (capital/init-1)*100, wr, mdd, len(trades), avg_score)
+        return Result(
+            symbol,
+            min(pf, 999),
+            (capital / init - 1) * 100,
+            wr,
+            mdd,
+            len(trades),
+            avg_score,
+        )
 
 
 # ============================================================================
@@ -530,8 +646,16 @@ def main():
 
     # Symbols with most data available
     symbols = [
-        "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
-        "ADAUSDT", "DOGEUSDT", "DOTUSDT", "LTCUSDT", "LINKUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "ADAUSDT",
+        "DOGEUSDT",
+        "DOTUSDT",
+        "LTCUSDT",
+        "LINKUSDT",
     ]
 
     # Load common data once
@@ -582,7 +706,7 @@ def main():
 
         # 2. Fear & Greed
         if not fear_greed.empty:
-            fg = fear_greed['fear_greed'].reindex(df.index, method='ffill')
+            fg = fear_greed["fear_greed"].reindex(df.index, method="ffill")
             fg_score = scorer.score_fear_greed(fg)
             logger.info(f"    Fear&Greed: mean={fg_score.mean():.2f}")
         else:
@@ -590,7 +714,7 @@ def main():
 
         # 3. Funding
         if not funding.empty:
-            fund = funding['funding'].reindex(df.index, method='ffill')
+            fund = funding["funding"].reindex(df.index, method="ffill")
             fund_score = scorer.score_funding(fund)
             logger.info(f"    Funding: mean={fund_score.mean():.2f}")
         else:
@@ -606,7 +730,7 @@ def main():
 
         # 6. Google Trends
         if not gtrends.empty:
-            gt = gtrends['gtrends']
+            gt = gtrends["gtrends"]
             gt_score = scorer.score_social(gt, df.index)
             logger.info(f"    G.Trends: mean={gt_score.mean():.2f}")
         else:
@@ -618,7 +742,7 @@ def main():
 
         # 8. TVL
         if not tvl.empty:
-            tv = tvl['tvl']
+            tv = tvl["tvl"]
             tvl_score = scorer.score_tvl(tv, df.index)
             logger.info(f"    TVL: mean={tvl_score.mean():.2f}")
         else:
@@ -626,7 +750,7 @@ def main():
 
         # 9. Long/Short Ratio
         if not ls_ratio.empty:
-            ls = ls_ratio['ls_ratio'].reindex(df.index, method='ffill')
+            ls = ls_ratio["ls_ratio"].reindex(df.index, method="ffill")
             ls_score = scorer.score_long_short(ls)
             logger.info(f"    L/S Ratio: mean={ls_score.mean():.2f}")
         else:
@@ -634,42 +758,44 @@ def main():
 
         # 10. Open Interest
         if not oi.empty:
-            o = oi['oi'].reindex(df.index, method='ffill')
-            oi_score = scorer.score_open_interest(o, df['close'])
+            o = oi["oi"].reindex(df.index, method="ffill")
+            oi_score = scorer.score_open_interest(o, df["close"])
             logger.info(f"    Open Int: mean={oi_score.mean():.2f}")
         else:
             oi_score = pd.Series(0, index=df.index)
 
         # Combine all scores with weights
         weights = {
-            'technical': 1.5,    # Core signal
-            'fear_greed': 1.2,   # Proven contrarian
-            'funding': 1.0,
-            'btc': 1.0,
-            'onchain': 0.8,
-            'social': 0.7,
-            'macro': 1.0,
-            'tvl': 0.6,
-            'ls_ratio': 0.8,
-            'oi': 0.7,
+            "technical": 1.5,  # Core signal
+            "fear_greed": 1.2,  # Proven contrarian
+            "funding": 1.0,
+            "btc": 1.0,
+            "onchain": 0.8,
+            "social": 0.7,
+            "macro": 1.0,
+            "tvl": 0.6,
+            "ls_ratio": 0.8,
+            "oi": 0.7,
         }
 
         total_score = (
-            tech_score * weights['technical'] +
-            fg_score * weights['fear_greed'] +
-            fund_score * weights['funding'] +
-            btc_score * weights['btc'] +
-            oc_score * weights['onchain'] +
-            gt_score * weights['social'] +
-            macro_score * weights['macro'] +
-            tvl_score * weights['tvl'] +
-            ls_score * weights['ls_ratio'] +
-            oi_score * weights['oi']
+            tech_score * weights["technical"]
+            + fg_score * weights["fear_greed"]
+            + fund_score * weights["funding"]
+            + btc_score * weights["btc"]
+            + oc_score * weights["onchain"]
+            + gt_score * weights["social"]
+            + macro_score * weights["macro"]
+            + tvl_score * weights["tvl"]
+            + ls_score * weights["ls_ratio"]
+            + oi_score * weights["oi"]
         )
 
-        logger.info(f"\n  TOTAL SCORE: mean={total_score.mean():.2f}, "
-                   f"std={total_score.std():.2f}, "
-                   f"min={total_score.min():.2f}, max={total_score.max():.2f}")
+        logger.info(
+            f"\n  TOTAL SCORE: mean={total_score.mean():.2f}, "
+            f"std={total_score.std():.2f}, "
+            f"min={total_score.min():.2f}, max={total_score.max():.2f}"
+        )
 
         # Run backtest
         result = backtester.run(df, total_score, symbol)
@@ -677,8 +803,10 @@ def main():
         if result:
             results.append(result)
             status = "OK" if result.pf > 1.0 else "FAIL"
-            logger.info(f"\n  RESULT: [{status}] PF={result.pf:.2f}, Ret={result.ret:+.1f}%, "
-                       f"WR={result.wr:.0f}%, MDD={result.mdd:.1f}%, Trades={result.trades}")
+            logger.info(
+                f"\n  RESULT: [{status}] PF={result.pf:.2f}, Ret={result.ret:+.1f}%, "
+                f"WR={result.wr:.0f}%, MDD={result.mdd:.1f}%, Trades={result.trades}"
+            )
         else:
             logger.info(f"\n  RESULT: Insufficient trades")
 
@@ -692,15 +820,19 @@ def main():
         avg_pf = np.mean([r.pf for r in results if r.pf < 999])
         avg_ret = np.mean([r.ret for r in results])
 
-        logger.info(f"\nProfitable: {profitable}/{len(results)} ({profitable/len(results)*100:.0f}%)")
+        logger.info(
+            f"\nProfitable: {profitable}/{len(results)} ({profitable/len(results)*100:.0f}%)"
+        )
         logger.info(f"Average PF: {avg_pf:.2f}")
         logger.info(f"Average Return: {avg_ret:+.1f}%")
 
         logger.info("\nPer-symbol results:")
         for r in sorted(results, key=lambda x: -x.pf):
             status = "OK" if r.pf > 1.0 else "X"
-            logger.info(f"  [{status}] {r.symbol}: PF={r.pf:.2f}, Ret={r.ret:+.1f}%, "
-                       f"WR={r.wr:.0f}%, MDD={r.mdd:.1f}%")
+            logger.info(
+                f"  [{status}] {r.symbol}: PF={r.pf:.2f}, Ret={r.ret:+.1f}%, "
+                f"WR={r.wr:.0f}%, MDD={r.mdd:.1f}%"
+            )
 
     return results
 

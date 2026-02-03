@@ -39,7 +39,9 @@ def main():
     print(f"  VIX (T-1):    {metrics.get('vix_t1', 'N/A')}")
     print(f"  VIX (T-2):    {metrics.get('vix_t2', 'N/A')}")
     print(f"  VIX SMA10:    {metrics.get('vix_sma10', 'N/A')}")
-    print(f"  차이:         {metrics.get('vix_diff', 'N/A')} ({metrics.get('vix_pct_diff', 0):+.1f}%)")
+    print(
+        f"  차이:         {metrics.get('vix_diff', 'N/A')} ({metrics.get('vix_pct_diff', 0):+.1f}%)"
+    )
     print(f"  데이터 기준:  {metrics.get('date', 'N/A')}")
     print()
 
@@ -61,7 +63,9 @@ def main():
     for ticker in strategy.get_valid_symbols():
         info = VIX_VALID_STOCKS[ticker]
         action = "매수" if signal == 1 else "현금"
-        print(f"{ticker:<8} {info['name']:<15} {info['sharpe']:>8.2f} {info['cagr']:>10} {action:>8}")
+        print(
+            f"{ticker:<8} {info['name']:<15} {info['sharpe']:>8.2f} {info['cagr']:>10} {action:>8}"
+        )
 
     print()
     print("[추가 옵션]")

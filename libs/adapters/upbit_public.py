@@ -2,6 +2,7 @@
 Upbit Public API client for symbol discovery (no auth).
 MASP Phase 3B - KRW market symbol loader.
 """
+
 from __future__ import annotations
 
 import logging

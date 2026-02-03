@@ -73,6 +73,7 @@ class TestJSONFormatter:
             raise ValueError("Test error")
         except ValueError:
             import sys
+
             exc_info = sys.exc_info()
 
         record = logging.LogRecord(
@@ -101,6 +102,7 @@ class TestJSONFormatter:
             raise RuntimeError("Runtime error")
         except RuntimeError:
             import sys
+
             exc_info = sys.exc_info()
 
         record = logging.LogRecord(

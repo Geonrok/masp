@@ -13,6 +13,7 @@ C. Ensemble: Dominance + Volatility + Momentum
 D. Mean Reversion with RSI
 E. Multi-Timeframe Momentum
 """
+
 from __future__ import annotations
 
 import logging
@@ -26,7 +27,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -49,11 +50,15 @@ class DataLoader:
         self.data_root = data_root
 
     def load_ohlcv(self, symbol: str, timeframe: str = "4h") -> pd.DataFrame:
-        tf_map = {"4h": "binance_futures_4h", "1d": "binance_futures_1d", "1h": "binance_futures_1h"}
+        tf_map = {
+            "4h": "binance_futures_4h",
+            "1d": "binance_futures_1d",
+            "1h": "binance_futures_1h",
+        }
         folder = tf_map.get(timeframe, "binance_futures_4h")
         for file_path in [
             self.data_root / folder / f"{symbol}.csv",
-            self.data_root / folder / f"{symbol.replace('USDT', '')}.csv"
+            self.data_root / folder / f"{symbol.replace('USDT', '')}.csv",
         ]:
             if file_path.exists():
                 df = pd.read_csv(file_path)
@@ -92,8 +97,10 @@ class DataLoader:
 def calc_ema(series: pd.Series, period: int) -> pd.Series:
     return series.ewm(span=period, adjust=False).mean()
 
+
 def calc_sma(series: pd.Series, period: int) -> pd.Series:
     return series.rolling(period).mean()
+
 
 def calc_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
@@ -102,14 +109,20 @@ def calc_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     rs = gain / loss.replace(0, np.nan)
     return 100 - (100 / (1 + rs))
 
-def calc_atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
+
+def calc_atr(
+    high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14
+) -> pd.Series:
     tr1 = high - low
     tr2 = abs(high - close.shift(1))
     tr3 = abs(low - close.shift(1))
     tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
     return tr.rolling(period).mean()
 
-def calc_adx(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
+
+def calc_adx(
+    high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14
+) -> pd.Series:
     plus_dm = high.diff()
     minus_dm = -low.diff()
     plus_dm = plus_dm.where((plus_dm > minus_dm) & (plus_dm > 0), 0)
@@ -119,6 +132,7 @@ def calc_adx(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14
     minus_di = 100 * calc_ema(minus_dm, period) / atr
     dx = 100 * abs(plus_di - minus_di) / (plus_di + minus_di + 1e-10)
     return calc_ema(dx, period)
+
 
 def calc_bollinger_bands(series: pd.Series, period: int = 20, std_dev: float = 2.0):
     sma = calc_sma(series, period)
@@ -169,22 +183,34 @@ class Backtester:
         self.leverage = leverage
         self.position_size_pct = position_size_pct
 
-    def run(self, df: pd.DataFrame, signals: pd.DataFrame, symbol: str, strategy_name: str) -> BacktestResult:
+    def run(
+        self, df: pd.DataFrame, signals: pd.DataFrame, symbol: str, strategy_name: str
+    ) -> BacktestResult:
         capital = self.initial_capital
         position = None
         trades: List[Trade] = []
         equity = [capital]
 
         for i in range(1, len(df)):
-            current_price = df['close'].iloc[i]
-            signal = signals['signal'].iloc[i] if i < len(signals) else 0
-            exit_signal = signals['exit'].iloc[i] if i < len(signals) and 'exit' in signals.columns else False
+            current_price = df["close"].iloc[i]
+            signal = signals["signal"].iloc[i] if i < len(signals) else 0
+            exit_signal = (
+                signals["exit"].iloc[i]
+                if i < len(signals) and "exit" in signals.columns
+                else False
+            )
 
             if position is not None:
-                should_exit = exit_signal or (signal != 0 and signal != position.direction)
+                should_exit = exit_signal or (
+                    signal != 0 and signal != position.direction
+                )
                 if should_exit:
-                    exit_price = current_price * (1 - self.slippage_pct * position.direction)
-                    pnl_pct = (exit_price / position.entry_price - 1) * position.direction
+                    exit_price = current_price * (
+                        1 - self.slippage_pct * position.direction
+                    )
+                    pnl_pct = (
+                        exit_price / position.entry_price - 1
+                    ) * position.direction
                     pnl_pct -= self.commission_pct * 2
                     pnl = capital * self.position_size_pct * self.leverage * pnl_pct
                     position.exit_time = df.index[i]
@@ -207,7 +233,7 @@ class Backtester:
             equity.append(capital if position is None else capital)
 
         if position is not None:
-            exit_price = df['close'].iloc[-1]
+            exit_price = df["close"].iloc[-1]
             pnl_pct = (exit_price / position.entry_price - 1) * position.direction
             pnl_pct -= self.commission_pct * 2
             position.pnl = capital * self.position_size_pct * self.leverage * pnl_pct
@@ -240,7 +266,11 @@ class Backtester:
     def _calc_profit_factor(self, trades: List[Trade]) -> float:
         gross_profit = sum(t.pnl for t in trades if t.pnl > 0)
         gross_loss = abs(sum(t.pnl for t in trades if t.pnl < 0))
-        return gross_profit / gross_loss if gross_loss > 0 else float('inf') if gross_profit > 0 else 0.0
+        return (
+            gross_profit / gross_loss
+            if gross_loss > 0
+            else float("inf") if gross_profit > 0 else 0.0
+        )
 
     def _calc_sharpe(self, equity: pd.Series) -> float:
         returns = equity.pct_change().dropna()
@@ -259,41 +289,44 @@ class RSIMeanReversionStrategy:
     - Short when RSI > 70 AND price below EMA200 (overbought in downtrend)
     - Exit when RSI crosses 50
     """
-    def __init__(self, rsi_oversold: int = 30, rsi_overbought: int = 70, rsi_exit: int = 50):
+
+    def __init__(
+        self, rsi_oversold: int = 30, rsi_overbought: int = 70, rsi_exit: int = 50
+    ):
         self.rsi_oversold = rsi_oversold
         self.rsi_overbought = rsi_overbought
         self.rsi_exit = rsi_exit
 
     def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
-        signals = pd.DataFrame(index=df.index, columns=['signal', 'exit'])
-        signals['signal'] = 0
-        signals['exit'] = False
+        signals = pd.DataFrame(index=df.index, columns=["signal", "exit"])
+        signals["signal"] = 0
+        signals["exit"] = False
 
         df = df.copy()
-        df['rsi'] = calc_rsi(df['close'], 14)
-        df['ema200'] = calc_ema(df['close'], 200)
+        df["rsi"] = calc_rsi(df["close"], 14)
+        df["ema200"] = calc_ema(df["close"], 200)
 
         position = 0
         for i in range(200, len(df)):
-            rsi = df['rsi'].iloc[i]
-            close = df['close'].iloc[i]
-            ema200 = df['ema200'].iloc[i]
+            rsi = df["rsi"].iloc[i]
+            close = df["close"].iloc[i]
+            ema200 = df["ema200"].iloc[i]
 
             # Exit on RSI crossing 50
             if position == 1 and rsi >= self.rsi_exit:
-                signals.iloc[i, signals.columns.get_loc('exit')] = True
+                signals.iloc[i, signals.columns.get_loc("exit")] = True
                 position = 0
             elif position == -1 and rsi <= self.rsi_exit:
-                signals.iloc[i, signals.columns.get_loc('exit')] = True
+                signals.iloc[i, signals.columns.get_loc("exit")] = True
                 position = 0
 
             # Entry
             if position == 0:
                 if rsi < self.rsi_oversold and close > ema200:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = 1
+                    signals.iloc[i, signals.columns.get_loc("signal")] = 1
                     position = 1
                 elif rsi > self.rsi_overbought and close < ema200:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = -1
+                    signals.iloc[i, signals.columns.get_loc("signal")] = -1
                     position = -1
 
         return signals
@@ -309,41 +342,49 @@ class BTCCorrelationStrategy:
     - When BTC is weak, go short on alts
     - Use correlation to filter signals
     """
-    def __init__(self, lookback: int = 20, corr_threshold: float = 0.5, btc_momentum_period: int = 10):
+
+    def __init__(
+        self,
+        lookback: int = 20,
+        corr_threshold: float = 0.5,
+        btc_momentum_period: int = 10,
+    ):
         self.lookback = lookback
         self.corr_threshold = corr_threshold
         self.btc_momentum_period = btc_momentum_period
 
     def generate_signals(self, df: pd.DataFrame, btc_df: pd.DataFrame) -> pd.DataFrame:
-        signals = pd.DataFrame(index=df.index, columns=['signal', 'exit'])
-        signals['signal'] = 0
-        signals['exit'] = False
+        signals = pd.DataFrame(index=df.index, columns=["signal", "exit"])
+        signals["signal"] = 0
+        signals["exit"] = False
 
         if btc_df.empty:
             return signals
 
         merged = df.copy()
-        merged['btc_close'] = btc_df['close'].reindex(df.index, method='ffill')
-        merged['btc_ret'] = merged['btc_close'].pct_change(self.btc_momentum_period)
-        merged['alt_ret'] = merged['close'].pct_change(self.btc_momentum_period)
+        merged["btc_close"] = btc_df["close"].reindex(df.index, method="ffill")
+        merged["btc_ret"] = merged["btc_close"].pct_change(self.btc_momentum_period)
+        merged["alt_ret"] = merged["close"].pct_change(self.btc_momentum_period)
 
         # Rolling correlation
-        merged['corr'] = merged['alt_ret'].rolling(self.lookback).corr(merged['btc_ret'])
+        merged["corr"] = (
+            merged["alt_ret"].rolling(self.lookback).corr(merged["btc_ret"])
+        )
 
         # BTC trend
-        merged['btc_ema50'] = calc_ema(merged['btc_close'], 50)
-        merged['btc_uptrend'] = merged['btc_close'] > merged['btc_ema50']
+        merged["btc_ema50"] = calc_ema(merged["btc_close"], 50)
+        merged["btc_uptrend"] = merged["btc_close"] > merged["btc_ema50"]
 
         # Alt trend
-        merged['ema50'] = calc_ema(merged['close'], 50)
+        merged["ema50"] = calc_ema(merged["close"], 50)
 
         position = 0
         for i in range(100, len(merged)):
-            corr = merged['corr'].iloc[i]
-            btc_ret = merged['btc_ret'].iloc[i]
-            btc_uptrend = merged['btc_uptrend'].iloc[i]
-            close = merged['close'].iloc[i]
-            ema50 = merged['ema50'].iloc[i]
+            corr = merged["corr"].iloc[i]
+            btc_ret = merged["btc_ret"].iloc[i]
+            btc_uptrend = merged["btc_uptrend"].iloc[i]
+            close = merged["close"].iloc[i]
+            ema50 = merged["ema50"].iloc[i]
 
             if pd.isna(corr):
                 continue
@@ -351,25 +392,25 @@ class BTCCorrelationStrategy:
             # Exit when correlation breaks down or trend reverses
             if position != 0:
                 if abs(corr) < self.corr_threshold * 0.7:
-                    signals.iloc[i, signals.columns.get_loc('exit')] = True
+                    signals.iloc[i, signals.columns.get_loc("exit")] = True
                     position = 0
                     continue
                 if position == 1 and close < ema50 * 0.97:
-                    signals.iloc[i, signals.columns.get_loc('exit')] = True
+                    signals.iloc[i, signals.columns.get_loc("exit")] = True
                     position = 0
                     continue
                 if position == -1 and close > ema50 * 1.03:
-                    signals.iloc[i, signals.columns.get_loc('exit')] = True
+                    signals.iloc[i, signals.columns.get_loc("exit")] = True
                     position = 0
                     continue
 
             # Entry
             if position == 0 and corr > self.corr_threshold:
                 if btc_uptrend and btc_ret > 0.03:  # BTC up >3% in 10 bars
-                    signals.iloc[i, signals.columns.get_loc('signal')] = 1
+                    signals.iloc[i, signals.columns.get_loc("signal")] = 1
                     position = 1
                 elif not btc_uptrend and btc_ret < -0.03:  # BTC down >3%
-                    signals.iloc[i, signals.columns.get_loc('signal')] = -1
+                    signals.iloc[i, signals.columns.get_loc("signal")] = -1
                     position = -1
 
         return signals
@@ -385,54 +426,61 @@ class MultiTimeframeTrendStrategy:
     - 4H trend (EMA20 vs EMA50)
     - Entry when both align
     """
+
     def __init__(self):
         pass
 
-    def generate_signals(self, df: pd.DataFrame, df_daily: pd.DataFrame) -> pd.DataFrame:
-        signals = pd.DataFrame(index=df.index, columns=['signal', 'exit'])
-        signals['signal'] = 0
-        signals['exit'] = False
+    def generate_signals(
+        self, df: pd.DataFrame, df_daily: pd.DataFrame
+    ) -> pd.DataFrame:
+        signals = pd.DataFrame(index=df.index, columns=["signal", "exit"])
+        signals["signal"] = 0
+        signals["exit"] = False
 
         if df_daily.empty:
             return signals
 
         # 4H indicators
         df = df.copy()
-        df['ema20'] = calc_ema(df['close'], 20)
-        df['ema50'] = calc_ema(df['close'], 50)
-        df['trend_4h'] = np.where(df['ema20'] > df['ema50'], 1, -1)
+        df["ema20"] = calc_ema(df["close"], 20)
+        df["ema50"] = calc_ema(df["close"], 50)
+        df["trend_4h"] = np.where(df["ema20"] > df["ema50"], 1, -1)
 
         # Daily indicators
         df_daily = df_daily.copy()
-        df_daily['ema50_d'] = calc_ema(df_daily['close'], 50)
-        df_daily['ema200_d'] = calc_ema(df_daily['close'], 200)
-        df_daily['trend_daily'] = np.where(df_daily['ema50_d'] > df_daily['ema200_d'], 1, -1)
+        df_daily["ema50_d"] = calc_ema(df_daily["close"], 50)
+        df_daily["ema200_d"] = calc_ema(df_daily["close"], 200)
+        df_daily["trend_daily"] = np.where(
+            df_daily["ema50_d"] > df_daily["ema200_d"], 1, -1
+        )
 
         # Merge daily to 4h
-        df['trend_daily'] = df_daily['trend_daily'].reindex(df.index, method='ffill')
+        df["trend_daily"] = df_daily["trend_daily"].reindex(df.index, method="ffill")
 
         position = 0
         for i in range(200, len(df)):
-            trend_4h = df['trend_4h'].iloc[i]
-            trend_daily = df['trend_daily'].iloc[i]
-            close = df['close'].iloc[i]
-            ema50 = df['ema50'].iloc[i]
+            trend_4h = df["trend_4h"].iloc[i]
+            trend_daily = df["trend_daily"].iloc[i]
+            close = df["close"].iloc[i]
+            ema50 = df["ema50"].iloc[i]
 
             # Exit on trend break
             if position == 1 and (trend_4h == -1 or trend_daily == -1):
-                signals.iloc[i, signals.columns.get_loc('exit')] = True
+                signals.iloc[i, signals.columns.get_loc("exit")] = True
                 position = 0
             elif position == -1 and (trend_4h == 1 or trend_daily == 1):
-                signals.iloc[i, signals.columns.get_loc('exit')] = True
+                signals.iloc[i, signals.columns.get_loc("exit")] = True
                 position = 0
 
             # Entry when both trends align
             if position == 0:
-                if trend_4h == 1 and trend_daily == 1 and close > df['ema20'].iloc[i]:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = 1
+                if trend_4h == 1 and trend_daily == 1 and close > df["ema20"].iloc[i]:
+                    signals.iloc[i, signals.columns.get_loc("signal")] = 1
                     position = 1
-                elif trend_4h == -1 and trend_daily == -1 and close < df['ema20'].iloc[i]:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = -1
+                elif (
+                    trend_4h == -1 and trend_daily == -1 and close < df["ema20"].iloc[i]
+                ):
+                    signals.iloc[i, signals.columns.get_loc("signal")] = -1
                     position = -1
 
         return signals
@@ -451,92 +499,97 @@ class EnsembleStrategy:
 
     Only trade when >= 3 signals agree
     """
+
     def __init__(self, min_signals: int = 3):
         self.min_signals = min_signals
 
-    def generate_signals(self, df: pd.DataFrame, btc_df: pd.DataFrame, fear_greed: pd.DataFrame) -> pd.DataFrame:
-        signals = pd.DataFrame(index=df.index, columns=['signal', 'exit'])
-        signals['signal'] = 0
-        signals['exit'] = False
+    def generate_signals(
+        self, df: pd.DataFrame, btc_df: pd.DataFrame, fear_greed: pd.DataFrame
+    ) -> pd.DataFrame:
+        signals = pd.DataFrame(index=df.index, columns=["signal", "exit"])
+        signals["signal"] = 0
+        signals["exit"] = False
 
         df = df.copy()
 
         # Signal 1: RSI
-        df['rsi'] = calc_rsi(df['close'], 14)
-        df['rsi_signal'] = np.where(df['rsi'] < 40, 1, np.where(df['rsi'] > 60, -1, 0))
+        df["rsi"] = calc_rsi(df["close"], 14)
+        df["rsi_signal"] = np.where(df["rsi"] < 40, 1, np.where(df["rsi"] > 60, -1, 0))
 
         # Signal 2: EMA trend
-        df['ema20'] = calc_ema(df['close'], 20)
-        df['ema50'] = calc_ema(df['close'], 50)
-        df['trend_signal'] = np.where(df['ema20'] > df['ema50'], 1, -1)
+        df["ema20"] = calc_ema(df["close"], 20)
+        df["ema50"] = calc_ema(df["close"], 50)
+        df["trend_signal"] = np.where(df["ema20"] > df["ema50"], 1, -1)
 
         # Signal 3: BTC momentum
         if not btc_df.empty:
-            df['btc_close'] = btc_df['close'].reindex(df.index, method='ffill')
-            df['btc_mom'] = df['btc_close'].pct_change(20)
-            df['btc_signal'] = np.where(df['btc_mom'] > 0.05, 1, np.where(df['btc_mom'] < -0.05, -1, 0))
+            df["btc_close"] = btc_df["close"].reindex(df.index, method="ffill")
+            df["btc_mom"] = df["btc_close"].pct_change(20)
+            df["btc_signal"] = np.where(
+                df["btc_mom"] > 0.05, 1, np.where(df["btc_mom"] < -0.05, -1, 0)
+            )
         else:
-            df['btc_signal'] = 0
+            df["btc_signal"] = 0
 
         # Signal 4: Fear & Greed
         if not fear_greed.empty:
-            fg_col = 'value' if 'value' in fear_greed.columns else fear_greed.columns[0]
-            df['fg'] = fear_greed[fg_col].reindex(df.index, method='ffill')
-            df['fg_signal'] = np.where(df['fg'] < 30, 1, np.where(df['fg'] > 70, -1, 0))
+            fg_col = "value" if "value" in fear_greed.columns else fear_greed.columns[0]
+            df["fg"] = fear_greed[fg_col].reindex(df.index, method="ffill")
+            df["fg_signal"] = np.where(df["fg"] < 30, 1, np.where(df["fg"] > 70, -1, 0))
         else:
-            df['fg_signal'] = 0
+            df["fg_signal"] = 0
 
         # Signal 5: Price vs EMA200
-        df['ema200'] = calc_ema(df['close'], 200)
-        df['ema200_signal'] = np.where(df['close'] > df['ema200'], 1, -1)
+        df["ema200"] = calc_ema(df["close"], 200)
+        df["ema200_signal"] = np.where(df["close"] > df["ema200"], 1, -1)
 
         # Aggregate
-        df['total_long'] = (
-            (df['rsi_signal'] == 1).astype(int) +
-            (df['trend_signal'] == 1).astype(int) +
-            (df['btc_signal'] == 1).astype(int) +
-            (df['fg_signal'] == 1).astype(int) +
-            (df['ema200_signal'] == 1).astype(int)
+        df["total_long"] = (
+            (df["rsi_signal"] == 1).astype(int)
+            + (df["trend_signal"] == 1).astype(int)
+            + (df["btc_signal"] == 1).astype(int)
+            + (df["fg_signal"] == 1).astype(int)
+            + (df["ema200_signal"] == 1).astype(int)
         )
-        df['total_short'] = (
-            (df['rsi_signal'] == -1).astype(int) +
-            (df['trend_signal'] == -1).astype(int) +
-            (df['btc_signal'] == -1).astype(int) +
-            (df['fg_signal'] == -1).astype(int) +
-            (df['ema200_signal'] == -1).astype(int)
+        df["total_short"] = (
+            (df["rsi_signal"] == -1).astype(int)
+            + (df["trend_signal"] == -1).astype(int)
+            + (df["btc_signal"] == -1).astype(int)
+            + (df["fg_signal"] == -1).astype(int)
+            + (df["ema200_signal"] == -1).astype(int)
         )
 
         position = 0
         bars_in_position = 0
 
         for i in range(200, len(df)):
-            total_long = df['total_long'].iloc[i]
-            total_short = df['total_short'].iloc[i]
+            total_long = df["total_long"].iloc[i]
+            total_short = df["total_short"].iloc[i]
 
             if position != 0:
                 bars_in_position += 1
                 # Exit when signals reverse or timeout
                 if position == 1 and total_short >= self.min_signals:
-                    signals.iloc[i, signals.columns.get_loc('exit')] = True
+                    signals.iloc[i, signals.columns.get_loc("exit")] = True
                     position = 0
                     bars_in_position = 0
                 elif position == -1 and total_long >= self.min_signals:
-                    signals.iloc[i, signals.columns.get_loc('exit')] = True
+                    signals.iloc[i, signals.columns.get_loc("exit")] = True
                     position = 0
                     bars_in_position = 0
                 elif bars_in_position > 60:  # Max 10 days
-                    signals.iloc[i, signals.columns.get_loc('exit')] = True
+                    signals.iloc[i, signals.columns.get_loc("exit")] = True
                     position = 0
                     bars_in_position = 0
                 continue
 
             if position == 0:
                 if total_long >= self.min_signals:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = 1
+                    signals.iloc[i, signals.columns.get_loc("signal")] = 1
                     position = 1
                     bars_in_position = 0
                 elif total_short >= self.min_signals:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = -1
+                    signals.iloc[i, signals.columns.get_loc("signal")] = -1
                     position = -1
                     bars_in_position = 0
 
@@ -553,53 +606,59 @@ class BreakoutVolumeStrategy:
     - Volume > 1.5x average
     - Trail stop with ATR
     """
-    def __init__(self, breakout_period: int = 20, volume_multiplier: float = 1.5, atr_multiplier: float = 2.0):
+
+    def __init__(
+        self,
+        breakout_period: int = 20,
+        volume_multiplier: float = 1.5,
+        atr_multiplier: float = 2.0,
+    ):
         self.breakout_period = breakout_period
         self.volume_multiplier = volume_multiplier
         self.atr_multiplier = atr_multiplier
 
     def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
-        signals = pd.DataFrame(index=df.index, columns=['signal', 'exit'])
-        signals['signal'] = 0
-        signals['exit'] = False
+        signals = pd.DataFrame(index=df.index, columns=["signal", "exit"])
+        signals["signal"] = 0
+        signals["exit"] = False
 
         df = df.copy()
-        df['highest'] = df['high'].rolling(self.breakout_period).max().shift(1)
-        df['lowest'] = df['low'].rolling(self.breakout_period).min().shift(1)
-        df['vol_ma'] = df['volume'].rolling(20).mean()
-        df['vol_spike'] = df['volume'] > df['vol_ma'] * self.volume_multiplier
-        df['atr'] = calc_atr(df['high'], df['low'], df['close'], 14)
+        df["highest"] = df["high"].rolling(self.breakout_period).max().shift(1)
+        df["lowest"] = df["low"].rolling(self.breakout_period).min().shift(1)
+        df["vol_ma"] = df["volume"].rolling(20).mean()
+        df["vol_spike"] = df["volume"] > df["vol_ma"] * self.volume_multiplier
+        df["atr"] = calc_atr(df["high"], df["low"], df["close"], 14)
 
         position = 0
         entry_price = 0
         trail_stop = 0
 
         for i in range(self.breakout_period + 20, len(df)):
-            high = df['high'].iloc[i]
-            low = df['low'].iloc[i]
-            close = df['close'].iloc[i]
-            highest = df['highest'].iloc[i]
-            lowest = df['lowest'].iloc[i]
-            vol_spike = df['vol_spike'].iloc[i]
-            atr = df['atr'].iloc[i]
+            high = df["high"].iloc[i]
+            low = df["low"].iloc[i]
+            close = df["close"].iloc[i]
+            highest = df["highest"].iloc[i]
+            lowest = df["lowest"].iloc[i]
+            vol_spike = df["vol_spike"].iloc[i]
+            atr = df["atr"].iloc[i]
 
             # Exit on trailing stop
             if position == 1 and low < trail_stop:
-                signals.iloc[i, signals.columns.get_loc('exit')] = True
+                signals.iloc[i, signals.columns.get_loc("exit")] = True
                 position = 0
             elif position == -1 and high > trail_stop:
-                signals.iloc[i, signals.columns.get_loc('exit')] = True
+                signals.iloc[i, signals.columns.get_loc("exit")] = True
                 position = 0
 
             # Entry on breakout with volume
             if position == 0 and vol_spike:
                 if high > highest:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = 1
+                    signals.iloc[i, signals.columns.get_loc("signal")] = 1
                     position = 1
                     entry_price = close
                     trail_stop = close - self.atr_multiplier * atr
                 elif low < lowest:
-                    signals.iloc[i, signals.columns.get_loc('signal')] = -1
+                    signals.iloc[i, signals.columns.get_loc("signal")] = -1
                     position = -1
                     entry_price = close
                     trail_stop = close + self.atr_multiplier * atr
@@ -629,9 +688,20 @@ def run_improved_strategies():
     )
 
     symbols = [
-        "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
-        "ADAUSDT", "DOGEUSDT", "LINKUSDT", "DOTUSDT", "LTCUSDT",
-        "AVAXUSDT", "ATOMUSDT", "UNIUSDT", "NEARUSDT",
+        "BTCUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "ADAUSDT",
+        "DOGEUSDT",
+        "LINKUSDT",
+        "DOTUSDT",
+        "LTCUSDT",
+        "AVAXUSDT",
+        "ATOMUSDT",
+        "UNIUSDT",
+        "NEARUSDT",
     ]
 
     fear_greed = loader.load_fear_greed()
@@ -692,8 +762,10 @@ def run_improved_strategies():
                 all_results[strat_name].append(result)
 
                 status = "✓" if result.profit_factor > 1.0 else "✗"
-                logger.info(f"  {status} {strat_name}: PF={result.profit_factor:.2f}, "
-                           f"Ret={result.total_return:+.1f}%, WR={result.win_rate:.0f}%, Trades={result.num_trades}")
+                logger.info(
+                    f"  {status} {strat_name}: PF={result.profit_factor:.2f}, "
+                    f"Ret={result.total_return:+.1f}%, WR={result.win_rate:.0f}%, Trades={result.num_trades}"
+                )
 
             except Exception as e:
                 logger.error(f"  Error {strat_name}: {e}")
@@ -708,13 +780,17 @@ def run_improved_strategies():
             continue
 
         profitable = sum(1 for r in results if r.profit_factor > 1.0)
-        avg_pf = np.mean([r.profit_factor for r in results if r.profit_factor < float('inf')])
+        avg_pf = np.mean(
+            [r.profit_factor for r in results if r.profit_factor < float("inf")]
+        )
         avg_ret = np.mean([r.total_return for r in results])
         avg_wr = np.mean([r.win_rate for r in results])
         avg_trades = np.mean([r.num_trades for r in results])
 
         logger.info(f"\n{strat_name}:")
-        logger.info(f"  Profitable: {profitable}/{len(results)} ({profitable/len(results)*100:.0f}%)")
+        logger.info(
+            f"  Profitable: {profitable}/{len(results)} ({profitable/len(results)*100:.0f}%)"
+        )
         logger.info(f"  Avg PF: {avg_pf:.2f}")
         logger.info(f"  Avg Return: {avg_ret:+.1f}%")
         logger.info(f"  Avg WR: {avg_wr:.1f}%")
@@ -730,7 +806,9 @@ def run_improved_strategies():
         if results:
             profitable = sum(1 for r in results if r.profit_factor > 1.0)
             pct = profitable / len(results) * 100
-            avg_pf = np.mean([r.profit_factor for r in results if r.profit_factor < float('inf')])
+            avg_pf = np.mean(
+                [r.profit_factor for r in results if r.profit_factor < float("inf")]
+            )
             rankings.append((strat_name, profitable, len(results), pct, avg_pf))
 
     rankings.sort(key=lambda x: (-x[3], -x[4]))

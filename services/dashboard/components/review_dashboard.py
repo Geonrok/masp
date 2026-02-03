@@ -3,6 +3,7 @@ AI Code Review Dashboard Component for Streamlit.
 
 Displays review status and history in the MASP dashboard.
 """
+
 import json
 import subprocess
 from datetime import datetime
@@ -30,12 +31,14 @@ def get_recent_commits(count: int = 10) -> List[Dict]:
         for line in result.stdout.strip().split("\n"):
             if "|" in line:
                 parts = line.split("|")
-                commits.append({
-                    "hash": parts[0],
-                    "message": parts[1],
-                    "date": parts[2] if len(parts) > 2 else "",
-                    "author": parts[3] if len(parts) > 3 else "",
-                })
+                commits.append(
+                    {
+                        "hash": parts[0],
+                        "message": parts[1],
+                        "date": parts[2] if len(parts) > 2 else "",
+                        "author": parts[3] if len(parts) > 3 else "",
+                    }
+                )
         return commits
     except Exception:
         return []
@@ -98,12 +101,16 @@ def render_review_dashboard():
 
     reviewed = sum(1 for c in commits if get_review_summary(c["hash"]))
     passed = sum(
-        1 for c in commits
-        if get_review_summary(c["hash"]) and get_review_summary(c["hash"]).get("overall_status") == "PASS"
+        1
+        for c in commits
+        if get_review_summary(c["hash"])
+        and get_review_summary(c["hash"]).get("overall_status") == "PASS"
     )
     blocked = sum(
-        1 for c in commits
-        if get_review_summary(c["hash"]) and get_review_summary(c["hash"]).get("overall_status") == "BLOCKED"
+        1
+        for c in commits
+        if get_review_summary(c["hash"])
+        and get_review_summary(c["hash"]).get("overall_status") == "BLOCKED"
     )
 
     with col1:
@@ -145,7 +152,9 @@ def render_review_dashboard():
                 st.code(commit["hash"], language=None)
 
             with col2:
-                st.markdown(f"**{commit['message'][:50]}{'...' if len(commit['message']) > 50 else ''}**")
+                st.markdown(
+                    f"**{commit['message'][:50]}{'...' if len(commit['message']) > 50 else ''}**"
+                )
 
                 if summary:
                     # Reviewer icons
@@ -163,7 +172,9 @@ def render_review_dashboard():
                     st.markdown(status_badge(status), unsafe_allow_html=True)
 
                     issues = summary.get("total_issues", {})
-                    st.caption(f"P0:{issues.get('p0', 0)} P1:{issues.get('p1', 0)} P2:{issues.get('p2', 0)}")
+                    st.caption(
+                        f"P0:{issues.get('p0', 0)} P1:{issues.get('p1', 0)} P2:{issues.get('p2', 0)}"
+                    )
                 else:
                     st.markdown(status_badge("NOT_REVIEWED"), unsafe_allow_html=True)
                     st.caption("검수 대기중")
@@ -179,8 +190,14 @@ def render_review_dashboard():
         if st.button("🔄 자동 라우팅 실행", use_container_width=True):
             with st.spinner("분석 중..."):
                 result = subprocess.run(
-                    ["powershell", "-ExecutionPolicy", "Bypass", "-File",
-                     str(PROJECT_ROOT / ".ai-review" / "auto-review.ps1"), "-DryRun"],
+                    [
+                        "powershell",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(PROJECT_ROOT / ".ai-review" / "auto-review.ps1"),
+                        "-DryRun",
+                    ],
                     cwd=PROJECT_ROOT,
                     capture_output=True,
                     text=True,
@@ -191,9 +208,15 @@ def render_review_dashboard():
         if st.button("📊 요약 생성", use_container_width=True):
             with st.spinner("요약 생성 중..."):
                 result = subprocess.run(
-                    ["powershell", "-ExecutionPolicy", "Bypass", "-File",
-                     str(PROJECT_ROOT / ".ai-review" / "review-collector.ps1"),
-                     "-Mode", "summarize"],
+                    [
+                        "powershell",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(PROJECT_ROOT / ".ai-review" / "review-collector.ps1"),
+                        "-Mode",
+                        "summarize",
+                    ],
                     cwd=PROJECT_ROOT,
                     capture_output=True,
                     text=True,
@@ -236,7 +259,9 @@ def render_review_detail(commit_hash: str):
     for reviewer, status in summary.get("reviewers", {}).items():
         review_file = REVIEW_DIR / f"{commit_hash}-{reviewer}.md"
         if review_file.exists():
-            with st.expander(f"{reviewer_status_icon(status)} {reviewer.upper()}: {status}"):
+            with st.expander(
+                f"{reviewer_status_icon(status)} {reviewer.upper()}: {status}"
+            ):
                 with open(review_file, "r", encoding="utf-8") as f:
                     st.markdown(f.read())
 

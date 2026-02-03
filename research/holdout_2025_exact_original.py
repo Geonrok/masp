@@ -15,30 +15,163 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 print("=" * 80)
 print("2025 HOLDOUT TEST - EXACT ORIGINAL METHODOLOGY")
 print("=" * 80)
 
-ORIGINAL_SYMBOLS = ['AAVE', 'ADA', 'AERGO', 'AGLD', 'AHT', 'AKT', 'ALGO', 'ALT', 'ANIME', 'API3',
-    'AQT', 'ARB', 'ARDR', 'ARK', 'ATH', 'AUCTION', 'AVAX', 'AVNT', 'AWE', 'BARD', 'BAT', 'BCH',
-    'BEAM', 'BERA', 'BIGTIME', 'BLAST', 'BONK', 'BORA', 'BOUNTY', 'BSV', 'BTC', 'BTT', 'CARV',
-    'CBK', 'CELO', 'CHZ', 'CKB', 'COW', 'CRO', 'CTC', 'CVC', 'CYBER', 'DEEP', 'DOGE', 'DOOD',
-    'DRIFT', 'ENA', 'ENS', 'ETC', 'ETH', 'FLUID', 'GAME2', 'GAS', 'GLM', 'GMT', 'GRS', 'HBAR',
-    'HIVE', 'HP', 'HYPER', 'ICX', 'IMX', 'IOST', 'IP', 'JST', 'JTO', 'JUP', 'KAITO', 'KAVA',
-    'KNC', 'LA', 'LAYER', 'LINEA', 'LINK', 'LPT', 'MASK', 'ME', 'MEW', 'MIRA', 'MNT', 'MOC',
-    'MOCA', 'MOODENG', 'MOVE', 'NEAR', 'NEO', 'NOM', 'NXPC', 'ONDO', 'OPEN', 'ORBS', 'ORCA',
-    'PENDLE', 'PENGU', 'PEPE', 'POKT', 'POL', 'POLYX', 'PROVE', 'PUNDIX', 'PYTH', 'QTUM', 'RAY',
-    'RENDER', 'SAFE', 'SAHARA', 'SAND', 'SEI', 'SHIB', 'SIGN', 'SNT', 'SOL', 'SONIC', 'SOPH',
-    'STEEM', 'STG', 'STRAX', 'STX', 'SUI', 'TOKAMAK', 'TRUMP', 'TRX', 'UNI', 'USD1', 'USDC',
-    'USDT', 'VANA', 'VET', 'VIRTUAL', 'VTHO', 'W', 'WAL', 'WAVES', 'WCT', 'WLFI', 'XLM', 'XRP',
-    'XTZ', 'ZETA', 'ZKC', 'ZORA', 'ZRO']
+ORIGINAL_SYMBOLS = [
+    "AAVE",
+    "ADA",
+    "AERGO",
+    "AGLD",
+    "AHT",
+    "AKT",
+    "ALGO",
+    "ALT",
+    "ANIME",
+    "API3",
+    "AQT",
+    "ARB",
+    "ARDR",
+    "ARK",
+    "ATH",
+    "AUCTION",
+    "AVAX",
+    "AVNT",
+    "AWE",
+    "BARD",
+    "BAT",
+    "BCH",
+    "BEAM",
+    "BERA",
+    "BIGTIME",
+    "BLAST",
+    "BONK",
+    "BORA",
+    "BOUNTY",
+    "BSV",
+    "BTC",
+    "BTT",
+    "CARV",
+    "CBK",
+    "CELO",
+    "CHZ",
+    "CKB",
+    "COW",
+    "CRO",
+    "CTC",
+    "CVC",
+    "CYBER",
+    "DEEP",
+    "DOGE",
+    "DOOD",
+    "DRIFT",
+    "ENA",
+    "ENS",
+    "ETC",
+    "ETH",
+    "FLUID",
+    "GAME2",
+    "GAS",
+    "GLM",
+    "GMT",
+    "GRS",
+    "HBAR",
+    "HIVE",
+    "HP",
+    "HYPER",
+    "ICX",
+    "IMX",
+    "IOST",
+    "IP",
+    "JST",
+    "JTO",
+    "JUP",
+    "KAITO",
+    "KAVA",
+    "KNC",
+    "LA",
+    "LAYER",
+    "LINEA",
+    "LINK",
+    "LPT",
+    "MASK",
+    "ME",
+    "MEW",
+    "MIRA",
+    "MNT",
+    "MOC",
+    "MOCA",
+    "MOODENG",
+    "MOVE",
+    "NEAR",
+    "NEO",
+    "NOM",
+    "NXPC",
+    "ONDO",
+    "OPEN",
+    "ORBS",
+    "ORCA",
+    "PENDLE",
+    "PENGU",
+    "PEPE",
+    "POKT",
+    "POL",
+    "POLYX",
+    "PROVE",
+    "PUNDIX",
+    "PYTH",
+    "QTUM",
+    "RAY",
+    "RENDER",
+    "SAFE",
+    "SAHARA",
+    "SAND",
+    "SEI",
+    "SHIB",
+    "SIGN",
+    "SNT",
+    "SOL",
+    "SONIC",
+    "SOPH",
+    "STEEM",
+    "STG",
+    "STRAX",
+    "STX",
+    "SUI",
+    "TOKAMAK",
+    "TRUMP",
+    "TRX",
+    "UNI",
+    "USD1",
+    "USDC",
+    "USDT",
+    "VANA",
+    "VET",
+    "VIRTUAL",
+    "VTHO",
+    "W",
+    "WAL",
+    "WAVES",
+    "WCT",
+    "WLFI",
+    "XLM",
+    "XRP",
+    "XTZ",
+    "ZETA",
+    "ZKC",
+    "ZORA",
+    "ZRO",
+]
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 HOLDOUT_START = pd.Timestamp("2025-01-01")
 HOLDOUT_END = pd.Timestamp("2025-12-31")
 MAX_POSITIONS = 20
+
 
 def load_data(folder: Path, symbols: list) -> dict:
     data = {}
@@ -48,61 +181,76 @@ def load_data(folder: Path, symbols: list) -> dict:
             continue
         try:
             df = pd.read_csv(csv_file)
-            date_col = [c for c in df.columns if 'date' in c.lower() or 'time' in c.lower()][0]
-            df['date'] = pd.to_datetime(df[date_col]).dt.normalize()
-            df = df.sort_values('date').reset_index(drop=True)
-            df = df.drop_duplicates(subset=['date'], keep='last')
-            data[symbol] = df[['date', 'close', 'volume']].set_index('date')
+            date_col = [
+                c for c in df.columns if "date" in c.lower() or "time" in c.lower()
+            ][0]
+            df["date"] = pd.to_datetime(df[date_col]).dt.normalize()
+            df = df.sort_values("date").reset_index(drop=True)
+            df = df.drop_duplicates(subset=["date"], keep="last")
+            data[symbol] = df[["date", "close", "volume"]].set_index("date")
         except:
             continue
     return data
+
 
 def calc_kama(prices, period):
     n = len(prices)
     kama = np.full(n, np.nan)
     if n < period + 1:
         return kama
-    kama[period-1] = np.mean(prices[:period])
-    fast, slow = 2/(2+1), 2/(30+1)
+    kama[period - 1] = np.mean(prices[:period])
+    fast, slow = 2 / (2 + 1), 2 / (30 + 1)
     for i in range(period, n):
-        change = abs(prices[i] - prices[i-period])
-        volatility = sum(abs(prices[j] - prices[j-1]) for j in range(i-period+1, i+1))
+        change = abs(prices[i] - prices[i - period])
+        volatility = sum(
+            abs(prices[j] - prices[j - 1]) for j in range(i - period + 1, i + 1)
+        )
         er = change / volatility if volatility > 0 else 0
         sc = (er * (fast - slow) + slow) ** 2
-        kama[i] = kama[i-1] + sc * (prices[i] - kama[i-1])
+        kama[i] = kama[i - 1] + sc * (prices[i] - kama[i - 1])
     return kama
+
 
 def calc_ma(prices, period):
     result = np.full(len(prices), np.nan)
-    for i in range(period-1, len(prices)):
-        result[i] = np.mean(prices[i-period+1:i+1])
+    for i in range(period - 1, len(prices)):
+        result[i] = np.mean(prices[i - period + 1 : i + 1])
     return result
 
-def generate_signals(data: dict, kama_period: int, tsmom_period: int, gate_period: int) -> dict:
+
+def generate_signals(
+    data: dict, kama_period: int, tsmom_period: int, gate_period: int
+) -> dict:
     """Generate entry signals for each symbol"""
-    btc = data.get('BTC')
+    btc = data.get("BTC")
     if btc is None:
         return {}
 
-    btc_prices = btc['close'].values
+    btc_prices = btc["close"].values
     btc_ma = calc_ma(btc_prices, gate_period)
     btc_gate = pd.Series(btc_prices > btc_ma, index=btc.index)
 
     signals = {}
     for symbol, df in data.items():
-        prices = df['close'].values
+        prices = df["close"].values
         n = len(prices)
         if n < max(kama_period, tsmom_period, gate_period) + 10:
             continue
 
         kama = calc_kama(prices, kama_period)
         kama_sig = prices > kama
-        tsmom_sig = np.array([prices[i] > prices[i-tsmom_period] if i >= tsmom_period else False for i in range(n)])
+        tsmom_sig = np.array(
+            [
+                prices[i] > prices[i - tsmom_period] if i >= tsmom_period else False
+                for i in range(n)
+            ]
+        )
 
         entry = kama_sig | tsmom_sig
         signals[symbol] = pd.Series(entry, index=df.index)
 
     return signals, btc_gate
+
 
 def run_backtest_exact_original(data: dict, signals: dict, btc_gate: pd.Series) -> dict:
     """
@@ -129,7 +277,10 @@ def run_backtest_exact_original(data: dict, signals: dict, btc_gate: pd.Series) 
         for symbol, sig_series in signals.items():
             if date in sig_series.index and sig_series.loc[date] and gate:
                 if symbol in data and date in data[symbol].index:
-                    vol = data[symbol].loc[date, 'volume'] * data[symbol].loc[date, 'close']
+                    vol = (
+                        data[symbol].loc[date, "volume"]
+                        * data[symbol].loc[date, "close"]
+                    )
                     active.append((symbol, vol))
 
         # Sort by volume and take top N
@@ -146,10 +297,10 @@ def run_backtest_exact_original(data: dict, signals: dict, btc_gate: pd.Series) 
                 daily_pnl = 0
                 for symbol, weight in prev_positions.items():
                     if symbol in data and date in data[symbol].index:
-                        curr = data[symbol].loc[date, 'close']
-                        prev_date = dates_2025[i-1]
+                        curr = data[symbol].loc[date, "close"]
+                        prev_date = dates_2025[i - 1]
                         if prev_date in data[symbol].index:
-                            prev = data[symbol].loc[prev_date, 'close']
+                            prev = data[symbol].loc[prev_date, "close"]
                             daily_pnl += weight * (curr - prev) / prev
                 daily_ret = daily_pnl
             elif not was_invested and is_invested:
@@ -158,10 +309,10 @@ def run_backtest_exact_original(data: dict, signals: dict, btc_gate: pd.Series) 
                 weight = 1.0 / len(selected)
                 for symbol in selected:
                     if symbol in data and date in data[symbol].index:
-                        curr = data[symbol].loc[date, 'close']
-                        prev_date = dates_2025[i-1]
+                        curr = data[symbol].loc[date, "close"]
+                        prev_date = dates_2025[i - 1]
                         if prev_date in data[symbol].index:
-                            prev = data[symbol].loc[prev_date, 'close']
+                            prev = data[symbol].loc[prev_date, "close"]
                             daily_pnl += weight * (curr - prev) / prev
                 daily_ret = daily_pnl
             elif was_invested and not is_invested:
@@ -186,28 +337,33 @@ def run_backtest_exact_original(data: dict, signals: dict, btc_gate: pd.Series) 
     daily_returns = np.array(daily_returns)
 
     total_return = (portfolio_values[-1] - 10000) / 10000
-    sharpe = np.mean(daily_returns) / np.std(daily_returns) * np.sqrt(252) if np.std(daily_returns) > 0 else 0
+    sharpe = (
+        np.mean(daily_returns) / np.std(daily_returns) * np.sqrt(252)
+        if np.std(daily_returns) > 0
+        else 0
+    )
     peak = np.maximum.accumulate(portfolio_values)
     mdd = np.min((portfolio_values - peak) / peak)
 
     return {
-        'sharpe': sharpe,
-        'mdd': mdd,
-        'total_return': total_return,
-        'n_days': len(daily_returns),
+        "sharpe": sharpe,
+        "mdd": mdd,
+        "total_return": total_return,
+        "n_days": len(daily_returns),
     }
+
 
 # Main
 print("\n[1] Loading Data")
 print("-" * 60)
 
-upbit_data = load_data(DATA_ROOT / 'upbit_1d', ORIGINAL_SYMBOLS)
+upbit_data = load_data(DATA_ROOT / "upbit_1d", ORIGINAL_SYMBOLS)
 print(f"Loaded {len(upbit_data)} symbols")
 
 print("\n[2] Running Backtests (Exact Original Methodology)")
 print("-" * 60)
 
-for name, kama, tsmom in [('KAMA=5, TSMOM=90', 5, 90), ('KAMA=10, TSMOM=60', 10, 60)]:
+for name, kama, tsmom in [("KAMA=5, TSMOM=90", 5, 90), ("KAMA=10, TSMOM=60", 10, 60)]:
     signals, gate = generate_signals(upbit_data, kama, tsmom, 30)
     result = run_backtest_exact_original(upbit_data, signals, gate)
     print(f"{name}:")

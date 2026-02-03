@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class OHLCVCandle:
     """OHLCV candlestick data."""
+
     timestamp: datetime
     open: float
     high: float
@@ -91,6 +92,7 @@ class EbestSpotMarketData(MarketDataAdapter):
             loop = asyncio.get_running_loop()
             # Already in async context - use nest_asyncio or thread
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 # Reset API state for new thread/loop
                 self._api = None
@@ -113,6 +115,7 @@ class EbestSpotMarketData(MarketDataAdapter):
 
         try:
             from ebest import OpenApi
+
             self._api = OpenApi()
             success = await self._api.login(self._app_key, self._app_secret)
             if success:
@@ -123,7 +126,9 @@ class EbestSpotMarketData(MarketDataAdapter):
                 logger.error("[eBest] Login failed")
                 return False
         except ImportError:
-            logger.error("[eBest] 'ebest' package not installed. Run: pip install ebest")
+            logger.error(
+                "[eBest] 'ebest' package not installed. Run: pip install ebest"
+            )
             return False
         except Exception as e:
             logger.error(f"[eBest] Login error: {e}")
@@ -149,7 +154,7 @@ class EbestSpotMarketData(MarketDataAdapter):
                 return None
 
             # ResponseValue has .body attribute containing the parsed JSON
-            body = result.body if hasattr(result, 'body') else result
+            body = result.body if hasattr(result, "body") else result
             out_block = body.get("t1102OutBlock", {}) if isinstance(body, dict) else {}
             if not out_block:
                 logger.warning(f"[eBest] Empty response for {symbol}")
@@ -158,8 +163,8 @@ class EbestSpotMarketData(MarketDataAdapter):
             # Parse response
             price = float(out_block.get("price", 0))
             offer = float(out_block.get("offerho", price))  # 매도호가
-            bid = float(out_block.get("bidho", price))      # 매수호가
-            volume = float(out_block.get("volume", 0))      # 거래량
+            bid = float(out_block.get("bidho", price))  # 매수호가
+            volume = float(out_block.get("volume", 0))  # 거래량
 
             return MarketQuote(
                 symbol=symbol,
@@ -235,7 +240,8 @@ class EbestSpotMarketData(MarketDataAdapter):
             if limit > 500:
                 logger.warning(
                     "[eBest] Requested %d candles but API limit is 500. Returning %d.",
-                    limit, actual_limit
+                    limit,
+                    actual_limit,
                 )
 
             data = {
@@ -254,7 +260,7 @@ class EbestSpotMarketData(MarketDataAdapter):
                 return []
 
             # ResponseValue has .body attribute containing the parsed JSON
-            body = result.body if hasattr(result, 'body') else result
+            body = result.body if hasattr(result, "body") else result
             out_block = body.get("t1305OutBlock1", []) if isinstance(body, dict) else []
             if not out_block:
                 logger.warning(f"[eBest] Empty OHLCV response for {symbol}")
@@ -269,14 +275,16 @@ class EbestSpotMarketData(MarketDataAdapter):
                     else:
                         continue
 
-                    candles.append(OHLCVCandle(
-                        timestamp=ts,
-                        open=float(item.get("open", 0)),
-                        high=float(item.get("high", 0)),
-                        low=float(item.get("low", 0)),
-                        close=float(item.get("close", 0)),
-                        volume=float(item.get("volume", 0)),
-                    ))
+                    candles.append(
+                        OHLCVCandle(
+                            timestamp=ts,
+                            open=float(item.get("open", 0)),
+                            high=float(item.get("high", 0)),
+                            low=float(item.get("low", 0)),
+                            close=float(item.get("close", 0)),
+                            volume=float(item.get("volume", 0)),
+                        )
+                    )
                 except (KeyError, ValueError) as e:
                     logger.warning(f"[eBest] Failed to parse candle: {e}")
                     continue
@@ -334,7 +342,7 @@ class EbestSpotMarketData(MarketDataAdapter):
                 return []
 
             # ResponseValue has .body attribute containing the parsed JSON
-            body = result.body if hasattr(result, 'body') else result
+            body = result.body if hasattr(result, "body") else result
             out_block = body.get("t8430OutBlock", []) if isinstance(body, dict) else []
             if not out_block:
                 logger.warning(f"[eBest] Empty symbol response for market={market}")

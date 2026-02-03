@@ -7,7 +7,9 @@
 import asyncio
 import logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 # API 키
@@ -47,11 +49,14 @@ async def main():
         # 2. 삼성전자 일봉 차트 (ka10081)
         logger.info("\n=== 삼성전자 일봉 (ka10081) ===")
         try:
-            response = await api.request("ka10081", {
-                "stk_cd": "005930",
-                "base_dt": "00000000",  # 현재일자
-                "upd_stkpc_tp": "1"     # 수정주가 적용
-            })
+            response = await api.request(
+                "ka10081",
+                {
+                    "stk_cd": "005930",
+                    "base_dt": "00000000",  # 현재일자
+                    "upd_stkpc_tp": "1",  # 수정주가 적용
+                },
+            )
             logger.info(f"응답 코드: {response.return_code}")
             if response.body:
                 data = response.body
@@ -68,9 +73,7 @@ async def main():
         # 3. 외국인 종목별 매매동향 (ka10008)
         logger.info("\n=== 외국인 매매동향 (ka10008) ===")
         try:
-            response = await api.request("ka10008", {
-                "stk_cd": "005930"
-            })
+            response = await api.request("ka10008", {"stk_cd": "005930"})
             logger.info(f"응답 코드: {response.return_code}")
             if response.body:
                 logger.info(f"데이터: {response.body}")
@@ -100,6 +103,7 @@ async def main():
     except Exception as e:
         logger.error(f"오류: {e}")
         import traceback
+
         traceback.print_exc()
 
     logger.info("\n테스트 완료!")

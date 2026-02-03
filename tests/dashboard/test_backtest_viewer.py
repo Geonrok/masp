@@ -1,4 +1,5 @@
 """Tests for backtest viewer component."""
+
 from __future__ import annotations
 
 import math
@@ -113,7 +114,7 @@ def test_metrics_calculation():
     # Total return: (final/initial - 1) * 100
     expected_final = initial
     for r in returns:
-        expected_final *= (1 + r)
+        expected_final *= 1 + r
     expected_total = (expected_final / initial - 1) * 100
     assert abs(metrics["total_return"] - expected_total) < 0.01
 
@@ -213,7 +214,13 @@ def test_nonfinite_handling():
     initial = 1_000_000
     # Returns with non-finite values (should be treated as 0)
     returns = [0.01, float("nan"), 0.02, float("inf"), -0.01]
-    equity = [initial * 1.01, initial * 1.01, initial * 1.0302, initial * 1.0302, initial * 1.02]
+    equity = [
+        initial * 1.01,
+        initial * 1.01,
+        initial * 1.0302,
+        initial * 1.0302,
+        initial * 1.02,
+    ]
 
     metrics = _calculate_metrics(returns, equity, initial)
 

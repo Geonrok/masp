@@ -1,6 +1,7 @@
 """
 WebSocket real-time stream (stabilized).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -58,7 +59,9 @@ class ConnectionManager:
         for ws in disconnected:
             await self.disconnect(ws)
 
-    async def send_price_update(self, symbol: str, price: float, change: float = 0) -> None:
+    async def send_price_update(
+        self, symbol: str, price: float, change: float = 0
+    ) -> None:
         await self.broadcast(
             {
                 "type": "price",
@@ -67,7 +70,9 @@ class ConnectionManager:
             }
         )
 
-    async def send_signal(self, symbol: str, signal: str, price: float, reason: str) -> None:
+    async def send_signal(
+        self, symbol: str, signal: str, price: float, reason: str
+    ) -> None:
         await self.broadcast(
             {
                 "type": "signal",

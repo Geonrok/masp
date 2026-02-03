@@ -54,10 +54,13 @@ class TestCircuitBreakerConfig:
         assert config.max_drawdown_pct == 0.15
         assert config.max_daily_loss_pct == 0.05
 
-    @patch.dict(os.environ, {
-        "MASP_MAX_DRAWDOWN_PCT": "0.20",
-        "MASP_MAX_DAILY_LOSS_PCT": "0.05",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "MASP_MAX_DRAWDOWN_PCT": "0.20",
+            "MASP_MAX_DAILY_LOSS_PCT": "0.05",
+        },
+    )
     def test_from_env(self):
         """Test loading from environment."""
         config = CircuitBreakerConfig.from_env()

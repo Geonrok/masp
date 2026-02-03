@@ -65,23 +65,28 @@ class MASPError(Exception):
 # Configuration Errors
 # =============================================================================
 
+
 class ConfigurationError(MASPError):
     """Base class for configuration-related errors."""
+
     error_code = "CONFIG_ERROR"
 
 
 class MissingConfigError(ConfigurationError):
     """Required configuration is missing."""
+
     error_code = "CONFIG_MISSING"
 
 
 class InvalidConfigError(ConfigurationError):
     """Configuration value is invalid."""
+
     error_code = "CONFIG_INVALID"
 
 
 class EnvironmentError(ConfigurationError):
     """Environment variable is missing or invalid."""
+
     error_code = "CONFIG_ENV_ERROR"
 
 
@@ -89,23 +94,28 @@ class EnvironmentError(ConfigurationError):
 # Adapter Errors
 # =============================================================================
 
+
 class AdapterError(MASPError):
     """Base class for adapter-related errors."""
+
     error_code = "ADAPTER_ERROR"
 
 
 class ConnectionError(AdapterError):
     """Failed to connect to external service."""
+
     error_code = "ADAPTER_CONNECTION"
 
 
 class AuthenticationError(AdapterError):
     """Authentication with external service failed."""
+
     error_code = "ADAPTER_AUTH"
 
 
 class RateLimitError(AdapterError):
     """Rate limit exceeded for external service."""
+
     error_code = "ADAPTER_RATE_LIMIT"
 
     def __init__(
@@ -123,6 +133,7 @@ class RateLimitError(AdapterError):
 
 class APIError(AdapterError):
     """External API returned an error."""
+
     error_code = "ADAPTER_API_ERROR"
 
     def __init__(
@@ -142,6 +153,7 @@ class APIError(AdapterError):
 
 class DataUnavailableError(AdapterError):
     """Requested data is not available."""
+
     error_code = "ADAPTER_DATA_UNAVAILABLE"
 
 
@@ -149,13 +161,16 @@ class DataUnavailableError(AdapterError):
 # Trading/Execution Errors
 # =============================================================================
 
+
 class TradingError(MASPError):
     """Base class for trading-related errors."""
+
     error_code = "TRADING_ERROR"
 
 
 class InsufficientFundsError(TradingError):
     """Insufficient funds for the requested operation."""
+
     error_code = "TRADING_INSUFFICIENT_FUNDS"
 
     def __init__(
@@ -175,6 +190,7 @@ class InsufficientFundsError(TradingError):
 
 class OrderRejectedError(TradingError):
     """Order was rejected by the exchange/broker."""
+
     error_code = "TRADING_ORDER_REJECTED"
 
     def __init__(
@@ -194,16 +210,19 @@ class OrderRejectedError(TradingError):
 
 class OrderNotFoundError(TradingError):
     """Order was not found."""
+
     error_code = "TRADING_ORDER_NOT_FOUND"
 
 
 class PositionError(TradingError):
     """Error related to position management."""
+
     error_code = "TRADING_POSITION_ERROR"
 
 
 class MarketClosedError(TradingError):
     """Market is closed for trading."""
+
     error_code = "TRADING_MARKET_CLOSED"
 
 
@@ -211,28 +230,34 @@ class MarketClosedError(TradingError):
 # Strategy Errors
 # =============================================================================
 
+
 class StrategyError(MASPError):
     """Base class for strategy-related errors."""
+
     error_code = "STRATEGY_ERROR"
 
 
 class StrategyNotFoundError(StrategyError):
     """Strategy was not found."""
+
     error_code = "STRATEGY_NOT_FOUND"
 
 
 class StrategyExecutionError(StrategyError):
     """Error during strategy execution."""
+
     error_code = "STRATEGY_EXECUTION"
 
 
 class InvalidSignalError(StrategyError):
     """Strategy generated an invalid signal."""
+
     error_code = "STRATEGY_INVALID_SIGNAL"
 
 
 class InsufficientDataError(StrategyError):
     """Insufficient data for strategy calculation."""
+
     error_code = "STRATEGY_INSUFFICIENT_DATA"
 
 
@@ -240,13 +265,16 @@ class InsufficientDataError(StrategyError):
 # Risk Management Errors
 # =============================================================================
 
+
 class RiskError(MASPError):
     """Base class for risk management errors."""
+
     error_code = "RISK_ERROR"
 
 
 class RiskLimitExceededError(RiskError):
     """Risk limit has been exceeded."""
+
     error_code = "RISK_LIMIT_EXCEEDED"
 
     def __init__(
@@ -269,16 +297,19 @@ class RiskLimitExceededError(RiskError):
 
 class DrawdownExceededError(RiskError):
     """Maximum drawdown limit exceeded."""
+
     error_code = "RISK_DRAWDOWN_EXCEEDED"
 
 
 class PositionLimitError(RiskError):
     """Position size limit exceeded."""
+
     error_code = "RISK_POSITION_LIMIT"
 
 
 class TradingHaltedError(RiskError):
     """Trading has been halted due to risk limits."""
+
     error_code = "RISK_TRADING_HALTED"
 
 
@@ -286,28 +317,34 @@ class TradingHaltedError(RiskError):
 # Validation Errors
 # =============================================================================
 
+
 class ValidationError(MASPError):
     """Base class for validation errors."""
+
     error_code = "VALIDATION_ERROR"
 
 
 class InvalidSymbolError(ValidationError):
     """Invalid trading symbol."""
+
     error_code = "VALIDATION_INVALID_SYMBOL"
 
 
 class InvalidQuantityError(ValidationError):
     """Invalid order quantity."""
+
     error_code = "VALIDATION_INVALID_QUANTITY"
 
 
 class InvalidPriceError(ValidationError):
     """Invalid price value."""
+
     error_code = "VALIDATION_INVALID_PRICE"
 
 
 class InvalidOrderTypeError(ValidationError):
     """Invalid order type."""
+
     error_code = "VALIDATION_INVALID_ORDER_TYPE"
 
 
@@ -315,23 +352,28 @@ class InvalidOrderTypeError(ValidationError):
 # Database/Storage Errors
 # =============================================================================
 
+
 class StorageError(MASPError):
     """Base class for storage-related errors."""
+
     error_code = "STORAGE_ERROR"
 
 
 class DatabaseConnectionError(StorageError):
     """Failed to connect to database."""
+
     error_code = "STORAGE_DB_CONNECTION"
 
 
 class DatabaseQueryError(StorageError):
     """Database query failed."""
+
     error_code = "STORAGE_DB_QUERY"
 
 
 class CacheError(StorageError):
     """Cache operation failed."""
+
     error_code = "STORAGE_CACHE"
 
 
@@ -339,13 +381,16 @@ class CacheError(StorageError):
 # Network/Communication Errors
 # =============================================================================
 
+
 class NetworkError(MASPError):
     """Base class for network-related errors."""
+
     error_code = "NETWORK_ERROR"
 
 
 class TimeoutError(NetworkError):
     """Operation timed out."""
+
     error_code = "NETWORK_TIMEOUT"
 
 
@@ -353,8 +398,10 @@ class TimeoutError(NetworkError):
 # Exchange Errors
 # =============================================================================
 
+
 class ExchangeError(MASPError):
     """Base class for exchange-related errors."""
+
     error_code = "EXCHANGE_ERROR"
 
 
@@ -362,8 +409,10 @@ class ExchangeError(MASPError):
 # Data Errors
 # =============================================================================
 
+
 class DataError(MASPError):
     """Base class for data-related errors."""
+
     error_code = "DATA_ERROR"
 
 
@@ -371,8 +420,10 @@ class DataError(MASPError):
 # Execution Errors
 # =============================================================================
 
+
 class ExecutionError(MASPError):
     """Base class for execution-related errors."""
+
     error_code = "EXECUTION_ERROR"
 
 
@@ -380,18 +431,22 @@ class ExecutionError(MASPError):
 # Notification Errors
 # =============================================================================
 
+
 class NotificationError(MASPError):
     """Base class for notification errors."""
+
     error_code = "NOTIFICATION_ERROR"
 
 
 class NotificationDeliveryError(NotificationError):
     """Failed to deliver notification."""
+
     error_code = "NOTIFICATION_DELIVERY"
 
 
 class NotificationConfigError(NotificationError):
     """Notification configuration error."""
+
     error_code = "NOTIFICATION_CONFIG"
 
 
@@ -399,24 +454,29 @@ class NotificationConfigError(NotificationError):
 # Backtest Errors
 # =============================================================================
 
+
 class BacktestError(MASPError):
     """Base class for backtest errors."""
+
     error_code = "BACKTEST_ERROR"
 
 
 class InsufficientHistoricalDataError(BacktestError):
     """Not enough historical data for backtest."""
+
     error_code = "BACKTEST_INSUFFICIENT_DATA"
 
 
 class BacktestConfigError(BacktestError):
     """Invalid backtest configuration."""
+
     error_code = "BACKTEST_CONFIG"
 
 
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
 
 def wrap_exception(
     exception: Exception,

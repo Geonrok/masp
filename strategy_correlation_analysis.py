@@ -14,9 +14,11 @@ from datetime import datetime
 import json
 from collections import defaultdict
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import sys
+
 sys.path.insert(0, r"E:\투자\Multi-Asset Strategy Platform")
 
 from kosdaq_futures_realworld_validation import BaseStrategy, Signal
@@ -32,11 +34,13 @@ def chande_momentum(close, period=14):
     cmo = 100 * (gain - loss) / (gain + loss + 1e-10)
     return cmo
 
+
 def williams_r(high, low, close, period=14):
     highest_high = high.rolling(window=period).max()
     lowest_low = low.rolling(window=period).min()
     wr = -100 * (highest_high - close) / (highest_high - lowest_low + 1e-10)
     return wr
+
 
 def bb_percent_b(close, period=20, std_dev=2):
     sma = close.rolling(window=period).mean()
@@ -46,12 +50,14 @@ def bb_percent_b(close, period=20, std_dev=2):
     percent_b = (close - lower) / (upper - lower + 1e-10)
     return percent_b
 
+
 def rsi(close, period=14):
     delta = close.diff()
     gain = delta.where(delta > 0, 0).rolling(window=period).mean()
     loss = (-delta).where(delta < 0, 0).rolling(window=period).mean()
     rs = gain / (loss + 1e-10)
     return 100 - (100 / (1 + rs))
+
 
 def stochastic(high, low, close, k_period=14, d_period=3):
     lowest_low = low.rolling(k_period).min()
@@ -65,194 +71,284 @@ def stochastic(high, low, close, k_period=14, d_period=3):
 # 전략 클래스들 (검증용 재구현)
 # =============================================================================
 class TripleV5Strategy(BaseStrategy):
-    def __init__(self, cmo_period, cmo_t, wr_period, wr_t, bb_period, direction='both'):
+    def __init__(self, cmo_period, cmo_t, wr_period, wr_t, bb_period, direction="both"):
         super().__init__(
             f"TripleV5_{cmo_period}_{cmo_t}_{wr_period}_{wr_t}_{bb_period}_{direction}",
-            {"cmo_period": cmo_period, "cmo_t": cmo_t, "wr_period": wr_period,
-             "wr_t": wr_t, "bb_period": bb_period}, direction
+            {
+                "cmo_period": cmo_period,
+                "cmo_t": cmo_t,
+                "wr_period": wr_period,
+                "wr_t": wr_t,
+                "bb_period": bb_period,
+            },
+            direction,
         )
 
     def generate_signals(self, df: pd.DataFrame) -> List[Signal]:
         signals = []
-        cmo = chande_momentum(df['Close'], self.params["cmo_period"])
-        wr = williams_r(df['High'], df['Low'], df['Close'], self.params["wr_period"])
-        pct_b = bb_percent_b(df['Close'], self.params["bb_period"], 2)
+        cmo = chande_momentum(df["Close"], self.params["cmo_period"])
+        wr = williams_r(df["High"], df["Low"], df["Close"], self.params["wr_period"])
+        pct_b = bb_percent_b(df["Close"], self.params["bb_period"], 2)
 
-        start = max(self.params["cmo_period"], self.params["wr_period"], self.params["bb_period"]) + 5
+        start = (
+            max(
+                self.params["cmo_period"],
+                self.params["wr_period"],
+                self.params["bb_period"],
+            )
+            + 5
+        )
 
         for i in range(start, len(df)):
             date = df.index[i]
-            if pd.isna(cmo.iloc[i-1]) or pd.isna(wr.iloc[i-1]) or pd.isna(pct_b.iloc[i-1]):
+            if (
+                pd.isna(cmo.iloc[i - 1])
+                or pd.isna(wr.iloc[i - 1])
+                or pd.isna(pct_b.iloc[i - 1])
+            ):
                 continue
 
             cmo_t, wr_t = self.params["cmo_t"], self.params["wr_t"]
 
             bull_count = 0
-            if cmo.iloc[i-2] < -cmo_t and cmo.iloc[i-1] >= -cmo_t: bull_count += 1
-            if wr.iloc[i-2] < -wr_t and wr.iloc[i-1] >= -wr_t: bull_count += 1
-            if pct_b.iloc[i-2] < 0.1 and pct_b.iloc[i-1] >= 0.1: bull_count += 1
+            if cmo.iloc[i - 2] < -cmo_t and cmo.iloc[i - 1] >= -cmo_t:
+                bull_count += 1
+            if wr.iloc[i - 2] < -wr_t and wr.iloc[i - 1] >= -wr_t:
+                bull_count += 1
+            if pct_b.iloc[i - 2] < 0.1 and pct_b.iloc[i - 1] >= 0.1:
+                bull_count += 1
 
             bear_count = 0
-            if cmo.iloc[i-2] > cmo_t and cmo.iloc[i-1] <= cmo_t: bear_count += 1
-            if wr.iloc[i-2] > -(100-wr_t) and wr.iloc[i-1] <= -(100-wr_t): bear_count += 1
-            if pct_b.iloc[i-2] > 0.9 and pct_b.iloc[i-1] <= 0.9: bear_count += 1
+            if cmo.iloc[i - 2] > cmo_t and cmo.iloc[i - 1] <= cmo_t:
+                bear_count += 1
+            if wr.iloc[i - 2] > -(100 - wr_t) and wr.iloc[i - 1] <= -(100 - wr_t):
+                bear_count += 1
+            if pct_b.iloc[i - 2] > 0.9 and pct_b.iloc[i - 1] <= 0.9:
+                bear_count += 1
 
             if bull_count >= 2:
-                signals.append(Signal(date, 1, bull_count/3, "Long"))
+                signals.append(Signal(date, 1, bull_count / 3, "Long"))
             elif bear_count >= 2:
-                signals.append(Signal(date, -1, bear_count/3, "Short"))
+                signals.append(Signal(date, -1, bear_count / 3, "Short"))
 
         return signals
 
 
 class TripleVolStrategy(BaseStrategy):
-    def __init__(self, period, cmo_t, wr_t, vol_mult, direction='both'):
+    def __init__(self, period, cmo_t, wr_t, vol_mult, direction="both"):
         super().__init__(
             f"TripleVol_{period}_{cmo_t}_{wr_t}_{vol_mult}_{direction}",
-            {"period": period, "cmo_t": cmo_t, "wr_t": wr_t, "vol_mult": vol_mult}, direction
+            {"period": period, "cmo_t": cmo_t, "wr_t": wr_t, "vol_mult": vol_mult},
+            direction,
         )
 
     def generate_signals(self, df: pd.DataFrame) -> List[Signal]:
         signals = []
         period = self.params["period"]
-        cmo = chande_momentum(df['Close'], period)
-        wr = williams_r(df['High'], df['Low'], df['Close'], period)
-        pct_b = bb_percent_b(df['Close'], period * 2, 2)
-        vol_ma = df['Volume'].rolling(window=period).mean()
+        cmo = chande_momentum(df["Close"], period)
+        wr = williams_r(df["High"], df["Low"], df["Close"], period)
+        pct_b = bb_percent_b(df["Close"], period * 2, 2)
+        vol_ma = df["Volume"].rolling(window=period).mean()
 
-        cmo_t, wr_t, vol_mult = self.params["cmo_t"], self.params["wr_t"], self.params["vol_mult"]
+        cmo_t, wr_t, vol_mult = (
+            self.params["cmo_t"],
+            self.params["wr_t"],
+            self.params["vol_mult"],
+        )
 
         for i in range(period * 2 + 5, len(df)):
             date = df.index[i]
-            if pd.isna(cmo.iloc[i-1]) or pd.isna(wr.iloc[i-1]) or pd.isna(pct_b.iloc[i-1]):
+            if (
+                pd.isna(cmo.iloc[i - 1])
+                or pd.isna(wr.iloc[i - 1])
+                or pd.isna(pct_b.iloc[i - 1])
+            ):
                 continue
-            if df['Volume'].iloc[i] < vol_ma.iloc[i] * vol_mult:
+            if df["Volume"].iloc[i] < vol_ma.iloc[i] * vol_mult:
                 continue
 
             bull_count = 0
-            if cmo.iloc[i-2] < -cmo_t and cmo.iloc[i-1] >= -cmo_t: bull_count += 1
-            if wr.iloc[i-2] < -wr_t and wr.iloc[i-1] >= -wr_t: bull_count += 1
-            if pct_b.iloc[i-2] < 0.1 and pct_b.iloc[i-1] >= 0.1: bull_count += 1
+            if cmo.iloc[i - 2] < -cmo_t and cmo.iloc[i - 1] >= -cmo_t:
+                bull_count += 1
+            if wr.iloc[i - 2] < -wr_t and wr.iloc[i - 1] >= -wr_t:
+                bull_count += 1
+            if pct_b.iloc[i - 2] < 0.1 and pct_b.iloc[i - 1] >= 0.1:
+                bull_count += 1
 
             bear_count = 0
-            if cmo.iloc[i-2] > cmo_t and cmo.iloc[i-1] <= cmo_t: bear_count += 1
-            if wr.iloc[i-2] > -(100-wr_t) and wr.iloc[i-1] <= -(100-wr_t): bear_count += 1
-            if pct_b.iloc[i-2] > 0.9 and pct_b.iloc[i-1] <= 0.9: bear_count += 1
+            if cmo.iloc[i - 2] > cmo_t and cmo.iloc[i - 1] <= cmo_t:
+                bear_count += 1
+            if wr.iloc[i - 2] > -(100 - wr_t) and wr.iloc[i - 1] <= -(100 - wr_t):
+                bear_count += 1
+            if pct_b.iloc[i - 2] > 0.9 and pct_b.iloc[i - 1] <= 0.9:
+                bear_count += 1
 
             if bull_count >= 2:
-                signals.append(Signal(date, 1, bull_count/3, "Long"))
+                signals.append(Signal(date, 1, bull_count / 3, "Long"))
             elif bear_count >= 2:
-                signals.append(Signal(date, -1, bear_count/3, "Short"))
+                signals.append(Signal(date, -1, bear_count / 3, "Short"))
 
         return signals
 
 
 class TripleADXStrategy(BaseStrategy):
-    def __init__(self, period, cmo_t, wr_t, adx_period, adx_thresh, direction='both'):
+    def __init__(self, period, cmo_t, wr_t, adx_period, adx_thresh, direction="both"):
         super().__init__(
             f"TripleADX_{period}_{cmo_t}_{wr_t}_{adx_thresh}_{direction}",
-            {"period": period, "cmo_t": cmo_t, "wr_t": wr_t,
-             "adx_period": adx_period, "adx_thresh": adx_thresh}, direction
+            {
+                "period": period,
+                "cmo_t": cmo_t,
+                "wr_t": wr_t,
+                "adx_period": adx_period,
+                "adx_thresh": adx_thresh,
+            },
+            direction,
         )
 
     def generate_signals(self, df: pd.DataFrame) -> List[Signal]:
         signals = []
         period = self.params["period"]
-        cmo = chande_momentum(df['Close'], period)
-        wr = williams_r(df['High'], df['Low'], df['Close'], period)
-        pct_b = bb_percent_b(df['Close'], period * 2, 2)
+        cmo = chande_momentum(df["Close"], period)
+        wr = williams_r(df["High"], df["Low"], df["Close"], period)
+        pct_b = bb_percent_b(df["Close"], period * 2, 2)
 
         # ADX
         adx_period = self.params["adx_period"]
-        tr = pd.concat([
-            df['High'] - df['Low'],
-            (df['High'] - df['Close'].shift(1)).abs(),
-            (df['Low'] - df['Close'].shift(1)).abs()
-        ], axis=1).max(axis=1)
+        tr = pd.concat(
+            [
+                df["High"] - df["Low"],
+                (df["High"] - df["Close"].shift(1)).abs(),
+                (df["Low"] - df["Close"].shift(1)).abs(),
+            ],
+            axis=1,
+        ).max(axis=1)
         atr = tr.rolling(window=adx_period).mean()
 
-        plus_dm = (df['High'] - df['High'].shift(1)).where(
-            (df['High'] - df['High'].shift(1)) > (df['Low'].shift(1) - df['Low']), 0
-        ).where((df['High'] - df['High'].shift(1)) > 0, 0)
-        minus_dm = (df['Low'].shift(1) - df['Low']).where(
-            (df['Low'].shift(1) - df['Low']) > (df['High'] - df['High'].shift(1)), 0
-        ).where((df['Low'].shift(1) - df['Low']) > 0, 0)
+        plus_dm = (
+            (df["High"] - df["High"].shift(1))
+            .where(
+                (df["High"] - df["High"].shift(1)) > (df["Low"].shift(1) - df["Low"]), 0
+            )
+            .where((df["High"] - df["High"].shift(1)) > 0, 0)
+        )
+        minus_dm = (
+            (df["Low"].shift(1) - df["Low"])
+            .where(
+                (df["Low"].shift(1) - df["Low"]) > (df["High"] - df["High"].shift(1)), 0
+            )
+            .where((df["Low"].shift(1) - df["Low"]) > 0, 0)
+        )
 
         plus_di = 100 * plus_dm.rolling(window=adx_period).mean() / (atr + 1e-10)
         minus_di = 100 * minus_dm.rolling(window=adx_period).mean() / (atr + 1e-10)
         dx = 100 * (plus_di - minus_di).abs() / (plus_di + minus_di + 1e-10)
         adx = dx.rolling(window=adx_period).mean()
 
-        cmo_t, wr_t, adx_thresh = self.params["cmo_t"], self.params["wr_t"], self.params["adx_thresh"]
+        cmo_t, wr_t, adx_thresh = (
+            self.params["cmo_t"],
+            self.params["wr_t"],
+            self.params["adx_thresh"],
+        )
         start = max(period * 2, adx_period * 2) + 5
 
         for i in range(start, len(df)):
             date = df.index[i]
-            if pd.isna(cmo.iloc[i-1]) or pd.isna(wr.iloc[i-1]) or pd.isna(adx.iloc[i]):
+            if (
+                pd.isna(cmo.iloc[i - 1])
+                or pd.isna(wr.iloc[i - 1])
+                or pd.isna(adx.iloc[i])
+            ):
                 continue
             if adx.iloc[i] < adx_thresh:
                 continue
 
             bull_count = 0
-            if cmo.iloc[i-2] < -cmo_t and cmo.iloc[i-1] >= -cmo_t: bull_count += 1
-            if wr.iloc[i-2] < -wr_t and wr.iloc[i-1] >= -wr_t: bull_count += 1
-            if pct_b.iloc[i-2] < 0.1 and pct_b.iloc[i-1] >= 0.1: bull_count += 1
+            if cmo.iloc[i - 2] < -cmo_t and cmo.iloc[i - 1] >= -cmo_t:
+                bull_count += 1
+            if wr.iloc[i - 2] < -wr_t and wr.iloc[i - 1] >= -wr_t:
+                bull_count += 1
+            if pct_b.iloc[i - 2] < 0.1 and pct_b.iloc[i - 1] >= 0.1:
+                bull_count += 1
 
             bear_count = 0
-            if cmo.iloc[i-2] > cmo_t and cmo.iloc[i-1] <= cmo_t: bear_count += 1
-            if wr.iloc[i-2] > -(100-wr_t) and wr.iloc[i-1] <= -(100-wr_t): bear_count += 1
-            if pct_b.iloc[i-2] > 0.9 and pct_b.iloc[i-1] <= 0.9: bear_count += 1
+            if cmo.iloc[i - 2] > cmo_t and cmo.iloc[i - 1] <= cmo_t:
+                bear_count += 1
+            if wr.iloc[i - 2] > -(100 - wr_t) and wr.iloc[i - 1] <= -(100 - wr_t):
+                bear_count += 1
+            if pct_b.iloc[i - 2] > 0.9 and pct_b.iloc[i - 1] <= 0.9:
+                bear_count += 1
 
             if bull_count >= 2:
-                signals.append(Signal(date, 1, bull_count/3, "Long"))
+                signals.append(Signal(date, 1, bull_count / 3, "Long"))
             elif bear_count >= 2:
-                signals.append(Signal(date, -1, bear_count/3, "Short"))
+                signals.append(Signal(date, -1, bear_count / 3, "Short"))
 
         return signals
 
 
 class CombBestStrategy(BaseStrategy):
-    def __init__(self, period, cmo_t, wr_t, rsi_t, stoch_t, direction='both'):
+    def __init__(self, period, cmo_t, wr_t, rsi_t, stoch_t, direction="both"):
         super().__init__(
             f"CombBest_{period}_{cmo_t}_{wr_t}_{rsi_t}_{stoch_t}_{direction}",
-            {"period": period, "cmo_t": cmo_t, "wr_t": wr_t, "rsi_t": rsi_t, "stoch_t": stoch_t}, direction
+            {
+                "period": period,
+                "cmo_t": cmo_t,
+                "wr_t": wr_t,
+                "rsi_t": rsi_t,
+                "stoch_t": stoch_t,
+            },
+            direction,
         )
 
     def generate_signals(self, df: pd.DataFrame) -> List[Signal]:
         signals = []
         period = self.params["period"]
-        cmo = chande_momentum(df['Close'], period)
-        wr = williams_r(df['High'], df['Low'], df['Close'], period)
-        pct_b = bb_percent_b(df['Close'], period, 2)
-        rsi_val = rsi(df['Close'], period)
-        stoch_k, _ = stochastic(df['High'], df['Low'], df['Close'], period, 3)
+        cmo = chande_momentum(df["Close"], period)
+        wr = williams_r(df["High"], df["Low"], df["Close"], period)
+        pct_b = bb_percent_b(df["Close"], period, 2)
+        rsi_val = rsi(df["Close"], period)
+        stoch_k, _ = stochastic(df["High"], df["Low"], df["Close"], period, 3)
 
         cmo_t, wr_t = self.params["cmo_t"], self.params["wr_t"]
         rsi_t, stoch_t = self.params["rsi_t"], self.params["stoch_t"]
 
         for i in range(period + 5, len(df)):
             date = df.index[i]
-            if pd.isna(cmo.iloc[i-1]) or pd.isna(wr.iloc[i-1]):
+            if pd.isna(cmo.iloc[i - 1]) or pd.isna(wr.iloc[i - 1]):
                 continue
 
             bull_count = 0
-            if cmo.iloc[i-2] < -cmo_t and cmo.iloc[i-1] >= -cmo_t: bull_count += 1
-            if wr.iloc[i-2] < -wr_t and wr.iloc[i-1] >= -wr_t: bull_count += 1
-            if pct_b.iloc[i-2] < 0.1 and pct_b.iloc[i-1] >= 0.1: bull_count += 1
-            if rsi_val.iloc[i-2] < (100-rsi_t) and rsi_val.iloc[i-1] >= (100-rsi_t): bull_count += 1
-            if stoch_k.iloc[i-2] < stoch_t and stoch_k.iloc[i-1] >= stoch_t: bull_count += 1
+            if cmo.iloc[i - 2] < -cmo_t and cmo.iloc[i - 1] >= -cmo_t:
+                bull_count += 1
+            if wr.iloc[i - 2] < -wr_t and wr.iloc[i - 1] >= -wr_t:
+                bull_count += 1
+            if pct_b.iloc[i - 2] < 0.1 and pct_b.iloc[i - 1] >= 0.1:
+                bull_count += 1
+            if rsi_val.iloc[i - 2] < (100 - rsi_t) and rsi_val.iloc[i - 1] >= (
+                100 - rsi_t
+            ):
+                bull_count += 1
+            if stoch_k.iloc[i - 2] < stoch_t and stoch_k.iloc[i - 1] >= stoch_t:
+                bull_count += 1
 
             bear_count = 0
-            if cmo.iloc[i-2] > cmo_t and cmo.iloc[i-1] <= cmo_t: bear_count += 1
-            if wr.iloc[i-2] > -(100-wr_t) and wr.iloc[i-1] <= -(100-wr_t): bear_count += 1
-            if pct_b.iloc[i-2] > 0.9 and pct_b.iloc[i-1] <= 0.9: bear_count += 1
-            if rsi_val.iloc[i-2] > rsi_t and rsi_val.iloc[i-1] <= rsi_t: bear_count += 1
-            if stoch_k.iloc[i-2] > (100-stoch_t) and stoch_k.iloc[i-1] <= (100-stoch_t): bear_count += 1
+            if cmo.iloc[i - 2] > cmo_t and cmo.iloc[i - 1] <= cmo_t:
+                bear_count += 1
+            if wr.iloc[i - 2] > -(100 - wr_t) and wr.iloc[i - 1] <= -(100 - wr_t):
+                bear_count += 1
+            if pct_b.iloc[i - 2] > 0.9 and pct_b.iloc[i - 1] <= 0.9:
+                bear_count += 1
+            if rsi_val.iloc[i - 2] > rsi_t and rsi_val.iloc[i - 1] <= rsi_t:
+                bear_count += 1
+            if stoch_k.iloc[i - 2] > (100 - stoch_t) and stoch_k.iloc[i - 1] <= (
+                100 - stoch_t
+            ):
+                bear_count += 1
 
             if bull_count >= 3:
-                signals.append(Signal(date, 1, bull_count/5, "Long"))
+                signals.append(Signal(date, 1, bull_count / 5, "Long"))
             elif bear_count >= 3:
-                signals.append(Signal(date, -1, bear_count/5, "Short"))
+                signals.append(Signal(date, -1, bear_count / 5, "Short"))
 
         return signals
 
@@ -260,7 +356,9 @@ class CombBestStrategy(BaseStrategy):
 # =============================================================================
 # 분석 함수들
 # =============================================================================
-def analyze_signal_correlation(strategies: List[BaseStrategy], df: pd.DataFrame) -> pd.DataFrame:
+def analyze_signal_correlation(
+    strategies: List[BaseStrategy], df: pd.DataFrame
+) -> pd.DataFrame:
     """전략 간 신호 상관관계 분석"""
 
     # 각 전략의 신호를 시계열로 변환
@@ -305,8 +403,11 @@ def analyze_trade_overlap(strategies: List[BaseStrategy], df: pd.DataFrame) -> D
 
             # 같은 날 같은 방향 신호
             common_dates = dates1 & dates2
-            same_direction = sum(1 for d in common_dates
-                                if all_signals[name1][d] == all_signals[name2][d])
+            same_direction = sum(
+                1
+                for d in common_dates
+                if all_signals[name1][d] == all_signals[name2][d]
+            )
 
             overlap_pct = same_direction / len(dates1) * 100 if dates1 else 0
             overlap_matrix[name1][name2] = overlap_pct
@@ -318,11 +419,11 @@ def analyze_market_periods(strategies: List[BaseStrategy], df: pd.DataFrame) -> 
     """시장 구간별 성과 분석"""
 
     periods = {
-        '2010-2015 (회복기)': ('2010-01-01', '2015-12-31'),
-        '2016-2019 (안정기)': ('2016-01-01', '2019-12-31'),
-        '2020 (코로나)': ('2020-01-01', '2020-12-31'),
-        '2021-2022 (변동기)': ('2021-01-01', '2022-12-31'),
-        '2023-2026 (최근)': ('2023-01-01', '2026-12-31'),
+        "2010-2015 (회복기)": ("2010-01-01", "2015-12-31"),
+        "2016-2019 (안정기)": ("2016-01-01", "2019-12-31"),
+        "2020 (코로나)": ("2020-01-01", "2020-12-31"),
+        "2021-2022 (변동기)": ("2021-01-01", "2022-12-31"),
+        "2023-2026 (최근)": ("2023-01-01", "2026-12-31"),
     }
 
     results = {}
@@ -348,26 +449,26 @@ def analyze_market_periods(strategies: List[BaseStrategy], df: pd.DataFrame) -> 
                 if idx + 1 >= len(period_df):
                     continue
 
-                price = period_df['Close'].iloc[idx + 1]
+                price = period_df["Close"].iloc[idx + 1]
 
                 if position == 0:
                     position = signal.signal
                     entry_price = price
                 elif position != signal.signal:
                     if position == 1:
-                        pnl = (price / entry_price - 1)
+                        pnl = price / entry_price - 1
                     else:
-                        pnl = (entry_price / price - 1)
+                        pnl = entry_price / price - 1
                     pnls.append(pnl)
                     position = signal.signal
                     entry_price = price
 
             if pnls:
                 period_results[strategy.name] = {
-                    'trades': len(pnls),
-                    'total_return': sum(pnls) * 100,
-                    'win_rate': sum(1 for p in pnls if p > 0) / len(pnls) * 100,
-                    'avg_return': np.mean(pnls) * 100
+                    "trades": len(pnls),
+                    "total_return": sum(pnls) * 100,
+                    "win_rate": sum(1 for p in pnls if p > 0) / len(pnls) * 100,
+                    "avg_return": np.mean(pnls) * 100,
                 }
 
         results[period_name] = period_results
@@ -375,7 +476,9 @@ def analyze_market_periods(strategies: List[BaseStrategy], df: pd.DataFrame) -> 
     return results
 
 
-def check_validation_issues(strategies: List[BaseStrategy], df: pd.DataFrame) -> List[str]:
+def check_validation_issues(
+    strategies: List[BaseStrategy], df: pd.DataFrame
+) -> List[str]:
     """검증 방법론 점검"""
 
     issues = []
@@ -383,12 +486,14 @@ def check_validation_issues(strategies: List[BaseStrategy], df: pd.DataFrame) ->
     # 1. 과적합 위험 체크
     param_variations = defaultdict(list)
     for s in strategies:
-        base_type = s.name.split('_')[0]
+        base_type = s.name.split("_")[0]
         param_variations[base_type].append(s.name)
 
     for base_type, variants in param_variations.items():
         if len(variants) > 1:
-            issues.append(f"[주의] {base_type} 유형의 전략이 {len(variants)}개 존재 - 파라미터 과적합 가능성")
+            issues.append(
+                f"[주의] {base_type} 유형의 전략이 {len(variants)}개 존재 - 파라미터 과적합 가능성"
+            )
 
     # 2. 신호 빈도 체크
     for strategy in strategies:
@@ -397,12 +502,16 @@ def check_validation_issues(strategies: List[BaseStrategy], df: pd.DataFrame) ->
         signals_per_year = len(signals) / years
 
         if signals_per_year < 5:
-            issues.append(f"[경고] {strategy.name}: 연간 신호 {signals_per_year:.1f}회로 너무 적음")
+            issues.append(
+                f"[경고] {strategy.name}: 연간 신호 {signals_per_year:.1f}회로 너무 적음"
+            )
         elif signals_per_year > 100:
-            issues.append(f"[경고] {strategy.name}: 연간 신호 {signals_per_year:.1f}회로 과다")
+            issues.append(
+                f"[경고] {strategy.name}: 연간 신호 {signals_per_year:.1f}회로 과다"
+            )
 
     # 3. 핵심 지표 의존도 체크
-    cmo_wr_based = sum(1 for s in strategies if 'Triple' in s.name or 'Comb' in s.name)
+    cmo_wr_based = sum(1 for s in strategies if "Triple" in s.name or "Comb" in s.name)
     if cmo_wr_based == len(strategies):
         issues.append("[심각] 모든 전략이 CMO+WR 기반 - 동일 지표 과의존")
 
@@ -416,9 +525,13 @@ def check_validation_issues(strategies: List[BaseStrategy], df: pd.DataFrame) ->
             if total > 0:
                 long_ratio = long_signals / total
                 if long_ratio > 0.7:
-                    issues.append(f"[주의] {strategy.name}: Long 편향 {long_ratio*100:.0f}%")
+                    issues.append(
+                        f"[주의] {strategy.name}: Long 편향 {long_ratio*100:.0f}%"
+                    )
                 elif long_ratio < 0.3:
-                    issues.append(f"[주의] {strategy.name}: Short 편향 {(1-long_ratio)*100:.0f}%")
+                    issues.append(
+                        f"[주의] {strategy.name}: Short 편향 {(1-long_ratio)*100:.0f}%"
+                    )
 
     return issues
 
@@ -431,19 +544,21 @@ def run_correlation_analysis():
     print("=" * 80)
 
     # 데이터 로드
-    df = pd.read_parquet(r"E:\투자\data\kosdaq_futures\kosdaq150_futures_ohlcv_fresh.parquet")
+    df = pd.read_parquet(
+        r"E:\투자\data\kosdaq_futures\kosdaq150_futures_ohlcv_fresh.parquet"
+    )
     print(f"데이터: {len(df)} 행 ({df.index[0]} ~ {df.index[-1]})")
 
     # 검증 통과 전략들 생성
     strategies = [
-        TripleV5Strategy(14, 38, 14, 78, 20, 'both'),
-        TripleV5Strategy(14, 33, 14, 73, 20, 'both'),
-        TripleV5Strategy(14, 35, 14, 75, 20, 'both'),
-        TripleVolStrategy(14, 35, 75, 0.8, 'both'),
-        TripleVolStrategy(14, 38, 78, 0.8, 'both'),
-        CombBestStrategy(14, 35, 75, 70, 20, 'both'),
-        TripleADXStrategy(14, 35, 75, 14, 25, 'both'),
-        TripleADXStrategy(14, 38, 78, 14, 25, 'both'),
+        TripleV5Strategy(14, 38, 14, 78, 20, "both"),
+        TripleV5Strategy(14, 33, 14, 73, 20, "both"),
+        TripleV5Strategy(14, 35, 14, 75, 20, "both"),
+        TripleVolStrategy(14, 35, 75, 0.8, "both"),
+        TripleVolStrategy(14, 38, 78, 0.8, "both"),
+        CombBestStrategy(14, 35, 75, 70, 20, "both"),
+        TripleADXStrategy(14, 35, 75, 14, 25, "both"),
+        TripleADXStrategy(14, 38, 78, 14, 25, "both"),
     ]
 
     print(f"\n분석 전략 수: {len(strategies)}")
@@ -458,7 +573,14 @@ def run_correlation_analysis():
     print()
 
     # 짧은 이름으로 변환
-    short_names = {s.name: s.name.replace('_both', '').replace('TripleV5_14_', 'V5_').replace('TripleVol_14_', 'Vol_').replace('CombBest_14_', 'Comb_').replace('TripleADX_14_', 'ADX_') for s in strategies}
+    short_names = {
+        s.name: s.name.replace("_both", "")
+        .replace("TripleV5_14_", "V5_")
+        .replace("TripleVol_14_", "Vol_")
+        .replace("CombBest_14_", "Comb_")
+        .replace("TripleADX_14_", "ADX_")
+        for s in strategies
+    }
 
     corr_display = corr_matrix.copy()
     corr_display.index = [short_names[n] for n in corr_display.index]
@@ -513,7 +635,9 @@ def run_correlation_analysis():
 
         for strat_name, perf in list(results.items())[:3]:
             short = short_names[strat_name]
-            print(f"  {short:20s}: 수익={perf['total_return']:+6.1f}%, 승률={perf['win_rate']:5.1f}%, 거래={perf['trades']:3d}회")
+            print(
+                f"  {short:20s}: 수익={perf['total_return']:+6.1f}%, 승률={perf['win_rate']:5.1f}%, 거래={perf['trades']:3d}회"
+            )
 
     # 4. 검증 이슈 체크
     print("\n" + "=" * 80)

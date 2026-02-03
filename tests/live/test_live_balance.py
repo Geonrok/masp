@@ -1,6 +1,7 @@
 """
 Live balance check (v2.2 Final).
 """
+
 from __future__ import annotations
 
 import os
@@ -23,7 +24,9 @@ from _live_test_utils import live_test_enabled, require_live_guard
 MIN_ORDER_KRW = 5000
 
 if pytest and not live_test_enabled():
-    pytest.skip("Live trading tests disabled (env guard not satisfied)", allow_module_level=True)
+    pytest.skip(
+        "Live trading tests disabled (env guard not satisfied)", allow_module_level=True
+    )
 
 
 def test_live_balance(execution=None) -> bool:
@@ -36,7 +39,9 @@ def test_live_balance(execution=None) -> bool:
 
     if execution is None:
         config = Config(asset_class="crypto_spot", strategy_name="live_test")
-        execution = AdapterFactory.create_execution("upbit_spot", adapter_mode="live", config=config)
+        execution = AdapterFactory.create_execution(
+            "upbit_spot", adapter_mode="live", config=config
+        )
 
     krw_balance = execution.get_balance("KRW") or 0
     btc_balance = execution.get_balance("BTC") or 0
@@ -44,7 +49,9 @@ def test_live_balance(execution=None) -> bool:
     print(f"BTC balance: {btc_balance:.8f}")
 
     if krw_balance < MIN_ORDER_KRW:
-        print(f"❌ Insufficient KRW for min order: {krw_balance:,.0f} < {MIN_ORDER_KRW:,}")
+        print(
+            f"❌ Insufficient KRW for min order: {krw_balance:,.0f} < {MIN_ORDER_KRW:,}"
+        )
         return False
 
     print("✅ Balance check PASSED")

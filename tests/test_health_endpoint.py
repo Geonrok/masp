@@ -84,9 +84,7 @@ async def test_readiness_200_when_ready(health_client):
 
 
 @pytest.mark.asyncio
-async def test_readiness_503_when_not_ready(
-    health_client, mock_scheduler_status
-):
+async def test_readiness_503_when_not_ready(health_client, mock_scheduler_status):
     """TC-H-005: /health/ready 503 when not initialized."""
     mock_scheduler_status.return_value = {"running": True, "initialized": False}
     resp = await health_client.get("/health/ready")

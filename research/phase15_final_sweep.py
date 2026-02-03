@@ -10,11 +10,13 @@ Phase 15: Final Strategy Sweep - 아직 테스트하지 않은 모든 변형
 6. 매크로 오버레이 + Vol Profile
 7. 다중 타임프레임 필터 (1D 추세 + 1H 진입)
 """
+
 import json
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
@@ -32,17 +34,18 @@ def load_ohlcv(symbol, timeframe="1h"):
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path)
-    for col in ['datetime', 'timestamp', 'date']:
+    for col in ["datetime", "timestamp", "date"]:
         if col in df.columns:
-            df['datetime'] = pd.to_datetime(df[col])
+            df["datetime"] = pd.to_datetime(df[col])
             break
-    return df.sort_values('datetime').reset_index(drop=True)
+    return df.sort_values("datetime").reset_index(drop=True)
 
 
 def calc_atr(high, low, close, period=14):
-    tr = np.maximum(high - low,
-         np.maximum(np.abs(high - np.roll(close, 1)),
-                    np.abs(low - np.roll(close, 1))))
+    tr = np.maximum(
+        high - low,
+        np.maximum(np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))),
+    )
     tr[0] = high[0] - low[0]
     return pd.Series(tr).rolling(period).mean().values
 
@@ -51,11 +54,12 @@ def calc_atr(high, low, close, period=14):
 # STRATEGY VARIANTS
 # =============================================================================
 
+
 def strat_vol_profile(df, lookback=48):
     """Current best: Vol Profile Breakout (baseline for comparison)"""
-    close = df['close']
-    high = df['high']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
     vwap = (close * vol).rolling(lookback).sum() / (vol.rolling(lookback).sum() + 1e-10)
     upper = high.rolling(lookback).max().shift(1)
     ema_f = close.ewm(span=50, adjust=False).mean()
@@ -66,7 +70,7 @@ def strat_vol_profile(df, lookback=48):
 
 def strat_mean_reversion(df, lookback=20, zscore_entry=-2.0):
     """Mean reversion: buy when z-score < -2, sell when z-score > 0"""
-    close = df['close']
+    close = df["close"]
     ma = close.rolling(lookback).mean()
     std = close.rolling(lookback).std()
     zscore = (close - ma) / (std + 1e-10)
@@ -79,7 +83,7 @@ def strat_mean_reversion(df, lookback=20, zscore_entry=-2.0):
 
 def strat_mean_reversion_rsi(df, rsi_period=14, rsi_entry=30):
     """RSI mean reversion: buy RSI < 30 in uptrend"""
-    close = df['close']
+    close = df["close"]
     delta = close.diff()
     gain = delta.where(delta > 0, 0).rolling(rsi_period).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(rsi_period).mean()
@@ -93,7 +97,7 @@ def strat_mean_reversion_rsi(df, rsi_period=14, rsi_entry=30):
 
 def strat_mean_reversion_bb(df, period=20, std_mult=2.0):
     """Bollinger Band mean reversion: buy at lower band in uptrend"""
-    close = df['close']
+    close = df["close"]
     ma = close.rolling(period).mean()
     std = close.rolling(period).std()
     lower = ma - std_mult * std
@@ -105,9 +109,9 @@ def strat_mean_reversion_bb(df, period=20, std_mult=2.0):
 
 def strat_vol_profile_short(df, lookback=48):
     """Vol Profile but SHORT only: sell breakdowns in downtrend"""
-    close = df['close']
-    low = df['low']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    low = df["low"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
     vwap = (close * vol).rolling(lookback).sum() / (vol.rolling(lookback).sum() + 1e-10)
     lower = low.rolling(lookback).min().shift(1)
     ema_f = close.ewm(span=50, adjust=False).mean()
@@ -118,10 +122,10 @@ def strat_vol_profile_short(df, lookback=48):
 
 def strat_vol_profile_longshort(df, lookback=48):
     """Vol Profile long AND short"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
     vwap = (close * vol).rolling(lookback).sum() / (vol.rolling(lookback).sum() + 1e-10)
     upper = high.rolling(lookback).max().shift(1)
     lower = low.rolling(lookback).min().shift(1)
@@ -135,8 +139,8 @@ def strat_vol_profile_longshort(df, lookback=48):
 
 def strat_momentum_rotation(df, lookback=48):
     """Momentum-based: buy if return over lookback > 0 and breakout"""
-    close = df['close']
-    high = df['high']
+    close = df["close"]
+    high = df["high"]
     ret = close.pct_change(lookback)
     upper = high.rolling(lookback).max().shift(1)
     ema_f = close.ewm(span=50, adjust=False).mean()
@@ -153,29 +157,31 @@ def strat_vol_profile_tight_exit(df, lookback=48):
 
 def strat_multi_tf(df, lookback=48):
     """Multi-timeframe: 1D trend (via 24-bar proxy) + 1H breakout"""
-    close = df['close']
-    high = df['high']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
     vwap = (close * vol).rolling(lookback).sum() / (vol.rolling(lookback).sum() + 1e-10)
     upper = high.rolling(lookback).max().shift(1)
 
     # Daily trend proxy: 24h EMA
-    ema_daily = close.ewm(span=24*20, adjust=False).mean()  # ~20-day EMA
+    ema_daily = close.ewm(span=24 * 20, adjust=False).mean()  # ~20-day EMA
     ema_f = close.ewm(span=50, adjust=False).mean()
     ema_s = close.ewm(span=200, adjust=False).mean()
 
     # Daily must be trending up too
     daily_trend = close > ema_daily
-    signals = np.where((close > upper) & (close > vwap * 1.01) & (ema_f > ema_s) & daily_trend, 1, 0)
+    signals = np.where(
+        (close > upper) & (close > vwap * 1.01) & (ema_f > ema_s) & daily_trend, 1, 0
+    )
     return signals
 
 
 def strat_vol_profile_adx(df, lookback=48, adx_period=14, adx_thresh=25):
     """Vol Profile + ADX filter: only trade in strong trends"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
-    vol = df['volume'] if 'volume' in df.columns else pd.Series(1.0, index=df.index)
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
+    vol = df["volume"] if "volume" in df.columns else pd.Series(1.0, index=df.index)
     vwap = (close * vol).rolling(lookback).sum() / (vol.rolling(lookback).sum() + 1e-10)
     upper = high.rolling(lookback).max().shift(1)
     ema_f = close.ewm(span=50, adjust=False).mean()
@@ -186,13 +192,19 @@ def strat_vol_profile_adx(df, lookback=48, adx_period=14, adx_thresh=25):
     minus_dm = -low.diff()
     plus_dm = plus_dm.where((plus_dm > minus_dm) & (plus_dm > 0), 0)
     minus_dm = minus_dm.where((minus_dm > plus_dm) & (minus_dm > 0), 0)
-    atr = pd.Series(calc_atr(high.values, low.values, close.values, adx_period), index=df.index)
+    atr = pd.Series(
+        calc_atr(high.values, low.values, close.values, adx_period), index=df.index
+    )
     plus_di = 100 * (plus_dm.rolling(adx_period).mean() / (atr + 1e-10))
     minus_di = 100 * (minus_dm.rolling(adx_period).mean() / (atr + 1e-10))
     dx = 100 * np.abs(plus_di - minus_di) / (plus_di + minus_di + 1e-10)
     adx = dx.rolling(adx_period).mean()
 
-    signals = np.where((close > upper) & (close > vwap * 1.01) & (ema_f > ema_s) & (adx > adx_thresh), 1, 0)
+    signals = np.where(
+        (close > upper) & (close > vwap * 1.01) & (ema_f > ema_s) & (adx > adx_thresh),
+        1,
+        0,
+    )
     return signals
 
 
@@ -200,9 +212,17 @@ def strat_vol_profile_adx(df, lookback=48, adx_period=14, adx_thresh=25):
 # SIMULATION
 # =============================================================================
 
-def simulate(df, signals, position_pct=0.02, max_bars=72,
-             atr_stop=3.0, profit_target_atr=8.0, slippage=0.0003,
-             trailing_stop_atr=0):
+
+def simulate(
+    df,
+    signals,
+    position_pct=0.02,
+    max_bars=72,
+    atr_stop=3.0,
+    profit_target_atr=8.0,
+    slippage=0.0003,
+    trailing_stop_atr=0,
+):
     capital = 1.0
     position = 0
     entry_price = 0
@@ -210,9 +230,9 @@ def simulate(df, signals, position_pct=0.02, max_bars=72,
     trades = []
     max_favorable = 0  # for trailing stop
 
-    close = df['close'].values
-    high = df['high'].values
-    low = df['low'].values
+    close = df["close"].values
+    high = df["high"].values
+    low = df["low"].values
     atr_vals = calc_atr(high, low, close, 14)
 
     for i in range(len(df)):
@@ -268,31 +288,38 @@ def simulate(df, signals, position_pct=0.02, max_bars=72,
     gp = sum(t for t in trades if t > 0)
     gl = abs(sum(t for t in trades if t < 0))
     return {
-        'total_return': capital - 1,
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(trades),
-        'trades': trades,
+        "total_return": capital - 1,
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(trades),
+        "trades": trades,
     }
 
 
 def check_criteria(r):
     c = {
-        'sharpe_gt_1': r.get('sharpe', 0) > 1.0,
-        'max_dd_lt_25': r.get('max_drawdown', -1) > -0.25,
-        'win_rate_gt_45': r.get('win_rate', 0) > 0.45,
-        'profit_factor_gt_1_5': r.get('profit_factor', 0) > 1.5,
-        'wfa_efficiency_gt_50': r.get('wfa_efficiency', 0) > 50,
-        'trade_count_gt_100': r.get('trade_count', 0) > 100,
+        "sharpe_gt_1": r.get("sharpe", 0) > 1.0,
+        "max_dd_lt_25": r.get("max_drawdown", -1) > -0.25,
+        "win_rate_gt_45": r.get("win_rate", 0) > 0.45,
+        "profit_factor_gt_1_5": r.get("profit_factor", 0) > 1.5,
+        "wfa_efficiency_gt_50": r.get("wfa_efficiency", 0) > 50,
+        "trade_count_gt_100": r.get("trade_count", 0) > 100,
     }
     return c, sum(v for v in c.values())
 
 
-def run_portfolio_oos(all_data, strat_fn, max_positions=10, test_bars=720,
-                      exit_params=None, position_scale=5.0, select_by='low_vol',
-                      trailing_stop_atr=0):
+def run_portfolio_oos(
+    all_data,
+    strat_fn,
+    max_positions=10,
+    test_bars=720,
+    exit_params=None,
+    position_scale=5.0,
+    select_by="low_vol",
+    trailing_stop_atr=0,
+):
     if exit_params is None:
-        exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+        exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     oos_data = {}
     for symbol in all_data:
@@ -318,18 +345,18 @@ def run_portfolio_oos(all_data, strat_fn, max_positions=10, test_bars=720,
         for symbol, df in oos_data.items():
             if len(df) <= i:
                 continue
-            vol = df['close'].iloc[:i].pct_change().rolling(168).std().iloc[-1]
+            vol = df["close"].iloc[:i].pct_change().rolling(168).std().iloc[-1]
             if np.isnan(vol) or vol == 0:
                 vol = 0.01
 
-            if select_by == 'momentum':
+            if select_by == "momentum":
                 # Select by recent momentum (highest return)
-                ret = df['close'].iloc[i-720:i].pct_change().sum() if i > 720 else 0
+                ret = df["close"].iloc[i - 720 : i].pct_change().sum() if i > 720 else 0
                 scored.append((symbol, vol, ret))
             else:
                 scored.append((symbol, vol, 0))
 
-        if select_by == 'momentum':
+        if select_by == "momentum":
             scored.sort(key=lambda x: -x[2])  # highest momentum first
         else:
             scored.sort(key=lambda x: x[1])  # lowest vol first
@@ -340,19 +367,25 @@ def run_portfolio_oos(all_data, strat_fn, max_positions=10, test_bars=720,
             df = oos_data[symbol]
             if i + test_bars > len(df):
                 continue
-            full = df.iloc[:i + test_bars]
+            full = df.iloc[: i + test_bars]
             sigs = strat_fn(full)
-            test_sigs = sigs[i:i + test_bars]
-            test_df = df.iloc[i:i + test_bars].copy().reset_index(drop=True)
+            test_sigs = sigs[i : i + test_bars]
+            test_df = df.iloc[i : i + test_bars].copy().reset_index(drop=True)
             ann_vol = vol * np.sqrt(24 * 365)
             position_pct = min(0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05)
             position_pct *= position_scale
-            r = simulate(test_df, test_sigs, position_pct,
-                       exit_params['max_bars'], exit_params['atr_stop'],
-                       exit_params['profit_target_atr'], 0.0003,
-                       trailing_stop_atr=trailing_stop_atr)
-            period_pnl += r['total_return']
-            all_trades.extend(r['trades'])
+            r = simulate(
+                test_df,
+                test_sigs,
+                position_pct,
+                exit_params["max_bars"],
+                exit_params["atr_stop"],
+                exit_params["profit_target_atr"],
+                0.0003,
+                trailing_stop_atr=trailing_stop_atr,
+            )
+            period_pnl += r["total_return"]
+            all_trades.extend(r["trades"])
 
         period_returns.append(period_pnl)
         equity.append(equity[-1] * (1 + period_pnl))
@@ -372,16 +405,18 @@ def run_portfolio_oos(all_data, strat_fn, max_positions=10, test_bars=720,
     sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
 
     return {
-        'total_return': float(equity_arr[-1] - 1),
-        'max_drawdown': float(dd.min()),
-        'sharpe': float(sharpe),
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(all_trades),
-        'periods': len(period_returns),
-        'wfa_efficiency': sum(1 for r in period_returns if r > 0) / len(period_returns) * 100,
-        'period_returns': period_returns,
-        'all_trades': all_trades,
+        "total_return": float(equity_arr[-1] - 1),
+        "max_drawdown": float(dd.min()),
+        "sharpe": float(sharpe),
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(all_trades),
+        "periods": len(period_returns),
+        "wfa_efficiency": sum(1 for r in period_returns if r > 0)
+        / len(period_returns)
+        * 100,
+        "period_returns": period_returns,
+        "all_trades": all_trades,
     }
 
 
@@ -412,11 +447,11 @@ def main():
                 all_data_4h[symbol] = df
     print(f"Loaded {len(all_data_4h)} symbols (4H)\n")
 
-    exit_default = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
-    exit_tight = {'max_bars': 48, 'atr_stop': 2.0, 'profit_target_atr': 6.0}
-    exit_wide = {'max_bars': 96, 'atr_stop': 4.0, 'profit_target_atr': 10.0}
+    exit_default = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
+    exit_tight = {"max_bars": 48, "atr_stop": 2.0, "profit_target_atr": 6.0}
+    exit_wide = {"max_bars": 96, "atr_stop": 4.0, "profit_target_atr": 10.0}
     # For 4H: scale bars proportionally (72 bars 1H = 18 bars 4H)
-    exit_4h = {'max_bars': 18, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+    exit_4h = {"max_bars": 18, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     all_results = []
 
@@ -429,9 +464,11 @@ def main():
     r = run_portfolio_oos(all_data_1h, strat_vol_profile, position_scale=5.0)
     if r:
         c, p = check_criteria(r)
-        all_results.append(('A_baseline_vol_profile', p, r))
-        print(f"  [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+        all_results.append(("A_baseline_vol_profile", p, r))
+        print(
+            f"  [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
 
     # -----------------------------------------------------------------
     # B. TIMEFRAME: 4H
@@ -443,13 +480,21 @@ def main():
         # 4H: lookback=12 (48h / 4h), test_bars=180 (720/4)
         def strat_vp_4h(df):
             return strat_vol_profile(df, lookback=12)
-        r = run_portfolio_oos(all_data_4h, strat_vp_4h, test_bars=180,
-                              exit_params=exit_4h, position_scale=5.0)
+
+        r = run_portfolio_oos(
+            all_data_4h,
+            strat_vp_4h,
+            test_bars=180,
+            exit_params=exit_4h,
+            position_scale=5.0,
+        )
         if r:
             c, p = check_criteria(r)
-            all_results.append(('B_vol_profile_4H', p, r))
-            print(f"  [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                  f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+            all_results.append(("B_vol_profile_4H", p, r))
+            print(
+                f"  [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+            )
         else:
             print("  SKIP (insufficient data)")
     else:
@@ -461,12 +506,16 @@ def main():
     print(f"\n{'=' * 60}")
     print("C. Vol Profile with Momentum-based symbol selection")
     print("=" * 60)
-    r = run_portfolio_oos(all_data_1h, strat_vol_profile, position_scale=5.0, select_by='momentum')
+    r = run_portfolio_oos(
+        all_data_1h, strat_vol_profile, position_scale=5.0, select_by="momentum"
+    )
     if r:
         c, p = check_criteria(r)
-        all_results.append(('C_momentum_selection', p, r))
-        print(f"  [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+        all_results.append(("C_momentum_selection", p, r))
+        print(
+            f"  [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
 
     # -----------------------------------------------------------------
     # D. EXIT VARIANTS
@@ -476,28 +525,40 @@ def main():
     print("=" * 60)
 
     # Tight exit
-    r = run_portfolio_oos(all_data_1h, strat_vol_profile, exit_params=exit_tight, position_scale=5.0)
+    r = run_portfolio_oos(
+        all_data_1h, strat_vol_profile, exit_params=exit_tight, position_scale=5.0
+    )
     if r:
         c, p = check_criteria(r)
-        all_results.append(('D1_tight_exit', p, r))
-        print(f"  Tight [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+        all_results.append(("D1_tight_exit", p, r))
+        print(
+            f"  Tight [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
 
     # Wide exit
-    r = run_portfolio_oos(all_data_1h, strat_vol_profile, exit_params=exit_wide, position_scale=5.0)
+    r = run_portfolio_oos(
+        all_data_1h, strat_vol_profile, exit_params=exit_wide, position_scale=5.0
+    )
     if r:
         c, p = check_criteria(r)
-        all_results.append(('D2_wide_exit', p, r))
-        print(f"  Wide  [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+        all_results.append(("D2_wide_exit", p, r))
+        print(
+            f"  Wide  [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
 
     # Trailing stop
-    r = run_portfolio_oos(all_data_1h, strat_vol_profile, position_scale=5.0, trailing_stop_atr=4.0)
+    r = run_portfolio_oos(
+        all_data_1h, strat_vol_profile, position_scale=5.0, trailing_stop_atr=4.0
+    )
     if r:
         c, p = check_criteria(r)
-        all_results.append(('D3_trailing_stop', p, r))
-        print(f"  Trail [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+        all_results.append(("D3_trailing_stop", p, r))
+        print(
+            f"  Trail [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
 
     # -----------------------------------------------------------------
     # E. MEAN REVERSION STRATEGIES
@@ -506,15 +567,19 @@ def main():
     print("E. Mean Reversion strategies (1H portfolio)")
     print("=" * 60)
 
-    for name, fn in [('E1_zscore_mr', strat_mean_reversion),
-                      ('E2_rsi_mr', strat_mean_reversion_rsi),
-                      ('E3_bollinger_mr', strat_mean_reversion_bb)]:
+    for name, fn in [
+        ("E1_zscore_mr", strat_mean_reversion),
+        ("E2_rsi_mr", strat_mean_reversion_rsi),
+        ("E3_bollinger_mr", strat_mean_reversion_bb),
+    ]:
         r = run_portfolio_oos(all_data_1h, fn, position_scale=5.0)
         if r:
             c, p = check_criteria(r)
             all_results.append((name, p, r))
-            print(f"  {name} [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-                  f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+            print(
+                f"  {name} [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+                f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+            )
 
     # -----------------------------------------------------------------
     # F. SHORT / LONG-SHORT
@@ -526,16 +591,20 @@ def main():
     r = run_portfolio_oos(all_data_1h, strat_vol_profile_short, position_scale=5.0)
     if r:
         c, p = check_criteria(r)
-        all_results.append(('F1_short_only', p, r))
-        print(f"  Short    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+        all_results.append(("F1_short_only", p, r))
+        print(
+            f"  Short    [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
 
     r = run_portfolio_oos(all_data_1h, strat_vol_profile_longshort, position_scale=5.0)
     if r:
         c, p = check_criteria(r)
-        all_results.append(('F2_long_short', p, r))
-        print(f"  LongShrt [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+        all_results.append(("F2_long_short", p, r))
+        print(
+            f"  LongShrt [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
 
     # -----------------------------------------------------------------
     # G. ADDITIONAL FILTERS
@@ -547,23 +616,29 @@ def main():
     r = run_portfolio_oos(all_data_1h, strat_momentum_rotation, position_scale=5.0)
     if r:
         c, p = check_criteria(r)
-        all_results.append(('G1_momentum_filter', p, r))
-        print(f"  Momentum [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+        all_results.append(("G1_momentum_filter", p, r))
+        print(
+            f"  Momentum [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
 
     r = run_portfolio_oos(all_data_1h, strat_multi_tf, position_scale=5.0)
     if r:
         c, p = check_criteria(r)
-        all_results.append(('G2_multi_timeframe', p, r))
-        print(f"  MultiTF  [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+        all_results.append(("G2_multi_timeframe", p, r))
+        print(
+            f"  MultiTF  [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
 
     r = run_portfolio_oos(all_data_1h, strat_vol_profile_adx, position_scale=5.0)
     if r:
         c, p = check_criteria(r)
-        all_results.append(('G3_adx_filter', p, r))
-        print(f"  ADX      [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
-              f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}")
+        all_results.append(("G3_adx_filter", p, r))
+        print(
+            f"  ADX      [{p}/6] Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}% "
+            f"DD={r['max_drawdown']*100:.1f}% WR={r['win_rate']*100:.0f}% PF={r['profit_factor']:.2f} T={r['trade_count']}"
+        )
 
     # -----------------------------------------------------------------
     # H. ENSEMBLE: vol_profile + mean_reversion (if MR passes)
@@ -574,24 +649,26 @@ def main():
 
     baseline_pr = None
     for name, p, r in all_results:
-        if name == 'A_baseline_vol_profile':
-            baseline_pr = r.get('period_returns', [])
+        if name == "A_baseline_vol_profile":
+            baseline_pr = r.get("period_returns", [])
 
     if baseline_pr:
         for name, p, r in all_results:
-            if name.startswith('A_'):
+            if name.startswith("A_"):
                 continue
-            pr = r.get('period_returns', [])
+            pr = r.get("period_returns", [])
             if pr and baseline_pr:
                 ml = min(len(baseline_pr), len(pr))
                 if ml > 2:
                     corr = np.corrcoef(baseline_pr[:ml], pr[:ml])[0, 1]
-                    print(f"  {name} vs baseline: corr={corr:.3f} {'(LOW - ensemble!)' if corr < 0.5 else '(high)'}")
+                    print(
+                        f"  {name} vs baseline: corr={corr:.3f} {'(LOW - ensemble!)' if corr < 0.5 else '(high)'}"
+                    )
 
     # -----------------------------------------------------------------
     # FINAL RANKING
     # -----------------------------------------------------------------
-    all_results.sort(key=lambda x: (-x[1], -x[2].get('sharpe', 0)))
+    all_results.sort(key=lambda x: (-x[1], -x[2].get("sharpe", 0)))
 
     print(f"\n\n{'=' * 70}")
     print("FINAL RANKING - ALL VARIATIONS")
@@ -602,9 +679,11 @@ def main():
         fails = [k for k, v in c.items() if not v]
         fail_str = f"  FAILS: {', '.join(fails)}" if fails else ""
         print(f"  {i+1}. [{passed}/6] {name}")
-        print(f"     Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
-              f"DD={r['max_drawdown']*100:.1f}%  WR={r['win_rate']*100:.0f}%  "
-              f"PF={r['profit_factor']:.2f}  WFA={r['wfa_efficiency']:.0f}%  T={r['trade_count']}{fail_str}")
+        print(
+            f"     Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
+            f"DD={r['max_drawdown']*100:.1f}%  WR={r['win_rate']*100:.0f}%  "
+            f"PF={r['profit_factor']:.2f}  WFA={r['wfa_efficiency']:.0f}%  T={r['trade_count']}{fail_str}"
+        )
 
     six_six = [(n, r) for n, p, r in all_results if p == 6]
     print(f"\n*** {len(six_six)} configs passed 6/6 ***")
@@ -613,32 +692,43 @@ def main():
 
     # Any new 6/6 that beats baseline?
     baseline_sharpe = 2.52
-    better = [(n, r) for n, r in six_six if r['sharpe'] > baseline_sharpe and n != 'A_baseline_vol_profile']
+    better = [
+        (n, r)
+        for n, r in six_six
+        if r["sharpe"] > baseline_sharpe and n != "A_baseline_vol_profile"
+    ]
     if better:
         print(f"\n*** NEW STRATEGIES BEAT BASELINE (Sharpe > {baseline_sharpe}) ***")
         for name, r in better:
-            print(f"  {name}: Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}%")
+            print(
+                f"  {name}: Sharpe={r['sharpe']:.2f} Ret={r['total_return']*100:+.1f}%"
+            )
     else:
-        print(f"\nNo new strategy beats Vol Profile baseline (Sharpe={baseline_sharpe})")
+        print(
+            f"\nNo new strategy beats Vol Profile baseline (Sharpe={baseline_sharpe})"
+        )
         print("→ Vol Profile Breakout CONFIRMED as final strategy")
 
     # Save
     save_data = {
-        'timestamp': datetime.now().isoformat(),
-        'total_tested': len(all_results),
-        'six_six_count': len(six_six),
-        'results': [
-            {'name': n, 'passed': int(p),
-             'sharpe': float(r.get('sharpe', 0)),
-             'return': float(r.get('total_return', 0)),
-             'max_dd': float(r.get('max_drawdown', 0)),
-             'win_rate': float(r.get('win_rate', 0)),
-             'pf': float(r.get('profit_factor', 0)),
-             'trades': int(r.get('trade_count', 0))}
+        "timestamp": datetime.now().isoformat(),
+        "total_tested": len(all_results),
+        "six_six_count": len(six_six),
+        "results": [
+            {
+                "name": n,
+                "passed": int(p),
+                "sharpe": float(r.get("sharpe", 0)),
+                "return": float(r.get("total_return", 0)),
+                "max_dd": float(r.get("max_drawdown", 0)),
+                "win_rate": float(r.get("win_rate", 0)),
+                "pf": float(r.get("profit_factor", 0)),
+                "trades": int(r.get("trade_count", 0)),
+            }
             for n, p, r in all_results
         ],
     }
-    with open(RESULTS_PATH / "phase15_final_sweep.json", 'w') as f:
+    with open(RESULTS_PATH / "phase15_final_sweep.json", "w") as f:
         json.dump(save_data, f, indent=2, default=str)
 
     print(f"\nSaved to {RESULTS_PATH / 'phase15_final_sweep.json'}")

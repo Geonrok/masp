@@ -47,6 +47,7 @@ PAPER_DIR.mkdir(parents=True, exist_ok=True)
 @dataclass
 class Position:
     """보유 포지션."""
+
     shares: int  # 보유 주수
     avg_price: float  # 평균 매수가
     entry_date: str  # 매수일
@@ -58,6 +59,7 @@ class Position:
 @dataclass
 class Trade:
     """거래 기록."""
+
     timestamp: str
     action: str  # BUY, SELL
     shares: int
@@ -71,6 +73,7 @@ class Trade:
 @dataclass
 class TradingState:
     """거래 상태."""
+
     # 계좌
     initial_capital: float = 1_000_000  # 초기 자본 100만원
     cash: float = 1_000_000
@@ -131,7 +134,9 @@ class TIGER200PaperTrader:
                 with open(self.state_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     state = TradingState(
-                        initial_capital=data.get("initial_capital", self.initial_capital),
+                        initial_capital=data.get(
+                            "initial_capital", self.initial_capital
+                        ),
                         cash=data.get("cash", self.initial_capital),
                         position=data.get("position"),
                         total_trades=data.get("total_trades", 0),
@@ -186,7 +191,9 @@ class TIGER200PaperTrader:
             header = not self.trades_file.exists()
             with open(self.trades_file, "a", encoding="utf-8") as f:
                 if header:
-                    f.write("timestamp,action,shares,price,amount,commission,pnl,reason\n")
+                    f.write(
+                        "timestamp,action,shares,price,amount,commission,pnl,reason\n"
+                    )
                 f.write(
                     f"{trade.timestamp},{trade.action},{trade.shares},"
                     f"{trade.price},{trade.amount},{trade.commission},"
@@ -212,7 +219,7 @@ class TIGER200PaperTrader:
         TIGER 200 ≈ KOSPI200 × 0.052 (대략적 비율)
         """
         if self.strategy._kospi_data is not None:
-            kospi = self.strategy._kospi_data['close'].iloc[-1]
+            kospi = self.strategy._kospi_data["close"].iloc[-1]
             # TIGER 200은 약 KOSPI200 × 0.052 수준
             # 765 포인트 → 약 40,000원
             etf_price = kospi * 52.2  # 약 40,000원 수준
@@ -238,7 +245,9 @@ class TIGER200PaperTrader:
 
         return equity
 
-    def _execute_buy(self, etf_price: float, composite: float, signals: dict, reason: str):
+    def _execute_buy(
+        self, etf_price: float, composite: float, signals: dict, reason: str
+    ):
         """매수 실행."""
         if self.state.position:
             logger.info("[TIGER200] 이미 포지션 보유 중, 매수 스킵")
@@ -261,7 +270,7 @@ class TIGER200PaperTrader:
         amount = shares * etf_price
         commission = amount * self.COMMISSION_RATE
 
-        self.state.cash -= (amount + commission)
+        self.state.cash -= amount + commission
         self.state.position = {
             "shares": shares,
             "avg_price": etf_price,
@@ -290,7 +299,9 @@ class TIGER200PaperTrader:
         )
         self._log_message(f"BUY: {shares}주 @ {etf_price:,.0f}원, {reason}")
 
-    def _execute_sell(self, etf_price: float, composite: float, signals: dict, reason: str):
+    def _execute_sell(
+        self, etf_price: float, composite: float, signals: dict, reason: str
+    ):
         """매도 실행."""
         if not self.state.position:
             logger.info("[TIGER200] 보유 포지션 없음, 매도 스킵")
@@ -308,7 +319,7 @@ class TIGER200PaperTrader:
         net_pnl = gross_pnl - commission
         pnl_pct = (etf_price - avg_price) / avg_price * 100
 
-        self.state.cash += (amount - commission)
+        self.state.cash += amount - commission
         self.state.realized_pnl += net_pnl
 
         if net_pnl > 0:
@@ -333,7 +344,9 @@ class TIGER200PaperTrader:
             f"[TIGER200] 매도 체결: {shares}주 × {etf_price:,.0f}원, "
             f"손익: {net_pnl:+,.0f}원 ({pnl_pct:+.2f}%)"
         )
-        self._log_message(f"SELL: {shares}주 @ {etf_price:,.0f}원, P&L: {net_pnl:+,.0f}원")
+        self._log_message(
+            f"SELL: {shares}주 @ {etf_price:,.0f}원, P&L: {net_pnl:+,.0f}원"
+        )
 
         # 포지션 초기화
         self.state.position = None
@@ -365,14 +378,20 @@ class TIGER200PaperTrader:
         has_position = self.state.position is not None
 
         if action == "BUY" and not has_position:
-            self._execute_buy(etf_price, composite, signals, f"Composite {composite:.0%}")
+            self._execute_buy(
+                etf_price, composite, signals, f"Composite {composite:.0%}"
+            )
             executed_action = "BUY"
         elif action == "SELL" and has_position:
-            self._execute_sell(etf_price, composite, signals, f"Composite {composite:.0%}")
+            self._execute_sell(
+                etf_price, composite, signals, f"Composite {composite:.0%}"
+            )
             executed_action = "SELL"
         else:
             executed_action = "HOLD"
-            logger.info(f"[TIGER200] HOLD (Composite: {composite:.0%}, Position: {has_position})")
+            logger.info(
+                f"[TIGER200] HOLD (Composite: {composite:.0%}, Position: {has_position})"
+            )
 
         # 자산 계산
         equity = self._calc_equity(etf_price)
@@ -390,26 +409,33 @@ class TIGER200PaperTrader:
         self.state.last_composite = composite
 
         # 기록
-        self.state.equity_history.append({
-            "timestamp": datetime.now().isoformat(),
-            "equity": equity,
-            "price": etf_price,
-        })
-        self.state.signal_history.append({
-            "timestamp": datetime.now().isoformat(),
-            "composite": composite,
-            "signals": signals,
-            "action": executed_action,
-        })
+        self.state.equity_history.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "equity": equity,
+                "price": etf_price,
+            }
+        )
+        self.state.signal_history.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "composite": composite,
+                "signals": signals,
+                "action": executed_action,
+            }
+        )
 
         # 저장
         self._save_state()
 
         # 결과 출력
-        total_return = (equity - self.state.initial_capital) / self.state.initial_capital * 100
+        total_return = (
+            (equity - self.state.initial_capital) / self.state.initial_capital * 100
+        )
         win_rate = (
             self.state.winning_trades / self.state.total_trades * 100
-            if self.state.total_trades > 0 else 0
+            if self.state.total_trades > 0
+            else 0
         )
 
         logger.info("-" * 60)
@@ -425,7 +451,9 @@ class TIGER200PaperTrader:
         if self.state.position:
             pos = self.state.position
             logger.info(f"  포지션: {pos['shares']}주 @ {pos['avg_price']:,.0f}원")
-            logger.info(f"  미실현 손익: {pos['unrealized_pnl']:+,.0f}원 ({pos['unrealized_pnl_pct']:+.2f}%)")
+            logger.info(
+                f"  미실현 손익: {pos['unrealized_pnl']:+,.0f}원 ({pos['unrealized_pnl_pct']:+.2f}%)"
+            )
         else:
             logger.info("  포지션: 없음 (현금)")
 
@@ -467,7 +495,9 @@ class TIGER200PaperTrader:
 
         etf_price = self._get_etf_price()
         equity = self._calc_equity(etf_price)
-        total_return = (equity - self.state.initial_capital) / self.state.initial_capital * 100
+        total_return = (
+            (equity - self.state.initial_capital) / self.state.initial_capital * 100
+        )
 
         indicators = self.strategy.get_indicators()
 
@@ -486,7 +516,8 @@ class TIGER200PaperTrader:
             "total_trades": self.state.total_trades,
             "win_rate": (
                 self.state.winning_trades / self.state.total_trades * 100
-                if self.state.total_trades > 0 else 0
+                if self.state.total_trades > 0
+                else 0
             ),
             "position": self.state.position,
             "indicators": indicators,
@@ -499,7 +530,9 @@ def main():
     parser.add_argument("--daemon", action="store_true", help="데몬 모드")
     parser.add_argument("--status", action="store_true", help="상태 확인")
     parser.add_argument("--interval", type=int, default=60, help="간격 (분)")
-    parser.add_argument("--capital", type=float, default=1_000_000, help="초기 자본 (원)")
+    parser.add_argument(
+        "--capital", type=float, default=1_000_000, help="초기 자본 (원)"
+    )
 
     args = parser.parse_args()
 
@@ -535,7 +568,9 @@ def main():
         if pos:
             print(f"  보유: {pos['shares']}주 @ {pos['avg_price']:,.0f}원")
             print(f"  현재가: {pos['current_price']:,.0f}원")
-            print(f"  미실현 손익: {pos['unrealized_pnl']:+,.0f}원 ({pos['unrealized_pnl_pct']:+.2f}%)")
+            print(
+                f"  미실현 손익: {pos['unrealized_pnl']:+,.0f}원 ({pos['unrealized_pnl_pct']:+.2f}%)"
+            )
         else:
             print("  없음 (현금 보유)")
 
@@ -564,7 +599,9 @@ def main():
 
     else:
         result = trader.run_once()
-        print(f"\n결과: {json.dumps(result, indent=2, default=str, ensure_ascii=False)}")
+        print(
+            f"\n결과: {json.dumps(result, indent=2, default=str, ensure_ascii=False)}"
+        )
 
 
 if __name__ == "__main__":

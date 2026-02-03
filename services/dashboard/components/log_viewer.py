@@ -1,4 +1,5 @@
 """Log viewer component for displaying application logs."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

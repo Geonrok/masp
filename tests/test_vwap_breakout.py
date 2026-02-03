@@ -1,6 +1,7 @@
 """
 Tests for VwapBreakoutStrategy.
 """
+
 import numpy as np
 import pytest
 
@@ -68,9 +69,13 @@ class TestVwapBreakoutSignals:
     def test_hold_on_flat_market(self):
         strategy = VwapBreakoutStrategy()
         data = _make_flat_data()
-        strategy.update_ohlcv("TEST/USDT:PERP", data["close"].tolist(),
-                              data["high"].tolist(), data["low"].tolist(),
-                              data["volume"].tolist())
+        strategy.update_ohlcv(
+            "TEST/USDT:PERP",
+            data["close"].tolist(),
+            data["high"].tolist(),
+            data["low"].tolist(),
+            data["volume"].tolist(),
+        )
 
         signal = strategy.generate_signal("TEST/USDT:PERP")
         assert signal.signal == Signal.HOLD
@@ -85,9 +90,13 @@ class TestVwapBreakoutSignals:
         """Strong uptrend should eventually trigger BUY."""
         strategy = VwapBreakoutStrategy()
         data = _make_trending_data(n=300, trend=0.003)
-        strategy.update_ohlcv("TREND/USDT:PERP", data["close"].tolist(),
-                              data["high"].tolist(), data["low"].tolist(),
-                              data["volume"].tolist())
+        strategy.update_ohlcv(
+            "TREND/USDT:PERP",
+            data["close"].tolist(),
+            data["high"].tolist(),
+            data["low"].tolist(),
+            data["volume"].tolist(),
+        )
 
         signal = strategy.generate_signal("TREND/USDT:PERP")
         # Strong trend may or may not trigger depending on exact data
@@ -97,9 +106,13 @@ class TestVwapBreakoutSignals:
         strategy = VwapBreakoutStrategy()
         data = _make_flat_data()
         for sym in ["A/USDT:PERP", "B/USDT:PERP"]:
-            strategy.update_ohlcv(sym, data["close"].tolist(),
-                                  data["high"].tolist(), data["low"].tolist(),
-                                  data["volume"].tolist())
+            strategy.update_ohlcv(
+                sym,
+                data["close"].tolist(),
+                data["high"].tolist(),
+                data["low"].tolist(),
+                data["volume"].tolist(),
+            )
 
         signals = strategy.generate_signals(["A/USDT:PERP", "B/USDT:PERP"])
         assert len(signals) == 2
@@ -113,9 +126,13 @@ class TestVwapBreakoutExits:
         data = _make_flat_data()
 
         symbol = "EXIT/USDT:PERP"
-        strategy.update_ohlcv(symbol, data["close"].tolist(),
-                              data["high"].tolist(), data["low"].tolist(),
-                              data["volume"].tolist())
+        strategy.update_ohlcv(
+            symbol,
+            data["close"].tolist(),
+            data["high"].tolist(),
+            data["low"].tolist(),
+            data["volume"].tolist(),
+        )
 
         # Simulate open position
         strategy.update_position(symbol, 1.0)
@@ -142,8 +159,9 @@ class TestVwapBreakoutExits:
         volume = np.ones(n) * 500.0
 
         symbol = "STOP/USDT:PERP"
-        strategy.update_ohlcv(symbol, close.tolist(), high.tolist(),
-                              low.tolist(), volume.tolist())
+        strategy.update_ohlcv(
+            symbol, close.tolist(), high.tolist(), low.tolist(), volume.tolist()
+        )
 
         strategy.update_position(symbol, 1.0)
         strategy._entry_prices[symbol] = 100.0
@@ -158,10 +176,12 @@ class TestVwapBreakoutEntry:
 
     def test_check_entry_insufficient_data(self):
         strategy = VwapBreakoutStrategy()
-        data = {"close": np.array([100.0] * 10),
-                "high": np.array([101.0] * 10),
-                "low": np.array([99.0] * 10),
-                "volume": np.array([500.0] * 10)}
+        data = {
+            "close": np.array([100.0] * 10),
+            "high": np.array([101.0] * 10),
+            "low": np.array([99.0] * 10),
+            "volume": np.array([500.0] * 10),
+        }
         assert strategy._check_entry(data) is False
 
     def test_check_entry_no_breakout(self):
@@ -175,16 +195,19 @@ class TestVwapBreakoutLoader:
 
     def test_registry_contains_vwap_breakout(self):
         from libs.strategies.loader import STRATEGY_REGISTRY
+
         assert "vwap_breakout" in STRATEGY_REGISTRY
 
     def test_get_strategy(self):
         from libs.strategies.loader import get_strategy
+
         strategy = get_strategy("vwap_breakout")
         assert strategy is not None
         assert isinstance(strategy, VwapBreakoutStrategy)
 
     def test_available_strategies_metadata(self):
         from libs.strategies.loader import list_available_strategies
+
         strategies = list_available_strategies()
         vwap = [s for s in strategies if s.get("strategy_id") == "vwap_breakout"]
         assert len(vwap) == 1

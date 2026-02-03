@@ -3,13 +3,15 @@ KAMA=10, TSMOM=60 Binance 2025 Holdout - 실제 백테스트
 """
 
 import sys
+
 sys.path.insert(0, "E:/투자/Multi-Asset Strategy Platform")
 
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 print("=" * 70)
 print("BINANCE 2025 HOLDOUT - 실제 백테스트")
@@ -26,6 +28,7 @@ from libs.adapters.real_binance_spot import BinanceSpotMarketData
 
 adapter = BinanceSpotMarketData()
 
+
 def fetch_ohlcv(symbol: str, days: int = 500) -> pd.DataFrame:
     try:
         ohlcv = adapter.get_ohlcv(symbol, interval="1d", limit=days)
@@ -34,28 +37,55 @@ def fetch_ohlcv(symbol: str, days: int = 500) -> pd.DataFrame:
 
         data = []
         for candle in ohlcv:
-            data.append({
-                'date': candle.timestamp[:10],
-                'close': candle.close,
-            })
+            data.append(
+                {
+                    "date": candle.timestamp[:10],
+                    "close": candle.close,
+                }
+            )
         df = pd.DataFrame(data)
-        df['date'] = pd.to_datetime(df['date'])
-        df = df.sort_values('date').reset_index(drop=True)
+        df["date"] = pd.to_datetime(df["date"])
+        df = df.sort_values("date").reset_index(drop=True)
         return df
     except Exception as e:
         return pd.DataFrame()
+
 
 print("Fetching symbols...")
 all_symbols = adapter.get_all_symbols()
 print(f"Total USDT pairs: {len(all_symbols)}")
 
 major_symbols = [
-    "BTC/USDT", "ETH/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT",
-    "DOGE/USDT", "SOL/USDT", "DOT/USDT", "MATIC/USDT", "SHIB/USDT",
-    "LTC/USDT", "TRX/USDT", "AVAX/USDT", "LINK/USDT", "ATOM/USDT",
-    "UNI/USDT", "ETC/USDT", "XLM/USDT", "BCH/USDT", "NEAR/USDT",
-    "APT/USDT", "FIL/USDT", "LDO/USDT", "ARB/USDT", "OP/USDT",
-    "AAVE/USDT", "MKR/USDT", "GRT/USDT", "STX/USDT", "IMX/USDT",
+    "BTC/USDT",
+    "ETH/USDT",
+    "BNB/USDT",
+    "XRP/USDT",
+    "ADA/USDT",
+    "DOGE/USDT",
+    "SOL/USDT",
+    "DOT/USDT",
+    "MATIC/USDT",
+    "SHIB/USDT",
+    "LTC/USDT",
+    "TRX/USDT",
+    "AVAX/USDT",
+    "LINK/USDT",
+    "ATOM/USDT",
+    "UNI/USDT",
+    "ETC/USDT",
+    "XLM/USDT",
+    "BCH/USDT",
+    "NEAR/USDT",
+    "APT/USDT",
+    "FIL/USDT",
+    "LDO/USDT",
+    "ARB/USDT",
+    "OP/USDT",
+    "AAVE/USDT",
+    "MKR/USDT",
+    "GRT/USDT",
+    "STX/USDT",
+    "IMX/USDT",
 ]
 
 valid_symbols = [s for s in major_symbols if s in all_symbols]
@@ -73,7 +103,7 @@ for i, symbol in enumerate(valid_symbols):
     df = fetch_ohlcv(symbol, days=500)
     if not df.empty and len(df) > 100:
         price_data[symbol] = df
-        if (i+1) % 10 == 0:
+        if (i + 1) % 10 == 0:
             print(f"  [{i+1}/{len(valid_symbols)}] loaded...")
 
 print(f"Total: {len(price_data)} symbols")
@@ -82,6 +112,7 @@ btc_df = price_data.get("BTC/USDT")
 if btc_df is None:
     print("[ERROR] BTC required!")
     sys.exit(1)
+
 
 # ============================================================
 # 3. 지표 계산
@@ -96,26 +127,30 @@ def calc_kama(prices: np.ndarray, period: int = 10) -> np.ndarray:
         return kama
 
     # 초기값
-    kama[period-1] = np.mean(prices[:period])
+    kama[period - 1] = np.mean(prices[:period])
 
     fast = 2 / (2 + 1)
     slow = 2 / (30 + 1)
 
     for i in range(period, n):
-        change = abs(prices[i] - prices[i-period])
-        volatility = sum(abs(prices[j] - prices[j-1]) for j in range(i-period+1, i+1))
+        change = abs(prices[i] - prices[i - period])
+        volatility = sum(
+            abs(prices[j] - prices[j - 1]) for j in range(i - period + 1, i + 1)
+        )
         er = change / volatility if volatility > 0 else 0
         sc = (er * (fast - slow) + slow) ** 2
-        kama[i] = kama[i-1] + sc * (prices[i] - kama[i-1])
+        kama[i] = kama[i - 1] + sc * (prices[i] - kama[i - 1])
 
     return kama
 
+
 def calc_ma(prices: np.ndarray, period: int) -> np.ndarray:
     result = np.zeros(len(prices))
-    result[:period-1] = np.nan
-    for i in range(period-1, len(prices)):
-        result[i] = np.mean(prices[i-period+1:i+1])
+    result[: period - 1] = np.nan
+    for i in range(period - 1, len(prices)):
+        result[i] = np.mean(prices[i - period + 1 : i + 1])
     return result
+
 
 # ============================================================
 # 4. 신호 계산
@@ -128,13 +163,13 @@ TSMOM_LOOKBACK = 60
 GATE_MA_PERIOD = 30
 
 # BTC Gate
-btc_prices = btc_df['close'].values
+btc_prices = btc_df["close"].values
 btc_ma30 = calc_ma(btc_prices, GATE_MA_PERIOD)
 btc_gate = btc_prices > btc_ma30
 
 # Gate 신호를 DataFrame으로
 btc_df = btc_df.copy()
-btc_df['gate'] = btc_gate
+btc_df["gate"] = btc_gate
 
 # 2025년 필터
 start_date = pd.Timestamp("2025-01-01")
@@ -145,7 +180,7 @@ signal_data = {}
 
 for symbol, df in price_data.items():
     df = df.copy()
-    prices = df['close'].values
+    prices = df["close"].values
     n = len(prices)
 
     # KAMA
@@ -160,21 +195,21 @@ for symbol, df in price_data.items():
     # Entry signal (KAMA OR TSMOM)
     entry_signal = kama_signal | tsmom_signal
 
-    df['kama'] = kama
-    df['kama_signal'] = kama_signal
-    df['tsmom_signal'] = tsmom_signal
-    df['entry_signal'] = entry_signal
+    df["kama"] = kama
+    df["kama_signal"] = kama_signal
+    df["tsmom_signal"] = tsmom_signal
+    df["entry_signal"] = entry_signal
 
     # Gate 병합
-    df = df.merge(btc_df[['date', 'gate']], on='date', how='left')
-    df['gate'] = df['gate'].fillna(False)
-    df['final_signal'] = df['gate'] & df['entry_signal']
+    df = df.merge(btc_df[["date", "gate"]], on="date", how="left")
+    df["gate"] = df["gate"].fillna(False)
+    df["final_signal"] = df["gate"] & df["entry_signal"]
 
     # 2025년 필터
-    df_2025 = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+    df_2025 = df[(df["date"] >= start_date) & (df["date"] <= end_date)]
 
     if len(df_2025) > 0:
-        signal_data[symbol] = df_2025.set_index('date')
+        signal_data[symbol] = df_2025.set_index("date")
 
 print(f"Symbols with 2025 data: {len(signal_data)}")
 
@@ -192,7 +227,7 @@ total_signals = 0
 for date in common_dates[:30]:  # 처음 30일만 확인
     cnt = 0
     for symbol, df in signal_data.items():
-        if date in df.index and df.loc[date, 'final_signal']:
+        if date in df.index and df.loc[date, "final_signal"]:
             cnt += 1
     total_signals += cnt
 
@@ -221,8 +256,8 @@ for i, date in enumerate(common_dates):
 
     for symbol, df in signal_data.items():
         if date in df.index:
-            signals_today[symbol] = df.loc[date, 'final_signal']
-            prices_today[symbol] = df.loc[date, 'close']
+            signals_today[symbol] = df.loc[date, "final_signal"]
+            prices_today[symbol] = df.loc[date, "close"]
 
     # 활성 신호
     active = [s for s, sig in signals_today.items() if sig]
@@ -252,7 +287,9 @@ for i, date in enumerate(common_dates):
     # 다음날 포지션 설정
     if len(selected) > 0:
         weight = 1.0 / len(selected)
-        prev_positions = {s: (weight, prices_today[s]) for s in selected if s in prices_today}
+        prev_positions = {
+            s: (weight, prices_today[s]) for s in selected if s in prices_today
+        }
     else:
         prev_positions = {}
 
@@ -277,7 +314,9 @@ drawdown = (portfolio_values - peak) / peak
 max_drawdown = np.min(drawdown)
 
 n_days = len(portfolio_values)
-cagr = (portfolio_values[-1] / INITIAL_CAPITAL) ** (365 / n_days) - 1 if n_days > 0 else 0
+cagr = (
+    (portfolio_values[-1] / INITIAL_CAPITAL) ** (365 / n_days) - 1 if n_days > 0 else 0
+)
 
 avg_positions = np.mean(position_counts)
 
@@ -312,15 +351,21 @@ print(f"""
 """)
 
 # 저장
-results_df = pd.DataFrame([{
-    'strategy': 'KAMA=10, TSMOM=60',
-    'market': 'binance',
-    'sharpe': sharpe,
-    'mdd': max_drawdown,
-    'total_return': total_return,
-    'avg_positions': avg_positions,
-}])
-output_path = "E:/투자/Multi-Asset Strategy Platform/research/binance_holdout_kama10_actual.csv"
+results_df = pd.DataFrame(
+    [
+        {
+            "strategy": "KAMA=10, TSMOM=60",
+            "market": "binance",
+            "sharpe": sharpe,
+            "mdd": max_drawdown,
+            "total_return": total_return,
+            "avg_positions": avg_positions,
+        }
+    ]
+)
+output_path = (
+    "E:/투자/Multi-Asset Strategy Platform/research/binance_holdout_kama10_actual.csv"
+)
 results_df.to_csv(output_path, index=False)
 print(f"Saved: {output_path}")
 print("=" * 70)

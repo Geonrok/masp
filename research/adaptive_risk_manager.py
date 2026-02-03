@@ -18,23 +18,25 @@ from enum import Enum
 
 class MarketRegime(Enum):
     """Market regime classification."""
-    BULL_LOW_VOL = "bull_low_vol"      # Best for momentum
-    BULL_HIGH_VOL = "bull_high_vol"    # Good but reduce size
-    BEAR_LOW_VOL = "bear_low_vol"      # Cautious
-    BEAR_HIGH_VOL = "bear_high_vol"    # Maximum caution / cash
-    SIDEWAYS = "sideways"               # Reduce trading
+
+    BULL_LOW_VOL = "bull_low_vol"  # Best for momentum
+    BULL_HIGH_VOL = "bull_high_vol"  # Good but reduce size
+    BEAR_LOW_VOL = "bear_low_vol"  # Cautious
+    BEAR_HIGH_VOL = "bear_high_vol"  # Maximum caution / cash
+    SIDEWAYS = "sideways"  # Reduce trading
 
 
 @dataclass
 class RiskParameters:
     """Risk parameters for position sizing."""
-    max_portfolio_risk: float = 0.02      # Max 2% daily portfolio VaR
-    max_position_size: float = 0.10       # Max 10% per position
-    min_position_size: float = 0.01       # Min 1% per position
-    max_correlation: float = 0.7          # Max avg correlation
-    max_drawdown_limit: float = 0.20      # -20% triggers recovery mode
-    kelly_fraction: float = 0.25          # Use 1/4 Kelly for safety
-    volatility_target: float = 0.15       # 15% annual vol target
+
+    max_portfolio_risk: float = 0.02  # Max 2% daily portfolio VaR
+    max_position_size: float = 0.10  # Max 10% per position
+    min_position_size: float = 0.01  # Min 1% per position
+    max_correlation: float = 0.7  # Max avg correlation
+    max_drawdown_limit: float = 0.20  # -20% triggers recovery mode
+    kelly_fraction: float = 0.25  # Use 1/4 Kelly for safety
+    volatility_target: float = 0.15  # 15% annual vol target
 
 
 class AdaptiveRiskManager:
@@ -54,11 +56,7 @@ class AdaptiveRiskManager:
         self.peak_equity = 1.0
         self.recovery_mode = False
 
-    def detect_regime(
-        self,
-        btc_returns: pd.Series,
-        lookback: int = 30
-    ) -> MarketRegime:
+    def detect_regime(self, btc_returns: pd.Series, lookback: int = 30) -> MarketRegime:
         """
         Detect current market regime based on BTC.
 
@@ -87,26 +85,27 @@ class AdaptiveRiskManager:
             return MarketRegime.SIDEWAYS
 
         if is_bull:
-            return MarketRegime.BULL_HIGH_VOL if is_high_vol else MarketRegime.BULL_LOW_VOL
+            return (
+                MarketRegime.BULL_HIGH_VOL if is_high_vol else MarketRegime.BULL_LOW_VOL
+            )
         else:
-            return MarketRegime.BEAR_HIGH_VOL if is_high_vol else MarketRegime.BEAR_LOW_VOL
+            return (
+                MarketRegime.BEAR_HIGH_VOL if is_high_vol else MarketRegime.BEAR_LOW_VOL
+            )
 
     def get_regime_multiplier(self, regime: MarketRegime) -> float:
         """Get position size multiplier based on regime."""
         multipliers = {
-            MarketRegime.BULL_LOW_VOL: 1.0,     # Full size
-            MarketRegime.BULL_HIGH_VOL: 0.7,    # Reduce 30%
-            MarketRegime.SIDEWAYS: 0.5,         # Half size
-            MarketRegime.BEAR_LOW_VOL: 0.3,     # Cautious
-            MarketRegime.BEAR_HIGH_VOL: 0.1,    # Minimal
+            MarketRegime.BULL_LOW_VOL: 1.0,  # Full size
+            MarketRegime.BULL_HIGH_VOL: 0.7,  # Reduce 30%
+            MarketRegime.SIDEWAYS: 0.5,  # Half size
+            MarketRegime.BEAR_LOW_VOL: 0.3,  # Cautious
+            MarketRegime.BEAR_HIGH_VOL: 0.1,  # Minimal
         }
         return multipliers.get(regime, 0.5)
 
     def calculate_kelly_size(
-        self,
-        win_rate: float,
-        avg_win: float,
-        avg_loss: float
+        self, win_rate: float, avg_win: float, avg_loss: float
     ) -> float:
         """
         Calculate Kelly Criterion position size.
@@ -134,9 +133,7 @@ class AdaptiveRiskManager:
         return min(kelly, self.params.max_position_size)
 
     def calculate_volatility_adjusted_size(
-        self,
-        symbol_volatility: float,
-        base_size: float
+        self, symbol_volatility: float, base_size: float
     ) -> float:
         """
         Adjust position size to target constant volatility.
@@ -155,16 +152,14 @@ class AdaptiveRiskManager:
         adjusted_size = base_size * vol_adjustment
 
         return np.clip(
-            adjusted_size,
-            self.params.min_position_size,
-            self.params.max_position_size
+            adjusted_size, self.params.min_position_size, self.params.max_position_size
         )
 
     def check_correlation_limit(
         self,
         current_positions: pd.DataFrame,
         new_symbol: str,
-        returns_data: pd.DataFrame
+        returns_data: pd.DataFrame,
     ) -> bool:
         """
         Check if adding new position exceeds correlation limit.
@@ -221,7 +216,7 @@ class AdaptiveRiskManager:
         self,
         positions: Dict[str, float],
         returns_data: pd.DataFrame,
-        confidence: float = 0.95
+        confidence: float = 0.95,
     ) -> float:
         """
         Calculate portfolio Value at Risk.
@@ -260,7 +255,7 @@ class AdaptiveRiskManager:
         symbol_returns: pd.Series,
         current_positions: Dict[str, float],
         returns_data: pd.DataFrame,
-        trade_stats: Optional[Dict] = None
+        trade_stats: Optional[Dict] = None,
     ) -> float:
         """
         Calculate optimal position size considering all factors.
@@ -283,9 +278,9 @@ class AdaptiveRiskManager:
         # 2. Apply Kelly if trade stats available
         if trade_stats:
             kelly_size = self.calculate_kelly_size(
-                trade_stats.get('win_rate', 0.5),
-                trade_stats.get('avg_win', 0.02),
-                trade_stats.get('avg_loss', 0.02)
+                trade_stats.get("win_rate", 0.5),
+                trade_stats.get("avg_win", 0.02),
+                trade_stats.get("avg_loss", 0.02),
             )
             base_size = min(base_size, kelly_size) if kelly_size > 0 else base_size
 
@@ -301,26 +296,28 @@ class AdaptiveRiskManager:
         recovery_multiplier = self.get_recovery_multiplier()
 
         # 6. Correlation check (binary)
-        positions_df = pd.DataFrame({'weight': current_positions})
+        positions_df = pd.DataFrame({"weight": current_positions})
         can_add = self.check_correlation_limit(positions_df, symbol, returns_data)
         correlation_multiplier = 1.0 if can_add else 0.0
 
         # Final size
-        final_size = (vol_adjusted *
-                     regime_multiplier *
-                     recovery_multiplier *
-                     correlation_multiplier)
+        final_size = (
+            vol_adjusted
+            * regime_multiplier
+            * recovery_multiplier
+            * correlation_multiplier
+        )
 
         return np.clip(final_size, 0, self.params.max_position_size)
 
     def get_risk_report(self) -> Dict:
         """Generate current risk status report."""
         return {
-            'current_drawdown': f"{self.current_drawdown:.2%}",
-            'peak_equity': self.peak_equity,
-            'recovery_mode': self.recovery_mode,
-            'recovery_multiplier': self.get_recovery_multiplier(),
-            'max_drawdown_limit': f"{self.params.max_drawdown_limit:.2%}",
+            "current_drawdown": f"{self.current_drawdown:.2%}",
+            "peak_equity": self.peak_equity,
+            "recovery_mode": self.recovery_mode,
+            "recovery_multiplier": self.get_recovery_multiplier(),
+            "max_drawdown_limit": f"{self.params.max_drawdown_limit:.2%}",
         }
 
 
@@ -338,7 +335,7 @@ class DynamicStopLoss:
         self,
         atr_multiplier: float = 2.0,
         profit_target_atr: float = 3.0,
-        max_holding_days: int = 30
+        max_holding_days: int = 30,
     ):
         self.atr_multiplier = atr_multiplier
         self.profit_target_atr = profit_target_atr
@@ -350,7 +347,7 @@ class DynamicStopLoss:
         current_price: float,
         atr: float,
         position_side: str,  # 'long' or 'short'
-        days_held: int
+        days_held: int,
     ) -> Tuple[float, str]:
         """
         Calculate adaptive stop price.
@@ -359,7 +356,7 @@ class DynamicStopLoss:
             (stop_price, reason)
         """
         # Base stop: entry - 2*ATR for long
-        if position_side == 'long':
+        if position_side == "long":
             base_stop = entry_price - self.atr_multiplier * atr
 
             # Trail stop up if in profit
@@ -375,7 +372,11 @@ class DynamicStopLoss:
             tightened_stop = entry_price - (1 - time_decay) * self.atr_multiplier * atr
             base_stop = max(base_stop, tightened_stop)
 
-            return base_stop, 'trailing' if base_stop > entry_price - self.atr_multiplier * atr else 'initial'
+            return base_stop, (
+                "trailing"
+                if base_stop > entry_price - self.atr_multiplier * atr
+                else "initial"
+            )
 
         else:  # short
             base_stop = entry_price + self.atr_multiplier * atr
@@ -390,17 +391,17 @@ class DynamicStopLoss:
             tightened_stop = entry_price + (1 - time_decay) * self.atr_multiplier * atr
             base_stop = min(base_stop, tightened_stop)
 
-            return base_stop, 'trailing' if base_stop < entry_price + self.atr_multiplier * atr else 'initial'
+            return base_stop, (
+                "trailing"
+                if base_stop < entry_price + self.atr_multiplier * atr
+                else "initial"
+            )
 
     def should_take_profit(
-        self,
-        entry_price: float,
-        current_price: float,
-        atr: float,
-        position_side: str
+        self, entry_price: float, current_price: float, atr: float, position_side: str
     ) -> bool:
         """Check if profit target reached."""
-        if position_side == 'long':
+        if position_side == "long":
             profit_atr = (current_price - entry_price) / atr
         else:
             profit_atr = (entry_price - current_price) / atr
@@ -420,20 +421,18 @@ def example_usage():
     # BTC returns (for regime detection)
     btc_returns = pd.Series(
         np.random.normal(0.001, 0.03, n_days),
-        index=pd.date_range('2024-01-01', periods=n_days, freq='D')
+        index=pd.date_range("2024-01-01", periods=n_days, freq="D"),
     )
 
     # Symbol returns
     symbol_returns = pd.Series(
         np.random.normal(0.002, 0.05, n_days),
-        index=pd.date_range('2024-01-01', periods=n_days, freq='D')
+        index=pd.date_range("2024-01-01", periods=n_days, freq="D"),
     )
 
     # Initialize manager
     params = RiskParameters(
-        max_portfolio_risk=0.02,
-        max_position_size=0.10,
-        volatility_target=0.15
+        max_portfolio_risk=0.02, max_position_size=0.10, volatility_target=0.15
     )
     manager = AdaptiveRiskManager(params)
 
@@ -443,24 +442,17 @@ def example_usage():
     print(f"Regime Multiplier: {manager.get_regime_multiplier(regime)}")
 
     # Calculate position size
-    trade_stats = {
-        'win_rate': 0.55,
-        'avg_win': 0.03,
-        'avg_loss': 0.02
-    }
+    trade_stats = {"win_rate": 0.55, "avg_win": 0.03, "avg_loss": 0.02}
 
-    returns_data = pd.DataFrame({
-        'BTC': btc_returns,
-        'ETH': symbol_returns
-    })
+    returns_data = pd.DataFrame({"BTC": btc_returns, "ETH": symbol_returns})
 
     position_size = manager.get_optimal_position_size(
-        symbol='ETH',
+        symbol="ETH",
         btc_returns=btc_returns,
         symbol_returns=symbol_returns,
         current_positions={},
         returns_data=returns_data,
-        trade_stats=trade_stats
+        trade_stats=trade_stats,
     )
 
     print(f"\nOptimal Position Size: {position_size:.2%}")

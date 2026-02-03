@@ -39,13 +39,16 @@ def sample_ohlcv():
 
     dates = pd.date_range(start="2024-01-01", periods=n, freq="D")
 
-    df = pd.DataFrame({
-        "open": close * (1 + np.random.uniform(-0.01, 0.01, n)),
-        "high": close * (1 + np.abs(np.random.normal(0, 0.015, n))),
-        "low": close * (1 - np.abs(np.random.normal(0, 0.015, n))),
-        "close": close,
-        "volume": np.random.randint(1000000, 5000000, n),
-    }, index=dates)
+    df = pd.DataFrame(
+        {
+            "open": close * (1 + np.random.uniform(-0.01, 0.01, n)),
+            "high": close * (1 + np.abs(np.random.normal(0, 0.015, n))),
+            "low": close * (1 - np.abs(np.random.normal(0, 0.015, n))),
+            "close": close,
+            "volume": np.random.randint(1000000, 5000000, n),
+        },
+        index=dates,
+    )
 
     # Ensure high >= close >= low
     df["high"] = df[["open", "high", "close"]].max(axis=1)
@@ -456,7 +459,9 @@ class TestModelRegistry:
 
         # Register multiple models
         for i in range(3):
-            model = SklearnModel(RandomForestClassifier(n_estimators=10, random_state=i))
+            model = SklearnModel(
+                RandomForestClassifier(n_estimators=10, random_state=i)
+            )
             X = np.random.randn(100, 5)
             y = (X[:, 0] > 0).astype(int)
             model.fit(X, y)

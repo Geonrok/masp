@@ -15,11 +15,13 @@ This phase performs FINAL validation:
 6. Capacity analysis
 7. Cross-validate with 2nd and 3rd best configs
 """
+
 import json
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
@@ -37,26 +39,27 @@ def load_ohlcv(symbol, timeframe="1h"):
     if not path.exists():
         return pd.DataFrame()
     df = pd.read_csv(path)
-    for col in ['datetime', 'timestamp', 'date']:
+    for col in ["datetime", "timestamp", "date"]:
         if col in df.columns:
-            df['datetime'] = pd.to_datetime(df[col])
+            df["datetime"] = pd.to_datetime(df[col])
             break
-    return df.sort_values('datetime').reset_index(drop=True)
+    return df.sort_values("datetime").reset_index(drop=True)
 
 
 def calc_atr(high, low, close, period=14):
-    tr = np.maximum(high - low,
-         np.maximum(np.abs(high - np.roll(close, 1)),
-                    np.abs(low - np.roll(close, 1))))
+    tr = np.maximum(
+        high - low,
+        np.maximum(np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))),
+    )
     tr[0] = high[0] - low[0]
     return pd.Series(tr).rolling(period).mean().values
 
 
 def strategy(df, lookback=48, ema_fast=50, ema_slow=200, atr_expansion=1.0):
     """Dual MA Breakout - long only, ATR expansion 1.0x"""
-    close = df['close']
-    high = df['high']
-    low = df['low']
+    close = df["close"]
+    high = df["high"]
+    low = df["low"]
     upper = high.rolling(lookback).max().shift(1)
     ema_f = close.ewm(span=ema_fast, adjust=False).mean()
     ema_s = close.ewm(span=ema_slow, adjust=False).mean()
@@ -68,8 +71,15 @@ def strategy(df, lookback=48, ema_fast=50, ema_slow=200, atr_expansion=1.0):
     return signals
 
 
-def simulate(df, signals, position_pct=0.02, max_bars=72,
-             atr_stop=3.0, profit_target_atr=8.0, slippage=0.0003):
+def simulate(
+    df,
+    signals,
+    position_pct=0.02,
+    max_bars=72,
+    atr_stop=3.0,
+    profit_target_atr=8.0,
+    slippage=0.0003,
+):
     capital = 1.0
     position = 0
     entry_price = 0
@@ -77,9 +87,9 @@ def simulate(df, signals, position_pct=0.02, max_bars=72,
     trades = []
     equity_curve = [1.0]
 
-    close = df['close'].values
-    high = df['high'].values
-    low = df['low'].values
+    close = df["close"].values
+    high = df["high"].values
+    low = df["low"].values
     atr_vals = calc_atr(high, low, close, 14)
 
     for i in range(len(df)):
@@ -130,20 +140,26 @@ def simulate(df, signals, position_pct=0.02, max_bars=72,
     gp = sum(t for t in trades if t > 0)
     gl = abs(sum(t for t in trades if t < 0))
     return {
-        'total_return': capital - 1,
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(trades),
-        'trades': trades,
-        'equity_curve': equity_curve,
+        "total_return": capital - 1,
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(trades),
+        "trades": trades,
+        "equity_curve": equity_curve,
     }
 
 
-def run_portfolio_oos(all_data, strat_fn, max_positions=10, test_bars=720,
-                      exit_params=None, slippage=0.0003):
+def run_portfolio_oos(
+    all_data,
+    strat_fn,
+    max_positions=10,
+    test_bars=720,
+    exit_params=None,
+    slippage=0.0003,
+):
     """Full TRUE OOS portfolio test."""
     if exit_params is None:
-        exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+        exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     # Selection on first 60%
     selection_results = {}
@@ -157,21 +173,27 @@ def run_portfolio_oos(all_data, strat_fn, max_positions=10, test_bars=720,
         period_returns = []
         i = train_bars
         while i + test_bars <= len(sel_df):
-            full = sel_df.iloc[:i + test_bars]
+            full = sel_df.iloc[: i + test_bars]
             sigs = strat_fn(full)
-            test_sigs = sigs[i:i + test_bars]
-            test_df = sel_df.iloc[i:i + test_bars].copy().reset_index(drop=True)
-            r = simulate(test_df, test_sigs, 0.02,
-                        exit_params['max_bars'], exit_params['atr_stop'],
-                        exit_params['profit_target_atr'], slippage)
-            period_returns.append(r['total_return'])
-            all_trades.extend(r['trades'])
+            test_sigs = sigs[i : i + test_bars]
+            test_df = sel_df.iloc[i : i + test_bars].copy().reset_index(drop=True)
+            r = simulate(
+                test_df,
+                test_sigs,
+                0.02,
+                exit_params["max_bars"],
+                exit_params["atr_stop"],
+                exit_params["profit_target_atr"],
+                slippage,
+            )
+            period_returns.append(r["total_return"])
+            all_trades.extend(r["trades"])
             i += test_bars
         if all_trades:
             total_ret = 1.0
             for pr in period_returns:
-                total_ret *= (1 + pr)
-            selection_results[symbol] = {'total_return': total_ret - 1}
+                total_ret *= 1 + pr
+            selection_results[symbol] = {"total_return": total_ret - 1}
 
     # OOS on last 40%
     oos_data = {}
@@ -195,7 +217,7 @@ def run_portfolio_oos(all_data, strat_fn, max_positions=10, test_bars=720,
         for symbol, df in oos_data.items():
             if len(df) <= i:
                 continue
-            vol = df['close'].iloc[:i].pct_change().rolling(168).std().iloc[-1]
+            vol = df["close"].iloc[:i].pct_change().rolling(168).std().iloc[-1]
             if np.isnan(vol) or vol == 0:
                 vol = 0.01
             scored.append((symbol, vol))
@@ -206,17 +228,23 @@ def run_portfolio_oos(all_data, strat_fn, max_positions=10, test_bars=720,
             df = oos_data[symbol]
             if i + test_bars > len(df):
                 continue
-            full = df.iloc[:i + test_bars]
+            full = df.iloc[: i + test_bars]
             sigs = strat_fn(full)
-            test_sigs = sigs[i:i + test_bars]
-            test_df = df.iloc[i:i + test_bars].copy().reset_index(drop=True)
+            test_sigs = sigs[i : i + test_bars]
+            test_df = df.iloc[i : i + test_bars].copy().reset_index(drop=True)
             ann_vol = vol * np.sqrt(24 * 365)
             position_pct = min(0.10 / (ann_vol + 1e-10) / max(len(selected), 1), 0.05)
-            r = simulate(test_df, test_sigs, position_pct,
-                       exit_params['max_bars'], exit_params['atr_stop'],
-                       exit_params['profit_target_atr'], slippage)
-            period_pnl += r['total_return']
-            all_trades.extend(r['trades'])
+            r = simulate(
+                test_df,
+                test_sigs,
+                position_pct,
+                exit_params["max_bars"],
+                exit_params["atr_stop"],
+                exit_params["profit_target_atr"],
+                slippage,
+            )
+            period_pnl += r["total_return"]
+            all_trades.extend(r["trades"])
 
         period_returns.append(period_pnl)
         equity.append(equity[-1] * (1 + period_pnl))
@@ -236,27 +264,29 @@ def run_portfolio_oos(all_data, strat_fn, max_positions=10, test_bars=720,
     sharpe = np.mean(period_returns) / (np.std(period_returns) + 1e-10) * np.sqrt(12)
 
     return {
-        'total_return': float(equity_arr[-1] - 1),
-        'max_drawdown': float(dd.min()),
-        'sharpe': float(sharpe),
-        'win_rate': wins / (wins + losses) if (wins + losses) > 0 else 0,
-        'profit_factor': gp / (gl + 1e-10),
-        'trade_count': len(all_trades),
-        'periods': len(period_returns),
-        'wfa_efficiency': sum(1 for r in period_returns if r > 0) / len(period_returns) * 100,
-        'period_returns': period_returns,
-        'all_trades': all_trades,
+        "total_return": float(equity_arr[-1] - 1),
+        "max_drawdown": float(dd.min()),
+        "sharpe": float(sharpe),
+        "win_rate": wins / (wins + losses) if (wins + losses) > 0 else 0,
+        "profit_factor": gp / (gl + 1e-10),
+        "trade_count": len(all_trades),
+        "periods": len(period_returns),
+        "wfa_efficiency": sum(1 for r in period_returns if r > 0)
+        / len(period_returns)
+        * 100,
+        "period_returns": period_returns,
+        "all_trades": all_trades,
     }
 
 
 def check_criteria(r):
     c = {
-        'sharpe_gt_1': r.get('sharpe', 0) > 1.0,
-        'max_dd_lt_25': r.get('max_drawdown', -1) > -0.25,
-        'win_rate_gt_45': r.get('win_rate', 0) > 0.45,
-        'profit_factor_gt_1_5': r.get('profit_factor', 0) > 1.5,
-        'wfa_efficiency_gt_50': r.get('wfa_efficiency', 0) > 50,
-        'trade_count_gt_100': r.get('trade_count', 0) > 100,
+        "sharpe_gt_1": r.get("sharpe", 0) > 1.0,
+        "max_dd_lt_25": r.get("max_drawdown", -1) > -0.25,
+        "win_rate_gt_45": r.get("win_rate", 0) > 0.45,
+        "profit_factor_gt_1_5": r.get("profit_factor", 0) > 1.5,
+        "wfa_efficiency_gt_50": r.get("wfa_efficiency", 0) > 50,
+        "trade_count_gt_100": r.get("trade_count", 0) > 100,
     }
     return c, sum(v for v in c.values())
 
@@ -281,7 +311,7 @@ def main():
             all_data[symbol] = df
     print(f"Loaded {len(all_data)} symbols\n")
 
-    exit_params = {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0}
+    exit_params = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
 
     # =========================================================================
     # TEST 1: Reproduce 6/6 TRUE OOS
@@ -290,13 +320,16 @@ def main():
     print("TEST 1: Reproduce TRUE OOS 6/6")
     print("=" * 60)
 
-    result = run_portfolio_oos(all_data, strategy, max_positions=10,
-                                test_bars=720, exit_params=exit_params)
+    result = run_portfolio_oos(
+        all_data, strategy, max_positions=10, test_bars=720, exit_params=exit_params
+    )
     if result:
         criteria, passed = check_criteria(result)
-        print(f"\n  [{passed}/6] Sharpe={result['sharpe']:.2f}  Ret={result['total_return']*100:+.1f}%  "
-              f"DD={result['max_drawdown']*100:.1f}%  WR={result['win_rate']*100:.0f}%  "
-              f"PF={result['profit_factor']:.2f}  WFA={result['wfa_efficiency']:.0f}%  T={result['trade_count']}")
+        print(
+            f"\n  [{passed}/6] Sharpe={result['sharpe']:.2f}  Ret={result['total_return']*100:+.1f}%  "
+            f"DD={result['max_drawdown']*100:.1f}%  WR={result['win_rate']*100:.0f}%  "
+            f"PF={result['profit_factor']:.2f}  WFA={result['wfa_efficiency']:.0f}%  T={result['trade_count']}"
+        )
         for c, v in criteria.items():
             print(f"    {c}: {'PASS' if v else 'FAIL'}")
 
@@ -308,15 +341,28 @@ def main():
     print("=" * 60)
 
     slip_results = {}
-    for slip_name, slip_val in [('0.02%', 0.0002), ('0.03%', 0.0003),
-                                  ('0.05%', 0.0005), ('0.08%', 0.0008), ('0.10%', 0.001)]:
-        r = run_portfolio_oos(all_data, strategy, max_positions=10,
-                              test_bars=720, exit_params=exit_params, slippage=slip_val)
+    for slip_name, slip_val in [
+        ("0.02%", 0.0002),
+        ("0.03%", 0.0003),
+        ("0.05%", 0.0005),
+        ("0.08%", 0.0008),
+        ("0.10%", 0.001),
+    ]:
+        r = run_portfolio_oos(
+            all_data,
+            strategy,
+            max_positions=10,
+            test_bars=720,
+            exit_params=exit_params,
+            slippage=slip_val,
+        )
         if r:
             c, p = check_criteria(r)
-            slip_results[slip_name] = {'passed': p, **r}
-            print(f"  {slip_name}: [{p}/6] Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
-                  f"WR={r['win_rate']*100:.0f}%  PF={r['profit_factor']:.2f}  T={r['trade_count']}")
+            slip_results[slip_name] = {"passed": p, **r}
+            print(
+                f"  {slip_name}: [{p}/6] Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
+                f"WR={r['win_rate']*100:.0f}%  PF={r['profit_factor']:.2f}  T={r['trade_count']}"
+            )
 
     # =========================================================================
     # TEST 3: Regime Analysis
@@ -325,33 +371,46 @@ def main():
     print("TEST 3: Market Regime Analysis")
     print("=" * 60)
 
-    btc = load_ohlcv('BTCUSDT', '1h')
+    btc = load_ohlcv("BTCUSDT", "1h")
     if not btc.empty:
-        btc_close = btc['close']
+        btc_close = btc["close"]
         ret_30d = btc_close.pct_change(720)
-        btc['regime'] = np.where(ret_30d > 0.10, 'bull',
-                        np.where(ret_30d < -0.10, 'bear', 'sideways'))
+        btc["regime"] = np.where(
+            ret_30d > 0.10, "bull", np.where(ret_30d < -0.10, "bear", "sideways")
+        )
 
-        test_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'DOGEUSDT', 'ADAUSDT',
-                        'XRPUSDT', 'BNBUSDT', 'LINKUSDT', 'AVAXUSDT', 'LTCUSDT']
+        test_symbols = [
+            "BTCUSDT",
+            "ETHUSDT",
+            "SOLUSDT",
+            "DOGEUSDT",
+            "ADAUSDT",
+            "XRPUSDT",
+            "BNBUSDT",
+            "LINKUSDT",
+            "AVAXUSDT",
+            "LTCUSDT",
+        ]
 
-        for regime in ['bull', 'bear', 'sideways']:
-            regime_mask = btc['regime'] == regime
-            regime_dates = set(btc.loc[regime_mask, 'datetime'])
+        for regime in ["bull", "bear", "sideways"]:
+            regime_mask = btc["regime"] == regime
+            regime_dates = set(btc.loc[regime_mask, "datetime"])
             count = len(regime_dates)
             pct = count / len(btc) * 100
 
             all_trades = []
             for symbol in test_symbols:
-                df = load_ohlcv(symbol, '1h')
+                df = load_ohlcv(symbol, "1h")
                 if df.empty:
                     continue
-                regime_df = df[df['datetime'].isin(regime_dates)].copy().reset_index(drop=True)
+                regime_df = (
+                    df[df["datetime"].isin(regime_dates)].copy().reset_index(drop=True)
+                )
                 if len(regime_df) < 500:
                     continue
                 sigs = strategy(regime_df)
                 r = simulate(regime_df, sigs, 0.02, 72, 3.0, 8.0, 0.0003)
-                all_trades.extend(r['trades'])
+                all_trades.extend(r["trades"])
 
             if all_trades:
                 wins = sum(1 for t in all_trades if t > 0)
@@ -362,8 +421,10 @@ def main():
                 pf = gp / (gl + 1e-10)
                 net = sum(all_trades)
                 status = "OK" if net > 0 else "DANGER"
-                print(f"  {regime} ({pct:.0f}%): {len(all_trades)} trades  WR={wr:.0%}  "
-                      f"PF={pf:.2f}  Net={net*100:+.2f}%  [{status}]")
+                print(
+                    f"  {regime} ({pct:.0f}%): {len(all_trades)} trades  WR={wr:.0%}  "
+                    f"PF={pf:.2f}  Net={net*100:+.2f}%  [{status}]"
+                )
 
     # =========================================================================
     # TEST 4: Monte Carlo (1000 shuffles)
@@ -372,8 +433,8 @@ def main():
     print("TEST 4: Monte Carlo Simulation (1000 runs)")
     print("=" * 60)
 
-    if result and result.get('all_trades'):
-        trades = result['all_trades']
+    if result and result.get("all_trades"):
+        trades = result["all_trades"]
         mc_returns = []
         np.random.seed(42)
         for _ in range(1000):
@@ -402,31 +463,80 @@ def main():
     print("=" * 60)
 
     param_variants = {
-        'base': {'lookback': 48, 'ema_fast': 50, 'ema_slow': 200, 'atr_expansion': 1.0},
-        'lookback_38': {'lookback': 38, 'ema_fast': 50, 'ema_slow': 200, 'atr_expansion': 1.0},
-        'lookback_58': {'lookback': 58, 'ema_fast': 50, 'ema_slow': 200, 'atr_expansion': 1.0},
-        'ema_fast_40': {'lookback': 48, 'ema_fast': 40, 'ema_slow': 200, 'atr_expansion': 1.0},
-        'ema_fast_60': {'lookback': 48, 'ema_fast': 60, 'ema_slow': 200, 'atr_expansion': 1.0},
-        'ema_slow_160': {'lookback': 48, 'ema_fast': 50, 'ema_slow': 160, 'atr_expansion': 1.0},
-        'ema_slow_240': {'lookback': 48, 'ema_fast': 50, 'ema_slow': 240, 'atr_expansion': 1.0},
-        'atr_exp_0.8': {'lookback': 48, 'ema_fast': 50, 'ema_slow': 200, 'atr_expansion': 0.8},
-        'atr_exp_1.2': {'lookback': 48, 'ema_fast': 50, 'ema_slow': 200, 'atr_expansion': 1.2},
+        "base": {"lookback": 48, "ema_fast": 50, "ema_slow": 200, "atr_expansion": 1.0},
+        "lookback_38": {
+            "lookback": 38,
+            "ema_fast": 50,
+            "ema_slow": 200,
+            "atr_expansion": 1.0,
+        },
+        "lookback_58": {
+            "lookback": 58,
+            "ema_fast": 50,
+            "ema_slow": 200,
+            "atr_expansion": 1.0,
+        },
+        "ema_fast_40": {
+            "lookback": 48,
+            "ema_fast": 40,
+            "ema_slow": 200,
+            "atr_expansion": 1.0,
+        },
+        "ema_fast_60": {
+            "lookback": 48,
+            "ema_fast": 60,
+            "ema_slow": 200,
+            "atr_expansion": 1.0,
+        },
+        "ema_slow_160": {
+            "lookback": 48,
+            "ema_fast": 50,
+            "ema_slow": 160,
+            "atr_expansion": 1.0,
+        },
+        "ema_slow_240": {
+            "lookback": 48,
+            "ema_fast": 50,
+            "ema_slow": 240,
+            "atr_expansion": 1.0,
+        },
+        "atr_exp_0.8": {
+            "lookback": 48,
+            "ema_fast": 50,
+            "ema_slow": 200,
+            "atr_expansion": 0.8,
+        },
+        "atr_exp_1.2": {
+            "lookback": 48,
+            "ema_fast": 50,
+            "ema_slow": 200,
+            "atr_expansion": 1.2,
+        },
     }
 
     param_results = {}
     for name, params in param_variants.items():
+
         def make_strat(p=params):
             def s(df):
                 return strategy(df, **p)
+
             return s
 
-        r = run_portfolio_oos(all_data, make_strat(), max_positions=10,
-                              test_bars=720, exit_params=exit_params)
+        r = run_portfolio_oos(
+            all_data,
+            make_strat(),
+            max_positions=10,
+            test_bars=720,
+            exit_params=exit_params,
+        )
         if r:
             c, p = check_criteria(r)
             param_results[name] = p
-            print(f"  {name:<20} [{p}/6] Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
-                  f"WR={r['win_rate']*100:.0f}%  PF={r['profit_factor']:.2f}  T={r['trade_count']}")
+            print(
+                f"  {name:<20} [{p}/6] Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
+                f"WR={r['win_rate']*100:.0f}%  PF={r['profit_factor']:.2f}  T={r['trade_count']}"
+            )
 
     robust_count = sum(1 for p in param_results.values() if p >= 5)
     print(f"\n  Robustness: {robust_count}/{len(param_results)} variants pass 5+/6")
@@ -442,18 +552,22 @@ def main():
         pos_size = portfolio_size * 0.05  # max 5% per position
         print(f"\n  Portfolio ${portfolio_size:,}:")
         all_ok = True
-        for symbol in ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'DOGEUSDT']:
-            df = load_ohlcv(symbol, '1h')
+        for symbol in ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT"]:
+            df = load_ohlcv(symbol, "1h")
             if df.empty:
                 continue
             recent = df.tail(90 * 24)
-            if 'volume' in recent.columns:
-                adv = (recent['volume'] * recent['close']).mean() * 24
+            if "volume" in recent.columns:
+                adv = (recent["volume"] * recent["close"]).mean() * 24
                 impact = pos_size / adv * 100 if adv > 0 else 999
-                status = "OK" if impact < 0.1 else "CAUTION" if impact < 1 else "TOO LARGE"
+                status = (
+                    "OK" if impact < 0.1 else "CAUTION" if impact < 1 else "TOO LARGE"
+                )
                 if impact >= 0.1:
                     all_ok = False
-                print(f"    {symbol:<12} ADV=${adv/1e6:.0f}M  ${pos_size:,.0f} = {impact:.4f}% [{status}]")
+                print(
+                    f"    {symbol:<12} ADV=${adv/1e6:.0f}M  ${pos_size:,.0f} = {impact:.4f}% [{status}]"
+                )
         if all_ok:
             print(f"    → All OK for ${portfolio_size:,}")
 
@@ -468,25 +582,31 @@ def main():
     def strat_72(df):
         return strategy(df, lookback=72)
 
-    r2 = run_portfolio_oos(all_data, strat_72, max_positions=15,
-                           test_bars=360, exit_params=exit_params)
+    r2 = run_portfolio_oos(
+        all_data, strat_72, max_positions=15, test_bars=360, exit_params=exit_params
+    )
     if r2:
         c, p = check_criteria(r2)
         print(f"\n  #2 dual_ma_72_default_pos15_rb360:")
-        print(f"    [{p}/6] Sharpe={r2['sharpe']:.2f}  Ret={r2['total_return']*100:+.1f}%  "
-              f"DD={r2['max_drawdown']*100:.1f}%  WR={r2['win_rate']*100:.0f}%  "
-              f"PF={r2['profit_factor']:.2f}  T={r2['trade_count']}")
+        print(
+            f"    [{p}/6] Sharpe={r2['sharpe']:.2f}  Ret={r2['total_return']*100:+.1f}%  "
+            f"DD={r2['max_drawdown']*100:.1f}%  WR={r2['win_rate']*100:.0f}%  "
+            f"PF={r2['profit_factor']:.2f}  T={r2['trade_count']}"
+        )
 
     # #3: dual_ma_72_wide_pos15_rb360
-    exit_wide = {'max_bars': 96, 'atr_stop': 4.0, 'profit_target_atr': 10.0}
-    r3 = run_portfolio_oos(all_data, strat_72, max_positions=15,
-                           test_bars=360, exit_params=exit_wide)
+    exit_wide = {"max_bars": 96, "atr_stop": 4.0, "profit_target_atr": 10.0}
+    r3 = run_portfolio_oos(
+        all_data, strat_72, max_positions=15, test_bars=360, exit_params=exit_wide
+    )
     if r3:
         c, p = check_criteria(r3)
         print(f"\n  #3 dual_ma_72_wide_pos15_rb360:")
-        print(f"    [{p}/6] Sharpe={r3['sharpe']:.2f}  Ret={r3['total_return']*100:+.1f}%  "
-              f"DD={r3['max_drawdown']*100:.1f}%  WR={r3['win_rate']*100:.0f}%  "
-              f"PF={r3['profit_factor']:.2f}  T={r3['trade_count']}")
+        print(
+            f"    [{p}/6] Sharpe={r3['sharpe']:.2f}  Ret={r3['total_return']*100:+.1f}%  "
+            f"DD={r3['max_drawdown']*100:.1f}%  WR={r3['win_rate']*100:.0f}%  "
+            f"PF={r3['profit_factor']:.2f}  T={r3['trade_count']}"
+        )
 
     # =========================================================================
     # FINAL VERDICT
@@ -496,12 +616,16 @@ def main():
     print("=" * 70)
 
     verdicts = {
-        'test1_6_of_6': result is not None and check_criteria(result)[1] == 6,
-        'test2_slippage_robust': all(v.get('passed', 0) >= 5 for v in slip_results.values()),
-        'test3_no_bear_catastrophe': True,  # will update from regime results
-        'test4_monte_carlo_positive': p_positive > 90 if 'p_positive' in dir() else False,
-        'test5_param_robust': robust_count >= 6,
-        'test6_capacity_ok': True,
+        "test1_6_of_6": result is not None and check_criteria(result)[1] == 6,
+        "test2_slippage_robust": all(
+            v.get("passed", 0) >= 5 for v in slip_results.values()
+        ),
+        "test3_no_bear_catastrophe": True,  # will update from regime results
+        "test4_monte_carlo_positive": (
+            p_positive > 90 if "p_positive" in dir() else False
+        ),
+        "test5_param_robust": robust_count >= 6,
+        "test6_capacity_ok": True,
     }
 
     all_pass = all(verdicts.values())
@@ -543,29 +667,32 @@ def main():
 
     # Save final report
     report = {
-        'timestamp': datetime.now().isoformat(),
-        'strategy': 'Dual MA Breakout (Long-Only)',
-        'config': {
-            'lookback': 48, 'ema_fast': 50, 'ema_slow': 200,
-            'atr_expansion': 1.0, 'max_positions': 10,
-            'rebalance_bars': 720,
-            'exit': {'max_bars': 72, 'atr_stop': 3.0, 'profit_target_atr': 8.0},
+        "timestamp": datetime.now().isoformat(),
+        "strategy": "Dual MA Breakout (Long-Only)",
+        "config": {
+            "lookback": 48,
+            "ema_fast": 50,
+            "ema_slow": 200,
+            "atr_expansion": 1.0,
+            "max_positions": 10,
+            "rebalance_bars": 720,
+            "exit": {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0},
         },
-        'true_oos_result': {
+        "true_oos_result": {
             k: float(v) if isinstance(v, (float, np.floating)) else v
             for k, v in (result or {}).items()
-            if k not in ('all_trades', 'period_returns', 'equity_curve')
+            if k not in ("all_trades", "period_returns", "equity_curve")
         },
-        'verdicts': verdicts,
-        'all_pass': all_pass,
-        'slippage_results': {
-            k: {'passed': v['passed'], 'sharpe': float(v['sharpe'])}
+        "verdicts": verdicts,
+        "all_pass": all_pass,
+        "slippage_results": {
+            k: {"passed": v["passed"], "sharpe": float(v["sharpe"])}
             for k, v in slip_results.items()
         },
-        'param_robustness': param_results,
+        "param_robustness": param_results,
     }
 
-    with open(RESULTS_PATH / "phase10_final_report.json", 'w') as f:
+    with open(RESULTS_PATH / "phase10_final_report.json", "w") as f:
         json.dump(report, f, indent=2, default=str)
 
     print(f"\nReport saved to {RESULTS_PATH / 'phase10_final_report.json'}")

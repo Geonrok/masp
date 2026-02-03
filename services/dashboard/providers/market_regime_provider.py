@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 def _get_market_regime_detector():
     """MarketRegimeDetector 인스턴스 (캐싱)"""
     from libs.analysis.market_regime import MarketRegimeDetector
+
     return MarketRegimeDetector()
 
 
@@ -30,6 +31,7 @@ def _get_market_regime_detector():
 def _get_signal_alert_service():
     """DailySignalAlertService 인스턴스 (캐싱)"""
     from services.daily_signal_alert import DailySignalAlertService
+
     return DailySignalAlertService()
 
 
@@ -52,6 +54,7 @@ def get_market_regime_analysis():
             MomentumState,
         )
         from datetime import datetime
+
         return RegimeAnalysis(
             regime=MarketRegime.UNKNOWN,
             volatility=VolatilityRegime.NORMAL,
@@ -81,10 +84,7 @@ def get_daily_signal_summary() -> dict:
         return service.get_signal_summary()
     except Exception as e:
         logger.error(f"[MarketRegimeProvider] Signal summary failed: {e}")
-        return {
-            'error': True,
-            'message': f"Signal calculation failed: {e}"
-        }
+        return {"error": True, "message": f"Signal calculation failed: {e}"}
 
 
 def get_trading_recommendation() -> dict:
@@ -101,9 +101,9 @@ def get_trading_recommendation() -> dict:
     except Exception as e:
         logger.error(f"[MarketRegimeProvider] Recommendation failed: {e}")
         return {
-            'action': 'ERROR',
-            'position_size': 0,
-            'message': f"Failed to generate recommendation: {e}"
+            "action": "ERROR",
+            "position_size": 0,
+            "message": f"Failed to generate recommendation: {e}",
         }
 
 

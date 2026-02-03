@@ -6,6 +6,7 @@
 """
 
 import sys
+
 print(f"Python: {sys.version}")
 print(f"Architecture: {'64-bit' if sys.maxsize > 2**32 else '32-bit'}")
 
@@ -18,6 +19,7 @@ print("\n32-bit Python 확인됨. 키움 API 테스트 시작...")
 
 try:
     from pykiwoom.kiwoom import Kiwoom
+
     print("[OK] pykiwoom import 성공")
 except ImportError as e:
     print(f"[FAIL] pykiwoom import 실패: {e}")
@@ -25,6 +27,7 @@ except ImportError as e:
 
 try:
     from PyQt5.QtWidgets import QApplication
+
     print("[OK] PyQt5 import 성공")
 except ImportError as e:
     print(f"[FAIL] PyQt5 import 실패: {e}")

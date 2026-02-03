@@ -32,10 +32,11 @@ load_dotenv()
 
 class ConfigPriority(Enum):
     """Configuration source priority levels."""
-    DEFAULT = 0      # Built-in defaults
-    FILE = 10        # Configuration files
-    ENV = 20         # Environment variables
-    RUNTIME = 30     # Runtime overrides (highest priority)
+
+    DEFAULT = 0  # Built-in defaults
+    FILE = 10  # Configuration files
+    ENV = 20  # Environment variables
+    RUNTIME = 30  # Runtime overrides (highest priority)
 
 
 class ConfigSource(ABC):
@@ -96,7 +97,7 @@ class EnvConfigSource(ConfigSource):
             if self.prefix and not key.startswith(self.prefix):
                 continue
 
-            clean_key = key[len(self.prefix):] if self.prefix else key
+            clean_key = key[len(self.prefix) :] if self.prefix else key
             config[clean_key] = self._convert_type(clean_key, value)
 
         self._cache = config
@@ -155,6 +156,7 @@ class FileConfigSource(ConfigSource):
                 elif self.file_path.suffix in (".yaml", ".yml"):
                     try:
                         import yaml
+
                         self._cache = yaml.safe_load(f)
                     except ImportError:
                         self._cache = {}
@@ -214,6 +216,7 @@ class RuntimeConfigSource(ConfigSource):
 @dataclass
 class ConfigChange:
     """Represents a configuration change."""
+
     key: str
     old_value: Any
     new_value: Any
@@ -329,6 +332,7 @@ class ConfigHierarchy:
 @dataclass
 class ValidationRule:
     """A configuration validation rule."""
+
     key: str
     validator: Callable[[Any], bool]
     message: str
@@ -338,6 +342,7 @@ class ValidationRule:
 @dataclass
 class ValidationResult:
     """Result of configuration validation."""
+
     is_valid: bool
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
@@ -560,7 +565,7 @@ class ConfigDiff:
 def get_trading_limits() -> dict:
     """
     환경변수에서 Trading Limits 로드
-    
+
     Returns:
         dict: Trading limits configuration
     """
@@ -568,14 +573,14 @@ def get_trading_limits() -> dict:
         "max_order_value_krw": int(os.getenv("MAX_ORDER_VALUE_KRW", "1000000")),
         "max_position_pct": float(os.getenv("MAX_POSITION_PCT", "0.10")),
         "max_daily_loss_krw": int(os.getenv("MAX_DAILY_LOSS_KRW", "100000")),
-        "adapter_mode": os.getenv("ADAPTER_MODE", "paper")
+        "adapter_mode": os.getenv("ADAPTER_MODE", "paper"),
     }
 
 
 def is_live_mode() -> bool:
     """
     실거래 모드 여부 확인
-    
+
     Returns:
         bool: True if live mode, False if paper mode
     """
@@ -585,10 +590,10 @@ def is_live_mode() -> bool:
 def validate_api_keys(exchange: str) -> bool:
     """
     환경변수 API 키 유효성 검증
-    
+
     Args:
         exchange: "upbit" | "bithumb" | "binance"
-        
+
     Returns:
         bool: True if all required keys are set
     """
@@ -596,24 +601,24 @@ def validate_api_keys(exchange: str) -> bool:
         access = os.getenv("UPBIT_ACCESS_KEY", "")
         secret = os.getenv("UPBIT_SECRET_KEY", "")
         return bool(access and secret and access != "your_access_key_here")
-    
+
     elif exchange.lower() == "bithumb":
         api_key = os.getenv("BITHUMB_API_KEY", "")
         secret = os.getenv("BITHUMB_SECRET_KEY", "")
         return bool(api_key and secret and api_key != "your_api_key_here")
-    
+
     elif exchange.lower() == "binance":
         api_key = os.getenv("BINANCE_API_KEY", "")
         secret = os.getenv("BINANCE_API_SECRET", "")
         return bool(api_key and secret and api_key != "your_api_key_here")
-    
+
     return False
 
 
 def get_adapter_mode_description() -> str:
     """
     현재 Adapter Mode 설명
-    
+
     Returns:
         str: Mode description with warnings
     """
@@ -628,21 +633,21 @@ def print_config_summary():
     print("=" * 60)
     print("Configuration Summary (from .env)")
     print("=" * 60)
-    
+
     limits = get_trading_limits()
     print(f"\nTrading Limits:")
     print(f"  Max Order Value: {limits['max_order_value_krw']:,} KRW")
     print(f"  Max Position: {limits['max_position_pct']*100:.0f}%")
     print(f"  Max Daily Loss: {limits['max_daily_loss_krw']:,} KRW")
-    
+
     print(f"\nAdapter Mode:")
     print(f"  {get_adapter_mode_description()}")
-    
+
     print(f"\nAPI Keys:")
     for exchange in ["upbit", "bithumb", "binance"]:
         status = "✅ SET" if validate_api_keys(exchange) else "❌ NOT SET"
         print(f"  {exchange.capitalize()}: {status}")
-    
+
     print("=" * 60)
 
 

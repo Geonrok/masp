@@ -168,7 +168,9 @@ class FeatureEngineering:
 
         self.feature_names = list(features.columns)
 
-        logger.debug(f"[FeatureEngineering] Generated {len(self.feature_names)} features")
+        logger.debug(
+            f"[FeatureEngineering] Generated {len(self.feature_names)} features"
+        )
 
         return features
 
@@ -203,9 +205,11 @@ class FeatureEngineering:
         # Realized volatility
         if all(c in df.columns for c in ["high", "low"]):
             # Parkinson volatility
-            features["parkinson_vol"] = np.sqrt(
-                (1 / (4 * np.log(2))) * (np.log(df["high"] / df["low"]) ** 2)
-            ).rolling(20).mean()
+            features["parkinson_vol"] = (
+                np.sqrt((1 / (4 * np.log(2))) * (np.log(df["high"] / df["low"]) ** 2))
+                .rolling(20)
+                .mean()
+            )
 
         return features
 
@@ -396,8 +400,11 @@ class FeatureEngineering:
     def _add_lag_features(self, features: pd.DataFrame) -> pd.DataFrame:
         """Add lag features for key indicators."""
         lag_cols = [
-            c for c in features.columns
-            if any(x in c for x in ["return_1d", "rsi_14d", "macd_hist", "volume_ratio"])
+            c
+            for c in features.columns
+            if any(
+                x in c for x in ["return_1d", "rsi_14d", "macd_hist", "volume_ratio"]
+            )
         ]
 
         for col in lag_cols[:5]:  # Limit to 5 columns to avoid explosion

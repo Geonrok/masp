@@ -22,8 +22,9 @@ def chande_momentum(close: pd.Series, period: int = 14) -> pd.Series:
     return cmo
 
 
-def williams_r(high: pd.Series, low: pd.Series, close: pd.Series,
-               period: int = 14) -> pd.Series:
+def williams_r(
+    high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14
+) -> pd.Series:
     """
     Williams %R
 
@@ -37,8 +38,9 @@ def williams_r(high: pd.Series, low: pd.Series, close: pd.Series,
     return wr
 
 
-def bollinger_percent_b(close: pd.Series, period: int = 20,
-                        std_dev: float = 2.0) -> pd.Series:
+def bollinger_percent_b(
+    close: pd.Series, period: int = 20, std_dev: float = 2.0
+) -> pd.Series:
     """
     Bollinger Band %B
 
@@ -54,30 +56,28 @@ def bollinger_percent_b(close: pd.Series, period: int = 20,
     return percent_b
 
 
-def atr(high: pd.Series, low: pd.Series, close: pd.Series,
-        period: int = 14) -> pd.Series:
+def atr(
+    high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14
+) -> pd.Series:
     """Average True Range"""
-    tr = pd.concat([
-        high - low,
-        (high - close.shift(1)).abs(),
-        (low - close.shift(1)).abs()
-    ], axis=1).max(axis=1)
+    tr = pd.concat(
+        [high - low, (high - close.shift(1)).abs(), (low - close.shift(1)).abs()],
+        axis=1,
+    ).max(axis=1)
     return tr.rolling(period).mean()
 
 
-def adx(high: pd.Series, low: pd.Series, close: pd.Series,
-        period: int = 14) -> tuple:
+def adx(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> tuple:
     """
     Average Directional Index
 
     Returns: (ADX, +DI, -DI)
     - ADX > 25: 강한 추세
     """
-    tr = pd.concat([
-        high - low,
-        (high - close.shift(1)).abs(),
-        (low - close.shift(1)).abs()
-    ], axis=1).max(axis=1)
+    tr = pd.concat(
+        [high - low, (high - close.shift(1)).abs(), (low - close.shift(1)).abs()],
+        axis=1,
+    ).max(axis=1)
 
     plus_dm = high.diff()
     minus_dm = -low.diff()

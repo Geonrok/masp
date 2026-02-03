@@ -13,5 +13,3 @@ main = create_service_main(AssetClass.CRYPTO_SPOT)
 
 if __name__ == "__main__":
     main()
-
-

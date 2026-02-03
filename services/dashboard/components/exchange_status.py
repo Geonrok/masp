@@ -1,4 +1,5 @@
 """Exchange enable/disable status panel."""
+
 from __future__ import annotations
 
 import math
@@ -27,8 +28,18 @@ _AUTO_REFRESH_INTERVAL = _get_refresh_interval()
 _DEMO_EXCHANGE_CONFIGS: Dict[str, Dict[str, Any]] = {
     "upbit": {"enabled": True, "name": "Upbit", "region": "KR", "type": "spot"},
     "bithumb": {"enabled": True, "name": "Bithumb", "region": "KR", "type": "spot"},
-    "binance": {"enabled": False, "name": "Binance", "region": "Global", "type": "spot"},
-    "binance_futures": {"enabled": False, "name": "Binance Futures", "region": "Global", "type": "futures"},
+    "binance": {
+        "enabled": False,
+        "name": "Binance",
+        "region": "Global",
+        "type": "spot",
+    },
+    "binance_futures": {
+        "enabled": False,
+        "name": "Binance Futures",
+        "region": "Global",
+        "type": "futures",
+    },
 }
 
 
@@ -104,7 +115,9 @@ class ExchangeStatusPanel:
                             if success:
                                 st.rerun()
                             else:
-                                st.error(f"{exchange} 전환 실패. API 서버를 확인하세요.")
+                                st.error(
+                                    f"{exchange} 전환 실패. API 서버를 확인하세요."
+                                )
 
         # Show demo mode indicator
         if self._is_demo_mode:

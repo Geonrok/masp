@@ -83,7 +83,7 @@ class TestPortfolioOptimizer:
         result = optimizer.optimize(OptimizationMethod.EQUAL_WEIGHT)
 
         assert len(result.weights) == 3
-        assert np.allclose(result.weights, [1/3, 1/3, 1/3])
+        assert np.allclose(result.weights, [1 / 3, 1 / 3, 1 / 3])
         assert np.sum(result.weights) == pytest.approx(1.0)
 
     def test_inverse_volatility(self, optimizer):
@@ -166,7 +166,7 @@ class TestPortfolioOptimizer:
         assert "Aggressive" in allocation
         assert "Moderate" in allocation
         assert "Conservative" in allocation
-        assert allocation["Aggressive"] == pytest.approx(1/3, rel=0.01)
+        assert allocation["Aggressive"] == pytest.approx(1 / 3, rel=0.01)
 
 
 class TestOptimizationResult:

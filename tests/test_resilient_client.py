@@ -249,7 +249,9 @@ class TestSyncResilientHTTPClient:
             base_delay=0.01,
             circuit_failure_threshold=3,
         )
-        return SyncResilientHTTPClient("test_sync", config, base_url="https://api.example.com")
+        return SyncResilientHTTPClient(
+            "test_sync", config, base_url="https://api.example.com"
+        )
 
     def test_successful_request(self, sync_client):
         """Test successful sync request."""

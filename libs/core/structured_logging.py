@@ -86,7 +86,9 @@ class JSONFormatter(logging.Formatter):
 
         # Timestamp
         if self.include_timestamp:
-            log_data["timestamp"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            log_data["timestamp"] = (
+                datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            )
 
         # Standard fields
         log_data["level"] = record.levelname
@@ -140,12 +142,14 @@ class JSONFormatter(logging.Formatter):
 
         frames = []
         for frame in traceback.extract_tb(exc_info[2]):
-            frames.append({
-                "file": frame.filename,
-                "line": frame.lineno,
-                "function": frame.name,
-                "code": frame.line,
-            })
+            frames.append(
+                {
+                    "file": frame.filename,
+                    "line": frame.lineno,
+                    "function": frame.name,
+                    "code": frame.line,
+                }
+            )
         return frames
 
     def _serialize_value(self, value: Any) -> Any:

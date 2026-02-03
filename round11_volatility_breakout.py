@@ -24,7 +24,7 @@ from tqdm import tqdm
 import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 # Configuration
 DATA_DIR = Path("E:/투자/data/kr_stock")
@@ -37,126 +37,133 @@ OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 # Commission: 0.015% * 2 (Buy/Sell)
 # Tax: 0.20% (Sell)
 # Slippage: 0.05% * 2 (Buy Stop / Sell MOC)
-TOTAL_COST = 0.00015*2 + 0.0020 + 0.0005*2 
+TOTAL_COST = 0.00015 * 2 + 0.0020 + 0.0005 * 2
 # Total ~ 0.33% per trade (Very high hurdle)
+
 
 def run_volatility_breakout(file_path):
     try:
         df = pd.read_csv(file_path)
-        if len(df) < 500: return []
-        
+        if len(df) < 500:
+            return []
+
         # Date parsing
-        if 'Date' in df.columns:
-            df['Date'] = pd.to_datetime(df['Date'])
-            df.set_index('Date', inplace=True)
+        if "Date" in df.columns:
+            df["Date"] = pd.to_datetime(df["Date"])
+            df.set_index("Date", inplace=True)
         else:
             return []
-            
+
         df = df.sort_index()
-        
+
         # Calculate Indicators
-        df['range'] = df['High'] - df['Low']
-        df['prev_range'] = df['range'].shift(1)
-        df['ma5'] = df['Close'].rolling(5).mean().shift(1)
-        
+        df["range"] = df["High"] - df["Low"]
+        df["prev_range"] = df["range"].shift(1)
+        df["ma5"] = df["Close"].rolling(5).mean().shift(1)
+
         results = []
-        
+
         # Test Parameters
         k_values = [0.4, 0.5, 0.6]
-        
+
         for k in k_values:
             # Vectorized Backtest
-            target_price = df['Open'] + df['prev_range'] * k
-            
+            target_price = df["Open"] + df["prev_range"] * k
+
             # Entry Condition: High > Target
             # Filter: Open > MA5 (Trend Filter)
-            condition = (df['High'] > target_price) & (df['Open'] > df['ma5'])
-            
+            condition = (df["High"] > target_price) & (df["Open"] > df["ma5"])
+
             # Calculate Returns
             # If triggered, Buy at Target, Sell at Close
-            daily_profit = (df['Close'] - target_price) / target_price
+            daily_profit = (df["Close"] - target_price) / target_price
             daily_profit -= TOTAL_COST
-            
+
             # Apply signals (0 if not triggered)
             strategy_ret = daily_profit.where(condition, 0)
-            
+
             # Metrics (2022-2024 Test Period)
             test_ret = strategy_ret["2022-01-01":"2024-12-31"]
-            
-            if len(test_ret) == 0: continue
-            
+
+            if len(test_ret) == 0:
+                continue
+
             cum_ret = (1 + test_ret).cumprod()
             total_return = cum_ret.iloc[-1] - 1
-            
+
             # Count trades
             trades = condition["2022-01-01":"2024-12-31"].sum()
-            if trades < 20: continue # Too few trades
-            
+            if trades < 20:
+                continue  # Too few trades
+
             # MDD
             roll_max = cum_ret.cummax()
             dd = cum_ret / roll_max - 1
             mdd = dd.min()
-            
+
             # Sharpe (Daily)
-            if test_ret.std() == 0: continue
+            if test_ret.std() == 0:
+                continue
             sharpe = (test_ret.mean() * 252) / (test_ret.std() * np.sqrt(252))
-            
+
             # Win Rate
             win_rate = (test_ret > 0).sum() / trades
-            
-            results.append({
-                "ticker": file_path.stem,
-                "k": k,
-                "sharpe": sharpe,
-                "return": total_return,
-                "mdd": mdd,
-                "win_rate": win_rate,
-                "trades": trades
-            })
-            
+
+            results.append(
+                {
+                    "ticker": file_path.stem,
+                    "k": k,
+                    "sharpe": sharpe,
+                    "return": total_return,
+                    "mdd": mdd,
+                    "win_rate": win_rate,
+                    "trades": trades,
+                }
+            )
+
         return results
-        
+
     except Exception:
         return []
 
+
 def main():
-    print("="*80)
+    print("=" * 80)
     print("Round 11: Larry Williams Volatility Breakout")
-    print("="*80)
-    
+    print("=" * 80)
+
     all_files = list(KOSPI_DIR.glob("*.csv")) + list(KOSDAQ_DIR.glob("*.csv"))
     print(f"Scanning {len(all_files)} files...")
-    
+
     all_results = []
-    
+
     with ProcessPoolExecutor(max_workers=8) as executor:
         futures = [executor.submit(run_volatility_breakout, f) for f in all_files]
-        
+
         for f in tqdm(as_completed(futures), total=len(futures)):
             res = f.result()
             if res:
                 all_results.extend(res)
-                
+
     if not all_results:
         print("No results.")
         return
-        
+
     df = pd.DataFrame(all_results)
-    
+
     # Filter Viable
     viable = df[
-        (df['sharpe'] > 1.0) & 
-        (df['return'] > 0.3) & 
-        (df['mdd'] > -0.3)
-    ].sort_values('sharpe', ascending=False)
-    
+        (df["sharpe"] > 1.0) & (df["return"] > 0.3) & (df["mdd"] > -0.3)
+    ].sort_values("sharpe", ascending=False)
+
     print(f"\nTotal Viable Strategies: {len(viable)}")
     print(f"\nTOP 20 Volatility Breakout Candidates:")
     print(viable.head(20))
-    
+
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     viable.to_csv(OUTPUT_PATH / f"round11_viable_{timestamp}.csv", index=False)
     df.to_csv(OUTPUT_PATH / f"round11_all_{timestamp}.csv", index=False)
+
 
 if __name__ == "__main__":
     main()

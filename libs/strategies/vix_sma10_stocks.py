@@ -169,7 +169,9 @@ class VIXSMA10StocksStrategy(BaseStrategy):
                 df = vix.history(period="2y")
                 if len(df) > 0:
                     self._vix_data = df["Close"]
-                    logger.info(f"[VIXSMA10] VIX yfinance 로드: {len(self._vix_data)}일")
+                    logger.info(
+                        f"[VIXSMA10] VIX yfinance 로드: {len(self._vix_data)}일"
+                    )
                     return True
                 else:
                     logger.error("[VIXSMA10] yfinance VIX 데이터 없음")

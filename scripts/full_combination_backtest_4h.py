@@ -9,14 +9,15 @@ from pathlib import Path
 from datetime import datetime
 from itertools import product
 import warnings
-warnings.filterwarnings('ignore')
 
-DATA_ROOT = Path('E:/data/crypto_ohlcv')
+warnings.filterwarnings("ignore")
 
-print('=' * 80)
-print('전체 조합 백테스트 - 4시간봉')
+DATA_ROOT = Path("E:/data/crypto_ohlcv")
+
+print("=" * 80)
+print("전체 조합 백테스트 - 4시간봉")
 print(f'시작 시간: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-print('=' * 80)
+print("=" * 80)
 
 
 def calc_kama(prices, period=10, fast=2, slow=30):
@@ -29,7 +30,7 @@ def calc_kama(prices, period=10, fast=2, slow=30):
     slow_sc = 2 / (slow + 1)
     for i in range(period, n):
         change = abs(prices[i] - prices[i - period])
-        volatility = np.sum(np.abs(np.diff(prices[i - period:i + 1])))
+        volatility = np.sum(np.abs(np.diff(prices[i - period : i + 1])))
         er = change / volatility if volatility > 0 else 0
         sc = (er * (fast_sc - slow_sc) + slow_sc) ** 2
         kama[i] = kama[i - 1] + sc * (prices[i] - kama[i - 1])
@@ -39,7 +40,7 @@ def calc_kama(prices, period=10, fast=2, slow=30):
 def calc_sma(prices, period):
     result = np.full(len(prices), np.nan)
     for i in range(period - 1, len(prices)):
-        result[i] = np.mean(prices[i - period + 1:i + 1])
+        result[i] = np.mean(prices[i - period + 1 : i + 1])
     return result
 
 
@@ -51,21 +52,23 @@ def calc_tsmom(prices, period=60):
     return signal
 
 
-def load_ohlcv_4h(exchange='binance_futures'):
-    folder = DATA_ROOT / f'{exchange}_4h'
+def load_ohlcv_4h(exchange="binance_futures"):
+    folder = DATA_ROOT / f"{exchange}_4h"
     if not folder.exists():
         return {}
     data = {}
-    for f in folder.glob('*.csv'):
+    for f in folder.glob("*.csv"):
         try:
             df = pd.read_csv(f)
-            date_col = [c for c in df.columns if 'date' in c.lower() or 'time' in c.lower()]
+            date_col = [
+                c for c in df.columns if "date" in c.lower() or "time" in c.lower()
+            ]
             if not date_col:
                 continue
-            df['datetime'] = pd.to_datetime(df[date_col[0]])
-            df = df.set_index('datetime').sort_index()
-            df = df[~df.index.duplicated(keep='last')]
-            required = ['open', 'high', 'low', 'close', 'volume']
+            df["datetime"] = pd.to_datetime(df[date_col[0]])
+            df = df.set_index("datetime").sort_index()
+            df = df[~df.index.duplicated(keep="last")]
+            required = ["open", "high", "low", "close", "volume"]
             if not all(c in df.columns for c in required):
                 continue
             df = df[required]
@@ -80,12 +83,12 @@ def load_ohlcv_4h(exchange='binance_futures'):
 def backtest_4h(data, btc_data, kama_p=40, tsmom_p=240, btc_ma_p=120, max_pos=10):
     """4시간봉 백테스트 (파라미터는 4h 캔들 수 기준)"""
     if not data:
-        return {'return': 0, 'sharpe': 0, 'mdd': 0, 'trades': 0, 'win_rate': 0}
+        return {"return": 0, "sharpe": 0, "mdd": 0, "trades": 0, "win_rate": 0}
 
     # BTC Gate
     btc_gate = None
     if btc_data is not None:
-        btc_prices = btc_data['close'].values
+        btc_prices = btc_data["close"].values
         btc_ma = calc_sma(btc_prices, btc_ma_p)
         btc_gate = pd.Series(btc_prices > btc_ma, index=btc_data.index)
 
@@ -94,23 +97,23 @@ def backtest_4h(data, btc_data, kama_p=40, tsmom_p=240, btc_ma_p=120, max_pos=10
         if len(df) < max(kama_p, tsmom_p, 500):
             continue
 
-        prices = df['close'].values
+        prices = df["close"].values
         kama = calc_kama(prices, kama_p)
         kama_signal = prices > kama
         tsmom_signal = calc_tsmom(prices, tsmom_p)
         signal = kama_signal | tsmom_signal
 
         if btc_gate is not None:
-            aligned = btc_gate.reindex(df.index, method='ffill').fillna(False)
+            aligned = btc_gate.reindex(df.index, method="ffill").fillna(False)
             signal = signal & aligned.values
 
         df = df.copy()
-        df['signal'] = signal
-        df['dvol'] = df['close'] * df['volume']
+        df["signal"] = signal
+        df["dvol"] = df["close"] * df["volume"]
         signal_data[symbol] = df
 
     if not signal_data:
-        return {'return': 0, 'sharpe': 0, 'mdd': 0, 'trades': 0, 'win_rate': 0}
+        return {"return": 0, "sharpe": 0, "mdd": 0, "trades": 0, "win_rate": 0}
 
     all_times = sorted(set().union(*[df.index.tolist() for df in signal_data.values()]))
 
@@ -134,11 +137,14 @@ def backtest_4h(data, btc_data, kama_p=40, tsmom_p=240, btc_ma_p=120, max_pos=10
 
         for sym, df in signal_data.items():
             if dt in df.index:
-                prices_now[sym] = df.loc[dt, 'close']
-                signals_now[sym] = df.loc[dt, 'signal']
-                vols_now[sym] = df.loc[dt, 'dvol']
+                prices_now[sym] = df.loc[dt, "close"]
+                signals_now[sym] = df.loc[dt, "signal"]
+                vols_now[sym] = df.loc[dt, "dvol"]
 
-        pos_value = sum(shares * prices_now.get(sym, cost) for sym, (shares, cost) in positions.items())
+        pos_value = sum(
+            shares * prices_now.get(sym, cost)
+            for sym, (shares, cost) in positions.items()
+        )
         port_value = cash + pos_value
 
         if i > 0:
@@ -166,7 +172,9 @@ def backtest_4h(data, btc_data, kama_p=40, tsmom_p=240, btc_ma_p=120, max_pos=10
                 trades += 1
 
         if targets:
-            curr_val = cash + sum(s * prices_now.get(sym, 0) for sym, (s, _) in positions.items())
+            curr_val = cash + sum(
+                s * prices_now.get(sym, 0) for sym, (s, _) in positions.items()
+            )
             per_pos = curr_val / len(targets) if targets else 0
 
             for sym in new_entries:
@@ -184,7 +192,11 @@ def backtest_4h(data, btc_data, kama_p=40, tsmom_p=240, btc_ma_p=120, max_pos=10
     rets = np.array(returns)
 
     # 4시간봉은 하루 6개 캔들 → 연 252*6 = 1512
-    sharpe = np.mean(rets) / np.std(rets) * np.sqrt(1512) if len(rets) > 1 and np.std(rets) > 0 else 0
+    sharpe = (
+        np.mean(rets) / np.std(rets) * np.sqrt(1512)
+        if len(rets) > 1 and np.std(rets) > 0
+        else 0
+    )
 
     vals = np.array(values)
     peak = np.maximum.accumulate(vals)
@@ -192,44 +204,50 @@ def backtest_4h(data, btc_data, kama_p=40, tsmom_p=240, btc_ma_p=120, max_pos=10
     mdd = np.min(dd)
     win_rate = winning_trades / (trades / 2) if trades > 0 else 0
 
-    return {'return': total_ret, 'sharpe': sharpe, 'mdd': mdd, 'trades': trades, 'win_rate': win_rate}
+    return {
+        "return": total_ret,
+        "sharpe": sharpe,
+        "mdd": mdd,
+        "trades": trades,
+        "win_rate": win_rate,
+    }
 
 
 def main():
-    print('\n데이터 로드 중...')
-    ohlcv_4h = load_ohlcv_4h('binance_futures')
-    print(f'  Binance Futures 4h: {len(ohlcv_4h)}개 심볼')
+    print("\n데이터 로드 중...")
+    ohlcv_4h = load_ohlcv_4h("binance_futures")
+    print(f"  Binance Futures 4h: {len(ohlcv_4h)}개 심볼")
 
-    btc_data = ohlcv_4h.get('BTCUSDT')
+    btc_data = ohlcv_4h.get("BTCUSDT")
 
     def get_universe(data, universe_type):
-        if universe_type == 'btc_only':
-            return {k: v for k, v in data.items() if 'BTC' in k.upper()}
-        elif universe_type == 'top5':
-            vols = [(s, (df['close'] * df['volume']).mean()) for s, df in data.items()]
+        if universe_type == "btc_only":
+            return {k: v for k, v in data.items() if "BTC" in k.upper()}
+        elif universe_type == "top5":
+            vols = [(s, (df["close"] * df["volume"]).mean()) for s, df in data.items()]
             vols.sort(key=lambda x: x[1], reverse=True)
             return {s: data[s] for s, _ in vols[:5]}
-        elif universe_type == 'top10':
-            vols = [(s, (df['close'] * df['volume']).mean()) for s, df in data.items()]
+        elif universe_type == "top10":
+            vols = [(s, (df["close"] * df["volume"]).mean()) for s, df in data.items()]
             vols.sort(key=lambda x: x[1], reverse=True)
             return {s: data[s] for s, _ in vols[:10]}
         return data
 
     # 4h 파라미터 (일봉 대비 6배)
     param_sets = [
-        {'kama_p': 30, 'tsmom_p': 360, 'btc_ma_p': 180},   # KAMA5/TSMOM60일 → 4h
-        {'kama_p': 60, 'tsmom_p': 360, 'btc_ma_p': 180},   # KAMA10/TSMOM60일
-        {'kama_p': 120, 'tsmom_p': 180, 'btc_ma_p': 300},  # KAMA20/TSMOM30일
+        {"kama_p": 30, "tsmom_p": 360, "btc_ma_p": 180},  # KAMA5/TSMOM60일 → 4h
+        {"kama_p": 60, "tsmom_p": 360, "btc_ma_p": 180},  # KAMA10/TSMOM60일
+        {"kama_p": 120, "tsmom_p": 180, "btc_ma_p": 300},  # KAMA20/TSMOM30일
     ]
 
-    universes = ['btc_only', 'top5', 'top10']
+    universes = ["btc_only", "top5", "top10"]
 
     results = []
     total = len(universes) * len(param_sets)
     count = 0
 
-    print(f'\n총 테스트: {total}개')
-    print('\n백테스트 실행 중...')
+    print(f"\n총 테스트: {total}개")
+    print("\n백테스트 실행 중...")
 
     for universe in universes:
         universe_data = get_universe(ohlcv_4h, universe)
@@ -238,39 +256,47 @@ def main():
 
         for params in param_sets:
             count += 1
-            print(f'  {count}/{total}: {universe} | KAMA{params["kama_p"]}/TSMOM{params["tsmom_p"]}')
+            print(
+                f'  {count}/{total}: {universe} | KAMA{params["kama_p"]}/TSMOM{params["tsmom_p"]}'
+            )
 
             result = backtest_4h(
                 universe_data,
                 btc_data,
-                kama_p=params['kama_p'],
-                tsmom_p=params['tsmom_p'],
-                btc_ma_p=params['btc_ma_p'],
+                kama_p=params["kama_p"],
+                tsmom_p=params["tsmom_p"],
+                btc_ma_p=params["btc_ma_p"],
                 max_pos=min(10, len(universe_data)),
             )
 
-            results.append({
-                'timeframe': '4h',
-                'universe': universe,
-                'kama_p': params['kama_p'],
-                'tsmom_p': params['tsmom_p'],
-                'btc_ma_p': params['btc_ma_p'],
-                **result
-            })
+            results.append(
+                {
+                    "timeframe": "4h",
+                    "universe": universe,
+                    "kama_p": params["kama_p"],
+                    "tsmom_p": params["tsmom_p"],
+                    "btc_ma_p": params["btc_ma_p"],
+                    **result,
+                }
+            )
 
     df = pd.DataFrame(results)
-    output_file = Path('E:/투자/Multi-Asset Strategy Platform/outputs/backtest_4h_results.csv')
-    df.to_csv(output_file, index=False, encoding='utf-8-sig')
+    output_file = Path(
+        "E:/투자/Multi-Asset Strategy Platform/outputs/backtest_4h_results.csv"
+    )
+    df.to_csv(output_file, index=False, encoding="utf-8-sig")
 
-    print('\n' + '=' * 80)
-    print('4시간봉 백테스트 결과')
-    print('=' * 80)
+    print("\n" + "=" * 80)
+    print("4시간봉 백테스트 결과")
+    print("=" * 80)
 
     for _, row in df.iterrows():
         print(f"  {row['universe']} | KAMA{row['kama_p']}/TSMOM{row['tsmom_p']}")
-        print(f"    수익률: {row['return']*100:.1f}% | 샤프: {row['sharpe']:.2f} | MDD: {row['mdd']*100:.1f}%")
+        print(
+            f"    수익률: {row['return']*100:.1f}% | 샤프: {row['sharpe']:.2f} | MDD: {row['mdd']*100:.1f}%"
+        )
 
-    print(f'\n결과 저장: {output_file}')
+    print(f"\n결과 저장: {output_file}")
     return df
 
 

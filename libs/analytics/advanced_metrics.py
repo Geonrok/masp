@@ -157,9 +157,7 @@ def calculate_var(
         VaR as positive number (loss amount)
     """
     if len(returns) < MIN_SAMPLE_VAR:
-        logger.warning(
-            f"[VAR] Insufficient samples: {len(returns)} < {MIN_SAMPLE_VAR}"
-        )
+        logger.warning(f"[VAR] Insufficient samples: {len(returns)} < {MIN_SAMPLE_VAR}")
 
     if len(returns) < 2:
         return 0.0
@@ -412,7 +410,7 @@ def calculate_kurtosis(returns: List[float]) -> float:
         return 0.0
 
     m4 = np.mean((returns_arr - mean) ** 4)
-    kurt = (m4 / (std ** 4)) - 3  # Excess kurtosis
+    kurt = (m4 / (std**4)) - 3  # Excess kurtosis
 
     return kurt
 
@@ -455,7 +453,7 @@ def analyze_drawdowns(equity_curve: List[float]) -> DrawdownMetrics:
     max_dd_idx = np.argmax(underwater)
 
     # Find max drawdown start (peak before max drawdown)
-    peak_idx = np.argmax(equity[:max_dd_idx + 1])
+    peak_idx = np.argmax(equity[: max_dd_idx + 1])
 
     # Find recovery (when equity returns to peak)
     recovery_time = None
@@ -595,14 +593,30 @@ def calculate_advanced_metrics(
     """
     if not returns or not equity_curve:
         return AdvancedPerformanceMetrics(
-            sharpe_ratio=0, sortino_ratio=0, calmar_ratio=0,
-            omega_ratio=0, information_ratio=0, treynor_ratio=0,
-            gain_to_pain_ratio=0, tail_ratio=0,
-            var_95=0, var_99=0, cvar_95=0, cvar_99=0,
-            max_drawdown_pct=0, max_drawdown_duration=0, avg_drawdown_pct=0,
-            win_rate=0, profit_factor=0, expectancy=0, payoff_ratio=0,
-            volatility_annual=0, downside_deviation=0, upside_potential=0,
-            skewness=0, kurtosis=0,
+            sharpe_ratio=0,
+            sortino_ratio=0,
+            calmar_ratio=0,
+            omega_ratio=0,
+            information_ratio=0,
+            treynor_ratio=0,
+            gain_to_pain_ratio=0,
+            tail_ratio=0,
+            var_95=0,
+            var_99=0,
+            cvar_95=0,
+            cvar_99=0,
+            max_drawdown_pct=0,
+            max_drawdown_duration=0,
+            avg_drawdown_pct=0,
+            win_rate=0,
+            profit_factor=0,
+            expectancy=0,
+            payoff_ratio=0,
+            volatility_annual=0,
+            downside_deviation=0,
+            upside_potential=0,
+            skewness=0,
+            kurtosis=0,
         )
 
     returns_arr = np.array(returns)
@@ -625,7 +639,11 @@ def calculate_advanced_metrics(
 
     # Calmar
     total_return = (equity_curve[-1] - equity_curve[0]) / equity_curve[0]
-    calmar = (total_return * 100) / dd_metrics.max_drawdown_pct if dd_metrics.max_drawdown_pct > 0 else 0
+    calmar = (
+        (total_return * 100) / dd_metrics.max_drawdown_pct
+        if dd_metrics.max_drawdown_pct > 0
+        else 0
+    )
 
     # Advanced ratios
     omega = calculate_omega_ratio(returns)

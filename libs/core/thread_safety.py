@@ -365,7 +365,8 @@ class NamedLockManager:
         now = time.time()
         with self._manager_lock:
             return [
-                info for info in self._lock_info.values()
+                info
+                for info in self._lock_info.values()
                 if now - info.acquired_at > threshold_seconds
             ]
 

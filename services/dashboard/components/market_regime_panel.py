@@ -144,7 +144,10 @@ def render_market_regime_panel(
             with col_c:
                 if diff:
                     color = "green" if diff.startswith("+") else "red"
-                    st.markdown(f"<span style='color:{color}'>{diff}</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<span style='color:{color}'>{diff}</span>",
+                        unsafe_allow_html=True,
+                    )
 
     with col2:
         st.markdown("**추세 & 모멘텀 지표**")
@@ -194,15 +197,15 @@ def render_signal_status_panel(
         st.error(f"시그널 조회 오류: {e}")
         return
 
-    if summary.get('error'):
-        st.warning(summary.get('message', 'Unknown error'))
+    if summary.get("error"):
+        st.warning(summary.get("message", "Unknown error"))
         return
 
     # === BTC Gate Status ===
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        gate_status = summary.get('btc_gate', False)
+        gate_status = summary.get("btc_gate", False)
         gate_color = "#4CAF50" if gate_status else "#F44336"
         gate_text = "PASS" if gate_status else "FAIL"
 
@@ -230,21 +233,19 @@ def render_signal_status_panel(
     st.markdown("<br>", unsafe_allow_html=True)
 
     # === Signal List ===
-    signals = summary.get('signals', {})
+    signals = summary.get("signals", {})
 
     if signals:
         # Entry signals
-        entry_list = [
-            (s, d) for s, d in signals.items() if d.get('entry_signal')
-        ]
-        entry_list.sort(key=lambda x: x[1].get('change_7d', 0), reverse=True)
+        entry_list = [(s, d) for s, d in signals.items() if d.get("entry_signal")]
+        entry_list.sort(key=lambda x: x[1].get("change_7d", 0), reverse=True)
 
         if entry_list:
             st.markdown("**Entry 시그널**")
 
             for symbol, data in entry_list[:10]:
-                kama = "KAMA" if data.get('kama_signal') else ""
-                tsmom = "TSMOM" if data.get('tsmom_signal') else ""
+                kama = "KAMA" if data.get("kama_signal") else ""
+                tsmom = "TSMOM" if data.get("tsmom_signal") else ""
                 signal_str = "+".join(filter(None, [kama, tsmom]))
 
                 col_a, col_b, col_c, col_d = st.columns([3, 2, 2, 2])
@@ -255,9 +256,12 @@ def render_signal_status_panel(
                 with col_c:
                     st.text(signal_str)
                 with col_d:
-                    change = data.get('change_7d', 0)
+                    change = data.get("change_7d", 0)
                     color = "green" if change > 0 else "red"
-                    st.markdown(f"<span style='color:{color}'>{change:+.1f}%</span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<span style='color:{color}'>{change:+.1f}%</span>",
+                        unsafe_allow_html=True,
+                    )
         else:
             st.info("현재 Entry 시그널이 없습니다.")
 

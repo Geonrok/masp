@@ -10,15 +10,12 @@ from dataclasses import dataclass
 from typing import Optional, Dict, List
 from enum import Enum
 
-from .indicators import (
-    calc_foreign_wght_mas,
-    calc_price_ma,
-    check_multi_tf_conditions
-)
+from .indicators import calc_foreign_wght_mas, calc_price_ma, check_multi_tf_conditions
 
 
 class SignalType(Enum):
     """신호 유형"""
+
     BUY = 1
     HOLD = 0
     SELL = -1
@@ -27,6 +24,7 @@ class SignalType(Enum):
 @dataclass
 class TradingSignal:
     """거래 신호"""
+
     ticker: str
     signal_type: SignalType
     strength: float  # 0.0 ~ 1.0
@@ -39,6 +37,7 @@ class TradingSignal:
 @dataclass
 class StrategyParams:
     """전략 파라미터"""
+
     wght_short1: int = 5
     wght_long1: int = 20
     wght_short2: int = 10
@@ -79,7 +78,7 @@ class MultiTFShortStrategy:
             wght_long1=self.params.wght_long1,
             wght_short2=self.params.wght_short2,
             wght_long2=self.params.wght_long2,
-            price_ma=self.params.price_ma
+            price_ma=self.params.price_ma,
         )
 
         signals = pd.Series(0, index=df.index)
@@ -98,20 +97,24 @@ class MultiTFShortStrategy:
             TradingSignal 객체
         """
         # 조건별 계산
-        wght_s1, wght_l1 = calc_foreign_wght_mas(df, self.params.wght_short1, self.params.wght_long1)
-        wght_s2, wght_l2 = calc_foreign_wght_mas(df, self.params.wght_short2, self.params.wght_long2)
+        wght_s1, wght_l1 = calc_foreign_wght_mas(
+            df, self.params.wght_short1, self.params.wght_long1
+        )
+        wght_s2, wght_l2 = calc_foreign_wght_mas(
+            df, self.params.wght_short2, self.params.wght_long2
+        )
         price_ma = calc_price_ma(df, self.params.price_ma)
 
         # 최신값
         latest_idx = df.index[-1]
         cond1 = wght_s1.iloc[-1] > wght_l1.iloc[-1]
         cond2 = wght_s2.iloc[-1] > wght_l2.iloc[-1]
-        cond3 = df['close'].iloc[-1] > price_ma.iloc[-1]
+        cond3 = df["close"].iloc[-1] > price_ma.iloc[-1]
 
         conditions = {
-            f'wght_{self.params.wght_short1}>{self.params.wght_long1}': cond1,
-            f'wght_{self.params.wght_short2}>{self.params.wght_long2}': cond2,
-            f'price>ma{self.params.price_ma}': cond3
+            f"wght_{self.params.wght_short1}>{self.params.wght_long1}": cond1,
+            f"wght_{self.params.wght_short2}>{self.params.wght_long2}": cond2,
+            f"price>ma{self.params.price_ma}": cond3,
         }
 
         # 신호 결정
@@ -124,9 +127,13 @@ class MultiTFShortStrategy:
         # 이유 생성
         reasons = []
         if cond1:
-            reasons.append(f"단기 외국인↑ ({wght_s1.iloc[-1]:.2f}>{wght_l1.iloc[-1]:.2f})")
+            reasons.append(
+                f"단기 외국인↑ ({wght_s1.iloc[-1]:.2f}>{wght_l1.iloc[-1]:.2f})"
+            )
         if cond2:
-            reasons.append(f"중기 외국인↑ ({wght_s2.iloc[-1]:.2f}>{wght_l2.iloc[-1]:.2f})")
+            reasons.append(
+                f"중기 외국인↑ ({wght_s2.iloc[-1]:.2f}>{wght_l2.iloc[-1]:.2f})"
+            )
         if cond3:
             reasons.append(f"가격>MA{self.params.price_ma}")
 
@@ -138,8 +145,8 @@ class MultiTFShortStrategy:
             strength=strength,
             reason=reason,
             conditions=conditions,
-            price=df['close'].iloc[-1],
-            foreign_wght=df['wght'].iloc[-1]
+            price=df["close"].iloc[-1],
+            foreign_wght=df["wght"].iloc[-1],
         )
 
 
@@ -161,42 +168,44 @@ class ForeignScoreStrategy:
 
         # 외국인 순매수 조건 (4점)
         for period in [3, 5, 10, 20]:
-            df[f'f{period}'] = df['chg_qty'].rolling(period).sum()
-            score += (df[f'f{period}'] > 0).astype(float)
+            df[f"f{period}"] = df["chg_qty"].rolling(period).sum()
+            score += (df[f"f{period}"] > 0).astype(float)
 
         # 가격 정배열 (3점)
-        df['ma5'] = df['close'].rolling(5).mean()
-        df['ma20'] = df['close'].rolling(20).mean()
-        df['ma60'] = df['close'].rolling(60).mean()
-        score += (df['close'] > df['ma20']).astype(float)
-        score += (df['ma5'] > df['ma20']).astype(float)
-        score += (df['ma20'] > df['ma60']).astype(float)
+        df["ma5"] = df["close"].rolling(5).mean()
+        df["ma20"] = df["close"].rolling(20).mean()
+        df["ma60"] = df["close"].rolling(60).mean()
+        score += (df["close"] > df["ma20"]).astype(float)
+        score += (df["ma5"] > df["ma20"]).astype(float)
+        score += (df["ma20"] > df["ma60"]).astype(float)
 
         # MACD (1점)
-        ema12 = df['close'].ewm(span=12).mean()
-        ema26 = df['close'].ewm(span=26).mean()
+        ema12 = df["close"].ewm(span=12).mean()
+        ema26 = df["close"].ewm(span=26).mean()
         macd = ema12 - ema26
         signal_line = macd.ewm(span=9).mean()
         score += (macd > signal_line).astype(float)
 
         # 모멘텀 (1점)
-        df['mom20'] = df['close'].pct_change(20)
-        score += (df['mom20'] > 0).astype(float)
+        df["mom20"] = df["close"].pct_change(20)
+        score += (df["mom20"] > 0).astype(float)
 
         # 거래량 (1점)
-        df['vol_ma'] = df['volume'].rolling(20).mean()
-        score += (df['volume'] > df['vol_ma']).astype(float)
+        df["vol_ma"] = df["volume"].rolling(20).mean()
+        score += (df["volume"] > df["vol_ma"]).astype(float)
 
         signals = pd.Series(0, index=df.index)
         signals[score >= self.threshold] = 1
         return signals
 
 
-def backtest_strategy(df: pd.DataFrame,
-                     signals: pd.Series,
-                     initial_capital: float = 10_000_000,
-                     fee_rate: float = 0.0015,
-                     slippage: float = 0.001) -> Dict:
+def backtest_strategy(
+    df: pd.DataFrame,
+    signals: pd.Series,
+    initial_capital: float = 10_000_000,
+    fee_rate: float = 0.0015,
+    slippage: float = 0.001,
+) -> Dict:
     """
     단일 종목 백테스트
 
@@ -209,7 +218,7 @@ def backtest_strategy(df: pd.DataFrame,
     trades = 0
 
     for i in range(1, len(df)):
-        price = df['close'].iloc[i]
+        price = df["close"].iloc[i]
         signal = signals.iloc[i] if i < len(signals) else 0
 
         # 청산
@@ -230,13 +239,13 @@ def backtest_strategy(df: pd.DataFrame,
 
     # 마지막 청산
     if position == 1 and shares > 0:
-        capital += shares * df['close'].iloc[-1] * (1 - slippage) * (1 - fee_rate * 1.5)
+        capital += shares * df["close"].iloc[-1] * (1 - slippage) * (1 - fee_rate * 1.5)
 
     return_pct = (capital - initial_capital) / initial_capital * 100
 
     return {
-        'return_pct': return_pct,
-        'final_capital': capital,
-        'trades': trades,
-        'profitable': return_pct > 0
+        "return_pct": return_pct,
+        "final_capital": capital,
+        "trades": trades,
+        "profitable": return_pct > 0,
     }

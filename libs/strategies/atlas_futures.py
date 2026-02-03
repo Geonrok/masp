@@ -2,6 +2,7 @@
 ATLAS-Futures P0-4 Squeeze-Surge Strategy.
 Protocol: v2.6.2-r1
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -39,7 +40,9 @@ class ATLASFuturesConfig:
     version: str = "v2.6.2-r1"
 
     timeframe: str = "4h"
-    symbols: List[str] = field(default_factory=lambda: ["BTCUSDT", "ETHUSDT", "LINKUSDT"])
+    symbols: List[str] = field(
+        default_factory=lambda: ["BTCUSDT", "ETHUSDT", "LINKUSDT"]
+    )
     leverage: int = 3
     max_positions: int = 3
     position_size_pct: float = 1.6
@@ -77,6 +80,7 @@ class ATLASFuturesConfig:
 @dataclass
 class Position:
     """Position state."""
+
     symbol: str
     side: str  # LONG or SHORT
     entry_price: float
@@ -117,6 +121,7 @@ class Position:
 @dataclass
 class Signal:
     """Signal output."""
+
     signal_type: SignalType
     symbol: str
     price: float
@@ -188,13 +193,19 @@ class ATLASFuturesStrategy:
 
         df["bb_width"] = (df["bb_upper"] - df["bb_lower"]) / df["bb_middle"]
 
-        df["bbwp"] = df["bb_width"].rolling(self.config.bbwp_lookback).apply(
-            lambda x: percentileofscore(x, x.iloc[-1]) if len(x) >= 10 else 50,
-            raw=False,
+        df["bbwp"] = (
+            df["bb_width"]
+            .rolling(self.config.bbwp_lookback)
+            .apply(
+                lambda x: percentileofscore(x, x.iloc[-1]) if len(x) >= 10 else 50,
+                raw=False,
+            )
         )
 
         df["adx"] = ta.trend.adx(
-            df["high"], df["low"], df["close"],
+            df["high"],
+            df["low"],
+            df["close"],
             window=self.config.adx_period,
         )
 
@@ -204,7 +215,9 @@ class ATLASFuturesStrategy:
         )
 
         df["atr"] = ta.volatility.average_true_range(
-            df["high"], df["low"], df["close"],
+            df["high"],
+            df["low"],
+            df["close"],
             window=self.config.atr_period,
         )
 
@@ -285,8 +298,7 @@ class ATLASFuturesStrategy:
             return
 
         total_value = sum(
-            abs(pos.size * pos.entry_price)
-            for pos in self.positions.values()
+            abs(pos.size * pos.entry_price) for pos in self.positions.values()
         )
 
         if total_value == 0:
@@ -308,7 +320,9 @@ class ATLASFuturesStrategy:
                 self.config.link_concentration_threshold,
             )
 
-    def check_entry_conditions(self, symbol: str, data: pd.DataFrame) -> Optional[Signal]:
+    def check_entry_conditions(
+        self, symbol: str, data: pd.DataFrame
+    ) -> Optional[Signal]:
         """Entry conditions."""
         if len(data) < self.config.ema_trend_period:
             return None
@@ -329,7 +343,9 @@ class ATLASFuturesStrategy:
             return None
 
         if latest["close"] > latest["ema_200"] and latest["close"] > latest["bb_upper"]:
-            stop_loss = latest["close"] - (latest["atr"] * self.config.chandelier_multiplier)
+            stop_loss = latest["close"] - (
+                latest["atr"] * self.config.chandelier_multiplier
+            )
             return Signal(
                 signal_type=SignalType.LONG,
                 symbol=symbol,
@@ -350,7 +366,9 @@ class ATLASFuturesStrategy:
             )
 
         if latest["close"] < latest["ema_200"] and latest["close"] < latest["bb_lower"]:
-            stop_loss = latest["close"] + (latest["atr"] * self.config.chandelier_multiplier)
+            stop_loss = latest["close"] + (
+                latest["atr"] * self.config.chandelier_multiplier
+            )
             return Signal(
                 signal_type=SignalType.SHORT,
                 symbol=symbol,
@@ -372,7 +390,9 @@ class ATLASFuturesStrategy:
 
         return None
 
-    def check_exit_conditions(self, symbol: str, data: pd.DataFrame) -> Optional[Signal]:
+    def check_exit_conditions(
+        self, symbol: str, data: pd.DataFrame
+    ) -> Optional[Signal]:
         """Exit conditions."""
         if symbol not in self.positions:
             return None
@@ -410,7 +430,11 @@ class ATLASFuturesStrategy:
         if position.bars_held >= failure_bars:
             pnl_pct = self._calculate_pnl_pct(position, latest["close"])
             if pnl_pct < self.config.failure_threshold_pct:
-                exit_type = SignalType.EXIT_LONG if position.side == "LONG" else SignalType.EXIT_SHORT
+                exit_type = (
+                    SignalType.EXIT_LONG
+                    if position.side == "LONG"
+                    else SignalType.EXIT_SHORT
+                )
                 return Signal(
                     signal_type=exit_type,
                     symbol=symbol,
@@ -457,7 +481,10 @@ class ATLASFuturesStrategy:
                 return exit_signal
             self._update_position(symbol, data.iloc[-1])
 
-        if len(self.positions) < self.config.max_positions and symbol not in self.positions:
+        if (
+            len(self.positions) < self.config.max_positions
+            and symbol not in self.positions
+        ):
             entry_signal = self.check_entry_conditions(symbol, data)
             if entry_signal:
                 self.last_signal = entry_signal
@@ -491,8 +518,16 @@ class ATLASFuturesStrategy:
     def _calculate_pnl_pct(self, position: Position, current_price: float) -> float:
         """Calculate PnL percent."""
         if position.side == "LONG":
-            return ((current_price - position.entry_price) / position.entry_price) * 100 * position.leverage
-        return ((position.entry_price - current_price) / position.entry_price) * 100 * position.leverage
+            return (
+                ((current_price - position.entry_price) / position.entry_price)
+                * 100
+                * position.leverage
+            )
+        return (
+            ((position.entry_price - current_price) / position.entry_price)
+            * 100
+            * position.leverage
+        )
 
     def open_position(self, symbol: str, signal: Signal) -> None:
         """Open position."""
@@ -527,7 +562,13 @@ class ATLASFuturesStrategy:
             self.consecutive_losses = 0
 
         del self.positions[symbol]
-        logger.info("[ATLAS] Closed %s %s @ %.2f, PnL=%.2f%%", pos.side, symbol, signal.price, pnl_pct)
+        logger.info(
+            "[ATLAS] Closed %s %s @ %.2f, PnL=%.2f%%",
+            pos.side,
+            symbol,
+            signal.price,
+            pnl_pct,
+        )
 
         return pnl_pct
 

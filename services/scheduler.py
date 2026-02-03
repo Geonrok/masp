@@ -1,6 +1,7 @@
 """
 DailyScheduler - APScheduler-based daily runner.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -148,7 +149,9 @@ class DailyScheduler:
         logger.error("[DailyScheduler] run_once called from a running event loop")
         return False
 
-    async def run_forever(self, validate_keys: bool = True, strict: bool = False) -> None:
+    async def run_forever(
+        self, validate_keys: bool = True, strict: bool = False
+    ) -> None:
         """
         Run the scheduler forever.
 

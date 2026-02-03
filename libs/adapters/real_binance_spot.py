@@ -3,6 +3,7 @@ Binance Spot Market Data & Execution Adapter
 
 Phase 9: Full spot trading support.
 """
+
 from __future__ import annotations
 
 import logging
@@ -47,7 +48,7 @@ class BinanceSpotMarketData(MarketDataAdapter):
         self.testnet = testnet
         logger.info(
             "[BinanceSpot] MarketData initialized (%s)",
-            "testnet" if testnet else "live"
+            "testnet" if testnet else "live",
         )
 
     def _convert_symbol(self, symbol: str) -> str:
@@ -59,7 +60,7 @@ class BinanceSpotMarketData(MarketDataAdapter):
         # Common quote assets
         for quote in ["USDT", "BUSD", "USDC", "BTC", "ETH", "BNB"]:
             if binance_symbol.endswith(quote):
-                base = binance_symbol[:-len(quote)]
+                base = binance_symbol[: -len(quote)]
                 return f"{base}/{quote}"
         return binance_symbol
 
@@ -107,14 +108,16 @@ class BinanceSpotMarketData(MarketDataAdapter):
 
             result = []
             for k in klines:
-                result.append(OHLCV(
-                    timestamp=datetime.fromtimestamp(k[0] / 1000).isoformat(),
-                    open=float(k[1]),
-                    high=float(k[2]),
-                    low=float(k[3]),
-                    close=float(k[4]),
-                    volume=float(k[5]),
-                ))
+                result.append(
+                    OHLCV(
+                        timestamp=datetime.fromtimestamp(k[0] / 1000).isoformat(),
+                        open=float(k[1]),
+                        high=float(k[2]),
+                        low=float(k[3]),
+                        close=float(k[4]),
+                        volume=float(k[5]),
+                    )
+                )
             return result
         except Exception as e:
             logger.error("[BinanceSpot] Failed to get OHLCV for %s: %s", symbol, e)
@@ -155,6 +158,7 @@ class BinanceSpotMarketData(MarketDataAdapter):
 @dataclass
 class BinanceOrderResult(OrderResult):
     """Extended order result for Binance."""
+
     client_order_id: Optional[str] = None
     executed_qty: float = 0.0
     cummulative_quote_qty: float = 0.0
@@ -196,8 +200,7 @@ class BinanceSpotExecution(ExecutionAdapter):
         self.api.sync_time()
 
         logger.info(
-            "[BinanceSpot] Execution initialized (%s)",
-            "testnet" if testnet else "live"
+            "[BinanceSpot] Execution initialized (%s)", "testnet" if testnet else "live"
         )
 
     def _convert_symbol(self, symbol: str) -> str:
@@ -282,7 +285,9 @@ class BinanceSpotExecution(ExecutionAdapter):
                 message=f"Order {result.get('status')}",
                 executed_qty=float(result.get("executedQty", 0)),
                 cummulative_quote_qty=float(result.get("cummulativeQuoteQty", 0)),
-                avg_price=float(result.get("avgPrice", 0)) if result.get("avgPrice") else 0,
+                avg_price=(
+                    float(result.get("avgPrice", 0)) if result.get("avgPrice") else 0
+                ),
                 commission=total_commission,
                 commission_asset=commission_asset,
             )
@@ -315,7 +320,9 @@ class BinanceSpotExecution(ExecutionAdapter):
                 "quantity": float(result.get("origQty", 0)),
                 "executed_qty": float(result.get("executedQty", 0)),
                 "price": float(result.get("price", 0)),
-                "avg_price": float(result.get("avgPrice", 0)) if result.get("avgPrice") else 0,
+                "avg_price": (
+                    float(result.get("avgPrice", 0)) if result.get("avgPrice") else 0
+                ),
             }
         except Exception as e:
             logger.error("[BinanceSpot] Get order status failed: %s", e)

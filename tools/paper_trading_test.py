@@ -26,6 +26,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from dotenv import load_dotenv
+
 load_dotenv(override=True)
 
 
@@ -142,7 +143,9 @@ class PaperTradingTest:
             signal = runner._generate_trade_signal("BTC/KRW", gate_pass)
 
             if signal is not None:
-                action = getattr(signal, "action", None) or getattr(signal, "signal", "UNKNOWN")
+                action = getattr(signal, "action", None) or getattr(
+                    signal, "signal", "UNKNOWN"
+                )
                 result["tests"]["signal"] = {
                     "passed": True,
                     "message": f"Signal: {action}, Gate: {'OPEN' if gate_pass else 'CLOSED'}",
@@ -189,7 +192,9 @@ class PaperTradingTest:
             print(f"    FAIL: {e}")
 
         # Calculate overall result
-        passed_count = sum(1 for t in result["tests"].values() if t.get("passed", False))
+        passed_count = sum(
+            1 for t in result["tests"].values() if t.get("passed", False)
+        )
         total_count = len(result["tests"])
         result["passed"] = passed_count >= total_count - 1  # Allow 1 failure
 
@@ -207,7 +212,9 @@ class PaperTradingTest:
 
             for test_name, test_result in result.get("tests", {}).items():
                 test_status = "PASS" if test_result.get("passed", False) else "FAIL"
-                print(f"  [{test_status:4}] {test_name}: {test_result.get('message', '')}")
+                print(
+                    f"  [{test_status:4}] {test_name}: {test_result.get('message', '')}"
+                )
 
         total_passed = sum(1 for r in self.results.values() if r.get("passed", False))
         total = len(self.results)
@@ -220,7 +227,10 @@ class PaperTradingTest:
         log_dir = PROJECT_ROOT / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
 
-        results_file = log_dir / f"paper_trading_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        results_file = (
+            log_dir
+            / f"paper_trading_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
 
         with open(results_file, "w", encoding="utf-8") as f:
             json.dump(

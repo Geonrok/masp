@@ -41,13 +41,14 @@ from libs.notifications.telegram import TelegramNotifier
 logger = logging.getLogger(__name__)
 
 # Default paths
-DATA_ROOT = Path('E:/data/crypto_ohlcv')
-TRADE_LOG_PATH = Path('E:/투자/Multi-Asset Strategy Platform/data/trade_log.json')
+DATA_ROOT = Path("E:/data/crypto_ohlcv")
+TRADE_LOG_PATH = Path("E:/투자/Multi-Asset Strategy Platform/data/trade_log.json")
 
 
 @dataclass
 class TradeRecord:
     """거래 기록"""
+
     symbol: str
     side: str  # buy or sell
     price: float
@@ -60,6 +61,7 @@ class TradeRecord:
 @dataclass
 class PerformanceMetrics:
     """성과 지표"""
+
     # 기본 정보
     period_name: str  # "Weekly" or "Monthly"
     start_date: datetime
@@ -102,32 +104,32 @@ class PerformanceMetrics:
 
     def to_dict(self) -> dict:
         return {
-            'period_name': self.period_name,
-            'start_date': self.start_date.isoformat(),
-            'end_date': self.end_date.isoformat(),
-            'total_return': self.total_return,
-            'annualized_return': self.annualized_return,
-            'sharpe_ratio': self.sharpe_ratio,
-            'sortino_ratio': self.sortino_ratio,
-            'calmar_ratio': self.calmar_ratio,
-            'max_drawdown': self.max_drawdown,
-            'max_drawdown_duration': self.max_drawdown_duration,
-            'total_trades': self.total_trades,
-            'winning_trades': self.winning_trades,
-            'losing_trades': self.losing_trades,
-            'win_rate': self.win_rate,
-            'avg_win': self.avg_win,
-            'avg_loss': self.avg_loss,
-            'profit_factor': self.profit_factor,
-            'avg_trade_pnl': self.avg_trade_pnl,
-            'best_day': self.best_day,
-            'worst_day': self.worst_day,
-            'avg_daily_return': self.avg_daily_return,
-            'daily_volatility': self.daily_volatility,
-            'positive_days': self.positive_days,
-            'negative_days': self.negative_days,
-            'btc_return': self.btc_return,
-            'excess_return': self.excess_return,
+            "period_name": self.period_name,
+            "start_date": self.start_date.isoformat(),
+            "end_date": self.end_date.isoformat(),
+            "total_return": self.total_return,
+            "annualized_return": self.annualized_return,
+            "sharpe_ratio": self.sharpe_ratio,
+            "sortino_ratio": self.sortino_ratio,
+            "calmar_ratio": self.calmar_ratio,
+            "max_drawdown": self.max_drawdown,
+            "max_drawdown_duration": self.max_drawdown_duration,
+            "total_trades": self.total_trades,
+            "winning_trades": self.winning_trades,
+            "losing_trades": self.losing_trades,
+            "win_rate": self.win_rate,
+            "avg_win": self.avg_win,
+            "avg_loss": self.avg_loss,
+            "profit_factor": self.profit_factor,
+            "avg_trade_pnl": self.avg_trade_pnl,
+            "best_day": self.best_day,
+            "worst_day": self.worst_day,
+            "avg_daily_return": self.avg_daily_return,
+            "daily_volatility": self.daily_volatility,
+            "positive_days": self.positive_days,
+            "negative_days": self.negative_days,
+            "btc_return": self.btc_return,
+            "excess_return": self.excess_return,
         }
 
 
@@ -153,24 +155,28 @@ class PerformanceReportService:
     def load_trade_log(self) -> List[TradeRecord]:
         """거래 로그 로드"""
         if not self.trade_log_path.exists():
-            logger.warning(f"[PerformanceReport] Trade log not found: {self.trade_log_path}")
+            logger.warning(
+                f"[PerformanceReport] Trade log not found: {self.trade_log_path}"
+            )
             return []
 
         try:
-            with open(self.trade_log_path, 'r', encoding='utf-8') as f:
+            with open(self.trade_log_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
             trades = []
             for record in data:
-                trades.append(TradeRecord(
-                    symbol=record.get('symbol', ''),
-                    side=record.get('side', ''),
-                    price=float(record.get('price', 0)),
-                    quantity=float(record.get('quantity', 0)),
-                    timestamp=datetime.fromisoformat(record.get('timestamp', '')),
-                    pnl=record.get('pnl'),
-                    pnl_pct=record.get('pnl_pct'),
-                ))
+                trades.append(
+                    TradeRecord(
+                        symbol=record.get("symbol", ""),
+                        side=record.get("side", ""),
+                        price=float(record.get("price", 0)),
+                        quantity=float(record.get("quantity", 0)),
+                        timestamp=datetime.fromisoformat(record.get("timestamp", "")),
+                        pnl=record.get("pnl"),
+                        pnl_pct=record.get("pnl_pct"),
+                    )
+                )
             return trades
         except Exception as e:
             logger.error(f"[PerformanceReport] Failed to load trade log: {e}")
@@ -182,16 +188,20 @@ class PerformanceReportService:
 
         실제 포트폴리오 데이터가 없으면 BTC 데이터로 시뮬레이션
         """
-        portfolio_path = Path('E:/투자/Multi-Asset Strategy Platform/data/portfolio_history.csv')
+        portfolio_path = Path(
+            "E:/투자/Multi-Asset Strategy Platform/data/portfolio_history.csv"
+        )
 
         if portfolio_path.exists():
             try:
                 df = pd.read_csv(portfolio_path)
-                df['date'] = pd.to_datetime(df['date'])
-                df = df.set_index('date').sort_index()
+                df["date"] = pd.to_datetime(df["date"])
+                df = df.set_index("date").sort_index()
                 return df
             except Exception as e:
-                logger.warning(f"[PerformanceReport] Failed to load portfolio history: {e}")
+                logger.warning(
+                    f"[PerformanceReport] Failed to load portfolio history: {e}"
+                )
 
         # Fallback: 백테스트 결과 기반 시뮬레이션
         return self._simulate_portfolio_from_backtest(days)
@@ -199,11 +209,11 @@ class PerformanceReportService:
     def _simulate_portfolio_from_backtest(self, days: int = 365) -> pd.DataFrame:
         """백테스트 결과 기반 포트폴리오 시뮬레이션"""
         # BTC 데이터 로드
-        folder = DATA_ROOT / f'{self.exchange}_1d'
+        folder = DATA_ROOT / f"{self.exchange}_1d"
         btc_file = None
 
-        for f in folder.glob('*.csv'):
-            if 'BTC' in f.stem.upper() and 'DOWN' not in f.stem.upper():
+        for f in folder.glob("*.csv"):
+            if "BTC" in f.stem.upper() and "DOWN" not in f.stem.upper():
                 btc_file = f
                 break
 
@@ -213,20 +223,32 @@ class PerformanceReportService:
 
         try:
             df = pd.read_csv(btc_file)
-            date_col = [c for c in df.columns if 'date' in c.lower() or 'time' in c.lower()]
-            df['date'] = pd.to_datetime(df[date_col[0]]).dt.normalize()
-            df = df.set_index('date').sort_index()
+            date_col = [
+                c for c in df.columns if "date" in c.lower() or "time" in c.lower()
+            ]
+            df["date"] = pd.to_datetime(df[date_col[0]]).dt.normalize()
+            df = df.set_index("date").sort_index()
             df = df.tail(days)
 
             # 간단한 시뮬레이션 (전략 수익률 = BTC 수익률 * 0.7 + 알파)
-            df['btc_return'] = df['close'].pct_change()
-            df['strategy_return'] = df['btc_return'] * 0.7  # 전략 수익률 시뮬레이션
+            df["btc_return"] = df["close"].pct_change()
+            df["strategy_return"] = df["btc_return"] * 0.7  # 전략 수익률 시뮬레이션
 
             initial_value = 10000000  # 1천만원
-            df['portfolio_value'] = initial_value * (1 + df['strategy_return']).cumprod()
-            df['btc_value'] = initial_value * (1 + df['btc_return']).cumprod()
+            df["portfolio_value"] = (
+                initial_value * (1 + df["strategy_return"]).cumprod()
+            )
+            df["btc_value"] = initial_value * (1 + df["btc_return"]).cumprod()
 
-            return df[['portfolio_value', 'btc_value', 'strategy_return', 'btc_return', 'close']].dropna()
+            return df[
+                [
+                    "portfolio_value",
+                    "btc_value",
+                    "strategy_return",
+                    "btc_return",
+                    "close",
+                ]
+            ].dropna()
         except Exception as e:
             logger.error(f"[PerformanceReport] Simulation failed: {e}")
             return pd.DataFrame()
@@ -274,15 +296,22 @@ class PerformanceReportService:
             return self._empty_metrics(period_name, start_date, end_date)
 
         # 수익률 계산
-        returns = period_data['strategy_return'].values
-        btc_returns = period_data['btc_return'].values
+        returns = period_data["strategy_return"].values
+        btc_returns = period_data["btc_return"].values
 
-        total_return = (period_data['portfolio_value'].iloc[-1] / period_data['portfolio_value'].iloc[0]) - 1
-        btc_total_return = (period_data['btc_value'].iloc[-1] / period_data['btc_value'].iloc[0]) - 1
+        total_return = (
+            period_data["portfolio_value"].iloc[-1]
+            / period_data["portfolio_value"].iloc[0]
+        ) - 1
+        btc_total_return = (
+            period_data["btc_value"].iloc[-1] / period_data["btc_value"].iloc[0]
+        ) - 1
 
         # 연환산 수익률
         trading_days = len(period_data)
-        annualized_return = (1 + total_return) ** (252 / trading_days) - 1 if trading_days > 0 else 0
+        annualized_return = (
+            (1 + total_return) ** (252 / trading_days) - 1 if trading_days > 0 else 0
+        )
 
         # 일별 통계
         avg_daily_return = np.mean(returns)
@@ -295,15 +324,23 @@ class PerformanceReportService:
         # 샤프비율 (연환산)
         risk_free_rate = 0.03 / 252  # 일일 무위험 수익률 (3%)
         excess_returns = returns - risk_free_rate
-        sharpe_ratio = np.mean(excess_returns) / np.std(returns) * np.sqrt(252) if np.std(returns) > 0 else 0
+        sharpe_ratio = (
+            np.mean(excess_returns) / np.std(returns) * np.sqrt(252)
+            if np.std(returns) > 0
+            else 0
+        )
 
         # 소르티노비율
         downside_returns = returns[returns < 0]
         downside_std = np.std(downside_returns) if len(downside_returns) > 0 else 0.01
-        sortino_ratio = np.mean(excess_returns) / downside_std * np.sqrt(252) if downside_std > 0 else 0
+        sortino_ratio = (
+            np.mean(excess_returns) / downside_std * np.sqrt(252)
+            if downside_std > 0
+            else 0
+        )
 
         # 최대 낙폭
-        portfolio_values = period_data['portfolio_value'].values
+        portfolio_values = period_data["portfolio_value"].values
         peak = np.maximum.accumulate(portfolio_values)
         drawdowns = (portfolio_values - peak) / peak
         max_drawdown = np.min(drawdowns)
@@ -371,10 +408,7 @@ class PerformanceReportService:
         )
 
     def _empty_metrics(
-        self,
-        period_name: str,
-        start_date: datetime,
-        end_date: datetime
+        self, period_name: str, start_date: datetime, end_date: datetime
     ) -> PerformanceMetrics:
         """빈 메트릭스 반환"""
         return PerformanceMetrics(
@@ -444,15 +478,17 @@ class PerformanceReportService:
         ]
 
         if metrics.total_trades > 0:
-            lines.extend([
-                "",
-                f"<b>Trade Stats</b>",
-                f"  Total Trades: {metrics.total_trades}",
-                f"  Win Rate: {metrics.win_rate*100:.1f}%",
-                f"  Profit Factor: {metrics.profit_factor:.2f}",
-                f"  Avg Win: {metrics.avg_win:+,.0f}",
-                f"  Avg Loss: {metrics.avg_loss:+,.0f}",
-            ])
+            lines.extend(
+                [
+                    "",
+                    f"<b>Trade Stats</b>",
+                    f"  Total Trades: {metrics.total_trades}",
+                    f"  Win Rate: {metrics.win_rate*100:.1f}%",
+                    f"  Profit Factor: {metrics.profit_factor:.2f}",
+                    f"  Avg Win: {metrics.avg_win:+,.0f}",
+                    f"  Avg Loss: {metrics.avg_loss:+,.0f}",
+                ]
+            )
 
         return "\n".join(lines)
 
@@ -483,20 +519,18 @@ class PerformanceReportService:
         return metrics
 
     def save_report(
-        self,
-        metrics: PerformanceMetrics,
-        output_dir: Optional[Path] = None
+        self, metrics: PerformanceMetrics, output_dir: Optional[Path] = None
     ) -> Path:
         """리포트를 파일로 저장"""
         if output_dir is None:
-            output_dir = Path('E:/투자/Multi-Asset Strategy Platform/outputs/reports')
+            output_dir = Path("E:/투자/Multi-Asset Strategy Platform/outputs/reports")
 
         output_dir.mkdir(parents=True, exist_ok=True)
 
         filename = f"performance_{metrics.period_name.lower()}_{metrics.end_date.strftime('%Y%m%d')}.json"
         filepath = output_dir / filename
 
-        with open(filepath, 'w', encoding='utf-8') as f:
+        with open(filepath, "w", encoding="utf-8") as f:
             json.dump(metrics.to_dict(), f, indent=2, ensure_ascii=False)
 
         logger.info(f"[PerformanceReport] Report saved: {filepath}")
@@ -506,27 +540,20 @@ class PerformanceReportService:
 def main():
     """CLI 실행"""
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
-    parser = argparse.ArgumentParser(description='MASP Performance Report')
+    parser = argparse.ArgumentParser(description="MASP Performance Report")
     parser.add_argument(
-        '--period',
-        choices=['weekly', 'monthly', 'annual'],
-        default='weekly',
-        help='Report period'
+        "--period",
+        choices=["weekly", "monthly", "annual"],
+        default="weekly",
+        help="Report period",
     )
     parser.add_argument(
-        '--no-telegram',
-        action='store_true',
-        help='Skip Telegram notification'
+        "--no-telegram", action="store_true", help="Skip Telegram notification"
     )
-    parser.add_argument(
-        '--save',
-        action='store_true',
-        help='Save report to file'
-    )
+    parser.add_argument("--save", action="store_true", help="Save report to file")
 
     args = parser.parse_args()
 
@@ -538,7 +565,9 @@ def main():
     metrics = service.calculate_metrics(args.period)
 
     # 콘솔 출력
-    print(f"\nPeriod: {metrics.start_date.strftime('%Y-%m-%d')} ~ {metrics.end_date.strftime('%Y-%m-%d')}")
+    print(
+        f"\nPeriod: {metrics.start_date.strftime('%Y-%m-%d')} ~ {metrics.end_date.strftime('%Y-%m-%d')}"
+    )
     print("\n--- Returns ---")
     print(f"Total Return: {metrics.total_return*100:+.2f}%")
     print(f"Annualized: {metrics.annualized_return*100:+.1f}%")
@@ -572,7 +601,7 @@ def main():
     if not args.no_telegram and service.notifier.enabled:
         print("\n" + "=" * 60)
         response = input("Send Telegram notification? (y/n): ")
-        if response.lower() == 'y':
+        if response.lower() == "y":
             message = service.format_telegram_message(metrics)
             success = service.notifier.send_message_sync(message)
             print(f"Telegram sent: {success}")

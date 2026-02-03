@@ -160,7 +160,9 @@ class TestTailRatio:
     def test_tail_ratio_right_skewed(self):
         """Test tail ratio with right-skewed distribution."""
         # More large positive returns
-        returns = list(np.random.exponential(0.01, 50)) + list(-np.random.exponential(0.005, 50))
+        returns = list(np.random.exponential(0.01, 50)) + list(
+            -np.random.exponential(0.005, 50)
+        )
 
         tail = calculate_tail_ratio(returns)
         assert tail > 0

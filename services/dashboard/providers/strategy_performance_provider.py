@@ -1,4 +1,5 @@
 """Strategy performance provider - connects trade history to strategy_performance component."""
+
 from __future__ import annotations
 
 import logging
@@ -99,7 +100,9 @@ def _calculate_returns(trades: List[Dict]) -> List[float]:
     return returns
 
 
-def _calculate_sharpe_ratio(returns: List[float], risk_free_rate: float = 0.02) -> float:
+def _calculate_sharpe_ratio(
+    returns: List[float], risk_free_rate: float = 0.02
+) -> float:
     """Calculate Sharpe ratio from returns.
 
     Args:
@@ -130,7 +133,9 @@ def _calculate_sharpe_ratio(returns: List[float], risk_free_rate: float = 0.02) 
     return annual_excess / annual_std if annual_std > 0 else 0.0
 
 
-def _calculate_sortino_ratio(returns: List[float], risk_free_rate: float = 0.02) -> float:
+def _calculate_sortino_ratio(
+    returns: List[float], risk_free_rate: float = 0.02
+) -> float:
     """Calculate Sortino ratio from returns.
 
     Args:
@@ -149,7 +154,7 @@ def _calculate_sortino_ratio(returns: List[float], risk_free_rate: float = 0.02)
     if not negative_returns:
         return 0.0  # No downside deviation
 
-    downside_variance = sum(r ** 2 for r in negative_returns) / len(negative_returns)
+    downside_variance = sum(r**2 for r in negative_returns) / len(negative_returns)
     downside_std = math.sqrt(downside_variance) if downside_variance > 0 else 0
 
     if downside_std == 0:
@@ -376,7 +381,9 @@ def get_strategy_performances(days: int = 30) -> List[StrategyPerformance]:
     return performances
 
 
-def get_strategy_performance_provider() -> Optional[Callable[[], List[StrategyPerformance]]]:
+def get_strategy_performance_provider() -> (
+    Optional[Callable[[], List[StrategyPerformance]]]
+):
     """Get performance provider function for strategy_performance component.
 
     Returns:

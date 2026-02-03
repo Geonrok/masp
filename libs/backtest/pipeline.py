@@ -73,7 +73,9 @@ class BacktestJob:
             "status": self.status.value,
             "created_at": self.created_at.isoformat(),
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
             "error_message": self.error_message,
             "metrics": self.metrics,
         }
@@ -200,12 +202,17 @@ class BacktestResultStore:
                             # Date filter
                             created_str = data.get("created_at", "")
                             if created_str:
-                                created = datetime.fromisoformat(created_str.replace("Z", "+00:00"))
+                                created = datetime.fromisoformat(
+                                    created_str.replace("Z", "+00:00")
+                                )
                                 if created < cutoff:
                                     continue
 
                             # Strategy filter
-                            if strategy_name and data.get("strategy_name") != strategy_name:
+                            if (
+                                strategy_name
+                                and data.get("strategy_name") != strategy_name
+                            ):
                                 continue
 
                             # Exchange filter
@@ -478,10 +485,7 @@ class BacktestPipeline:
         # Get schedule for this job
         schedule = None
         for s in self._schedules.values():
-            if (
-                s.strategy_name == job.strategy_name
-                and s.exchange == job.exchange
-            ):
+            if s.strategy_name == job.strategy_name and s.exchange == job.exchange:
                 schedule = s
                 break
 
@@ -546,17 +550,29 @@ class BacktestPipeline:
         # Calculate changes
         sharpe_change = 0.0
         if base_r.sharpe_ratio != 0:
-            sharpe_change = (comp_r.sharpe_ratio - base_r.sharpe_ratio) / abs(base_r.sharpe_ratio) * 100
+            sharpe_change = (
+                (comp_r.sharpe_ratio - base_r.sharpe_ratio)
+                / abs(base_r.sharpe_ratio)
+                * 100
+            )
 
         dd_change = 0.0
         if base_r.max_drawdown_pct != 0:
-            dd_change = (comp_r.max_drawdown_pct - base_r.max_drawdown_pct) / base_r.max_drawdown_pct * 100
+            dd_change = (
+                (comp_r.max_drawdown_pct - base_r.max_drawdown_pct)
+                / base_r.max_drawdown_pct
+                * 100
+            )
 
         win_rate_change = comp_r.win_rate - base_r.win_rate
 
         pnl_change = 0.0
         if base_r.total_pnl_pct != 0:
-            pnl_change = (comp_r.total_pnl_pct - base_r.total_pnl_pct) / abs(base_r.total_pnl_pct) * 100
+            pnl_change = (
+                (comp_r.total_pnl_pct - base_r.total_pnl_pct)
+                / abs(base_r.total_pnl_pct)
+                * 100
+            )
 
         # Assess changes
         is_improvement = (
@@ -564,9 +580,7 @@ class BacktestPipeline:
             and comp_r.max_drawdown_pct <= base_r.max_drawdown_pct
         )
 
-        significant_degradation = (
-            sharpe_change < -20 or dd_change > 30
-        )
+        significant_degradation = sharpe_change < -20 or dd_change > 30
 
         recommendations = []
         if sharpe_change < -10:
@@ -642,8 +656,8 @@ class BacktestPipeline:
             return {"trend": "insufficient_data", "data_points": len(sharpe_values)}
 
         # Simple trend analysis
-        first_half = sharpe_values[len(sharpe_values) // 2:]  # Older
-        second_half = sharpe_values[:len(sharpe_values) // 2]  # Newer
+        first_half = sharpe_values[len(sharpe_values) // 2 :]  # Older
+        second_half = sharpe_values[: len(sharpe_values) // 2]  # Newer
 
         first_avg = sum(first_half) / len(first_half) if first_half else 0
         second_avg = sum(second_half) / len(second_half) if second_half else 0

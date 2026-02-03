@@ -10,6 +10,7 @@ API Documentation:
 - Spot: https://binance-docs.github.io/apidocs/spot/en/
 - Futures: https://binance-docs.github.io/apidocs/futures/en/
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class BinanceMarket(Enum):
     """Binance market types."""
+
     SPOT = "spot"
     FUTURES_USDT = "futures_usdt"  # USDT-M Futures
     FUTURES_COIN = "futures_coin"  # COIN-M Futures
@@ -37,6 +39,7 @@ class BinanceMarket(Enum):
 @dataclass
 class BinanceEndpoints:
     """API endpoints for different markets."""
+
     base_url: str
     testnet_url: str
     ws_url: str
@@ -147,13 +150,17 @@ class BinanceAPI:
         self.timeout = timeout
 
         self.endpoints = get_endpoints(market)
-        self.base_url = self.endpoints.testnet_url if testnet else self.endpoints.base_url
+        self.base_url = (
+            self.endpoints.testnet_url if testnet else self.endpoints.base_url
+        )
 
         self.session = requests.Session()
-        self.session.headers.update({
-            "Accept": "application/json",
-            "User-Agent": "MASP/1.0",
-        })
+        self.session.headers.update(
+            {
+                "Accept": "application/json",
+                "User-Agent": "MASP/1.0",
+            }
+        )
         if self.api_key:
             self.session.headers["X-MBX-APIKEY"] = self.api_key
 
@@ -162,7 +169,9 @@ class BinanceAPI:
 
         logger.info(
             "[BinanceAPI] Initialized: market=%s, testnet=%s, base_url=%s",
-            market.value, testnet, self.base_url
+            market.value,
+            testnet,
+            self.base_url,
         )
 
     def _get_timestamp(self) -> int:
@@ -178,7 +187,7 @@ class BinanceAPI:
         signature = hmac.new(
             self.api_secret.encode("utf-8"),
             query_string.encode("utf-8"),
-            hashlib.sha256
+            hashlib.sha256,
         ).hexdigest()
         return signature
 
@@ -212,7 +221,9 @@ class BinanceAPI:
             # Handle rate limits
             if resp.status_code == 429:
                 retry_after = int(resp.headers.get("Retry-After", 60))
-                logger.warning("[BinanceAPI] Rate limited, retry after %ds", retry_after)
+                logger.warning(
+                    "[BinanceAPI] Rate limited, retry after %ds", retry_after
+                )
                 raise Exception(f"Rate limited, retry after {retry_after}s")
 
             resp.raise_for_status()
@@ -220,7 +231,9 @@ class BinanceAPI:
 
         except requests.exceptions.HTTPError as e:
             error_msg = self._extract_error(e.response)
-            logger.error("[BinanceAPI] HTTP Error: %s - %s", e.response.status_code, error_msg)
+            logger.error(
+                "[BinanceAPI] HTTP Error: %s - %s", e.response.status_code, error_msg
+            )
             raise Exception(f"Binance API Error: {error_msg}") from e
         except requests.exceptions.RequestException as e:
             logger.error("[BinanceAPI] Request failed: %s", e)
@@ -401,13 +414,13 @@ class BinanceAPI:
         }
 
         if quantity:
-            params["quantity"] = f"{quantity:.8f}".rstrip('0').rstrip('.')
+            params["quantity"] = f"{quantity:.8f}".rstrip("0").rstrip(".")
 
         if quote_quantity and self.market == BinanceMarket.SPOT:
-            params["quoteOrderQty"] = f"{quote_quantity:.8f}".rstrip('0').rstrip('.')
+            params["quoteOrderQty"] = f"{quote_quantity:.8f}".rstrip("0").rstrip(".")
 
         if price and order_type != "MARKET":
-            params["price"] = f"{price:.8f}".rstrip('0').rstrip('.')
+            params["price"] = f"{price:.8f}".rstrip("0").rstrip(".")
             params["timeInForce"] = time_in_force
 
         # Futures-specific
@@ -418,7 +431,12 @@ class BinanceAPI:
 
         return self._request("POST", self.endpoints.order, params, signed=True)
 
-    def get_order(self, symbol: str, order_id: Optional[int] = None, client_order_id: Optional[str] = None) -> Dict:
+    def get_order(
+        self,
+        symbol: str,
+        order_id: Optional[int] = None,
+        client_order_id: Optional[str] = None,
+    ) -> Dict:
         """Get order status."""
         params = {"symbol": symbol}
         if order_id:
@@ -427,7 +445,12 @@ class BinanceAPI:
             params["origClientOrderId"] = client_order_id
         return self._request("GET", self.endpoints.order, params, signed=True)
 
-    def cancel_order(self, symbol: str, order_id: Optional[int] = None, client_order_id: Optional[str] = None) -> Dict:
+    def cancel_order(
+        self,
+        symbol: str,
+        order_id: Optional[int] = None,
+        client_order_id: Optional[str] = None,
+    ) -> Dict:
         """Cancel an order."""
         params = {"symbol": symbol}
         if order_id:
@@ -485,7 +508,11 @@ class BinanceAPI:
             raise ValueError("Leverage not available for spot market")
 
         params = {"symbol": symbol, "leverage": leverage}
-        endpoint = "/fapi/v1/leverage" if self.market == BinanceMarket.FUTURES_USDT else "/dapi/v1/leverage"
+        endpoint = (
+            "/fapi/v1/leverage"
+            if self.market == BinanceMarket.FUTURES_USDT
+            else "/dapi/v1/leverage"
+        )
         return self._request("POST", endpoint, params, signed=True)
 
     def set_margin_type(self, symbol: str, margin_type: str) -> Dict:
@@ -500,5 +527,9 @@ class BinanceAPI:
             raise ValueError("Margin type not available for spot market")
 
         params = {"symbol": symbol, "marginType": margin_type.upper()}
-        endpoint = "/fapi/v1/marginType" if self.market == BinanceMarket.FUTURES_USDT else "/dapi/v1/marginType"
+        endpoint = (
+            "/fapi/v1/marginType"
+            if self.market == BinanceMarket.FUTURES_USDT
+            else "/dapi/v1/marginType"
+        )
         return self._request("POST", endpoint, params, signed=True)

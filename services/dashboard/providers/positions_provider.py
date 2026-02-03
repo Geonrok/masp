@@ -1,4 +1,5 @@
 """Positions provider - connects holdings to positions_panel component."""
+
 from __future__ import annotations
 
 import logging
@@ -99,7 +100,9 @@ def get_positions_data() -> Optional[Tuple[List[Dict], Dict[str, float]]]:
         try:
             balance = float(entry.get("balance", 0))
             avg_buy_price_raw = entry.get("avg_buy_price")
-            avg_price = float(avg_buy_price_raw) if avg_buy_price_raw is not None else 0.0
+            avg_price = (
+                float(avg_buy_price_raw) if avg_buy_price_raw is not None else 0.0
+            )
         except (ValueError, TypeError):
             continue
 
@@ -107,11 +110,13 @@ def get_positions_data() -> Optional[Tuple[List[Dict], Dict[str, float]]]:
         if balance <= 0:
             continue
 
-        positions.append({
-            "symbol": currency,
-            "quantity": balance,
-            "avg_price": avg_price,
-        })
+        positions.append(
+            {
+                "symbol": currency,
+                "quantity": balance,
+                "avg_price": avg_price,
+            }
+        )
         symbols.append(currency)
 
     if not positions:

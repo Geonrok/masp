@@ -2,6 +2,7 @@
 Strategy Engine - Async/Sync Bridge Layer.
 Phase 4B-v5: asyncio.to_thread integration.
 """
+
 from __future__ import annotations
 
 import asyncio

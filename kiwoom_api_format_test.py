@@ -16,12 +16,15 @@ BASE_URL = "https://api.kiwoom.com"
 def get_token():
     """토큰 발급"""
     url = f"{BASE_URL}/oauth2/token"
-    response = requests.post(url, json={
-        "grant_type": "client_credentials",
-        "appkey": APPKEY,
-        "secretkey": SECRETKEY
-    })
-    return response.json().get('token')
+    response = requests.post(
+        url,
+        json={
+            "grant_type": "client_credentials",
+            "appkey": APPKEY,
+            "secretkey": SECRETKEY,
+        },
+    )
+    return response.json().get("token")
 
 
 def test_api_format(token):
@@ -33,24 +36,18 @@ def test_api_format(token):
             "name": "api_id in body",
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
-                "Authorization": f"Bearer {token}"
+                "Authorization": f"Bearer {token}",
             },
-            "data": {
-                "api_id": "ka10001",
-                "stk_cd": "005930"
-            }
+            "data": {"api_id": "ka10001", "stk_cd": "005930"},
         },
         # Case 2: tr_id를 body에 추가
         {
             "name": "tr_id in body",
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
-                "Authorization": f"Bearer {token}"
+                "Authorization": f"Bearer {token}",
             },
-            "data": {
-                "tr_id": "ka10001",
-                "stk_cd": "005930"
-            }
+            "data": {"tr_id": "ka10001", "stk_cd": "005930"},
         },
         # Case 3: api_id 헤더로
         {
@@ -58,11 +55,9 @@ def test_api_format(token):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "api_id": "ka10001"
+                "api_id": "ka10001",
             },
-            "data": {
-                "stk_cd": "005930"
-            }
+            "data": {"stk_cd": "005930"},
         },
         # Case 4: tr_id 헤더로
         {
@@ -70,11 +65,9 @@ def test_api_format(token):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "tr_id": "ka10001"
+                "tr_id": "ka10001",
             },
-            "data": {
-                "stk_cd": "005930"
-            }
+            "data": {"stk_cd": "005930"},
         },
         # Case 5: appkey도 헤더에 추가
         {
@@ -83,36 +76,27 @@ def test_api_format(token):
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
                 "appkey": APPKEY,
-                "api_id": "ka10001"
+                "api_id": "ka10001",
             },
-            "data": {
-                "stk_cd": "005930"
-            }
+            "data": {"stk_cd": "005930"},
         },
         # Case 6: 키움 공식 문서 형식 추정 (input/output 구조)
         {
             "name": "input wrapper",
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
-                "Authorization": f"Bearer {token}"
+                "Authorization": f"Bearer {token}",
             },
-            "data": {
-                "input": {
-                    "stk_cd": "005930"
-                }
-            }
+            "data": {"input": {"stk_cd": "005930"}},
         },
         # Case 7: tr_cd 필드
         {
             "name": "tr_cd in body",
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
-                "Authorization": f"Bearer {token}"
+                "Authorization": f"Bearer {token}",
             },
-            "data": {
-                "tr_cd": "ka10001",
-                "stk_cd": "005930"
-            }
+            "data": {"tr_cd": "ka10001", "stk_cd": "005930"},
         },
         # Case 8: 대문자 TR_ID
         {
@@ -120,11 +104,9 @@ def test_api_format(token):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "TR_ID": "ka10001"
+                "TR_ID": "ka10001",
             },
-            "data": {
-                "stk_cd": "005930"
-            }
+            "data": {"stk_cd": "005930"},
         },
         # Case 9: 다양한 파라미터명
         {
@@ -132,11 +114,9 @@ def test_api_format(token):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "tr_id": "ka10001"
+                "tr_id": "ka10001",
             },
-            "data": {
-                "stock_code": "005930"
-            }
+            "data": {"stock_code": "005930"},
         },
         # Case 10: scode 필드
         {
@@ -144,11 +124,9 @@ def test_api_format(token):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "tr_id": "ka10001"
+                "tr_id": "ka10001",
             },
-            "data": {
-                "scode": "005930"
-            }
+            "data": {"scode": "005930"},
         },
         # Case 11: 코드 없이 빈 요청
         {
@@ -156,9 +134,9 @@ def test_api_format(token):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "tr_id": "ka10001"
+                "tr_id": "ka10001",
             },
-            "data": {}
+            "data": {},
         },
         # Case 12: shcode (eBest 스타일)
         {
@@ -166,11 +144,9 @@ def test_api_format(token):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "tr_id": "ka10001"
+                "tr_id": "ka10001",
             },
-            "data": {
-                "shcode": "005930"
-            }
+            "data": {"shcode": "005930"},
         },
         # Case 13: 종목코드 형식 다르게
         {
@@ -178,11 +154,9 @@ def test_api_format(token):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "tr_id": "ka10001"
+                "tr_id": "ka10001",
             },
-            "data": {
-                "code": "005930"
-            }
+            "data": {"code": "005930"},
         },
         # Case 14: query 파라미터 + POST
         {
@@ -190,12 +164,10 @@ def test_api_format(token):
             "headers": {
                 "Content-Type": "application/json;charset=UTF-8",
                 "Authorization": f"Bearer {token}",
-                "tr_id": "ka10001"
+                "tr_id": "ka10001",
             },
-            "params": {
-                "stk_cd": "005930"
-            },
-            "data": {}
+            "params": {"stk_cd": "005930"},
+            "data": {},
         },
     ]
 
@@ -206,21 +178,23 @@ def test_api_format(token):
         print(f"테스트: {case['name']}")
 
         try:
-            if 'params' in case:
+            if "params" in case:
                 response = requests.post(
                     url,
-                    headers=case['headers'],
-                    params=case['params'],
-                    json=case['data']
+                    headers=case["headers"],
+                    params=case["params"],
+                    json=case["data"],
                 )
             else:
-                response = requests.post(url, headers=case['headers'], json=case['data'])
+                response = requests.post(
+                    url, headers=case["headers"], json=case["data"]
+                )
 
             print(f"Status: {response.status_code}")
 
             result = response.json()
-            return_code = result.get('return_code')
-            return_msg = result.get('return_msg', '')
+            return_code = result.get("return_code")
+            return_msg = result.get("return_msg", "")
 
             print(f"Return Code: {return_code}")
             print(f"Return Msg: {return_msg[:100]}")
@@ -228,7 +202,9 @@ def test_api_format(token):
             # return_code가 0이면 성공
             if return_code == 0:
                 print("*** SUCCESS! ***")
-                print(f"Full Response: {json.dumps(result, indent=2, ensure_ascii=False)[:500]}")
+                print(
+                    f"Full Response: {json.dumps(result, indent=2, ensure_ascii=False)[:500]}"
+                )
                 return case
 
             # 다른 오류 코드도 분석
@@ -243,26 +219,21 @@ def test_api_format(token):
 
 def test_get_method(token):
     """GET 메서드로도 테스트"""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("GET 메서드 테스트")
-    print("="*60)
+    print("=" * 60)
 
     test_cases = [
         # GET with query params
         {
             "name": "GET with stk_cd param",
-            "headers": {
-                "Authorization": f"Bearer {token}",
-                "tr_id": "ka10001"
-            },
-            "params": {"stk_cd": "005930"}
+            "headers": {"Authorization": f"Bearer {token}", "tr_id": "ka10001"},
+            "params": {"stk_cd": "005930"},
         },
         {
             "name": "GET with api_id param",
-            "headers": {
-                "Authorization": f"Bearer {token}"
-            },
-            "params": {"api_id": "ka10001", "stk_cd": "005930"}
+            "headers": {"Authorization": f"Bearer {token}"},
+            "params": {"api_id": "ka10001", "stk_cd": "005930"},
         },
     ]
 
@@ -271,13 +242,13 @@ def test_get_method(token):
     for case in test_cases:
         print(f"\n테스트: {case['name']}")
         try:
-            response = requests.get(url, headers=case['headers'], params=case['params'])
+            response = requests.get(url, headers=case["headers"], params=case["params"])
             print(f"Status: {response.status_code}")
             print(f"Response: {response.text[:200]}")
 
             if response.status_code == 200:
                 result = response.json()
-                if result.get('return_code') == 0:
+                if result.get("return_code") == 0:
                     print("*** SUCCESS! ***")
                     return case
         except Exception as e:
@@ -288,7 +259,7 @@ def test_get_method(token):
 
 def main():
     print("키움 REST API 파라미터 형식 테스트")
-    print("="*60)
+    print("=" * 60)
 
     token = get_token()
     if not token:

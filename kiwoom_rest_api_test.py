@@ -9,7 +9,9 @@ import requests
 import json
 import logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 # API 키
@@ -25,14 +27,12 @@ def get_access_token():
     """접근 토큰 발급"""
     url = f"{BASE_URL}/oauth2/token"
 
-    headers = {
-        "Content-Type": "application/json;charset=UTF-8"
-    }
+    headers = {"Content-Type": "application/json;charset=UTF-8"}
 
     data = {
         "grant_type": "client_credentials",
         "appkey": APPKEY,
-        "secretkey": SECRETKEY
+        "secretkey": SECRETKEY,
     }
 
     logger.info("토큰 발급 요청 중...")
@@ -45,7 +45,7 @@ def get_access_token():
             result = response.json()
             logger.info(f"토큰 발급 성공!")
             logger.info(f"응답: {json.dumps(result, indent=2, ensure_ascii=False)}")
-            return result.get('access_token') or result.get('token')
+            return result.get("access_token") or result.get("token")
         else:
             logger.error(f"토큰 발급 실패: {response.text}")
             return None
@@ -61,7 +61,7 @@ def test_api_endpoint(token, endpoint, params=None):
 
     headers = {
         "Content-Type": "application/json;charset=UTF-8",
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {token}",
     }
 
     logger.info(f"\n=== {endpoint} 테스트 ===")
@@ -76,7 +76,9 @@ def test_api_endpoint(token, endpoint, params=None):
 
         if response.status_code == 200:
             result = response.json()
-            logger.info(f"응답: {json.dumps(result, indent=2, ensure_ascii=False)[:1000]}")
+            logger.info(
+                f"응답: {json.dumps(result, indent=2, ensure_ascii=False)[:1000]}"
+            )
             return result
         else:
             logger.error(f"실패: {response.text[:500]}")
@@ -108,7 +110,10 @@ def main():
     endpoints_to_try = [
         # 시세 관련
         ("/v1/trading/inquire-balance", None),  # 잔고 조회
-        ("/v1/quotations/inquire-price", {"fid_cond_mrkt_div_code": "J", "fid_input_iscd": "005930"}),
+        (
+            "/v1/quotations/inquire-price",
+            {"fid_cond_mrkt_div_code": "J", "fid_input_iscd": "005930"},
+        ),
         ("/v1/trading/inquire-daily-ccld", None),  # 일별 체결
         # 투자자별 매매동향 (추정)
         ("/v1/quotations/investor", {"fid_input_iscd": "005930"}),

@@ -1,6 +1,7 @@
 """
 Market sell test (v2.2 Final).
 """
+
 from __future__ import annotations
 
 import os
@@ -24,7 +25,9 @@ from _rate_limiter import RateLimiter
 from _live_test_utils import live_test_enabled, require_live_guard, log_event
 
 if pytest and not live_test_enabled():
-    pytest.skip("Live trading tests disabled (env guard not satisfied)", allow_module_level=True)
+    pytest.skip(
+        "Live trading tests disabled (env guard not satisfied)", allow_module_level=True
+    )
 
 
 MIN_ORDER_KRW = 5000
@@ -43,7 +46,9 @@ def test_live_sell(execution=None, fee_rates=None) -> dict:
 
     if execution is None:
         config = Config(asset_class="crypto_spot", strategy_name="live_test")
-        execution = AdapterFactory.create_execution("upbit_spot", adapter_mode="live", config=config)
+        execution = AdapterFactory.create_execution(
+            "upbit_spot", adapter_mode="live", config=config
+        )
 
     market_data = AdapterFactory.create_market_data("upbit_spot")
     quote = market_data.get_quote("BTC/KRW")
@@ -70,9 +75,14 @@ def test_live_sell(execution=None, fee_rates=None) -> dict:
             quantity=btc_before,
             order_type="MARKET",
         )
-        order_id = getattr(order, "order_id", None) or getattr(order, "uuid", None) or "N/A"
+        order_id = (
+            getattr(order, "order_id", None) or getattr(order, "uuid", None) or "N/A"
+        )
         if hasattr(order, "success") and not order.success:
-            return {"status": "failed", "reason": getattr(order, "message", "Order failed")}
+            return {
+                "status": "failed",
+                "reason": getattr(order, "message", "Order failed"),
+            }
         print(f"    Order ID: {order_id}")
     except Exception as exc:
         print(f"❌ Order failed: {exc}")
@@ -83,7 +93,9 @@ def test_live_sell(execution=None, fee_rates=None) -> dict:
         time.sleep(1)
         try:
             status = execution.get_order_status(order_id)
-            state = status.status if hasattr(status, "status") else status.get("state", "")
+            state = (
+                status.status if hasattr(status, "status") else status.get("state", "")
+            )
             print(f"    [{i + 1}s] Status: {state}")
             if str(state).lower() in ["done", "filled", "cancel", "cancelled"]:
                 break

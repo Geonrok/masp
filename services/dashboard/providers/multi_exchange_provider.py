@@ -1,4 +1,5 @@
 """Multi-exchange provider - connects exchange registry to dashboard."""
+
 from __future__ import annotations
 
 import logging
@@ -176,7 +177,12 @@ def get_best_exchange(symbol: str, side: str = "buy") -> Optional[Dict[str, Any]
             result = coordinator.get_best_exchange_for_sell(symbol)
 
         if result:
-            return {"exchange": result[0], "price": result[1], "symbol": symbol, "side": side}
+            return {
+                "exchange": result[0],
+                "price": result[1],
+                "symbol": symbol,
+                "side": side,
+            }
         return None
     except Exception as e:
         logger.error("Failed to get best exchange: %s", e)

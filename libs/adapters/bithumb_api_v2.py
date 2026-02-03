@@ -52,7 +52,9 @@ def retry_on_error(
                 except retryable_exceptions as e:
                     last_exception = e
                     if attempt < max_retries:
-                        delay = _calculate_delay(attempt, base_delay, max_delay, exponential_base)
+                        delay = _calculate_delay(
+                            attempt, base_delay, max_delay, exponential_base
+                        )
                         logger.warning(
                             "[Retry] %s attempt %d/%d failed: %s. Retrying in %.1fs",
                             func.__name__,
@@ -78,7 +80,9 @@ def retry_on_error(
                     ):
                         last_exception = e
                         if attempt < max_retries:
-                            delay = _calculate_delay(attempt, base_delay, max_delay, exponential_base)
+                            delay = _calculate_delay(
+                                attempt, base_delay, max_delay, exponential_base
+                            )
                             logger.warning(
                                 "[Retry] %s attempt %d/%d got HTTP %d. Retrying in %.1fs",
                                 func.__name__,
@@ -114,7 +118,7 @@ def _calculate_delay(
     exponential_base: float,
 ) -> float:
     """Calculate delay with exponential backoff and jitter."""
-    delay = base_delay * (exponential_base ** attempt)
+    delay = base_delay * (exponential_base**attempt)
     delay = min(delay, max_delay)
     # Add jitter (±20%)
     jitter = delay * 0.2 * (random.random() * 2 - 1)
@@ -150,14 +154,17 @@ class BithumbAPIV2:
         Convert params into a list of (key, value) pairs, preserving insertion order.
         - Skips None values
         - Encodes list/tuple values as key[]=v1&key[]=v2 (per Bithumb docs)
-        
+
         [ChatGPT 필수 보강 #1] sorted() 제거 - 서버와 동일한 순서 유지
         """
         if not params:
             return []
 
         items = []
-        for key, value in params.items():  # preserves dict insertion order (Python 3.7+)
+        for (
+            key,
+            value,
+        ) in params.items():  # preserves dict insertion order (Python 3.7+)
             if value is None:
                 continue
             if isinstance(value, (list, tuple)):
@@ -184,7 +191,9 @@ class BithumbAPIV2:
             "timestamp": int(time.time() * 1000),
         }
 
-        force_empty_query_hash = os.getenv("BITHUMB_JWT_INCLUDE_EMPTY_QUERY_HASH") == "1"
+        force_empty_query_hash = (
+            os.getenv("BITHUMB_JWT_INCLUDE_EMPTY_QUERY_HASH") == "1"
+        )
         has_params = bool(params)
         if has_params or force_empty_query_hash:
             query = self._encode_query(params or {})
@@ -306,7 +315,7 @@ class BithumbAPIV2:
                 return str(err)
             return str(data)
         except Exception:
-            return (getattr(resp, 'text', '') or "").strip()[:200]
+            return (getattr(resp, "text", "") or "").strip()[:200]
 
     def _public_get(self, endpoint: str, params: Optional[Dict] = None):
         url = f"{self.BASE_URL}{endpoint}"

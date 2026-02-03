@@ -379,7 +379,7 @@ def retry_with_backoff(
                     if attempt == max_retries:
                         break
 
-                    delay = base_delay * (2 ** attempt if exponential else 1)
+                    delay = base_delay * (2**attempt if exponential else 1)
                     delay = min(delay, max_delay)
                     delay *= 0.5 + random.random()  # Jitter
 
@@ -406,7 +406,7 @@ def retry_with_backoff(
                     if attempt == max_retries:
                         break
 
-                    delay = base_delay * (2 ** attempt if exponential else 1)
+                    delay = base_delay * (2**attempt if exponential else 1)
                     delay = min(delay, max_delay)
                     delay *= 0.5 + random.random()  # Jitter
 
@@ -480,8 +480,7 @@ class ExceptionAggregator:
         failure_rate = len(self.exceptions) / max(self._index, 1)
         if failure_rate >= threshold:
             errors_str = "; ".join(
-                f"[{idx}] {type(e).__name__}: {e}"
-                for idx, e in self.exceptions[:5]
+                f"[{idx}] {type(e).__name__}: {e}" for idx, e in self.exceptions[:5]
             )
             raise AdapterError(
                 message=f"{self.context}: {len(self.exceptions)} errors: {errors_str}",

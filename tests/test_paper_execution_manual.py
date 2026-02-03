@@ -4,7 +4,7 @@ from libs.adapters.paper_execution import PaperExecutionAdapter
 from libs.adapters.factory import AdapterFactory
 
 # Create market data adapter
-md = AdapterFactory.create_market_data('upbit_spot')
+md = AdapterFactory.create_market_data("upbit_spot")
 
 # Create paper execution with 10M KRW
 pe = PaperExecutionAdapter(md, 10_000_000)
@@ -13,7 +13,7 @@ print("=== Paper Trading Test ===\n")
 
 # Place BUY order
 print("[1] Placing BUY order: 0.01 BTC")
-order = pe.place_order('BTC/KRW', 'BUY', 0.01)
+order = pe.place_order("BTC/KRW", "BUY", 0.01)
 print(f"  Order ID: {order.order_id}")
 print(f"  Status: {order.status}")
 if order.price:

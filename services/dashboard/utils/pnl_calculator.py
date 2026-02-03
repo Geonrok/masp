@@ -1,4 +1,5 @@
 """PnL (Profit and Loss) calculator utilities."""
+
 from __future__ import annotations
 
 import math
@@ -9,6 +10,7 @@ from typing import Any, Dict, List
 @dataclass
 class PositionPnL:
     """PnL data for a single position."""
+
     symbol: str
     quantity: float
     avg_price: float

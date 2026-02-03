@@ -7,6 +7,7 @@ V12 Strategy Validation Suite
 3. Multi-Symbol Testing
 4. Robustness Analysis
 """
+
 from __future__ import annotations
 
 import logging
@@ -134,22 +135,28 @@ class LongOnlyStrategy:
         ema[0] = data[0]
         mult = 2 / (period + 1)
         for i in range(1, len(data)):
-            ema[i] = (data[i] - ema[i-1]) * mult + ema[i-1]
+            ema[i] = (data[i] - ema[i - 1]) * mult + ema[i - 1]
         return ema
 
     def calc_atr(self, df: pd.DataFrame, period: int = 14) -> np.ndarray:
         h, l, c = df["high"].values, df["low"].values, df["close"].values
-        tr = np.maximum(h - l, np.maximum(np.abs(h - np.roll(c, 1)), np.abs(l - np.roll(c, 1))))
+        tr = np.maximum(
+            h - l, np.maximum(np.abs(h - np.roll(c, 1)), np.abs(l - np.roll(c, 1)))
+        )
         tr[0] = h[0] - l[0]
         return pd.Series(tr).rolling(period).mean().values
 
-    def is_uptrend(self, price: float, ema50: float, ema200: float, ema200_prev: float) -> bool:
+    def is_uptrend(
+        self, price: float, ema50: float, ema200: float, ema200_prev: float
+    ) -> bool:
         ema200_rising = ema200 > ema200_prev
         price_above_ema200 = price > ema200 * (1 + self.trend_dev)
         ema_aligned = ema50 > ema200
         return price_above_ema200 and (ema200_rising or ema_aligned)
 
-    def generate_signal(self, df: pd.DataFrame, fear_greed: Optional[float]) -> Dict[str, Any]:
+    def generate_signal(
+        self, df: pd.DataFrame, fear_greed: Optional[float]
+    ) -> Dict[str, Any]:
         if len(df) < 250:
             return {"signal": "HOLD", "reason": "Insufficient data"}
 
@@ -204,9 +211,15 @@ class StrategyBacktester:
         self.loader = DataLoader()
         self.strategy = LongOnlyStrategy(config)
 
-    def run(self, data_4h: Dict[str, pd.DataFrame], fear_greed: pd.DataFrame) -> Dict[str, Any]:
+    def run(
+        self, data_4h: Dict[str, pd.DataFrame], fear_greed: pd.DataFrame
+    ) -> Dict[str, Any]:
         start_dt = pd.Timestamp(self.config.start_date)
-        end_dt = pd.Timestamp(self.config.end_date) if self.config.end_date else pd.Timestamp.now()
+        end_dt = (
+            pd.Timestamp(self.config.end_date)
+            if self.config.end_date
+            else pd.Timestamp.now()
+        )
 
         # Find common timestamps
         first_symbol = list(data_4h.keys())[0]
@@ -264,8 +277,15 @@ class StrategyBacktester:
 
                     if exit_sig:
                         exit_price = price * (1 - self.config.slippage_pct)
-                        pnl = (exit_price - pos["entry_price"]) / pos["entry_price"] * pos["leverage"]
-                        pnl_usd = pos["size"] * pnl - pos["size"] * self.config.commission_pct * 2
+                        pnl = (
+                            (exit_price - pos["entry_price"])
+                            / pos["entry_price"]
+                            * pos["leverage"]
+                        )
+                        pnl_usd = (
+                            pos["size"] * pnl
+                            - pos["size"] * self.config.commission_pct * 2
+                        )
                         capital += pnl_usd
 
                         trade_log.append({"pnl_usd": pnl_usd})
@@ -277,7 +297,10 @@ class StrategyBacktester:
                         continue
 
                 # Entry check
-                if symbol not in positions and len(positions) < self.config.max_positions:
+                if (
+                    symbol not in positions
+                    and len(positions) < self.config.max_positions
+                ):
                     sig = self.strategy.generate_signal(df_curr, fg)
 
                     if sig["signal"] == "LONG":
@@ -307,8 +330,14 @@ class StrategyBacktester:
         for sym, pos in list(positions.items()):
             if sym in data_4h:
                 exit_price = data_4h[sym].iloc[-1]["close"]
-                pnl = (exit_price - pos["entry_price"]) / pos["entry_price"] * pos["leverage"]
-                pnl_usd = pos["size"] * pnl - pos["size"] * self.config.commission_pct * 2
+                pnl = (
+                    (exit_price - pos["entry_price"])
+                    / pos["entry_price"]
+                    * pos["leverage"]
+                )
+                pnl_usd = (
+                    pos["size"] * pnl - pos["size"] * self.config.commission_pct * 2
+                )
                 capital += pnl_usd
                 trade_log.append({"pnl_usd": pnl_usd})
                 if pnl_usd > 0:
@@ -366,9 +395,21 @@ def run_walk_forward_validation():
 
     # Walk-forward periods
     periods = [
-        {"train": ("2020-01-01", "2022-12-31"), "test": ("2023-01-01", "2023-12-31"), "label": "Test 2023"},
-        {"train": ("2020-01-01", "2023-12-31"), "test": ("2024-01-01", "2024-12-31"), "label": "Test 2024"},
-        {"train": ("2020-01-01", "2024-12-31"), "test": ("2025-01-01", "2026-12-31"), "label": "Test 2025-26"},
+        {
+            "train": ("2020-01-01", "2022-12-31"),
+            "test": ("2023-01-01", "2023-12-31"),
+            "label": "Test 2023",
+        },
+        {
+            "train": ("2020-01-01", "2023-12-31"),
+            "test": ("2024-01-01", "2024-12-31"),
+            "label": "Test 2024",
+        },
+        {
+            "train": ("2020-01-01", "2024-12-31"),
+            "test": ("2025-01-01", "2026-12-31"),
+            "label": "Test 2025-26",
+        },
     ]
 
     results = []
@@ -377,7 +418,9 @@ def run_walk_forward_validation():
         test_start, test_end = period["test"]
         label = period["label"]
 
-        logger.info(f"\n{label}: Train {train_start}~{train_end}, Test {test_start}~{test_end}")
+        logger.info(
+            f"\n{label}: Train {train_start}~{train_end}, Test {test_start}~{test_end}"
+        )
 
         # Test period backtest
         config = BacktestConfig(
@@ -392,29 +435,35 @@ def run_walk_forward_validation():
         result = bt.run(all_data, fear_greed)
 
         if result.get("total_trades", 0) > 0:
-            results.append({
-                "period": label,
-                "return": result["total_return"],
-                "mdd": result["max_drawdown"],
-                "wr": result["win_rate"],
-                "pf": result["profit_factor"],
-                "trades": result["total_trades"],
-            })
-            logger.info(f"  Return: {result['total_return']*100:+.1f}%, "
-                       f"MDD: {result['max_drawdown']*100:.1f}%, "
-                       f"WR: {result['win_rate']*100:.1f}%, "
-                       f"PF: {result['profit_factor']:.2f}, "
-                       f"Trades: {result['total_trades']}")
+            results.append(
+                {
+                    "period": label,
+                    "return": result["total_return"],
+                    "mdd": result["max_drawdown"],
+                    "wr": result["win_rate"],
+                    "pf": result["profit_factor"],
+                    "trades": result["total_trades"],
+                }
+            )
+            logger.info(
+                f"  Return: {result['total_return']*100:+.1f}%, "
+                f"MDD: {result['max_drawdown']*100:.1f}%, "
+                f"WR: {result['win_rate']*100:.1f}%, "
+                f"PF: {result['profit_factor']:.2f}, "
+                f"Trades: {result['total_trades']}"
+            )
         else:
             logger.info(f"  No trades in this period")
-            results.append({
-                "period": label,
-                "return": 0,
-                "mdd": 0,
-                "wr": 0,
-                "pf": 0,
-                "trades": 0,
-            })
+            results.append(
+                {
+                    "period": label,
+                    "return": 0,
+                    "mdd": 0,
+                    "wr": 0,
+                    "pf": 0,
+                    "trades": 0,
+                }
+            )
 
     # Summary
     logger.info("\n" + "=" * 70)
@@ -503,7 +552,11 @@ def run_out_of_sample_test():
     # Comparison
     logger.info("\n--- COMPARISON ---")
     if result_in.get("total_trades", 0) > 0 and result_out.get("total_trades", 0) > 0:
-        pf_degradation = (result_out["profit_factor"] - result_in["profit_factor"]) / result_in["profit_factor"] * 100
+        pf_degradation = (
+            (result_out["profit_factor"] - result_in["profit_factor"])
+            / result_in["profit_factor"]
+            * 100
+        )
         logger.info(f"PF Change: {pf_degradation:+.1f}%")
 
         if result_out["profit_factor"] >= 1.0:
@@ -524,7 +577,16 @@ def run_multi_symbol_test():
     fear_greed = loader.load_fear_greed()
 
     # Test these symbols individually
-    test_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "DOGEUSDT", "LINKUSDT"]
+    test_symbols = [
+        "BTCUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "SOLUSDT",
+        "XRPUSDT",
+        "ADAUSDT",
+        "DOGEUSDT",
+        "LINKUSDT",
+    ]
 
     results = []
     for symbol in test_symbols:
@@ -546,19 +608,23 @@ def run_multi_symbol_test():
         result = bt.run({symbol: df}, fear_greed)
 
         if result.get("total_trades", 0) > 0:
-            results.append({
-                "symbol": symbol,
-                "return": result["total_return"],
-                "mdd": result["max_drawdown"],
-                "wr": result["win_rate"],
-                "pf": result["profit_factor"],
-                "trades": result["total_trades"],
-            })
+            results.append(
+                {
+                    "symbol": symbol,
+                    "return": result["total_return"],
+                    "mdd": result["max_drawdown"],
+                    "wr": result["win_rate"],
+                    "pf": result["profit_factor"],
+                    "trades": result["total_trades"],
+                }
+            )
             status = "✓" if result["profit_factor"] >= 1.0 else "✗"
-            logger.info(f"{status} {symbol}: Return={result['total_return']*100:+.1f}%, "
-                       f"PF={result['profit_factor']:.2f}, "
-                       f"WR={result['win_rate']*100:.1f}%, "
-                       f"Trades={result['total_trades']}")
+            logger.info(
+                f"{status} {symbol}: Return={result['total_return']*100:+.1f}%, "
+                f"PF={result['profit_factor']:.2f}, "
+                f"WR={result['win_rate']*100:.1f}%, "
+                f"Trades={result['total_trades']}"
+            )
         else:
             logger.info(f"- {symbol}: No trades")
 
@@ -614,13 +680,15 @@ def run_robustness_analysis():
             result = bt.run(all_data, fear_greed)
 
             if result.get("total_trades", 0) > 0:
-                results.append({
-                    "fear": fear,
-                    "greed": greed,
-                    "pf": result["profit_factor"],
-                    "return": result["total_return"],
-                    "trades": result["total_trades"],
-                })
+                results.append(
+                    {
+                        "fear": fear,
+                        "greed": greed,
+                        "pf": result["profit_factor"],
+                        "return": result["total_return"],
+                        "trades": result["total_trades"],
+                    }
+                )
 
     # Analyze stability
     if results:
@@ -637,7 +705,9 @@ def run_robustness_analysis():
 
         # Count profitable combinations
         profitable = sum(1 for r in results if r["pf"] >= 1.0)
-        logger.info(f"  Profitable: {profitable}/{len(results)} ({profitable/len(results)*100:.0f}%)")
+        logger.info(
+            f"  Profitable: {profitable}/{len(results)} ({profitable/len(results)*100:.0f}%)"
+        )
 
         # Stability score
         stability = 1 - (pf_std / pf_mean) if pf_mean > 0 else 0
@@ -678,12 +748,18 @@ def main():
 
     # Check walk-forward
     if wf_results:
-        profitable_periods = sum(1 for r in wf_results if r["return"] > 0 and r["trades"] > 0)
+        profitable_periods = sum(
+            1 for r in wf_results if r["return"] > 0 and r["trades"] > 0
+        )
         total_periods = sum(1 for r in wf_results if r["trades"] > 0)
         if profitable_periods >= total_periods * 0.5:
-            passes.append(f"Walk-forward: {profitable_periods}/{total_periods} profitable periods")
+            passes.append(
+                f"Walk-forward: {profitable_periods}/{total_periods} profitable periods"
+            )
         else:
-            issues.append(f"Walk-forward: Only {profitable_periods}/{total_periods} profitable periods")
+            issues.append(
+                f"Walk-forward: Only {profitable_periods}/{total_periods} profitable periods"
+            )
 
     # Check out-of-sample
     if oos_results and "out_of_sample" in oos_results:
@@ -691,15 +767,21 @@ def main():
         if oos.get("profit_factor", 0) >= 1.0:
             passes.append(f"Out-of-sample PF: {oos['profit_factor']:.2f}")
         else:
-            issues.append(f"Out-of-sample PF: {oos.get('profit_factor', 0):.2f} (losing)")
+            issues.append(
+                f"Out-of-sample PF: {oos.get('profit_factor', 0):.2f} (losing)"
+            )
 
     # Check multi-symbol
     if ms_results:
         profitable_symbols = sum(1 for r in ms_results if r["pf"] >= 1.0)
         if profitable_symbols >= len(ms_results) * 0.5:
-            passes.append(f"Multi-symbol: {profitable_symbols}/{len(ms_results)} profitable")
+            passes.append(
+                f"Multi-symbol: {profitable_symbols}/{len(ms_results)} profitable"
+            )
         else:
-            issues.append(f"Multi-symbol: Only {profitable_symbols}/{len(ms_results)} profitable")
+            issues.append(
+                f"Multi-symbol: Only {profitable_symbols}/{len(ms_results)} profitable"
+            )
 
     logger.info("\n✓ PASSES:")
     for p in passes:

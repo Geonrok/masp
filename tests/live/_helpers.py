@@ -1,6 +1,7 @@
 """
 Fee retrieval and market normalization (v2.2 Final).
 """
+
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
@@ -55,7 +56,9 @@ def get_fee_rates(market: str, execution) -> Dict:
         if hasattr(execution, "get_order_chance"):
             data = execution.get_order_chance(market)
         else:
-            data = execution._request("GET", "/orders/chance", params={"market": market}, is_order=True)
+            data = execution._request(
+                "GET", "/orders/chance", params={"market": market}, is_order=True
+            )
         if data is None:
             raise RuntimeError("orders/chance returned None")
         market_info = data.get("market", {}).get("bid", {})

@@ -219,8 +219,12 @@ class TestUser:
             username="Test",
             roles=[Role.VIEWER],
         )
-        assert user.has_any_permission([Permission.READ_POSITIONS, Permission.WRITE_CONFIG])
-        assert not user.has_any_permission([Permission.WRITE_CONFIG, Permission.ADMIN_USERS])
+        assert user.has_any_permission(
+            [Permission.READ_POSITIONS, Permission.WRITE_CONFIG]
+        )
+        assert not user.has_any_permission(
+            [Permission.WRITE_CONFIG, Permission.ADMIN_USERS]
+        )
 
     def test_has_all_permissions(self):
         """Test has_all_permissions method."""
@@ -229,8 +233,12 @@ class TestUser:
             username="Test",
             roles=[Role.VIEWER],
         )
-        assert user.has_all_permissions([Permission.READ_POSITIONS, Permission.READ_TRADES])
-        assert not user.has_all_permissions([Permission.READ_POSITIONS, Permission.WRITE_CONFIG])
+        assert user.has_all_permissions(
+            [Permission.READ_POSITIONS, Permission.READ_TRADES]
+        )
+        assert not user.has_all_permissions(
+            [Permission.READ_POSITIONS, Permission.WRITE_CONFIG]
+        )
 
     def test_has_role(self):
         """Test has_role method."""

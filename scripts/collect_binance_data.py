@@ -81,12 +81,16 @@ def collect_funding_rate(symbol: str, start_date: str = "2020-01-01") -> pd.Data
     df = df[["datetime", "fundingRate", "fundingTime"]].drop_duplicates()
     df = df.sort_values("datetime").reset_index(drop=True)
 
-    logger.info(f"  Total: {len(df)} records ({df['datetime'].min()} to {df['datetime'].max()})")
+    logger.info(
+        f"  Total: {len(df)} records ({df['datetime'].min()} to {df['datetime'].max()})"
+    )
 
     return df
 
 
-def collect_open_interest(symbol: str, period: str = "1d", start_date: str = "2020-01-01") -> pd.DataFrame:
+def collect_open_interest(
+    symbol: str, period: str = "1d", start_date: str = "2020-01-01"
+) -> pd.DataFrame:
     """Collect historical Open Interest (max 500 records, no startTime support)."""
     url = f"{BASE_URL}/futures/data/openInterestHist"
 
@@ -116,12 +120,16 @@ def collect_open_interest(symbol: str, period: str = "1d", start_date: str = "20
     df = df[["datetime", "sumOpenInterest", "sumOpenInterestValue"]].drop_duplicates()
     df = df.sort_values("datetime").reset_index(drop=True)
 
-    logger.info(f"  Total: {len(df)} records ({df['datetime'].min()} to {df['datetime'].max()})")
+    logger.info(
+        f"  Total: {len(df)} records ({df['datetime'].min()} to {df['datetime'].max()})"
+    )
 
     return df
 
 
-def collect_long_short_ratio(symbol: str, period: str = "1d", start_date: str = "2020-01-01") -> pd.DataFrame:
+def collect_long_short_ratio(
+    symbol: str, period: str = "1d", start_date: str = "2020-01-01"
+) -> pd.DataFrame:
     """Collect top trader long/short ratio (max 500 records)."""
     url = f"{BASE_URL}/futures/data/topLongShortAccountRatio"
 
@@ -149,15 +157,21 @@ def collect_long_short_ratio(symbol: str, period: str = "1d", start_date: str = 
     df["longShortRatio"] = df["longShortRatio"].astype(float)
     df["longAccount"] = df["longAccount"].astype(float)
     df["shortAccount"] = df["shortAccount"].astype(float)
-    df = df[["datetime", "longShortRatio", "longAccount", "shortAccount"]].drop_duplicates()
+    df = df[
+        ["datetime", "longShortRatio", "longAccount", "shortAccount"]
+    ].drop_duplicates()
     df = df.sort_values("datetime").reset_index(drop=True)
 
-    logger.info(f"  Total: {len(df)} records ({df['datetime'].min()} to {df['datetime'].max()})")
+    logger.info(
+        f"  Total: {len(df)} records ({df['datetime'].min()} to {df['datetime'].max()})"
+    )
 
     return df
 
 
-def collect_taker_buy_sell(symbol: str, period: str = "1d", start_date: str = "2020-01-01") -> pd.DataFrame:
+def collect_taker_buy_sell(
+    symbol: str, period: str = "1d", start_date: str = "2020-01-01"
+) -> pd.DataFrame:
     """Collect taker buy/sell volume ratio (max 500 records)."""
     url = f"{BASE_URL}/futures/data/takerlongshortRatio"
 
@@ -188,7 +202,9 @@ def collect_taker_buy_sell(symbol: str, period: str = "1d", start_date: str = "2
     df = df[["datetime", "buySellRatio", "buyVol", "sellVol"]].drop_duplicates()
     df = df.sort_values("datetime").reset_index(drop=True)
 
-    logger.info(f"  Total: {len(df)} records ({df['datetime'].min()} to {df['datetime'].max()})")
+    logger.info(
+        f"  Total: {len(df)} records ({df['datetime'].min()} to {df['datetime'].max()})"
+    )
 
     return df
 
@@ -206,11 +222,21 @@ def save_data(df: pd.DataFrame, folder: str, filename: str):
 def main():
     parser = argparse.ArgumentParser(description="Collect Binance Futures Data")
     parser.add_argument("--all", action="store_true", help="Collect all data types")
-    parser.add_argument("--funding-rate", action="store_true", help="Collect funding rate")
-    parser.add_argument("--open-interest", action="store_true", help="Collect open interest")
-    parser.add_argument("--long-short", action="store_true", help="Collect long/short ratio")
-    parser.add_argument("--taker-volume", action="store_true", help="Collect taker buy/sell")
-    parser.add_argument("--symbols", type=str, default="BTCUSDT,ETHUSDT", help="Symbols to collect")
+    parser.add_argument(
+        "--funding-rate", action="store_true", help="Collect funding rate"
+    )
+    parser.add_argument(
+        "--open-interest", action="store_true", help="Collect open interest"
+    )
+    parser.add_argument(
+        "--long-short", action="store_true", help="Collect long/short ratio"
+    )
+    parser.add_argument(
+        "--taker-volume", action="store_true", help="Collect taker buy/sell"
+    )
+    parser.add_argument(
+        "--symbols", type=str, default="BTCUSDT,ETHUSDT", help="Symbols to collect"
+    )
     parser.add_argument("--start", type=str, default="2020-01-01", help="Start date")
 
     args = parser.parse_args()

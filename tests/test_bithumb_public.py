@@ -19,7 +19,10 @@ def test_fallback_to_http_api():
         with patch("libs.adapters.bithumb_public.requests.get") as mock_get:
             mock_get.return_value = Mock(
                 json=Mock(
-                    return_value={"status": "0000", "data": {"BTC": {}, "ETH": {}, "date": "123"}}
+                    return_value={
+                        "status": "0000",
+                        "data": {"BTC": {}, "ETH": {}, "date": "123"},
+                    }
                 )
             )
             from libs.adapters.bithumb_public import BithumbPublic

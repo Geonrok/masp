@@ -1,4 +1,5 @@
 """Exchange control panel - toggle and position size editing."""
+
 from __future__ import annotations
 
 import os
@@ -36,7 +37,9 @@ def render_exchange_toggle(exchange_name: str, current_state: bool) -> None:
         with st.spinner("Updating..."):
             success = api.toggle_exchange(exchange_name, new_state)
         if success:
-            st.success(f"{exchange_name.upper()} {'enabled' if new_state else 'disabled'}.")
+            st.success(
+                f"{exchange_name.upper()} {'enabled' if new_state else 'disabled'}."
+            )
             st.rerun()
         else:
             st.error("Update failed.")

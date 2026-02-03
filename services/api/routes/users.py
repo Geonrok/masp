@@ -29,6 +29,7 @@ router = APIRouter()
 
 # Request/Response Models
 
+
 class CreateUserRequest(BaseModel):
     """Request to create a new user."""
 
@@ -102,6 +103,7 @@ class CurrentUserResponse(BaseModel):
 
 
 # Endpoints
+
 
 @router.get("/me", response_model=CurrentUserResponse)
 async def get_current_user_info(
@@ -231,7 +233,11 @@ async def update_user(
             )
 
         # Check permissions for super admin assignment
-        if roles and Role.SUPER_ADMIN in roles and Role.SUPER_ADMIN not in current_user.roles:
+        if (
+            roles
+            and Role.SUPER_ADMIN in roles
+            and Role.SUPER_ADMIN not in current_user.roles
+        ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Only super admins can assign super admin role",

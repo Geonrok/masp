@@ -301,7 +301,9 @@ class AlertManager:
 
             # Check severity
             severity_order = list(AlertSeverity)
-            if severity_order.index(alert.severity) < severity_order.index(rule.min_severity):
+            if severity_order.index(alert.severity) < severity_order.index(
+                rule.min_severity
+            ):
                 continue
 
             # Execute callback
@@ -381,11 +383,7 @@ class AlertManager:
         if min_severity:
             severity_order = list(AlertSeverity)
             min_idx = severity_order.index(min_severity)
-            alerts = [
-                a
-                for a in alerts
-                if severity_order.index(a.severity) >= min_idx
-            ]
+            alerts = [a for a in alerts if severity_order.index(a.severity) >= min_idx]
 
         return sorted(alerts, key=lambda a: a.timestamp, reverse=True)
 
@@ -452,7 +450,9 @@ class AlertManager:
         """Get alert statistics."""
         with self._lock:
             active_count = sum(1 for a in self._alerts if not a.resolved)
-            unacked_count = sum(1 for a in self._alerts if not a.acknowledged and not a.resolved)
+            unacked_count = sum(
+                1 for a in self._alerts if not a.acknowledged and not a.resolved
+            )
 
         return {
             **self._stats,

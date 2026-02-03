@@ -4,28 +4,37 @@ Ralph-Loop Phase 1: Data Discovery & Validation
 ===============================================
 Task 1.1 ~ 1.6: Complete data audit for Binance Futures
 """
+
 import json
 from pathlib import Path
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 import pandas as pd
 import numpy as np
 
 # Paths
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
-STATE_PATH = Path("E:/투자/Multi-Asset Strategy Platform/research/ralph_loop_state.json")
+STATE_PATH = Path(
+    "E:/투자/Multi-Asset Strategy Platform/research/ralph_loop_state.json"
+)
 RESULTS_PATH = Path("E:/투자/Multi-Asset Strategy Platform/research/results")
 
 RESULTS_PATH.mkdir(exist_ok=True)
 
+
 def load_state():
-    return json.loads(STATE_PATH.read_text(encoding='utf-8'))
+    return json.loads(STATE_PATH.read_text(encoding="utf-8"))
+
 
 def save_state(state):
     state["last_updated"] = datetime.now().isoformat()
-    STATE_PATH.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding='utf-8')
+    STATE_PATH.write_text(
+        json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+
 
 def task_1_1_enumerate_symbols():
     """Task 1.1: Enumerate all available symbols"""
@@ -36,43 +45,41 @@ def task_1_1_enumerate_symbols():
     results = {}
 
     # Check all timeframes
-    timeframes = ['binance_futures_1h', 'binance_futures_4h', 'binance_futures_1d']
+    timeframes = ["binance_futures_1h", "binance_futures_4h", "binance_futures_1d"]
 
     for tf in timeframes:
         tf_path = DATA_ROOT / tf
         if tf_path.exists():
             files = list(tf_path.glob("*.csv"))
-            symbols = sorted([f.stem for f in files if f.stem.endswith('USDT')])
-            results[tf] = {
-                'count': len(symbols),
-                'symbols': symbols
-            }
+            symbols = sorted([f.stem for f in files if f.stem.endswith("USDT")])
+            results[tf] = {"count": len(symbols), "symbols": symbols}
             print(f"  {tf}: {len(symbols)} symbols")
         else:
             print(f"  {tf}: NOT FOUND")
-            results[tf] = {'count': 0, 'symbols': []}
+            results[tf] = {"count": 0, "symbols": []}
 
     # Additional data sources
     extra_sources = [
-        'binance_funding_rate',
-        'binance_open_interest',
-        'binance_long_short_ratio',
-        'binance_taker_volume',
-        'macro',
-        'coinglass'
+        "binance_funding_rate",
+        "binance_open_interest",
+        "binance_long_short_ratio",
+        "binance_taker_volume",
+        "macro",
+        "coinglass",
     ]
 
     for src in extra_sources:
         src_path = DATA_ROOT / src
         if src_path.exists():
             files = list(src_path.glob("*.csv"))
-            results[src] = {'count': len(files), 'available': True}
+            results[src] = {"count": len(files), "available": True}
             print(f"  {src}: {len(files)} files")
         else:
-            results[src] = {'count': 0, 'available': False}
+            results[src] = {"count": 0, "available": False}
             print(f"  {src}: NOT FOUND")
 
     return results
+
 
 def task_1_2_date_ranges():
     """Task 1.2: Identify data start/end dates per symbol"""
@@ -92,7 +99,7 @@ def task_1_2_date_ranges():
         symbol = f.stem
         try:
             df = pd.read_csv(f, nrows=5)  # First few rows
-            for col in ['datetime', 'timestamp', 'date']:
+            for col in ["datetime", "timestamp", "date"]:
                 if col in df.columns:
                     start_date = pd.to_datetime(df[col].iloc[0])
                     break
@@ -101,7 +108,7 @@ def task_1_2_date_ranges():
 
             # Read last rows
             df_tail = pd.read_csv(f)
-            for col in ['datetime', 'timestamp', 'date']:
+            for col in ["datetime", "timestamp", "date"]:
                 if col in df_tail.columns:
                     df_tail[col] = pd.to_datetime(df_tail[col])
                     end_date = df_tail[col].max()
@@ -109,25 +116,26 @@ def task_1_2_date_ranges():
                     break
 
             results[symbol] = {
-                'start': str(start_date.date()),
-                'end': str(end_date.date()),
-                'rows': rows,
-                'days': (end_date - start_date).days
+                "start": str(start_date.date()),
+                "end": str(end_date.date()),
+                "rows": rows,
+                "days": (end_date - start_date).days,
             }
         except Exception as e:
-            results[symbol] = {'error': str(e)}
+            results[symbol] = {"error": str(e)}
 
     # Summary stats
-    valid = {k: v for k, v in results.items() if 'days' in v}
+    valid = {k: v for k, v in results.items() if "days" in v}
     if valid:
-        avg_days = np.mean([v['days'] for v in valid.values()])
-        min_days = min(v['days'] for v in valid.values())
-        max_days = max(v['days'] for v in valid.values())
+        avg_days = np.mean([v["days"] for v in valid.values()])
+        min_days = min(v["days"] for v in valid.values())
+        max_days = max(v["days"] for v in valid.values())
         print(f"  Symbols with data: {len(valid)}")
         print(f"  Average history: {avg_days:.0f} days")
         print(f"  Range: {min_days} - {max_days} days")
 
     return results
+
 
 def task_1_3_check_gaps():
     """Task 1.3: Check for gaps and anomalies"""
@@ -140,8 +148,8 @@ def task_1_3_check_gaps():
         print("  4h data not found, using 1h")
         tf_path = DATA_ROOT / "binance_futures_1h"
 
-    results = {'gap_analysis': [], 'anomalies': []}
-    sample_symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT']
+    results = {"gap_analysis": [], "anomalies": []}
+    sample_symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"]
 
     for symbol in sample_symbols:
         fp = tf_path / f"{symbol}.csv"
@@ -149,37 +157,44 @@ def task_1_3_check_gaps():
             continue
 
         df = pd.read_csv(fp)
-        for col in ['datetime', 'timestamp', 'date']:
+        for col in ["datetime", "timestamp", "date"]:
             if col in df.columns:
-                df['dt'] = pd.to_datetime(df[col])
+                df["dt"] = pd.to_datetime(df[col])
                 break
 
-        if 'dt' not in df.columns:
+        if "dt" not in df.columns:
             continue
 
-        df = df.sort_values('dt')
+        df = df.sort_values("dt")
 
         # Check gaps (expected 4h interval)
-        df['gap'] = df['dt'].diff()
+        df["gap"] = df["dt"].diff()
         expected_gap = pd.Timedelta(hours=4)
-        gaps = df[df['gap'] > expected_gap * 1.5]
+        gaps = df[df["gap"] > expected_gap * 1.5]
 
         # Check price anomalies
-        if 'close' in df.columns:
-            df['ret'] = df['close'].pct_change()
-            anomalies = df[abs(df['ret']) > 0.5]  # >50% moves
+        if "close" in df.columns:
+            df["ret"] = df["close"].pct_change()
+            anomalies = df[abs(df["ret"]) > 0.5]  # >50% moves
 
-            results['gap_analysis'].append({
-                'symbol': symbol,
-                'total_rows': len(df),
-                'gaps_found': len(gaps),
-                'max_gap_hours': gaps['gap'].max().total_seconds() / 3600 if len(gaps) > 0 else 0,
-                'anomalies': len(anomalies)
-            })
+            results["gap_analysis"].append(
+                {
+                    "symbol": symbol,
+                    "total_rows": len(df),
+                    "gaps_found": len(gaps),
+                    "max_gap_hours": (
+                        gaps["gap"].max().total_seconds() / 3600 if len(gaps) > 0 else 0
+                    ),
+                    "anomalies": len(anomalies),
+                }
+            )
 
-            print(f"  {symbol}: {len(df)} rows, {len(gaps)} gaps, {len(anomalies)} anomalies")
+            print(
+                f"  {symbol}: {len(df)} rows, {len(gaps)} gaps, {len(anomalies)} anomalies"
+            )
 
     return results
+
 
 def task_1_4_liquidity_metrics():
     """Task 1.4: Calculate liquidity metrics (ADV, spread proxy)"""
@@ -198,40 +213,45 @@ def task_1_4_liquidity_metrics():
         symbol = f.stem
         try:
             df = pd.read_csv(f)
-            if 'volume' not in df.columns or 'close' not in df.columns:
+            if "volume" not in df.columns or "close" not in df.columns:
                 continue
 
             # Use last 90 days
             df = df.tail(90 * 6)  # 6 bars per day for 4h
 
             # Average Daily Volume (in USD)
-            adv_usd = (df['volume'] * df['close']).mean() * 6  # Scale to daily
+            adv_usd = (df["volume"] * df["close"]).mean() * 6  # Scale to daily
 
             # Spread proxy: High-Low range relative to close
-            spread_proxy = ((df['high'] - df['low']) / df['close']).mean() * 100
+            spread_proxy = ((df["high"] - df["low"]) / df["close"]).mean() * 100
 
             # Volatility (daily)
-            returns = df['close'].pct_change()
+            returns = df["close"].pct_change()
             volatility = returns.std() * np.sqrt(6) * 100  # Annualized approx
 
-            results.append({
-                'symbol': symbol,
-                'adv_usd': adv_usd,
-                'spread_proxy_pct': spread_proxy,
-                'volatility_pct': volatility
-            })
+            results.append(
+                {
+                    "symbol": symbol,
+                    "adv_usd": adv_usd,
+                    "spread_proxy_pct": spread_proxy,
+                    "volatility_pct": volatility,
+                }
+            )
         except Exception as e:
             pass
 
     # Sort by ADV
-    results = sorted(results, key=lambda x: x['adv_usd'], reverse=True)
+    results = sorted(results, key=lambda x: x["adv_usd"], reverse=True)
 
     print(f"  Total symbols analyzed: {len(results)}")
     print(f"\n  Top 10 by ADV:")
     for r in results[:10]:
-        print(f"    {r['symbol']:<12} ADV=${r['adv_usd']/1e6:.1f}M  Spread={r['spread_proxy_pct']:.2f}%")
+        print(
+            f"    {r['symbol']:<12} ADV=${r['adv_usd']/1e6:.1f}M  Spread={r['spread_proxy_pct']:.2f}%"
+        )
 
     return results
+
 
 def task_1_5_create_tiers():
     """Task 1.5: Create symbol universe tiers"""
@@ -243,15 +263,15 @@ def task_1_5_create_tiers():
     liquidity = task_1_4_liquidity_metrics()
 
     # Create tiers based on ADV
-    tier_1 = [r['symbol'] for r in liquidity[:20]]   # Top 20
-    tier_2 = [r['symbol'] for r in liquidity[20:50]] # 21-50
-    tier_3 = [r['symbol'] for r in liquidity[50:100]] # 51-100
+    tier_1 = [r["symbol"] for r in liquidity[:20]]  # Top 20
+    tier_2 = [r["symbol"] for r in liquidity[20:50]]  # 21-50
+    tier_3 = [r["symbol"] for r in liquidity[50:100]]  # 51-100
 
     results = {
-        'tier_1_top20': tier_1,
-        'tier_2_top50': tier_1 + tier_2,
-        'tier_3_top100': tier_1 + tier_2 + tier_3,
-        'all': [r['symbol'] for r in liquidity]
+        "tier_1_top20": tier_1,
+        "tier_2_top50": tier_1 + tier_2,
+        "tier_3_top100": tier_1 + tier_2 + tier_3,
+        "all": [r["symbol"] for r in liquidity],
     }
 
     print(f"\n  Tier 1 (Top 20): {len(tier_1)} symbols")
@@ -262,6 +282,7 @@ def task_1_5_create_tiers():
     print(f"\n  Tier 1 symbols: {', '.join(tier_1[:10])}...")
 
     return results
+
 
 def task_1_6_document_report():
     """Task 1.6: Generate final data quality report"""
@@ -277,20 +298,24 @@ def task_1_6_document_report():
     tiers = task_1_5_create_tiers()
 
     report = {
-        'generated_at': datetime.now().isoformat(),
-        'summary': {
-            'total_symbols': symbols.get('binance_futures_4h', {}).get('count', 0),
-            'avg_history_days': np.mean([v['days'] for v in date_ranges.values() if 'days' in v]),
-            'data_sources': {k: v.get('available', v.get('count', 0) > 0) for k, v in symbols.items()},
+        "generated_at": datetime.now().isoformat(),
+        "summary": {
+            "total_symbols": symbols.get("binance_futures_4h", {}).get("count", 0),
+            "avg_history_days": np.mean(
+                [v["days"] for v in date_ranges.values() if "days" in v]
+            ),
+            "data_sources": {
+                k: v.get("available", v.get("count", 0) > 0) for k, v in symbols.items()
+            },
         },
-        'tiers': tiers,
-        'gap_analysis': gaps,
-        'liquidity_ranking': liquidity[:50]  # Top 50
+        "tiers": tiers,
+        "gap_analysis": gaps,
+        "liquidity_ranking": liquidity[:50],  # Top 50
     }
 
     # Save report
     report_path = RESULTS_PATH / "phase1_data_report.json"
-    report_path.write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')
+    report_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
     print(f"\n  Report saved: {report_path}")
 
     return report
@@ -308,16 +333,16 @@ def main():
     report = task_1_6_document_report()
 
     # Update state
-    state['current_phase'] = '2'
-    state['current_task'] = '2.1'
-    state['completed_tasks'] = ['1.1', '1.2', '1.3', '1.4', '1.5', '1.6']
-    state['findings']['data_quality'] = {
-        'total_symbols': report['summary']['total_symbols'],
-        'avg_history_days': report['summary']['avg_history_days'],
-        'tier_1_symbols': report['tiers']['tier_1_top20'],
-        'tier_2_symbols': report['tiers']['tier_2_top50']
+    state["current_phase"] = "2"
+    state["current_task"] = "2.1"
+    state["completed_tasks"] = ["1.1", "1.2", "1.3", "1.4", "1.5", "1.6"]
+    state["findings"]["data_quality"] = {
+        "total_symbols": report["summary"]["total_symbols"],
+        "avg_history_days": report["summary"]["avg_history_days"],
+        "tier_1_symbols": report["tiers"]["tier_1_top20"],
+        "tier_2_symbols": report["tiers"]["tier_2_top50"],
     }
-    state['next_actions'] = ['2.1: Price-based features', '2.2: Volume-based features']
+    state["next_actions"] = ["2.1: Price-based features", "2.2: Volume-based features"]
 
     save_state(state)
 

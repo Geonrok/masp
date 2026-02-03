@@ -28,11 +28,12 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-DATA_ROOT = Path('E:/data/crypto_ohlcv')
+DATA_ROOT = Path("E:/data/crypto_ohlcv")
 
 
 class MarketRegime(Enum):
     """시장 국면"""
+
     BULL = "bull"
     BEAR = "bear"
     SIDEWAYS = "sideways"
@@ -41,6 +42,7 @@ class MarketRegime(Enum):
 
 class VolatilityRegime(Enum):
     """변동성 레짐"""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -49,6 +51,7 @@ class VolatilityRegime(Enum):
 
 class MomentumState(Enum):
     """모멘텀 상태"""
+
     STRONG_UP = "strong_up"
     WEAK_UP = "weak_up"
     NEUTRAL = "neutral"
@@ -59,6 +62,7 @@ class MomentumState(Enum):
 @dataclass
 class RegimeAnalysis:
     """시장 국면 분석 결과"""
+
     regime: MarketRegime
     volatility: VolatilityRegime
     momentum: MomentumState
@@ -81,19 +85,19 @@ class RegimeAnalysis:
 
     def to_dict(self) -> dict:
         return {
-            'regime': self.regime.value,
-            'volatility': self.volatility.value,
-            'momentum': self.momentum.value,
-            'price': self.price,
-            'ma20': self.ma20,
-            'ma50': self.ma50,
-            'ma200': self.ma200,
-            'atr_pct': self.atr_pct,
-            'tsmom_30d': self.tsmom_30d,
-            'tsmom_90d': self.tsmom_90d,
-            'trend_strength': self.trend_strength,
-            'message': self.message,
-            'timestamp': self.timestamp.isoformat(),
+            "regime": self.regime.value,
+            "volatility": self.volatility.value,
+            "momentum": self.momentum.value,
+            "price": self.price,
+            "ma20": self.ma20,
+            "ma50": self.ma50,
+            "ma200": self.ma200,
+            "atr_pct": self.atr_pct,
+            "tsmom_30d": self.tsmom_30d,
+            "tsmom_90d": self.tsmom_90d,
+            "trend_strength": self.trend_strength,
+            "message": self.message,
+            "timestamp": self.timestamp.isoformat(),
         }
 
 
@@ -135,11 +139,7 @@ class MarketRegimeDetector:
         return np.mean(prices[-period:])
 
     def _calc_atr(
-        self,
-        high: np.ndarray,
-        low: np.ndarray,
-        close: np.ndarray,
-        period: int = 14
+        self, high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int = 14
     ) -> float:
         """ATR 계산"""
         n = len(close)
@@ -153,7 +153,7 @@ class MarketRegimeDetector:
             tr[i] = max(
                 high[i] - low[i],
                 abs(high[i] - close[i - 1]),
-                abs(low[i] - close[i - 1])
+                abs(low[i] - close[i - 1]),
             )
 
         if n <= period:
@@ -162,11 +162,7 @@ class MarketRegimeDetector:
         return np.mean(tr[-period:])
 
     def _calc_adx(
-        self,
-        high: np.ndarray,
-        low: np.ndarray,
-        close: np.ndarray,
-        period: int = 14
+        self, high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int = 14
     ) -> float:
         """ADX 계산 (추세 강도)"""
         n = len(close)
@@ -179,16 +175,16 @@ class MarketRegimeDetector:
         tr = np.zeros(n)
 
         for i in range(1, n):
-            up_move = high[i] - high[i-1]
-            down_move = low[i-1] - low[i]
+            up_move = high[i] - high[i - 1]
+            down_move = low[i - 1] - low[i]
 
             plus_dm[i] = up_move if up_move > down_move and up_move > 0 else 0
             minus_dm[i] = down_move if down_move > up_move and down_move > 0 else 0
 
             tr[i] = max(
                 high[i] - low[i],
-                abs(high[i] - close[i-1]),
-                abs(low[i] - close[i-1])
+                abs(high[i] - close[i - 1]),
+                abs(low[i] - close[i - 1]),
             )
 
         # Smoothed values
@@ -211,9 +207,7 @@ class MarketRegimeDetector:
         return min(100, max(0, dx))
 
     def _calc_volatility_percentile(
-        self,
-        atr_values: np.ndarray,
-        lookback: int = 252
+        self, atr_values: np.ndarray, lookback: int = 252
     ) -> float:
         """변동성 백분위 계산"""
         if len(atr_values) < lookback:
@@ -230,14 +224,14 @@ class MarketRegimeDetector:
 
     def load_btc_data(self) -> Optional[pd.DataFrame]:
         """BTC 데이터 로드"""
-        folder = DATA_ROOT / f'{self.exchange}_1d'
+        folder = DATA_ROOT / f"{self.exchange}_1d"
         if not folder.exists():
             logger.warning(f"[MarketRegime] Data folder not found: {folder}")
             return None
 
         btc_file = None
-        for f in folder.glob('*.csv'):
-            if 'BTC' in f.stem.upper() and 'DOWN' not in f.stem.upper():
+        for f in folder.glob("*.csv"):
+            if "BTC" in f.stem.upper() and "DOWN" not in f.stem.upper():
                 btc_file = f
                 break
 
@@ -247,15 +241,17 @@ class MarketRegimeDetector:
 
         try:
             df = pd.read_csv(btc_file)
-            date_col = [c for c in df.columns if 'date' in c.lower() or 'time' in c.lower()]
+            date_col = [
+                c for c in df.columns if "date" in c.lower() or "time" in c.lower()
+            ]
             if not date_col:
                 return None
 
-            df['date'] = pd.to_datetime(df[date_col[0]]).dt.normalize()
-            df = df.set_index('date').sort_index()
-            df = df[~df.index.duplicated(keep='last')]
+            df["date"] = pd.to_datetime(df[date_col[0]]).dt.normalize()
+            df = df.set_index("date").sort_index()
+            df = df[~df.index.duplicated(keep="last")]
 
-            required = ['open', 'high', 'low', 'close', 'volume']
+            required = ["open", "high", "low", "close", "volume"]
             if not all(c in df.columns for c in required):
                 return None
 
@@ -290,13 +286,13 @@ class MarketRegimeDetector:
                 tsmom_30d=0,
                 tsmom_90d=0,
                 trend_strength=50,
-                message="Insufficient data for analysis"
+                message="Insufficient data for analysis",
             )
 
         # 가격 데이터
-        close = df['close'].values
-        high = df['high'].values
-        low = df['low'].values
+        close = df["close"].values
+        high = df["high"].values
+        low = df["low"].values
 
         current_price = close[-1]
 
@@ -310,8 +306,12 @@ class MarketRegimeDetector:
         atr_pct = (atr / current_price) * 100 if current_price > 0 else 0
 
         # 모멘텀 계산
-        tsmom_30d = (current_price - close[-31]) / close[-31] * 100 if len(close) > 31 else 0
-        tsmom_90d = (current_price - close[-91]) / close[-91] * 100 if len(close) > 91 else 0
+        tsmom_30d = (
+            (current_price - close[-31]) / close[-31] * 100 if len(close) > 31 else 0
+        )
+        tsmom_90d = (
+            (current_price - close[-91]) / close[-91] * 100 if len(close) > 91 else 0
+        )
 
         # ADX (추세 강도) 계산
         adx = self._calc_adx(high, low, close, 14)
@@ -351,8 +351,7 @@ class MarketRegimeDetector:
 
         # 4. 메시지 생성
         message = self._generate_message(
-            regime, volatility, momentum, adx,
-            current_price, ma20, ma50, ma200
+            regime, volatility, momentum, adx, current_price, ma20, ma50, ma200
         )
 
         return RegimeAnalysis(
@@ -367,7 +366,7 @@ class MarketRegimeDetector:
             tsmom_30d=tsmom_30d,
             tsmom_90d=tsmom_90d,
             trend_strength=adx,
-            message=message
+            message=message,
         )
 
     def _generate_message(
@@ -428,73 +427,71 @@ class MarketRegimeDetector:
         """
         recommendations = {
             (MarketRegime.BULL, VolatilityRegime.LOW): {
-                'action': '적극 매수',
-                'position_size': 1.0,
-                'message': '강한 상승장 + 낮은 변동성 - 최대 포지션 권장'
+                "action": "적극 매수",
+                "position_size": 1.0,
+                "message": "강한 상승장 + 낮은 변동성 - 최대 포지션 권장",
             },
             (MarketRegime.BULL, VolatilityRegime.NORMAL): {
-                'action': '매수',
-                'position_size': 0.8,
-                'message': '상승장 - 일반적인 롱 포지션'
+                "action": "매수",
+                "position_size": 0.8,
+                "message": "상승장 - 일반적인 롱 포지션",
             },
             (MarketRegime.BULL, VolatilityRegime.HIGH): {
-                'action': '신중한 매수',
-                'position_size': 0.5,
-                'message': '상승장이나 높은 변동성 - 포지션 축소 권장'
+                "action": "신중한 매수",
+                "position_size": 0.5,
+                "message": "상승장이나 높은 변동성 - 포지션 축소 권장",
             },
             (MarketRegime.BULL, VolatilityRegime.EXTREME): {
-                'action': '대기',
-                'position_size': 0.2,
-                'message': '극심한 변동성 - 안정화 대기'
+                "action": "대기",
+                "position_size": 0.2,
+                "message": "극심한 변동성 - 안정화 대기",
             },
             (MarketRegime.BEAR, VolatilityRegime.LOW): {
-                'action': '관망',
-                'position_size': 0.0,
-                'message': '하락장 - 롱 포지션 회피'
+                "action": "관망",
+                "position_size": 0.0,
+                "message": "하락장 - 롱 포지션 회피",
             },
             (MarketRegime.BEAR, VolatilityRegime.NORMAL): {
-                'action': '관망',
-                'position_size': 0.0,
-                'message': '하락장 - 롱 포지션 회피'
+                "action": "관망",
+                "position_size": 0.0,
+                "message": "하락장 - 롱 포지션 회피",
             },
             (MarketRegime.BEAR, VolatilityRegime.HIGH): {
-                'action': '관망',
-                'position_size': 0.0,
-                'message': '하락장 + 높은 변동성 - 현금 보유'
+                "action": "관망",
+                "position_size": 0.0,
+                "message": "하락장 + 높은 변동성 - 현금 보유",
             },
             (MarketRegime.BEAR, VolatilityRegime.EXTREME): {
-                'action': '관망',
-                'position_size': 0.0,
-                'message': '하락장 + 극심한 변동성 - 자본 보존 우선'
+                "action": "관망",
+                "position_size": 0.0,
+                "message": "하락장 + 극심한 변동성 - 자본 보존 우선",
             },
             (MarketRegime.SIDEWAYS, VolatilityRegime.LOW): {
-                'action': '대기',
-                'position_size': 0.3,
-                'message': '횡보장 - 돌파 대기'
+                "action": "대기",
+                "position_size": 0.3,
+                "message": "횡보장 - 돌파 대기",
             },
             (MarketRegime.SIDEWAYS, VolatilityRegime.NORMAL): {
-                'action': '선별 매수',
-                'position_size': 0.4,
-                'message': '횡보장 - 선별적 진입만'
+                "action": "선별 매수",
+                "position_size": 0.4,
+                "message": "횡보장 - 선별적 진입만",
             },
             (MarketRegime.SIDEWAYS, VolatilityRegime.HIGH): {
-                'action': '신중',
-                'position_size': 0.2,
-                'message': '횡보장 + 높은 변동성 - 주의 필요'
+                "action": "신중",
+                "position_size": 0.2,
+                "message": "횡보장 + 높은 변동성 - 주의 필요",
             },
             (MarketRegime.SIDEWAYS, VolatilityRegime.EXTREME): {
-                'action': '대기',
-                'position_size': 0.1,
-                'message': '불확실성 높음 - 최소 노출'
+                "action": "대기",
+                "position_size": 0.1,
+                "message": "불확실성 높음 - 최소 노출",
             },
         }
 
         key = (analysis.regime, analysis.volatility)
-        return recommendations.get(key, {
-            'action': '대기',
-            'position_size': 0.3,
-            'message': '시장 상황 불확실'
-        })
+        return recommendations.get(
+            key, {"action": "대기", "position_size": 0.3, "message": "시장 상황 불확실"}
+        )
 
     def format_telegram_message(self, analysis: RegimeAnalysis) -> str:
         """텔레그램 메시지 포맷팅 (한글)"""
@@ -554,8 +551,7 @@ class MarketRegimeDetector:
 def main():
     """CLI 실행"""
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
     print("=" * 60)
@@ -591,7 +587,11 @@ def main():
     print("\n" + "-" * 60)
     print("Telegram Message Preview:")
     print("-" * 60)
-    print(detector.format_telegram_message(analysis).replace('<b>', '').replace('</b>', ''))
+    print(
+        detector.format_telegram_message(analysis)
+        .replace("<b>", "")
+        .replace("</b>", "")
+    )
 
 
 if __name__ == "__main__":

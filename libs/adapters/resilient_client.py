@@ -53,7 +53,10 @@ class RateLimitState:
     def update_window(self) -> None:
         """Update the request window tracking."""
         now = datetime.now()
-        if self.window_start is None or (now - self.window_start).total_seconds() > self.window_size_seconds:
+        if (
+            self.window_start is None
+            or (now - self.window_start).total_seconds() > self.window_size_seconds
+        ):
             self.window_start = now
             self.requests_per_window = 0
         self.requests_per_window += 1
@@ -215,7 +218,10 @@ class ResilientHTTPClient:
             state.update_window()
             if state.requests_per_window > self.config.max_requests_per_window:
                 # Proactive rate limiting
-                wait_time = state.window_size_seconds - (datetime.now() - state.window_start).total_seconds()
+                wait_time = (
+                    state.window_size_seconds
+                    - (datetime.now() - state.window_start).total_seconds()
+                )
                 if wait_time > 0:
                     logger.info(
                         f"[{self.name}] Proactive rate limiting, waiting {wait_time:.1f}s"
@@ -227,7 +233,7 @@ class ResilientHTTPClient:
         import random
 
         if self.config.exponential_backoff:
-            delay = self.config.base_delay * (2 ** attempt)
+            delay = self.config.base_delay * (2**attempt)
         else:
             delay = self.config.base_delay
 
@@ -292,7 +298,11 @@ class ResilientHTTPClient:
                 # Record metric
                 self._metrics.increment(
                     "http_requests_total",
-                    labels={"client": self.name, "method": method, "endpoint": endpoint},
+                    labels={
+                        "client": self.name,
+                        "method": method,
+                        "endpoint": endpoint,
+                    },
                 )
 
                 async with self._session.request(
@@ -512,7 +522,7 @@ class SyncResilientHTTPClient:
         import random
 
         if self.config.exponential_backoff:
-            delay = self.config.base_delay * (2 ** attempt)
+            delay = self.config.base_delay * (2**attempt)
         else:
             delay = self.config.base_delay
 

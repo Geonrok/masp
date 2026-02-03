@@ -79,8 +79,7 @@ class TestStrategyRoutes:
         if strategies:
             strategy_id = strategies[0]["strategy_id"]
             response = client.post(
-                "/api/v1/strategy/start",
-                json={"strategy_id": strategy_id}
+                "/api/v1/strategy/start", json={"strategy_id": strategy_id}
             )
             assert response.status_code == 200
             data = response.json()
@@ -89,16 +88,14 @@ class TestStrategyRoutes:
     def test_start_strategy_unknown(self, client):
         """Test starting an unknown strategy returns 404."""
         response = client.post(
-            "/api/v1/strategy/start",
-            json={"strategy_id": "nonexistent_strategy_xyz"}
+            "/api/v1/strategy/start", json={"strategy_id": "nonexistent_strategy_xyz"}
         )
         assert response.status_code == 404
 
     def test_stop_strategy(self, client):
         """Test stopping a strategy."""
         response = client.post(
-            "/api/v1/strategy/stop",
-            json={"strategy_id": "any_strategy"}
+            "/api/v1/strategy/stop", json={"strategy_id": "any_strategy"}
         )
         assert response.status_code == 200
         data = response.json()
@@ -136,18 +133,12 @@ class TestKillSwitchRoutes:
 
     def test_kill_switch_without_confirm(self, client):
         """Test kill switch requires confirm=true."""
-        response = client.post(
-            "/api/v1/kill-switch",
-            json={"confirm": False}
-        )
+        response = client.post("/api/v1/kill-switch", json={"confirm": False})
         assert response.status_code == 400
 
     def test_kill_switch_with_confirm(self, client):
         """Test kill switch with confirm=true."""
-        response = client.post(
-            "/api/v1/kill-switch",
-            json={"confirm": True}
-        )
+        response = client.post("/api/v1/kill-switch", json={"confirm": True})
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -245,8 +236,7 @@ class TestErrorHandling:
     def test_validation_error_format(self, client):
         """Test validation error returns proper format."""
         response = client.post(
-            "/api/v1/strategy/start",
-            json={}  # Missing required field
+            "/api/v1/strategy/start", json={}  # Missing required field
         )
         assert response.status_code == 422  # Unprocessable Entity
 
@@ -257,8 +247,7 @@ class TestCORS:
     def test_cors_headers(self, client):
         """Test CORS headers are present."""
         response = client.options(
-            "/api/v1/health/",
-            headers={"Origin": "http://localhost:5173"}
+            "/api/v1/health/", headers={"Origin": "http://localhost:5173"}
         )
         # Should allow the origin
         assert response.status_code in [200, 405]

@@ -7,7 +7,8 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import warnings
-warnings.filterwarnings('ignore')
+
+warnings.filterwarnings("ignore")
 
 # ============================================================
 # 1. 데이터 로드
@@ -38,8 +39,12 @@ print("-" * 50)
 
 n_strategies_upbit = len(upbit_results) if not upbit_results.empty else 0
 n_strategies_bithumb = len(bithumb_results) if not bithumb_results.empty else 0
-n_korean_combo = len(korean_combo) if 'korean_combo' in dir() and not korean_combo.empty else 0
-n_korean_full = len(korean_full) if 'korean_full' in dir() and not korean_full.empty else 0
+n_korean_combo = (
+    len(korean_combo) if "korean_combo" in dir() and not korean_combo.empty else 0
+)
+n_korean_full = (
+    len(korean_full) if "korean_full" in dir() and not korean_full.empty else 0
+)
 
 total_tests = n_strategies_upbit + n_strategies_bithumb + n_korean_combo + n_korean_full
 
@@ -55,6 +60,7 @@ print(f"\n총 테스트 횟수: {total_tests:,}")
 print("\n[2] Deflated Sharpe Ratio (다중 검정 보정)")
 print("-" * 50)
 
+
 def deflated_sharpe_ratio(observed_sharpe, n_tests, years, skewness=0, kurtosis=3):
     """
     다중 검정을 보정한 Sharpe Ratio 계산
@@ -65,19 +71,26 @@ def deflated_sharpe_ratio(observed_sharpe, n_tests, years, skewness=0, kurtosis=
 
     # E[max(Z_1, ..., Z_N)] 근사
     if n_tests > 1:
-        expected_max = (1 - euler) * stats.norm.ppf(1 - 1/n_tests) + \
-                      euler * stats.norm.ppf(1 - 1/(n_tests * np.e))
+        expected_max = (1 - euler) * stats.norm.ppf(
+            1 - 1 / n_tests
+        ) + euler * stats.norm.ppf(1 - 1 / (n_tests * np.e))
     else:
         expected_max = 0
 
     # Sharpe ratio 추정량의 분산
     n_obs = years * 252
-    var_sharpe = (1 + 0.5 * observed_sharpe**2 - skewness * observed_sharpe +
-                  (kurtosis - 3) / 4 * observed_sharpe**2) / n_obs
+    var_sharpe = (
+        1
+        + 0.5 * observed_sharpe**2
+        - skewness * observed_sharpe
+        + (kurtosis - 3) / 4 * observed_sharpe**2
+    ) / n_obs
 
     # Deflated Sharpe
     if var_sharpe > 0:
-        dsr = (observed_sharpe - expected_max * np.sqrt(var_sharpe)) / np.sqrt(var_sharpe)
+        dsr = (observed_sharpe - expected_max * np.sqrt(var_sharpe)) / np.sqrt(
+            var_sharpe
+        )
     else:
         dsr = 0
 
@@ -85,6 +98,7 @@ def deflated_sharpe_ratio(observed_sharpe, n_tests, years, skewness=0, kurtosis=
     p_value = 1 - stats.norm.cdf(dsr)
 
     return dsr, p_value, expected_max
+
 
 # 최종 전략의 관측된 Sharpe
 observed_sharpe_upbit = 3.16  # 2025 holdout 결과
@@ -126,6 +140,7 @@ print(f"  통과 여부: {'[PASS] PASS' if p_bithumb < 0.05 else '[FAIL] FAIL'}"
 print("\n[3] 우연히 좋은 전략이 발견될 확률")
 print("-" * 50)
 
+
 def prob_finding_good_strategy(n_tests, threshold_sharpe=2.0, years=5):
     """
     N번 테스트 시 Sharpe > threshold인 전략을 우연히 발견할 확률
@@ -140,9 +155,12 @@ def prob_finding_good_strategy(n_tests, threshold_sharpe=2.0, years=5):
 
     return p_at_least_one, p_single
 
+
 for threshold in [1.0, 1.5, 2.0, 2.5, 3.0]:
     p_find, p_single = prob_finding_good_strategy(estimated_tests, threshold, years)
-    print(f"Sharpe > {threshold}: {p_find*100:.1f}% 확률로 우연히 발견 (단일: {p_single:.6f})")
+    print(
+        f"Sharpe > {threshold}: {p_find*100:.1f}% 확률로 우연히 발견 (단일: {p_single:.6f})"
+    )
 
 # ============================================================
 # 5. 실제 전략 분포 분석
@@ -150,8 +168,8 @@ for threshold in [1.0, 1.5, 2.0, 2.5, 3.0]:
 print("\n[4] 실제 전략 Sharpe 분포 분석")
 print("-" * 50)
 
-if not upbit_results.empty and 'sharpe' in upbit_results.columns:
-    sharpes = upbit_results['sharpe'].dropna()
+if not upbit_results.empty and "sharpe" in upbit_results.columns:
+    sharpes = upbit_results["sharpe"].dropna()
 
     print(f"총 전략 수: {len(sharpes):,}")
     print(f"평균 Sharpe: {sharpes.mean():.3f}")
@@ -177,7 +195,9 @@ n_strategies_simulated = 1000  # 1000개 전략 시뮬레이션
 random_max_sharpes = []
 for _ in range(n_simulations):
     # 각 전략이 무작위 수익률을 가진다고 가정
-    random_sharpes = np.random.normal(0, 1, n_strategies_simulated)  # 평균 0, 표준편차 1
+    random_sharpes = np.random.normal(
+        0, 1, n_strategies_simulated
+    )  # 평균 0, 표준편차 1
     random_max_sharpes.append(np.max(random_sharpes))
 
 random_max_sharpes = np.array(random_max_sharpes)
@@ -192,11 +212,15 @@ print(f"  99th percentile: {np.percentile(random_max_sharpes, 99):.3f}")
 
 # 실제 Sharpe가 무작위 분포에서 어디에 위치하는지
 percentile_upbit = stats.percentileofscore(random_max_sharpes, observed_sharpe_upbit)
-percentile_bithumb = stats.percentileofscore(random_max_sharpes, observed_sharpe_bithumb)
+percentile_bithumb = stats.percentileofscore(
+    random_max_sharpes, observed_sharpe_bithumb
+)
 
 print(f"\n실제 전략의 위치:")
 print(f"  Upbit Sharpe {observed_sharpe_upbit}: {percentile_upbit:.1f}th percentile")
-print(f"  Bithumb Sharpe {observed_sharpe_bithumb}: {percentile_bithumb:.1f}th percentile")
+print(
+    f"  Bithumb Sharpe {observed_sharpe_bithumb}: {percentile_bithumb:.1f}th percentile"
+)
 
 # ============================================================
 # 7. 최종 평가
@@ -221,7 +245,9 @@ if percentile_upbit > 95 and percentile_bithumb > 95:
     score += 1
     print("[PASS] [2/5] Monte Carlo Percentile > 95%: PASS")
 else:
-    print(f"[WARN] [2/5] Monte Carlo Percentile: {percentile_upbit:.0f}%, {percentile_bithumb:.0f}%")
+    print(
+        f"[WARN] [2/5] Monte Carlo Percentile: {percentile_upbit:.0f}%, {percentile_bithumb:.0f}%"
+    )
     if percentile_upbit > 90 or percentile_bithumb > 90:
         score += 0.5
 

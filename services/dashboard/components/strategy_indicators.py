@@ -1,4 +1,5 @@
 """Strategy indicator display - read only."""
+
 from __future__ import annotations
 
 import os

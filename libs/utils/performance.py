@@ -4,6 +4,7 @@ Performance monitoring and optimization utilities.
 - Performance metrics collection
 - Resource usage tracking
 """
+
 from __future__ import annotations
 
 import functools
@@ -69,7 +70,9 @@ class TimingStats:
             "call_count": self.call_count,
             "total_time_ms": round(self.total_time_ms, 2),
             "avg_time_ms": round(self.avg_time_ms, 2),
-            "min_time_ms": round(self.min_time_ms, 2) if self.min_time_ms != float("inf") else 0,
+            "min_time_ms": (
+                round(self.min_time_ms, 2) if self.min_time_ms != float("inf") else 0
+            ),
             "max_time_ms": round(self.max_time_ms, 2),
             "recent_avg_ms": round(self.recent_avg_ms, 2),
             "std_dev_ms": round(self.std_dev_ms, 2),

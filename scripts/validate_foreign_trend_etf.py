@@ -51,7 +51,9 @@ def _to_datetime(s: pd.Series) -> pd.Series:
 
 def _coerce_numeric(s: pd.Series) -> pd.Series:
     # handles "1,234", "  123 ", etc.
-    return pd.to_numeric(s.astype(str).str.replace(",", "").str.strip(), errors="coerce")
+    return pd.to_numeric(
+        s.astype(str).str.replace(",", "").str.strip(), errors="coerce"
+    )
 
 
 def _read_csv_robust(path: Path) -> pd.DataFrame:
@@ -62,7 +64,9 @@ def _read_csv_robust(path: Path) -> pd.DataFrame:
             return pd.read_csv(path, encoding=enc)
         except Exception as e:
             last_err = e
-    raise RuntimeError(f"Failed to read CSV {path} with common encodings. Last error: {last_err}")
+    raise RuntimeError(
+        f"Failed to read CSV {path} with common encodings. Last error: {last_err}"
+    )
 
 
 def ensure_dir(p: Path) -> None:
@@ -139,12 +143,12 @@ def format_num(x: float, digits: int = 3) -> str:
 @dataclass
 class PriceData:
     close: pd.Series  # indexed by date
-    ret: pd.Series    # close-to-close returns
+    ret: pd.Series  # close-to-close returns
 
 
 @dataclass
 class ForeignData:
-    net: pd.Series    # indexed by date
+    net: pd.Series  # indexed by date
 
 
 def load_kospi200_parquet(path: Path) -> PriceData:
@@ -156,7 +160,14 @@ def load_kospi200_parquet(path: Path) -> PriceData:
     cols = {c.lower(): c for c in df.columns}
 
     date_col_candidates = ["date", "datetime", "time", "일자", "날짜", "trade_date"]
-    close_col_candidates = ["close", "adj close", "adj_close", "adjusted close", "종가", "종가(원)"]
+    close_col_candidates = [
+        "close",
+        "adj close",
+        "adj_close",
+        "adjusted close",
+        "종가",
+        "종가(원)",
+    ]
 
     date_col = None
     for k in date_col_candidates:
@@ -171,7 +182,9 @@ def load_kospi200_parquet(path: Path) -> PriceData:
             df["__date__"] = idx
             date_col = "__date__"
         else:
-            raise RuntimeError(f"Cannot find a date column in parquet columns={list(df.columns)}")
+            raise RuntimeError(
+                f"Cannot find a date column in parquet columns={list(df.columns)}"
+            )
 
     close_col = None
     # direct match by lowercase
@@ -187,12 +200,16 @@ def load_kospi200_parquet(path: Path) -> PriceData:
                 close_col = cand
                 break
     if close_col is None:
-        raise RuntimeError(f"Cannot find a close column in parquet columns={list(df.columns)}")
+        raise RuntimeError(
+            f"Cannot find a close column in parquet columns={list(df.columns)}"
+        )
 
-    out = pd.DataFrame({
-        "date": _to_datetime(df[date_col]),
-        "close": _coerce_numeric(df[close_col]),
-    }).dropna(subset=["date", "close"])
+    out = pd.DataFrame(
+        {
+            "date": _to_datetime(df[date_col]),
+            "close": _coerce_numeric(df[close_col]),
+        }
+    ).dropna(subset=["date", "close"])
 
     out = out.sort_values("date").drop_duplicates("date")
     out = out.set_index("date")
@@ -212,7 +229,16 @@ def _infer_foreign_net_from_df(df: pd.DataFrame) -> Tuple[pd.Series, Dict[str, s
     meta: Dict[str, str] = {}
 
     # Date
-    date_candidates = ["date", "Date", "datetime", "Datetime", "일자", "날짜", "trade_date", "기준일자"]
+    date_candidates = [
+        "date",
+        "Date",
+        "datetime",
+        "Datetime",
+        "일자",
+        "날짜",
+        "trade_date",
+        "기준일자",
+    ]
     date_col = None
     for c in date_candidates:
         if c in df.columns:
@@ -237,10 +263,19 @@ def _infer_foreign_net_from_df(df: pd.DataFrame) -> Tuple[pd.Series, Dict[str, s
 
     # 1) direct net column
     net_patterns = [
-        "foreign_net", "net_foreign", "foreign net",
-        "외국인순매수", "외국인 순매수", "외국인(순매수)", "외국인 순매수(수량)", "외국인 순매수(금액)",
-        "외국인_순매수", "외국인순매수금액", "외국인순매수수량",
-        "외국인합계", "외국인 합계",  # Added for aggregated foreign data
+        "foreign_net",
+        "net_foreign",
+        "foreign net",
+        "외국인순매수",
+        "외국인 순매수",
+        "외국인(순매수)",
+        "외국인 순매수(수량)",
+        "외국인 순매수(금액)",
+        "외국인_순매수",
+        "외국인순매수금액",
+        "외국인순매수수량",
+        "외국인합계",
+        "외국인 합계",  # Added for aggregated foreign data
     ]
     net_col = None
     for pat in net_patterns:
@@ -262,8 +297,22 @@ def _infer_foreign_net_from_df(df: pd.DataFrame) -> Tuple[pd.Series, Dict[str, s
 
     else:
         # 2) compute from buy/sell
-        buy_patterns = ["foreign_buy", "외국인매수", "외국인 매수", "foreign buy", "외국인매수(금액)", "외국인매수(수량)"]
-        sell_patterns = ["foreign_sell", "외국인매도", "외국인 매도", "foreign sell", "외국인매도(금액)", "외국인매도(수량)"]
+        buy_patterns = [
+            "foreign_buy",
+            "외국인매수",
+            "외국인 매수",
+            "foreign buy",
+            "외국인매수(금액)",
+            "외국인매수(수량)",
+        ]
+        sell_patterns = [
+            "foreign_sell",
+            "외국인매도",
+            "외국인 매도",
+            "foreign sell",
+            "외국인매도(금액)",
+            "외국인매도(수량)",
+        ]
 
         buy_col = None
         sell_col = None
@@ -319,7 +368,9 @@ def load_foreign_from_glob(
     """
     files = sorted([Path(f) for f in glob_module.glob(pattern)])
     if len(files) == 0:
-        raise FileNotFoundError(f"No foreign investor CSV files matched pattern: {pattern}")
+        raise FileNotFoundError(
+            f"No foreign investor CSV files matched pattern: {pattern}"
+        )
 
     s = pd.to_datetime(start)
     e = pd.to_datetime(end)
@@ -338,7 +389,9 @@ def load_foreign_from_glob(
             if overlap <= 10:
                 continue
 
-            non_null_ratio = float(overlap) / float(len(px_dates)) if len(px_dates) else 0.0
+            non_null_ratio = (
+                float(overlap) / float(len(px_dates)) if len(px_dates) else 0.0
+            )
             # keyword bonus
             name = fp.name.lower()
             bonus = 0.0
@@ -351,7 +404,11 @@ def load_foreign_from_glob(
             if score > best_score:
                 best_score = score
                 best = (fp, net)
-                best_meta = meta | {"selected_file": str(fp), "score": str(score), "overlap_days": str(int(overlap))}
+                best_meta = meta | {
+                    "selected_file": str(fp),
+                    "score": str(score),
+                    "overlap_days": str(int(overlap)),
+                }
         except Exception:
             continue
 
@@ -371,7 +428,9 @@ def load_foreign_single_file(path: Path) -> Tuple[ForeignData, Dict[str, str]]:
         raise FileNotFoundError(f"Foreign file not found: {path}")
     df = _read_csv_robust(path)
     net, meta = _infer_foreign_net_from_df(df)
-    return ForeignData(net=net.rename("foreign_net")), meta | {"selected_file": str(path)}
+    return ForeignData(net=net.rename("foreign_net")), meta | {
+        "selected_file": str(path)
+    }
 
 
 # -----------------------------
@@ -379,7 +438,7 @@ def load_foreign_single_file(path: Path) -> Tuple[ForeignData, Dict[str, str]]:
 # -----------------------------
 @dataclass
 class BacktestResult:
-    df: pd.DataFrame                # joined frame with indicators, signal, position, returns, equity
+    df: pd.DataFrame  # joined frame with indicators, signal, position, returns, equity
     metrics: Dict[str, float]
     trade_stats: Dict[str, float]
     meta: Dict[str, str]
@@ -426,16 +485,20 @@ def run_strategy(
     s = pd.to_datetime(start)
     e = pd.to_datetime(end)
 
-    df = pd.DataFrame({
-        "close": price.close,
-        "ret": price.ret,
-    }).join(pd.DataFrame({"foreign_net": foreign.net}), how="left")
+    df = pd.DataFrame(
+        {
+            "close": price.close,
+            "ret": price.ret,
+        }
+    ).join(pd.DataFrame({"foreign_net": foreign.net}), how="left")
 
     df = df[(df.index >= s) & (df.index <= e)].copy()
     df = df.sort_index()
 
     # Indicators (based on T close data)
-    df["foreign_roll"] = df["foreign_net"].rolling(foreign_period, min_periods=foreign_period).sum()
+    df["foreign_roll"] = (
+        df["foreign_net"].rolling(foreign_period, min_periods=foreign_period).sum()
+    )
     df["sma"] = df["close"].rolling(sma_period, min_periods=sma_period).mean()
 
     # Raw signal at T close
@@ -451,7 +514,9 @@ def run_strategy(
     df["cost"] = df["turnover"] * cost_per_side
 
     # Strategy daily return: position * underlying daily return - cost
-    df["strategy_ret"] = (df["position"] * df["ret"]).fillna(0.0) - df["cost"].fillna(0.0)
+    df["strategy_ret"] = (df["position"] * df["ret"]).fillna(0.0) - df["cost"].fillna(
+        0.0
+    )
 
     # Equity curves
     df["equity"] = (1.0 + df["strategy_ret"]).cumprod()
@@ -470,7 +535,9 @@ def run_strategy(
     # Daily win rate when invested
     invested = df["position"] == 1
     if invested.sum() > 0:
-        metrics["daily_win_rate_in_position"] = float((df.loc[invested, "strategy_ret"] > 0).mean())
+        metrics["daily_win_rate_in_position"] = float(
+            (df.loc[invested, "strategy_ret"] > 0).mean()
+        )
     else:
         metrics["daily_win_rate_in_position"] = float("nan")
 
@@ -517,7 +584,9 @@ class WFResult:
     summary: Dict[str, float]
 
 
-def walk_forward_split_indices(dates: pd.DatetimeIndex, n_folds: int) -> List[Tuple[pd.DatetimeIndex, pd.DatetimeIndex]]:
+def walk_forward_split_indices(
+    dates: pd.DatetimeIndex, n_folds: int
+) -> List[Tuple[pd.DatetimeIndex, pd.DatetimeIndex]]:
     """
     Expanding-window walk-forward:
       fold i:
@@ -571,47 +640,75 @@ def run_walk_forward(
         test_start, test_end = test_idx[0], test_idx[-1]
 
         bt_train = run_strategy(
-            price, foreign,
-            start=str(train_start.date()), end=str(train_end.date()),
-            foreign_period=foreign_period, sma_period=sma_period,
-            execution_lag=execution_lag, round_trip_cost=round_trip_cost,
+            price,
+            foreign,
+            start=str(train_start.date()),
+            end=str(train_end.date()),
+            foreign_period=foreign_period,
+            sma_period=sma_period,
+            execution_lag=execution_lag,
+            round_trip_cost=round_trip_cost,
             label=f"WF_train_fold{k}",
         )
         bt_test = run_strategy(
-            price, foreign,
-            start=str(test_start.date()), end=str(test_end.date()),
-            foreign_period=foreign_period, sma_period=sma_period,
-            execution_lag=execution_lag, round_trip_cost=round_trip_cost,
+            price,
+            foreign,
+            start=str(test_start.date()),
+            end=str(test_end.date()),
+            foreign_period=foreign_period,
+            sma_period=sma_period,
+            execution_lag=execution_lag,
+            round_trip_cost=round_trip_cost,
             label=f"WF_test_fold{k}",
         )
 
         sh_tr = bt_train.metrics["sharpe"]
         sh_te = bt_test.metrics["sharpe"]
-        ratio = (sh_te / sh_tr) if (not np.isnan(sh_tr) and sh_tr != 0 and not np.isnan(sh_te)) else float("nan")
+        ratio = (
+            (sh_te / sh_tr)
+            if (not np.isnan(sh_tr) and sh_tr != 0 and not np.isnan(sh_te))
+            else float("nan")
+        )
 
-        rows.append({
-            "fold": k,
-            "train_start": train_start,
-            "train_end": train_end,
-            "test_start": test_start,
-            "test_end": test_end,
-            "train_sharpe": sh_tr,
-            "test_sharpe": sh_te,
-            "wf_ratio": ratio,
-            "train_mdd": bt_train.metrics["mdd"],
-            "test_mdd": bt_test.metrics["mdd"],
-            "train_cagr": bt_train.metrics["cagr"],
-            "test_cagr": bt_test.metrics["cagr"],
-            "test_exposure": bt_test.metrics["exposure"],
-        })
+        rows.append(
+            {
+                "fold": k,
+                "train_start": train_start,
+                "train_end": train_end,
+                "test_start": test_start,
+                "test_end": test_end,
+                "train_sharpe": sh_tr,
+                "test_sharpe": sh_te,
+                "wf_ratio": ratio,
+                "train_mdd": bt_train.metrics["mdd"],
+                "test_mdd": bt_test.metrics["mdd"],
+                "train_cagr": bt_train.metrics["cagr"],
+                "test_cagr": bt_test.metrics["cagr"],
+                "test_exposure": bt_test.metrics["exposure"],
+            }
+        )
 
     fold_df = pd.DataFrame(rows)
     if len(fold_df) == 0:
-        summary = {"mean_train_sharpe": float("nan"), "mean_test_sharpe": float("nan"), "wf_ratio": float("nan")}
+        summary = {
+            "mean_train_sharpe": float("nan"),
+            "mean_test_sharpe": float("nan"),
+            "wf_ratio": float("nan"),
+        }
     else:
-        mean_train = float(fold_df["train_sharpe"].replace([np.inf, -np.inf], np.nan).mean())
-        mean_test = float(fold_df["test_sharpe"].replace([np.inf, -np.inf], np.nan).mean())
-        wf_ratio = float(mean_test / mean_train) if (not np.isnan(mean_train) and mean_train != 0 and not np.isnan(mean_test)) else float("nan")
+        mean_train = float(
+            fold_df["train_sharpe"].replace([np.inf, -np.inf], np.nan).mean()
+        )
+        mean_test = float(
+            fold_df["test_sharpe"].replace([np.inf, -np.inf], np.nan).mean()
+        )
+        wf_ratio = (
+            float(mean_test / mean_train)
+            if (
+                not np.isnan(mean_train) and mean_train != 0 and not np.isnan(mean_test)
+            )
+            else float("nan")
+        )
         summary = {
             "mean_train_sharpe": mean_train,
             "mean_test_sharpe": mean_test,
@@ -619,13 +716,17 @@ def run_walk_forward(
             "n_folds_used": float(len(fold_df)),
         }
 
-    return WFResult(method=f"{n_folds}-fold expanding WF", fold_rows=fold_df, summary=summary)
+    return WFResult(
+        method=f"{n_folds}-fold expanding WF", fold_rows=fold_df, summary=summary
+    )
 
 
 # -----------------------------
 # Leveraged ETF simulation
 # -----------------------------
-def simulate_daily_reset_leverage(ret: pd.Series, leverage: float, daily_fee: float = 0.0) -> pd.Series:
+def simulate_daily_reset_leverage(
+    ret: pd.Series, leverage: float, daily_fee: float = 0.0
+) -> pd.Series:
     """
     Daily reset leveraged return:
       r_L = leverage * r - daily_fee
@@ -669,21 +770,28 @@ def run_sensitivity_grid(
     for fp in foreign_period_list:
         for sp in sma_period_list:
             bt = run_strategy(
-                price, foreign, start, end,
-                foreign_period=fp, sma_period=sp,
-                execution_lag=execution_lag, round_trip_cost=round_trip_cost,
+                price,
+                foreign,
+                start,
+                end,
+                foreign_period=fp,
+                sma_period=sp,
+                execution_lag=execution_lag,
+                round_trip_cost=round_trip_cost,
                 label=f"grid_fp{fp}_sp{sp}",
             )
             m = bt.metrics
-            rows.append({
-                "foreign_period": fp,
-                "sma_period": sp,
-                "sharpe": m["sharpe"],
-                "cagr": m["cagr"],
-                "mdd": m["mdd"],
-                "exposure": m["exposure"],
-                "n_trades": m["n_trades"],
-            })
+            rows.append(
+                {
+                    "foreign_period": fp,
+                    "sma_period": sp,
+                    "sharpe": m["sharpe"],
+                    "cagr": m["cagr"],
+                    "mdd": m["mdd"],
+                    "exposure": m["exposure"],
+                    "n_trades": m["n_trades"],
+                }
+            )
     return pd.DataFrame(rows)
 
 
@@ -696,7 +804,9 @@ class ClaimedPerformance:
     cagr: float = 0.138
     mdd: float = -0.169
     wf_ratio: float = 0.86
-    win_rate: float = 0.552  # ambiguous: daily or trade. We'll compare both with tolerance.
+    win_rate: float = (
+        0.552  # ambiguous: daily or trade. We'll compare both with tolerance.
+    )
 
 
 def check_close(a: float, b: float, tol_abs: float) -> bool:
@@ -737,16 +847,24 @@ def verdict(
     # Win rate ambiguity: accept either daily(in-position) or trade win rate
     wr_daily = m.get("daily_win_rate_in_position", float("nan"))
     wr_trade = m.get("trade_win_rate", float("nan"))
-    ok_wr = check_close(wr_daily, claimed.win_rate, tol_abs=0.05) or check_close(wr_trade, claimed.win_rate, tol_abs=0.05)
+    ok_wr = check_close(wr_daily, claimed.win_rate, tol_abs=0.05) or check_close(
+        wr_trade, claimed.win_rate, tol_abs=0.05
+    )
 
-    reproduced = (ok_sh and ok_cg and ok_dd) or (ok_sh and ok_dd)  # allow some CAGR drift due to cost timing
+    reproduced = (ok_sh and ok_cg and ok_dd) or (
+        ok_sh and ok_dd
+    )  # allow some CAGR drift due to cost timing
 
     if not reproduced:
-        reasons.append("주장 성과(Sharpe/CAGR/MDD)와 재현 결과가 충분히 근접하지 않음(구현/데이터/정렬/비용가정 차이 가능).")
+        reasons.append(
+            "주장 성과(Sharpe/CAGR/MDD)와 재현 결과가 충분히 근접하지 않음(구현/데이터/정렬/비용가정 차이 가능)."
+        )
 
     # WF
     if np.isnan(wf_ratio):
-        reasons.append("Walk-Forward WF Ratio 산출 불가(폴드 수 부족/데이터 부족/샤프 0/NaN).")
+        reasons.append(
+            "Walk-Forward WF Ratio 산출 불가(폴드 수 부족/데이터 부족/샤프 0/NaN)."
+        )
     elif wf_ratio < 0.5:
         reasons.append(f"Walk-Forward WF Ratio가 낮음: {wf_ratio:.3f} (<0.5).")
     elif wf_ratio < 0.7:
@@ -754,9 +872,13 @@ def verdict(
 
     # Leverage suitability
     if not np.isnan(lev_mdd_1x) and lev_mdd_1x < mdd_1x_limit:
-        reasons.append(f"1배(가정) 전략 MDD가 기준 초과: {format_pct(lev_mdd_1x)} < {format_pct(mdd_1x_limit)}")
+        reasons.append(
+            f"1배(가정) 전략 MDD가 기준 초과: {format_pct(lev_mdd_1x)} < {format_pct(mdd_1x_limit)}"
+        )
     if not np.isnan(lev_mdd_2x) and lev_mdd_2x < mdd_2x_limit:
-        reasons.append(f"2배(가정) 전략 MDD가 기준 초과: {format_pct(lev_mdd_2x)} < {format_pct(mdd_2x_limit)}")
+        reasons.append(
+            f"2배(가정) 전략 MDD가 기준 초과: {format_pct(lev_mdd_2x)} < {format_pct(mdd_2x_limit)}"
+        )
 
     # Parameter sensitivity: flag if best Sharpe is extremely spiky vs median
     if grid is not None and len(grid) > 5:
@@ -766,7 +888,9 @@ def verdict(
             best = float(g["sharpe"].max())
             med = float(g["sharpe"].median())
             if (best - med) > 0.6:
-                reasons.append("파라미터 민감도에서 최고 Sharpe가 중앙값 대비 과도하게 튐(과적합/스누핑 신호).")
+                reasons.append(
+                    "파라미터 민감도에서 최고 Sharpe가 중앙값 대비 과도하게 튐(과적합/스누핑 신호)."
+                )
 
     # Decision
     if (np.isnan(wf_ratio) or wf_ratio < 0.5) and not reproduced:
@@ -776,7 +900,9 @@ def verdict(
         # If not reproduced but WF ok, still conditional (data/assumption mismatch might be fixable)
         return "CONDITIONAL", reasons
 
-    if (not np.isnan(wf_ratio) and wf_ratio >= 0.7) and (len([r for r in reasons if "기준 초과" in r]) == 0):
+    if (not np.isnan(wf_ratio) and wf_ratio >= 0.7) and (
+        len([r for r in reasons if "기준 초과" in r]) == 0
+    ):
         return "PASS", reasons
 
     return "CONDITIONAL", reasons
@@ -787,16 +913,39 @@ def verdict(
 # -----------------------------
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--price_parquet", type=str, default=r"E:/투자/data/kospi_futures/kospi200_daily_yf.parquet")
-    ap.add_argument("--foreign_glob", type=str, default=r"E:/투자/data/kr_stock/investor_trading/*_investor.csv")
-    ap.add_argument("--foreign_file", type=str, default="", help="Optional: force a single foreign CSV instead of auto-select.")
+    ap.add_argument(
+        "--price_parquet",
+        type=str,
+        default=r"E:/투자/data/kospi_futures/kospi200_daily_yf.parquet",
+    )
+    ap.add_argument(
+        "--foreign_glob",
+        type=str,
+        default=r"E:/투자/data/kr_stock/investor_trading/*_investor.csv",
+    )
+    ap.add_argument(
+        "--foreign_file",
+        type=str,
+        default="",
+        help="Optional: force a single foreign CSV instead of auto-select.",
+    )
     ap.add_argument("--start", type=str, default="2017-01-01")
     ap.add_argument("--end", type=str, default="2026-12-31")
 
     ap.add_argument("--foreign_period", type=int, default=30)
     ap.add_argument("--sma_period", type=int, default=100)
-    ap.add_argument("--execution_lag", type=int, default=1, help="Default 1 = shift(1) as requested. Use 0/2 for diagnostics.")
-    ap.add_argument("--round_trip_cost", type=float, default=0.0009, help="Round trip cost. Default 0.09%% = 0.0009")
+    ap.add_argument(
+        "--execution_lag",
+        type=int,
+        default=1,
+        help="Default 1 = shift(1) as requested. Use 0/2 for diagnostics.",
+    )
+    ap.add_argument(
+        "--round_trip_cost",
+        type=float,
+        default=0.0009,
+        help="Round trip cost. Default 0.09%% = 0.0009",
+    )
 
     ap.add_argument("--wf_folds", type=int, default=11)
 
@@ -804,13 +953,27 @@ def main() -> int:
     ap.add_argument("--grid_sma_periods", type=str, default="60,80,100,120,150")
 
     ap.add_argument("--out_dir", type=str, default="outputs/foreign_trend_validation")
-    ap.add_argument("--plots", action="store_true", help="If set, tries to save PNG plots (requires matplotlib).")
+    ap.add_argument(
+        "--plots",
+        action="store_true",
+        help="If set, tries to save PNG plots (requires matplotlib).",
+    )
 
     # Leverage suitability thresholds
     ap.add_argument("--mdd_1x_limit", type=float, default=-0.20)
     ap.add_argument("--mdd_2x_limit", type=float, default=-0.35)
-    ap.add_argument("--lev_daily_fee_1x", type=float, default=0.0, help="Daily fee for 1x series (e.g., expense ratio/252).")
-    ap.add_argument("--lev_daily_fee_2x", type=float, default=0.0, help="Daily fee for 2x series (e.g., expense ratio/252).")
+    ap.add_argument(
+        "--lev_daily_fee_1x",
+        type=float,
+        default=0.0,
+        help="Daily fee for 1x series (e.g., expense ratio/252).",
+    )
+    ap.add_argument(
+        "--lev_daily_fee_2x",
+        type=float,
+        default=0.0,
+        help="Daily fee for 2x series (e.g., expense ratio/252).",
+    )
 
     args = ap.parse_args()
 
@@ -829,14 +992,16 @@ def main() -> int:
         foreign, foreign_meta = load_foreign_from_glob(
             pattern=args.foreign_glob,
             price_index=price.close.index,
-            start=args.start, end=args.end,
+            start=args.start,
+            end=args.end,
         )
 
     # Main backtest (requested parameters)
     bt = run_strategy(
         price=price,
         foreign=foreign,
-        start=args.start, end=args.end,
+        start=args.start,
+        end=args.end,
         foreign_period=args.foreign_period,
         sma_period=args.sma_period,
         execution_lag=args.execution_lag,
@@ -845,14 +1010,35 @@ def main() -> int:
     )
 
     # Diagnostics: alternative lags (0 and 2) to catch accidental look-ahead / timing sensitivity
-    bt_lag0 = run_strategy(price, foreign, args.start, args.end, args.foreign_period, args.sma_period, 0, args.round_trip_cost, "diag_lag0")
-    bt_lag2 = run_strategy(price, foreign, args.start, args.end, args.foreign_period, args.sma_period, 2, args.round_trip_cost, "diag_lag2")
+    bt_lag0 = run_strategy(
+        price,
+        foreign,
+        args.start,
+        args.end,
+        args.foreign_period,
+        args.sma_period,
+        0,
+        args.round_trip_cost,
+        "diag_lag0",
+    )
+    bt_lag2 = run_strategy(
+        price,
+        foreign,
+        args.start,
+        args.end,
+        args.foreign_period,
+        args.sma_period,
+        2,
+        args.round_trip_cost,
+        "diag_lag2",
+    )
 
     # Walk-forward
     wf = run_walk_forward(
         price=price,
         foreign=foreign,
-        start=args.start, end=args.end,
+        start=args.start,
+        end=args.end,
         foreign_period=args.foreign_period,
         sma_period=args.sma_period,
         execution_lag=args.execution_lag,
@@ -867,11 +1053,35 @@ def main() -> int:
     if cut >= 50:
         tr_start, tr_end = dates[0], dates[cut - 1]
         te_start, te_end = dates[cut], dates[-1]
-        bt_train = run_strategy(price, foreign, str(tr_start.date()), str(tr_end.date()), args.foreign_period, args.sma_period, args.execution_lag, args.round_trip_cost, "train_70")
-        bt_test = run_strategy(price, foreign, str(te_start.date()), str(te_end.date()), args.foreign_period, args.sma_period, args.execution_lag, args.round_trip_cost, "test_30")
+        bt_train = run_strategy(
+            price,
+            foreign,
+            str(tr_start.date()),
+            str(tr_end.date()),
+            args.foreign_period,
+            args.sma_period,
+            args.execution_lag,
+            args.round_trip_cost,
+            "train_70",
+        )
+        bt_test = run_strategy(
+            price,
+            foreign,
+            str(te_start.date()),
+            str(te_end.date()),
+            args.foreign_period,
+            args.sma_period,
+            args.execution_lag,
+            args.round_trip_cost,
+            "test_30",
+        )
         train_sh = bt_train.metrics["sharpe"]
         test_sh = bt_test.metrics["sharpe"]
-        split_wf_ratio = (test_sh / train_sh) if (not np.isnan(train_sh) and train_sh != 0 and not np.isnan(test_sh)) else float("nan")
+        split_wf_ratio = (
+            (test_sh / train_sh)
+            if (not np.isnan(train_sh) and train_sh != 0 and not np.isnan(test_sh))
+            else float("nan")
+        )
     else:
         bt_train = None
         bt_test = None
@@ -881,7 +1091,10 @@ def main() -> int:
     grid_foreign = [int(x) for x in args.grid_foreign_periods.split(",") if x.strip()]
     grid_sma = [int(x) for x in args.grid_sma_periods.split(",") if x.strip()]
     grid = run_sensitivity_grid(
-        price, foreign, args.start, args.end,
+        price,
+        foreign,
+        args.start,
+        args.end,
         foreign_period_list=grid_foreign,
         sma_period_list=grid_sma,
         execution_lag=args.execution_lag,
@@ -898,14 +1111,32 @@ def main() -> int:
         crisis_out[k] = {
             "strategy": summarize_period(bt.df["equity"], v["start"], v["end"]),
             "buyhold": summarize_period(bt.df["equity_bh"], v["start"], v["end"]),
-            "cash_ratio": float((bt.df.loc[(bt.df.index >= v["start"]) & (bt.df.index <= v["end"]), "position"] == 0).mean())
-            if ((bt.df.index >= pd.to_datetime(v["start"])) & (bt.df.index <= pd.to_datetime(v["end"]))).any() else float("nan"),
+            "cash_ratio": (
+                float(
+                    (
+                        bt.df.loc[
+                            (bt.df.index >= v["start"]) & (bt.df.index <= v["end"]),
+                            "position",
+                        ]
+                        == 0
+                    ).mean()
+                )
+                if (
+                    (bt.df.index >= pd.to_datetime(v["start"]))
+                    & (bt.df.index <= pd.to_datetime(v["end"]))
+                ).any()
+                else float("nan")
+            ),
         }
 
     # Leverage suitability (simulate 1x/2x daily reset series from underlying returns)
     # Strategy is applied to "underlying returns" as proxy (ETF tracking error/fees are ignored unless provided).
-    r1 = simulate_daily_reset_leverage(bt.df["ret"], leverage=1.0, daily_fee=args.lev_daily_fee_1x)
-    r2 = simulate_daily_reset_leverage(bt.df["ret"], leverage=2.0, daily_fee=args.lev_daily_fee_2x)
+    r1 = simulate_daily_reset_leverage(
+        bt.df["ret"], leverage=1.0, daily_fee=args.lev_daily_fee_1x
+    )
+    r2 = simulate_daily_reset_leverage(
+        bt.df["ret"], leverage=2.0, daily_fee=args.lev_daily_fee_2x
+    )
 
     # Use the SAME position series but apply levered returns
     lev = pd.DataFrame(index=bt.df.index)
@@ -942,13 +1173,24 @@ def main() -> int:
     # Save outputs
     # Main DF (trim to useful columns)
     keep_cols = [
-        "close", "ret", "foreign_net", "foreign_roll", "sma",
-        "signal_raw", "position", "turnover", "cost",
-        "strategy_ret", "equity", "equity_bh"
+        "close",
+        "ret",
+        "foreign_net",
+        "foreign_roll",
+        "sma",
+        "signal_raw",
+        "position",
+        "turnover",
+        "cost",
+        "strategy_ret",
+        "equity",
+        "equity_bh",
     ]
     bt.df[keep_cols].to_csv(out_dir / "bt_main_timeseries.csv", encoding="utf-8-sig")
     grid.to_csv(out_dir / "sensitivity_grid.csv", index=False, encoding="utf-8-sig")
-    wf.fold_rows.to_csv(out_dir / "walk_forward_folds.csv", index=False, encoding="utf-8-sig")
+    wf.fold_rows.to_csv(
+        out_dir / "walk_forward_folds.csv", index=False, encoding="utf-8-sig"
+    )
     lev.to_csv(out_dir / "leveraged_sim.csv", encoding="utf-8-sig")
 
     # Summary JSON
@@ -966,16 +1208,28 @@ def main() -> int:
         "diagnostics": {
             "lag0_metrics": bt_lag0.metrics,
             "lag2_metrics": bt_lag2.metrics,
-            "lag0_minus_lag1_sharpe": float(bt_lag0.metrics["sharpe"] - bt.metrics["sharpe"]) if not np.isnan(bt.metrics["sharpe"]) else float("nan"),
-            "lag2_minus_lag1_sharpe": float(bt_lag2.metrics["sharpe"] - bt.metrics["sharpe"]) if not np.isnan(bt.metrics["sharpe"]) else float("nan"),
+            "lag0_minus_lag1_sharpe": (
+                float(bt_lag0.metrics["sharpe"] - bt.metrics["sharpe"])
+                if not np.isnan(bt.metrics["sharpe"])
+                else float("nan")
+            ),
+            "lag2_minus_lag1_sharpe": (
+                float(bt_lag2.metrics["sharpe"] - bt.metrics["sharpe"])
+                if not np.isnan(bt.metrics["sharpe"])
+                else float("nan")
+            ),
         },
         "walk_forward": {
             "method": wf.method,
             "summary": wf.summary,
             "split_70_30": {
                 "wf_ratio": split_wf_ratio,
-                "train_sharpe": float(bt_train.metrics["sharpe"]) if bt_train else float("nan"),
-                "test_sharpe": float(bt_test.metrics["sharpe"]) if bt_test else float("nan"),
+                "train_sharpe": (
+                    float(bt_train.metrics["sharpe"]) if bt_train else float("nan")
+                ),
+                "test_sharpe": (
+                    float(bt_test.metrics["sharpe"]) if bt_test else float("nan")
+                ),
             },
         },
         "crisis": crisis_out,
@@ -1017,10 +1271,14 @@ def main() -> int:
             plt.close(fig)
 
             # Sensitivity (Sharpe heatmap-like pivot as image using imshow)
-            pivot = grid.pivot(index="foreign_period", columns="sma_period", values="sharpe")
+            pivot = grid.pivot(
+                index="foreign_period", columns="sma_period", values="sharpe"
+            )
             fig = plt.figure()
             plt.imshow(pivot.values, aspect="auto", interpolation="nearest")
-            plt.xticks(range(len(pivot.columns)), [str(x) for x in pivot.columns], rotation=45)
+            plt.xticks(
+                range(len(pivot.columns)), [str(x) for x in pivot.columns], rotation=45
+            )
             plt.yticks(range(len(pivot.index)), [str(x) for x in pivot.index])
             plt.title("Sensitivity (Sharpe) - foreign_period x sma_period")
             plt.tight_layout()
@@ -1034,15 +1292,21 @@ def main() -> int:
     print("\n==================== Independent Validation Summary ====================")
     print(f"Selected foreign file: {foreign_meta.get('selected_file', 'N/A')}")
     print(f"Date range: {args.start} ~ {args.end}")
-    print(f"Params: foreign_period={args.foreign_period}, sma_period={args.sma_period}, lag={args.execution_lag}, round_trip_cost={args.round_trip_cost}")
+    print(
+        f"Params: foreign_period={args.foreign_period}, sma_period={args.sma_period}, lag={args.execution_lag}, round_trip_cost={args.round_trip_cost}"
+    )
     print("\n[Main Metrics]")
     print(f"  Sharpe: {format_num(bt.metrics['sharpe'])}")
     print(f"  CAGR  : {format_pct(bt.metrics['cagr'])}")
     print(f"  MDD   : {format_pct(bt.metrics['mdd'])}")
     print(f"  Exposure: {format_pct(bt.metrics['exposure'])}")
     print(f"  Trades: {int(bt.metrics['n_trades'])}")
-    print(f"  WinRate (daily in-position): {format_pct(bt.metrics.get('daily_win_rate_in_position', float('nan')))}")
-    print(f"  WinRate (per-trade): {format_pct(bt.metrics.get('trade_win_rate', float('nan')))}")
+    print(
+        f"  WinRate (daily in-position): {format_pct(bt.metrics.get('daily_win_rate_in_position', float('nan')))}"
+    )
+    print(
+        f"  WinRate (per-trade): {format_pct(bt.metrics.get('trade_win_rate', float('nan')))}"
+    )
 
     print("\n[Diagnostics: execution lag sensitivity]")
     print(f"  lag=0 Sharpe: {format_num(bt_lag0.metrics['sharpe'])}")
@@ -1050,23 +1314,33 @@ def main() -> int:
     print(f"  lag=2 Sharpe: {format_num(bt_lag2.metrics['sharpe'])}")
 
     print("\n[Walk-Forward]")
-    print(f"  {wf.method} | mean_train_sharpe={format_num(wf.summary.get('mean_train_sharpe', float('nan')))} "
-          f"mean_test_sharpe={format_num(wf.summary.get('mean_test_sharpe', float('nan')))} "
-          f"WF_ratio={format_num(wf.summary.get('wf_ratio', float('nan')))} "
-          f"folds_used={int(wf.summary.get('n_folds_used', 0)) if not np.isnan(wf.summary.get('n_folds_used', float('nan'))) else 'nan'}")
+    print(
+        f"  {wf.method} | mean_train_sharpe={format_num(wf.summary.get('mean_train_sharpe', float('nan')))} "
+        f"mean_test_sharpe={format_num(wf.summary.get('mean_test_sharpe', float('nan')))} "
+        f"WF_ratio={format_num(wf.summary.get('wf_ratio', float('nan')))} "
+        f"folds_used={int(wf.summary.get('n_folds_used', 0)) if not np.isnan(wf.summary.get('n_folds_used', float('nan'))) else 'nan'}"
+    )
     print(f"  70/30 split WF_ratio={format_num(split_wf_ratio)}")
 
     print("\n[Crisis performance]")
     for k, v in crisis_out.items():
         st = v["strategy"]
         bh = v["buyhold"]
-        print(f"  {k}: Strategy ret={format_pct(st['return'])}, mdd={format_pct(st['mdd'])} | "
-              f"B&H ret={format_pct(bh['return'])}, mdd={format_pct(bh['mdd'])} | cash_ratio={format_pct(v['cash_ratio'])}")
+        print(
+            f"  {k}: Strategy ret={format_pct(st['return'])}, mdd={format_pct(st['mdd'])} | "
+            f"B&H ret={format_pct(bh['return'])}, mdd={format_pct(bh['mdd'])} | cash_ratio={format_pct(v['cash_ratio'])}"
+        )
 
     print("\n[Leverage suitability (simulated daily-reset)]")
-    print(f"  Strategy MDD 1x: {format_pct(lev_mdd_1x)} (limit {format_pct(args.mdd_1x_limit)})")
-    print(f"  Strategy MDD 2x: {format_pct(lev_mdd_2x)} (limit {format_pct(args.mdd_2x_limit)})")
-    print(f"  2x vol-decay log_gap: {decay_2x['log_gap']:.6f} | avg_daily_log_gap: {decay_2x['avg_daily_log_gap']:.8f}")
+    print(
+        f"  Strategy MDD 1x: {format_pct(lev_mdd_1x)} (limit {format_pct(args.mdd_1x_limit)})"
+    )
+    print(
+        f"  Strategy MDD 2x: {format_pct(lev_mdd_2x)} (limit {format_pct(args.mdd_2x_limit)})"
+    )
+    print(
+        f"  2x vol-decay log_gap: {decay_2x['log_gap']:.6f} | avg_daily_log_gap: {decay_2x['avg_daily_log_gap']:.8f}"
+    )
 
     print("\n[VERDICT]")
     print(f"  => {v}")

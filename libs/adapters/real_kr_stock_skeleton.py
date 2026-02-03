@@ -24,7 +24,7 @@ class KRStockMarketDataSkeleton(MarketDataAdapter):
     Phase 0: 구현 없음 (RuntimeError)
     Phase 1: 실제 증권사 API 연동 예정
     """
-    
+
     def __init__(self, config: Optional[Dict] = None):
         self.config = config or {}
         logger.warning(
@@ -32,7 +32,7 @@ class KRStockMarketDataSkeleton(MarketDataAdapter):
             "Phase 0에서는 사용하지 않습니다. "
             "Phase 1에서 실거래 구현 예정."
         )
-    
+
     def get_ticker(self, symbol: str) -> Dict:
         """
         현재가 조회
@@ -43,7 +43,7 @@ class KRStockMarketDataSkeleton(MarketDataAdapter):
             "Not implemented. Phase 1에서 실거래 구현 예정. "
             "Phase 0에서는 MockAdapter를 사용하세요."
         )
-    
+
     def get_orderbook(self, symbol: str, depth: int = 10) -> Dict:
         """
         호가창 조회
@@ -53,7 +53,7 @@ class KRStockMarketDataSkeleton(MarketDataAdapter):
             f"[KRStockMarketDataSkeleton] get_orderbook({symbol}): "
             "Not implemented. Phase 1에서 실거래 구현 예정."
         )
-    
+
     def get_market_data(self, symbol: str) -> Dict:
         """
         시장 데이터 조회 (거래량, 시가총액 등)
@@ -71,7 +71,7 @@ class KRStockExecutionSkeleton(ExecutionAdapter):
     Phase 0: 구현 없음 (RuntimeError)
     Phase 1: 실제 증권사 API 연동 예정 (API 키/계좌정보 필수)
     """
-    
+
     def __init__(self, config: Optional[Dict] = None):
         self.config = config or {}
         logger.warning(
@@ -79,14 +79,14 @@ class KRStockExecutionSkeleton(ExecutionAdapter):
             "Phase 0에서는 사용하지 않습니다. "
             "Phase 1에서 실거래 구현 예정 (증권사 API 키/계좌정보 필요)."
         )
-    
+
     def place_order(
         self,
         symbol: str,
         side: str,
         order_type: str,
         quantity: int,  # 한국 주식은 정수
-        price: Optional[int] = None  # 원화는 정수
+        price: Optional[int] = None,  # 원화는 정수
     ) -> Dict:
         """
         주문 실행
@@ -97,7 +97,7 @@ class KRStockExecutionSkeleton(ExecutionAdapter):
             "Not implemented. Phase 1에서 실거래 구현 예정. "
             "실제 자금 집행 위험. Mock 모드를 사용하세요."
         )
-    
+
     def cancel_order(self, order_id: str) -> Dict:
         """
         주문 취소
@@ -107,7 +107,7 @@ class KRStockExecutionSkeleton(ExecutionAdapter):
             f"[KRStockExecutionSkeleton] cancel_order({order_id}): "
             "Not implemented. Phase 1에서 실거래 구현 예정."
         )
-    
+
     def get_order_status(self, order_id: str) -> Dict:
         """
         주문 상태 조회
@@ -117,7 +117,7 @@ class KRStockExecutionSkeleton(ExecutionAdapter):
             f"[KRStockExecutionSkeleton] get_order_status({order_id}): "
             "Not implemented. Phase 1에서 실거래 구현 예정."
         )
-    
+
     def get_balance(self) -> Dict:
         """
         잔고 조회 (현금 + 보유 주식)

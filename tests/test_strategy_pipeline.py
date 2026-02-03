@@ -33,11 +33,15 @@ def test_kill_switch_raises_error():
 def test_buy_uses_krw_not_quantity():
     """BUY 호출 시 amount_krw= 파라미터를 사용하는지 확인"""
     execution = MagicMock()
-    execution.place_order.return_value = SimpleNamespace(order_id="order-1", symbol="BTC/KRW")
+    execution.place_order.return_value = SimpleNamespace(
+        order_id="order-1", symbol="BTC/KRW"
+    )
     runner = _make_runner(execution=execution)
     mock_buy_signal = SimpleNamespace(action="BUY", reason="test")
 
-    result = runner._execute_trade_signal("BTC/KRW", mock_buy_signal, {"trade_price": 50000000})
+    result = runner._execute_trade_signal(
+        "BTC/KRW", mock_buy_signal, {"trade_price": 50000000}
+    )
 
     # 새로운 인터페이스: amount_krw= 키워드 파라미터 사용
     execution.place_order.assert_called_with(
@@ -71,9 +75,13 @@ def test_gate_veto_blocks_buy():
     market_data = MagicMock()
     strategy = MagicMock()
     strategy.check_gate.return_value = True
-    strategy.generate_signal.return_value = SimpleNamespace(action="BUY", gate_pass=False)
+    strategy.generate_signal.return_value = SimpleNamespace(
+        action="BUY", gate_pass=False
+    )
 
-    runner = _make_runner(strategy=strategy, execution=execution, market_data=market_data)
+    runner = _make_runner(
+        strategy=strategy, execution=execution, market_data=market_data
+    )
 
     result = runner.run_once()
 

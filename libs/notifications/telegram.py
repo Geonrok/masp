@@ -1,4 +1,5 @@
 """Telegram notification service - best effort, non-blocking."""
+
 from __future__ import annotations
 
 import html

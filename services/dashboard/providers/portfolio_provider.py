@@ -1,4 +1,5 @@
 """Portfolio data provider - connects holdings to portfolio_summary component."""
+
 from __future__ import annotations
 
 import logging
@@ -15,6 +16,7 @@ from services.dashboard.utils.holdings import (
     get_holdings_bithumb,
     is_private_api_enabled,
 )
+
 # Price caching removed for real-time updates
 # Holdings cache (5s TTL) is sufficient
 
@@ -86,7 +88,9 @@ def _get_current_prices_bithumb(symbols: List[str]) -> Dict[str, float]:
     return prices
 
 
-def _get_current_prices(symbols: List[str], exchange: str = "upbit") -> Dict[str, float]:
+def _get_current_prices(
+    symbols: List[str], exchange: str = "upbit"
+) -> Dict[str, float]:
     """Get current prices for symbols.
 
     Args:
@@ -217,16 +221,22 @@ def _fetch_portfolio_summary_cached() -> Optional[dict]:
             for entry in upbit_holdings
             if entry.get("currency") and entry.get("currency") != "KRW"
         ]
-        upbit_prices = _get_current_prices(upbit_symbols, "upbit") if upbit_symbols else {}
-        upbit_positions = _parse_holdings_to_positions(upbit_holdings, upbit_prices, "upbit")
+        upbit_prices = (
+            _get_current_prices(upbit_symbols, "upbit") if upbit_symbols else {}
+        )
+        upbit_positions = _parse_holdings_to_positions(
+            upbit_holdings, upbit_prices, "upbit"
+        )
         for p in upbit_positions:
-            all_positions_data.append({
-                "symbol": p.symbol,
-                "exchange": p.exchange,
-                "quantity": p.quantity,
-                "avg_price": p.avg_price,
-                "current_price": p.current_price,
-            })
+            all_positions_data.append(
+                {
+                    "symbol": p.symbol,
+                    "exchange": p.exchange,
+                    "quantity": p.quantity,
+                    "avg_price": p.avg_price,
+                    "current_price": p.current_price,
+                }
+            )
 
     # ===== Bithumb Holdings =====
     bithumb_holdings = get_holdings_bithumb()
@@ -237,16 +247,22 @@ def _fetch_portfolio_summary_cached() -> Optional[dict]:
             for entry in bithumb_holdings
             if entry.get("currency") and entry.get("currency") != "KRW"
         ]
-        bithumb_prices = _get_current_prices(bithumb_symbols, "bithumb") if bithumb_symbols else {}
-        bithumb_positions = _parse_holdings_to_positions(bithumb_holdings, bithumb_prices, "bithumb")
+        bithumb_prices = (
+            _get_current_prices(bithumb_symbols, "bithumb") if bithumb_symbols else {}
+        )
+        bithumb_positions = _parse_holdings_to_positions(
+            bithumb_holdings, bithumb_prices, "bithumb"
+        )
         for p in bithumb_positions:
-            all_positions_data.append({
-                "symbol": p.symbol,
-                "exchange": p.exchange,
-                "quantity": p.quantity,
-                "avg_price": p.avg_price,
-                "current_price": p.current_price,
-            })
+            all_positions_data.append(
+                {
+                    "symbol": p.symbol,
+                    "exchange": p.exchange,
+                    "quantity": p.quantity,
+                    "avg_price": p.avg_price,
+                    "current_price": p.current_price,
+                }
+            )
 
     if not all_positions_data and total_cash_balance <= 0:
         return None
@@ -322,10 +338,14 @@ def _get_portfolio_summary_uncached() -> Optional[PortfolioSummary]:
         ]
 
         # Get Upbit prices
-        upbit_prices = _get_current_prices(upbit_symbols, "upbit") if upbit_symbols else {}
+        upbit_prices = (
+            _get_current_prices(upbit_symbols, "upbit") if upbit_symbols else {}
+        )
 
         # Convert to positions
-        upbit_positions = _parse_holdings_to_positions(upbit_holdings, upbit_prices, "upbit")
+        upbit_positions = _parse_holdings_to_positions(
+            upbit_holdings, upbit_prices, "upbit"
+        )
         all_positions.extend(upbit_positions)
 
     # ===== Bithumb Holdings =====
@@ -342,10 +362,14 @@ def _get_portfolio_summary_uncached() -> Optional[PortfolioSummary]:
         ]
 
         # Get Bithumb prices
-        bithumb_prices = _get_current_prices(bithumb_symbols, "bithumb") if bithumb_symbols else {}
+        bithumb_prices = (
+            _get_current_prices(bithumb_symbols, "bithumb") if bithumb_symbols else {}
+        )
 
         # Convert to positions
-        bithumb_positions = _parse_holdings_to_positions(bithumb_holdings, bithumb_prices, "bithumb")
+        bithumb_positions = _parse_holdings_to_positions(
+            bithumb_holdings, bithumb_prices, "bithumb"
+        )
         all_positions.extend(bithumb_positions)
 
     # If no holdings from any exchange, return None for demo mode

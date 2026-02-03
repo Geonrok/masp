@@ -1,4 +1,5 @@
 """GPT 검수용 클립보드 복사 스크립트."""
+
 import subprocess
 import sys
 from pathlib import Path
@@ -7,9 +8,7 @@ from pathlib import Path
 def copy_to_clipboard(text: str) -> bool:
     """텍스트를 클립보드에 복사."""
     try:
-        process = subprocess.Popen(
-            ["clip"], stdin=subprocess.PIPE, shell=True
-        )
+        process = subprocess.Popen(["clip"], stdin=subprocess.PIPE, shell=True)
         process.communicate(text.encode("utf-8"))
         return True
     except Exception as e:

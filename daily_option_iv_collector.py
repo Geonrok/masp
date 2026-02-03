@@ -21,11 +21,13 @@ import os
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler("E:/투자/data/kosdaq_futures/investor_data/collector.log", encoding='utf-8'),
-        logging.StreamHandler()
-    ]
+        logging.FileHandler(
+            "E:/투자/data/kosdaq_futures/investor_data/collector.log", encoding="utf-8"
+        ),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -44,13 +46,16 @@ async def collect_option_iv(api):
     try:
         yyyymm = datetime.now().strftime("%Y%m")
 
-        response = await api.request("t2301", {
-            "yyyymm": yyyymm,
-            "cp": "1",
-            "shcode": "",
-        })
+        response = await api.request(
+            "t2301",
+            {
+                "yyyymm": yyyymm,
+                "cp": "1",
+                "shcode": "",
+            },
+        )
 
-        if response and hasattr(response, 'body'):
+        if response and hasattr(response, "body"):
             body = response.body
 
             result = {
@@ -58,29 +63,35 @@ async def collect_option_iv(api):
                 "timestamp": datetime.now().isoformat(),
             }
 
-            if 't2301OutBlock' in body:
-                summary = body['t2301OutBlock']
-                result['call_iv'] = float(summary.get('cimpv', 0))
-                result['put_iv'] = float(summary.get('pimpv', 0))
-                result['hist_iv'] = float(summary.get('histimpv', 0))
-                result['days_to_exp'] = int(summary.get('jandatecnt', 0))
+            if "t2301OutBlock" in body:
+                summary = body["t2301OutBlock"]
+                result["call_iv"] = float(summary.get("cimpv", 0))
+                result["put_iv"] = float(summary.get("pimpv", 0))
+                result["hist_iv"] = float(summary.get("histimpv", 0))
+                result["days_to_exp"] = int(summary.get("jandatecnt", 0))
 
-            if 't2301OutBlock1' in body:
-                call_data = body['t2301OutBlock1']
+            if "t2301OutBlock1" in body:
+                call_data = body["t2301OutBlock1"]
                 if isinstance(call_data, list):
-                    result['call_volume'] = sum(int(c.get('volume', 0)) for c in call_data)
+                    result["call_volume"] = sum(
+                        int(c.get("volume", 0)) for c in call_data
+                    )
 
-            if 't2301OutBlock2' in body:
-                put_data = body['t2301OutBlock2']
+            if "t2301OutBlock2" in body:
+                put_data = body["t2301OutBlock2"]
                 if isinstance(put_data, list):
-                    result['put_volume'] = sum(int(p.get('volume', 0)) for p in put_data)
+                    result["put_volume"] = sum(
+                        int(p.get("volume", 0)) for p in put_data
+                    )
 
-            if result.get('call_volume', 0) > 0:
-                result['put_call_ratio'] = result['put_volume'] / result['call_volume']
+            if result.get("call_volume", 0) > 0:
+                result["put_call_ratio"] = result["put_volume"] / result["call_volume"]
             else:
-                result['put_call_ratio'] = 0
+                result["put_call_ratio"] = 0
 
-            logger.info(f"  콜IV: {result.get('call_iv', 0):.2f}, 풋IV: {result.get('put_iv', 0):.2f}")
+            logger.info(
+                f"  콜IV: {result.get('call_iv', 0):.2f}, 풋IV: {result.get('put_iv', 0):.2f}"
+            )
             logger.info(f"  Put/Call Ratio: {result.get('put_call_ratio', 0):.3f}")
 
             return result
@@ -98,19 +109,22 @@ async def collect_kosdaq_index(api):
 
     try:
         # t1101 - 주식 현재가
-        response = await api.request("t1102", {
-            "shcode": "Q500",  # 코스닥150 지수
-        })
+        response = await api.request(
+            "t1102",
+            {
+                "shcode": "Q500",  # 코스닥150 지수
+            },
+        )
 
-        if response and hasattr(response, 'body'):
+        if response and hasattr(response, "body"):
             body = response.body
-            if 't1102OutBlock' in body:
-                data = body['t1102OutBlock']
+            if "t1102OutBlock" in body:
+                data = body["t1102OutBlock"]
                 return {
                     "date": today,
-                    "price": float(data.get('price', 0)),
-                    "change": float(data.get('change', 0)),
-                    "volume": int(data.get('volume', 0)),
+                    "price": float(data.get("price", 0)),
+                    "change": float(data.get("change", 0)),
+                    "volume": int(data.get("volume", 0)),
                 }
 
     except Exception as e:
@@ -149,7 +163,7 @@ async def main():
 
     # 개별 파일 저장
     output_file = SAVE_PATH / f"daily_{today}.json"
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(daily_data, f, indent=2, ensure_ascii=False)
 
     # 누적 파일에 추가
@@ -161,12 +175,12 @@ async def main():
         if history_file.exists():
             existing = pd.read_csv(history_file)
             # 중복 제거
-            existing = existing[existing['date'] != today]
+            existing = existing[existing["date"] != today]
             combined = pd.concat([existing, new_row], ignore_index=True)
         else:
             combined = new_row
 
-        combined.to_csv(history_file, index=False, encoding='utf-8-sig')
+        combined.to_csv(history_file, index=False, encoding="utf-8-sig")
         logger.info(f"히스토리 저장: {history_file} ({len(combined)}일)")
 
     logger.info("=" * 50)

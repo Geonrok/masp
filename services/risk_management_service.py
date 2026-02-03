@@ -47,6 +47,7 @@ logger = logging.getLogger(__name__)
 
 class RiskLevel(Enum):
     """리스크 수준"""
+
     SAFE = "safe"
     CAUTION = "caution"
     WARNING = "warning"
@@ -57,6 +58,7 @@ class RiskLevel(Enum):
 @dataclass
 class RiskAlert:
     """리스크 알림"""
+
     level: RiskLevel
     title: str
     message: str
@@ -68,6 +70,7 @@ class RiskAlert:
 @dataclass
 class RiskConfig:
     """리스크 설정"""
+
     # 손실 한도
     daily_loss_limit: float = 0.03  # 3%
     weekly_loss_limit: float = 0.07  # 7%
@@ -135,22 +138,26 @@ class RiskManagementService:
     def _setup_alert_rules(self):
         """알림 규칙 설정"""
         # 텔레그램 알림 규칙 - CRITICAL 등급
-        self.alert_manager.register_rule(AlertRule(
-            name="telegram_critical",
-            category=AlertCategory.RISK,
-            min_severity=AlertSeverity.CRITICAL,
-            callback=self._send_telegram_alert,
-            rate_limit_seconds=60,
-        ))
+        self.alert_manager.register_rule(
+            AlertRule(
+                name="telegram_critical",
+                category=AlertCategory.RISK,
+                min_severity=AlertSeverity.CRITICAL,
+                callback=self._send_telegram_alert,
+                rate_limit_seconds=60,
+            )
+        )
 
         # 텔레그램 알림 규칙 - WARNING 등급
-        self.alert_manager.register_rule(AlertRule(
-            name="telegram_warning",
-            category=AlertCategory.RISK,
-            min_severity=AlertSeverity.WARNING,
-            callback=self._send_telegram_alert,
-            rate_limit_seconds=300,
-        ))
+        self.alert_manager.register_rule(
+            AlertRule(
+                name="telegram_warning",
+                category=AlertCategory.RISK,
+                min_severity=AlertSeverity.WARNING,
+                callback=self._send_telegram_alert,
+                rate_limit_seconds=300,
+            )
+        )
 
     def _send_telegram_alert(self, alert: Alert):
         """텔레그램으로 알림 전송"""
@@ -208,8 +215,18 @@ class RiskManagementService:
             return RiskLevel.CRITICAL
 
         # 각 메트릭스별 사용률 계산
-        daily_usage = abs(state.daily_pnl) / (self.drawdown_guard.peak_capital * self.config.daily_loss_limit) if state.daily_pnl < 0 else 0
-        weekly_usage = abs(state.weekly_pnl) / (self.drawdown_guard.peak_capital * self.config.weekly_loss_limit) if state.weekly_pnl < 0 else 0
+        daily_usage = (
+            abs(state.daily_pnl)
+            / (self.drawdown_guard.peak_capital * self.config.daily_loss_limit)
+            if state.daily_pnl < 0
+            else 0
+        )
+        weekly_usage = (
+            abs(state.weekly_pnl)
+            / (self.drawdown_guard.peak_capital * self.config.weekly_loss_limit)
+            if state.weekly_pnl < 0
+            else 0
+        )
         dd_usage = state.current_drawdown / self.config.max_drawdown_limit
 
         max_usage = max(daily_usage, weekly_usage, dd_usage)
@@ -295,8 +312,16 @@ class RiskManagementService:
         lines = [
             f"Risk Level: {risk_level.value.upper()}",
             "",
-            f"Daily P&L: {metrics['daily_pnl']:+,.0f} ({metrics['daily_pnl']/metrics['peak_capital']*100:+.2f}%)" if metrics['peak_capital'] > 0 else "Daily P&L: N/A",
-            f"Weekly P&L: {metrics['weekly_pnl']:+,.0f} ({metrics['weekly_pnl']/metrics['peak_capital']*100:+.2f}%)" if metrics['peak_capital'] > 0 else "Weekly P&L: N/A",
+            (
+                f"Daily P&L: {metrics['daily_pnl']:+,.0f} ({metrics['daily_pnl']/metrics['peak_capital']*100:+.2f}%)"
+                if metrics["peak_capital"] > 0
+                else "Daily P&L: N/A"
+            ),
+            (
+                f"Weekly P&L: {metrics['weekly_pnl']:+,.0f} ({metrics['weekly_pnl']/metrics['peak_capital']*100:+.2f}%)"
+                if metrics["peak_capital"] > 0
+                else "Weekly P&L: N/A"
+            ),
             f"Drawdown: {metrics['current_drawdown']*100:.1f}%",
             "",
             f"Daily Limit: {metrics['daily_limit']*100:.1f}%",
@@ -307,7 +332,7 @@ class RiskManagementService:
             f"Can Trade: {'Yes' if metrics['can_trade'] else 'NO'}",
         ]
 
-        if metrics.get('halt_reason'):
+        if metrics.get("halt_reason"):
             lines.append(f"\nHalt Reason: {metrics['halt_reason']}")
 
         message = "\n".join(lines)
@@ -442,28 +467,27 @@ class RiskManagementService:
         risk_level = self.assess_risk_level()
 
         return {
-            'risk_level': risk_level.value,
-            'can_trade': self.can_trade(),
-            'position_multiplier': self.get_position_size_multiplier(),
-            'is_emergency': self.is_emergency_mode,
-            'current_capital': metrics['current_capital'],
-            'peak_capital': metrics['peak_capital'],
-            'current_drawdown': metrics['current_drawdown'],
-            'daily_pnl': metrics['daily_pnl'],
-            'weekly_pnl': metrics['weekly_pnl'],
-            'status': metrics['status'],
-            'is_halted': metrics['is_halted'],
-            'halt_reason': metrics.get('halt_reason'),
-            'message': state.message,
-            'alert_count': len(self.alert_history),
+            "risk_level": risk_level.value,
+            "can_trade": self.can_trade(),
+            "position_multiplier": self.get_position_size_multiplier(),
+            "is_emergency": self.is_emergency_mode,
+            "current_capital": metrics["current_capital"],
+            "peak_capital": metrics["peak_capital"],
+            "current_drawdown": metrics["current_drawdown"],
+            "daily_pnl": metrics["daily_pnl"],
+            "weekly_pnl": metrics["weekly_pnl"],
+            "status": metrics["status"],
+            "is_halted": metrics["is_halted"],
+            "halt_reason": metrics.get("halt_reason"),
+            "message": state.message,
+            "alert_count": len(self.alert_history),
         }
 
 
 def main():
     """CLI 실행"""
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
     )
 
     print("=" * 60)
@@ -515,7 +539,7 @@ def main():
     if service.notifier.enabled:
         print("\n" + "=" * 60)
         response = input("Send status to Telegram? (y/n): ")
-        if response.lower() == 'y':
+        if response.lower() == "y":
             success = service.send_status_report()
             print(f"Telegram sent: {success}")
     else:

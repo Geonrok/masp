@@ -50,7 +50,9 @@ class TestRetryPolicy:
 
     def test_max_delay(self):
         """Test max delay cap."""
-        policy = RetryPolicy(base_delay=1.0, max_delay=5.0, exponential=True, jitter=False)
+        policy = RetryPolicy(
+            base_delay=1.0, max_delay=5.0, exponential=True, jitter=False
+        )
 
         assert policy.get_delay(10) == 5.0  # Capped at max
 
@@ -383,11 +385,7 @@ class TestResilienceBuilder:
 
     def test_with_fallback(self):
         """Test builder with fallback."""
-        resilience = (
-            ResilienceBuilder("test")
-            .with_fallback(value="fallback")
-            .build()
-        )
+        resilience = ResilienceBuilder("test").with_fallback(value="fallback").build()
 
         @resilience
         def failing():

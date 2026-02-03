@@ -1,4 +1,5 @@
 """Strategy management routes."""
+
 from __future__ import annotations
 
 from typing import List
@@ -67,9 +68,7 @@ def get_strategy_manager(request: Request) -> StrategyManager:
 
 
 @router.get("/list", response_model=StrategyListResponse)
-async def list_strategies(
-    manager: StrategyManager = Depends(get_strategy_manager)
-):
+async def list_strategies(manager: StrategyManager = Depends(get_strategy_manager)):
     strategies = manager.list_strategies()
     return StrategyListResponse(
         success=True,
@@ -81,19 +80,23 @@ async def list_strategies(
 @router.post("/start", response_model=BaseResponse)
 async def start_strategy(
     request: StrategyActionRequest,
-    manager: StrategyManager = Depends(get_strategy_manager)
+    manager: StrategyManager = Depends(get_strategy_manager),
 ):
     try:
         manager.start(request.strategy_id)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
-    return BaseResponse(success=True, message=f"Strategy started: {request.strategy_id}")
+    return BaseResponse(
+        success=True, message=f"Strategy started: {request.strategy_id}"
+    )
 
 
 @router.post("/stop", response_model=BaseResponse)
 async def stop_strategy(
     request: StrategyActionRequest,
-    manager: StrategyManager = Depends(get_strategy_manager)
+    manager: StrategyManager = Depends(get_strategy_manager),
 ):
     manager.stop(request.strategy_id)
-    return BaseResponse(success=True, message=f"Strategy stopped: {request.strategy_id}")
+    return BaseResponse(
+        success=True, message=f"Strategy stopped: {request.strategy_id}"
+    )

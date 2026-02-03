@@ -4,6 +4,7 @@ Exchange Registry - 거래소 등록 및 관리
 - 거래소 상태 모니터링
 - 거래소별 설정 관리
 """
+
 from __future__ import annotations
 
 import logging
@@ -181,7 +182,9 @@ class ExchangeRegistry:
             self._exchanges[name] = info
 
         self._initialized = True
-        logger.info("[ExchangeRegistry] Initialized with %d exchanges", len(self._exchanges))
+        logger.info(
+            "[ExchangeRegistry] Initialized with %d exchanges", len(self._exchanges)
+        )
 
     def register(self, info: ExchangeInfo) -> None:
         """Register a new exchange.
@@ -399,14 +402,24 @@ class ExchangeRegistry:
         return {
             "total": len(exchanges),
             "online": len([e for e in exchanges if e.status == ExchangeStatus.ONLINE]),
-            "offline": len([e for e in exchanges if e.status == ExchangeStatus.OFFLINE]),
+            "offline": len(
+                [e for e in exchanges if e.status == ExchangeStatus.OFFLINE]
+            ),
             "by_type": {
-                "spot": len([e for e in exchanges if e.exchange_type == ExchangeType.SPOT]),
-                "futures": len([e for e in exchanges if e.exchange_type == ExchangeType.FUTURES]),
+                "spot": len(
+                    [e for e in exchanges if e.exchange_type == ExchangeType.SPOT]
+                ),
+                "futures": len(
+                    [e for e in exchanges if e.exchange_type == ExchangeType.FUTURES]
+                ),
             },
             "by_region": {
-                "korea": len([e for e in exchanges if e.region == ExchangeRegion.KOREA]),
-                "global": len([e for e in exchanges if e.region == ExchangeRegion.GLOBAL]),
+                "korea": len(
+                    [e for e in exchanges if e.region == ExchangeRegion.KOREA]
+                ),
+                "global": len(
+                    [e for e in exchanges if e.region == ExchangeRegion.GLOBAL]
+                ),
             },
         }
 

@@ -277,7 +277,9 @@ class MLPipeline:
                 timestamp=df.index[df.index.get_loc(idx)],
                 symbol=symbol,
                 prediction=float(predictions[i]),
-                probability=float(probabilities[i]) if probabilities is not None else None,
+                probability=(
+                    float(probabilities[i]) if probabilities is not None else None
+                ),
             )
             results.append(result)
 
@@ -298,7 +300,9 @@ class MLPipeline:
         Returns:
             List of evaluation results per window
         """
-        logger.info(f"[MLPipeline] Walk-forward fit with {self.config.walk_forward_windows} windows")
+        logger.info(
+            f"[MLPipeline] Walk-forward fit with {self.config.walk_forward_windows} windows"
+        )
 
         n = len(df)
         window_size = n // (self.config.walk_forward_windows + 1)
@@ -354,8 +358,10 @@ class MLPipeline:
         elif self.config.target_type == "volatility":
             # Regression: future volatility
             returns = close.pct_change()
-            target = returns.rolling(self.config.target_horizon).std().shift(
-                -self.config.target_horizon
+            target = (
+                returns.rolling(self.config.target_horizon)
+                .std()
+                .shift(-self.config.target_horizon)
             )
 
         else:
@@ -401,6 +407,7 @@ class MLPipeline:
 
         if model_type == "random_forest":
             from sklearn.ensemble import RandomForestClassifier
+
             estimator = RandomForestClassifier(
                 n_estimators=params.get("n_estimators", 100),
                 max_depth=params.get("max_depth", 10),
@@ -410,6 +417,7 @@ class MLPipeline:
 
         elif model_type == "gradient_boost":
             from sklearn.ensemble import GradientBoostingClassifier
+
             estimator = GradientBoostingClassifier(
                 n_estimators=params.get("n_estimators", 100),
                 max_depth=params.get("max_depth", 5),
@@ -419,6 +427,7 @@ class MLPipeline:
 
         elif model_type == "linear":
             from sklearn.linear_model import LogisticRegression
+
             estimator = LogisticRegression(
                 C=params.get("C", 1.0),
                 max_iter=params.get("max_iter", 1000),
@@ -428,6 +437,7 @@ class MLPipeline:
         elif model_type == "xgboost":
             try:
                 from xgboost import XGBClassifier
+
                 estimator = XGBClassifier(
                     n_estimators=params.get("n_estimators", 100),
                     max_depth=params.get("max_depth", 5),
@@ -437,11 +447,13 @@ class MLPipeline:
             except ImportError:
                 logger.warning("XGBoost not available, using RandomForest")
                 from sklearn.ensemble import RandomForestClassifier
+
                 estimator = RandomForestClassifier(n_estimators=100, random_state=42)
 
         elif model_type == "lightgbm":
             try:
                 from lightgbm import LGBMClassifier
+
                 estimator = LGBMClassifier(
                     n_estimators=params.get("n_estimators", 100),
                     max_depth=params.get("max_depth", 5),
@@ -452,6 +464,7 @@ class MLPipeline:
             except ImportError:
                 logger.warning("LightGBM not available, using RandomForest")
                 from sklearn.ensemble import RandomForestClassifier
+
                 estimator = RandomForestClassifier(n_estimators=100, random_state=42)
 
         else:
@@ -469,7 +482,12 @@ class MLPipeline:
 
         if self.config.target_type == "direction":
             # Classification metrics
-            from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+            from sklearn.metrics import (
+                accuracy_score,
+                precision_score,
+                recall_score,
+                f1_score,
+            )
 
             return {
                 "accuracy": accuracy_score(y, predictions),
@@ -480,7 +498,11 @@ class MLPipeline:
 
         else:
             # Regression metrics
-            from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+            from sklearn.metrics import (
+                mean_squared_error,
+                mean_absolute_error,
+                r2_score,
+            )
 
             return {
                 "mse": mean_squared_error(y, predictions),

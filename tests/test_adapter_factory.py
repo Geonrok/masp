@@ -1,6 +1,7 @@
 """
 AdapterFactory tests (Phase 6A Step 2 v3).
 """
+
 import os
 import warnings
 from unittest.mock import patch
@@ -64,6 +65,7 @@ class TestAdapterFactory:
         )
 
         from libs.adapters.paper_execution import PaperExecutionAdapter
+
         assert isinstance(adapter, PaperExecutionAdapter)
 
     def test_unknown_exchange_raises(self):
@@ -76,4 +78,5 @@ class TestAdapterFactory:
         market_data = AdapterFactory.create_market_data("upbit_spot")
 
         from libs.adapters.real_upbit_spot import UpbitSpotMarketData
+
         assert isinstance(market_data, UpbitSpotMarketData)

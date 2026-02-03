@@ -38,18 +38,22 @@ class TIGER200Config:
     """TIGER 200 ETF 전략 설정."""
 
     # 전략 선택
-    enabled_strategies: list[str] = field(default_factory=lambda: [
-        "vix_below_sma20",
-        "vix_declining",
-        "semicon_foreign",
-    ])
+    enabled_strategies: list[str] = field(
+        default_factory=lambda: [
+            "vix_below_sma20",
+            "vix_declining",
+            "semicon_foreign",
+        ]
+    )
 
     # 포트폴리오 가중치
-    strategy_weights: dict[str, float] = field(default_factory=lambda: {
-        "vix_below_sma20": 0.50,
-        "vix_declining": 0.30,
-        "semicon_foreign": 0.20,
-    })
+    strategy_weights: dict[str, float] = field(
+        default_factory=lambda: {
+            "vix_below_sma20": 0.50,
+            "vix_declining": 0.30,
+            "semicon_foreign": 0.20,
+        }
+    )
 
     # VIX 전략 파라미터
     vix_sma_period: int = 20
@@ -131,25 +135,25 @@ class TIGER200Strategy(BaseStrategy):
             vix_df = pd.read_parquet(vix_path)
             if vix_df.index.tz is not None:
                 vix_df.index = vix_df.index.tz_localize(None)
-            self._vix_data = vix_df['Close']
+            self._vix_data = vix_df["Close"]
 
             # 반도체 지수 데이터
             semicon_path = f"{self.config.multi_asset_dir}/semicon.parquet"
             semicon_df = pd.read_parquet(semicon_path)
             if semicon_df.index.tz is not None:
                 semicon_df.index = semicon_df.index.tz_localize(None)
-            self._semicon_data = semicon_df['Close']
+            self._semicon_data = semicon_df["Close"]
 
             # 외국인 투자자 데이터
             investor_dir = self.config.investor_data_dir
-            files = [f for f in os.listdir(investor_dir) if f.endswith('_investor.csv')]
+            files = [f for f in os.listdir(investor_dir) if f.endswith("_investor.csv")]
             all_data = []
             for f in files:
                 try:
-                    df = pd.read_csv(f"{investor_dir}/{f}", encoding='utf-8-sig')
-                    df['날짜'] = pd.to_datetime(df['날짜'])
-                    df = df.set_index('날짜')
-                    all_data.append(df[['외국인합계']])
+                    df = pd.read_csv(f"{investor_dir}/{f}", encoding="utf-8-sig")
+                    df["날짜"] = pd.to_datetime(df["날짜"])
+                    df = df.set_index("날짜")
+                    all_data.append(df[["외국인합계"]])
                 except Exception:
                     continue
 
@@ -157,7 +161,7 @@ class TIGER200Strategy(BaseStrategy):
                 merged = all_data[0].copy()
                 for df in all_data[1:]:
                     merged = merged.add(df, fill_value=0)
-                self._foreign_data = merged['외국인합계'].sort_index()
+                self._foreign_data = merged["외국인합계"].sort_index()
 
             logger.info("[TIGER200] 데이터 로드 완료")
             return True
@@ -179,7 +183,10 @@ class TIGER200Strategy(BaseStrategy):
         Returns:
             1 (LONG) 또는 0 (CASH)
         """
-        if self._vix_data is None or len(self._vix_data) < self.config.vix_sma_period + 1:
+        if (
+            self._vix_data is None
+            or len(self._vix_data) < self.config.vix_sma_period + 1
+        ):
             return 0
 
         # T-1 VIX 사용 (백테스트 방법론 일치)
@@ -206,7 +213,7 @@ class TIGER200Strategy(BaseStrategy):
 
         # T-1, T-2 VIX 사용 (백테스트 방법론 일치)
         current_vix = self._vix_data.iloc[-2]  # T-1 VIX
-        prev_vix = self._vix_data.iloc[-3]      # T-2 VIX
+        prev_vix = self._vix_data.iloc[-3]  # T-2 VIX
 
         return 1 if current_vix < prev_vix else 0
 
@@ -235,7 +242,9 @@ class TIGER200Strategy(BaseStrategy):
         semicon_bullish = current_semicon > semicon_sma
 
         # 외국인 조건
-        foreign_20d = self._foreign_data.iloc[-self.config.foreign_lookback_days:].sum()
+        foreign_20d = self._foreign_data.iloc[
+            -self.config.foreign_lookback_days :
+        ].sum()
         foreign_bullish = foreign_20d > 0
 
         return 1 if (semicon_bullish and foreign_bullish) else 0
@@ -284,8 +293,10 @@ class TIGER200Strategy(BaseStrategy):
         indicators = {}
 
         if self._kospi_data is not None and len(self._kospi_data) > 0:
-            indicators["kospi200"] = float(self._kospi_data['close'].iloc[-1])
-            indicators["kospi200_date"] = self._kospi_data.index[-1].strftime("%Y-%m-%d")
+            indicators["kospi200"] = float(self._kospi_data["close"].iloc[-1])
+            indicators["kospi200_date"] = self._kospi_data.index[-1].strftime(
+                "%Y-%m-%d"
+            )
 
         if self._vix_data is not None and len(self._vix_data) > 0:
             indicators["vix"] = float(self._vix_data.iloc[-1])
@@ -332,7 +343,7 @@ class TIGER200Strategy(BaseStrategy):
                 TradeSignal(
                     symbol=symbol,
                     signal=sig,
-                    price=float(self._kospi_data['close'].iloc[-1]),
+                    price=float(self._kospi_data["close"].iloc[-1]),
                     timestamp=datetime.now(),
                     reason=f"Composite {composite:.0%}: {individual}",
                     strength=composite,

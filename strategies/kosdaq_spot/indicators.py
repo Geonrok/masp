@@ -13,7 +13,9 @@ def calc_moving_average(series: pd.Series, period: int) -> pd.Series:
     return series.rolling(period).mean()
 
 
-def calc_foreign_wght_mas(df: pd.DataFrame, short: int, long: int) -> Tuple[pd.Series, pd.Series]:
+def calc_foreign_wght_mas(
+    df: pd.DataFrame, short: int, long: int
+) -> Tuple[pd.Series, pd.Series]:
     """
     외국인 비중 이동평균 계산
 
@@ -25,14 +27,14 @@ def calc_foreign_wght_mas(df: pd.DataFrame, short: int, long: int) -> Tuple[pd.S
     Returns:
         (단기 MA, 장기 MA) 튜플
     """
-    wght_short = df['wght'].rolling(short).mean()
-    wght_long = df['wght'].rolling(long).mean()
+    wght_short = df["wght"].rolling(short).mean()
+    wght_long = df["wght"].rolling(long).mean()
     return wght_short, wght_long
 
 
 def calc_price_ma(df: pd.DataFrame, period: int) -> pd.Series:
     """가격 이동평균 계산"""
-    return df['close'].rolling(period).mean()
+    return df["close"].rolling(period).mean()
 
 
 def calc_rsi(series: pd.Series, period: int = 14) -> pd.Series:
@@ -44,7 +46,9 @@ def calc_rsi(series: pd.Series, period: int = 14) -> pd.Series:
     return 100 - (100 / (1 + rs))
 
 
-def calc_macd(series: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9) -> Tuple[pd.Series, pd.Series]:
+def calc_macd(
+    series: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9
+) -> Tuple[pd.Series, pd.Series]:
     """MACD 계산"""
     ema_fast = series.ewm(span=fast).mean()
     ema_slow = series.ewm(span=slow).mean()
@@ -53,12 +57,14 @@ def calc_macd(series: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9
     return macd, macd_signal
 
 
-def check_multi_tf_conditions(df: pd.DataFrame,
-                              wght_short1: int = 5,
-                              wght_long1: int = 20,
-                              wght_short2: int = 10,
-                              wght_long2: int = 40,
-                              price_ma: int = 50) -> pd.Series:
+def check_multi_tf_conditions(
+    df: pd.DataFrame,
+    wght_short1: int = 5,
+    wght_long1: int = 20,
+    wght_short2: int = 10,
+    wght_long2: int = 40,
+    price_ma: int = 50,
+) -> pd.Series:
     """
     Multi TF Short 조건 확인
 
@@ -83,6 +89,6 @@ def check_multi_tf_conditions(df: pd.DataFrame,
 
     # 가격 상승 추세
     ma = calc_price_ma(df, price_ma)
-    cond3 = df['close'] > ma
+    cond3 = df["close"] > ma
 
     return cond1 & cond2 & cond3

@@ -6,14 +6,15 @@ Each strategy returns a signal series:
  -1 = Sell signal
   0 = Hold/No signal
 """
+
 from typing import Callable, Dict, Tuple
 import numpy as np
 import pandas as pd
 
-
 # ============================================================================
 # MOMENTUM STRATEGIES
 # ============================================================================
+
 
 def momentum_simple(lookback: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
     """
@@ -22,8 +23,9 @@ def momentum_simple(lookback: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
     Args:
         lookback: Lookback period in days
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
         momentum = close / close.shift(lookback) - 1
         signal = pd.Series(0, index=data.index)
         signal[momentum > 0] = 1
@@ -33,12 +35,15 @@ def momentum_simple(lookback: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
     return signal_func
 
 
-def momentum_dual(fast: int = 10, slow: int = 30) -> Callable[[pd.DataFrame], pd.Series]:
+def momentum_dual(
+    fast: int = 10, slow: int = 30
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Dual momentum: Buy when fast momentum > slow momentum.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
         fast_mom = close / close.shift(fast) - 1
         slow_mom = close / close.shift(slow) - 1
         signal = pd.Series(0, index=data.index)
@@ -49,12 +54,15 @@ def momentum_dual(fast: int = 10, slow: int = 30) -> Callable[[pd.DataFrame], pd
     return signal_func
 
 
-def momentum_12_1(skip_recent: int = 21, lookback: int = 252) -> Callable[[pd.DataFrame], pd.Series]:
+def momentum_12_1(
+    skip_recent: int = 21, lookback: int = 252
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Classic 12-1 momentum: 12-month momentum skipping most recent month.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
         # Return from lookback to skip_recent days ago
         past_price = close.shift(lookback)
         recent_price = close.shift(skip_recent)
@@ -71,12 +79,14 @@ def momentum_12_1(skip_recent: int = 21, lookback: int = 252) -> Callable[[pd.Da
 # MOVING AVERAGE STRATEGIES
 # ============================================================================
 
+
 def ma_crossover(fast: int = 5, slow: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
     """
     MA crossover: Buy when fast MA > slow MA.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
         fast_ma = close.rolling(fast).mean()
         slow_ma = close.rolling(slow).mean()
 
@@ -95,8 +105,9 @@ def ma_trend(period: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
     """
     MA trend: Stay long when price > MA, else flat.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
         ma = close.rolling(period).mean()
 
         signal = pd.Series(0, index=data.index)
@@ -108,12 +119,15 @@ def ma_trend(period: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
     return signal_func
 
 
-def triple_ma(fast: int = 5, mid: int = 20, slow: int = 60) -> Callable[[pd.DataFrame], pd.Series]:
+def triple_ma(
+    fast: int = 5, mid: int = 20, slow: int = 60
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Triple MA: Buy when fast > mid > slow, sell when fast < mid < slow.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
         fast_ma = close.rolling(fast).mean()
         mid_ma = close.rolling(mid).mean()
         slow_ma = close.rolling(slow).mean()
@@ -127,7 +141,9 @@ def triple_ma(fast: int = 5, mid: int = 20, slow: int = 60) -> Callable[[pd.Data
     return signal_func
 
 
-def golden_death_cross(fast: int = 50, slow: int = 200) -> Callable[[pd.DataFrame], pd.Series]:
+def golden_death_cross(
+    fast: int = 50, slow: int = 200
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Golden/Death cross: 50-day MA vs 200-day MA.
     """
@@ -138,12 +154,16 @@ def golden_death_cross(fast: int = 50, slow: int = 200) -> Callable[[pd.DataFram
 # MEAN REVERSION STRATEGIES
 # ============================================================================
 
-def rsi_reversal(period: int = 14, oversold: int = 30, overbought: int = 70) -> Callable[[pd.DataFrame], pd.Series]:
+
+def rsi_reversal(
+    period: int = 14, oversold: int = 30, overbought: int = 70
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     RSI reversal: Buy when RSI < oversold, sell when RSI > overbought.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
         delta = close.diff()
         gain = delta.where(delta > 0, 0)
         loss = -delta.where(delta < 0, 0)
@@ -163,12 +183,15 @@ def rsi_reversal(period: int = 14, oversold: int = 30, overbought: int = 70) -> 
     return signal_func
 
 
-def bollinger_bands(period: int = 20, std_dev: float = 2.0) -> Callable[[pd.DataFrame], pd.Series]:
+def bollinger_bands(
+    period: int = 20, std_dev: float = 2.0
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Bollinger Bands: Buy at lower band, sell at upper band.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
         ma = close.rolling(period).mean()
         std = close.rolling(period).std()
 
@@ -184,12 +207,15 @@ def bollinger_bands(period: int = 20, std_dev: float = 2.0) -> Callable[[pd.Data
     return signal_func
 
 
-def mean_reversion_zscore(period: int = 20, entry_z: float = -2.0, exit_z: float = 0) -> Callable[[pd.DataFrame], pd.Series]:
+def mean_reversion_zscore(
+    period: int = 20, entry_z: float = -2.0, exit_z: float = 0
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Z-score mean reversion: Enter when z-score below threshold.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
         ma = close.rolling(period).mean()
         std = close.rolling(period).std()
         zscore = (close - ma) / std
@@ -209,14 +235,16 @@ def mean_reversion_zscore(period: int = 20, entry_z: float = -2.0, exit_z: float
 # BREAKOUT STRATEGIES
 # ============================================================================
 
+
 def donchian_channel(period: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Donchian channel breakout: Buy at new highs, sell at new lows.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        high = data['High']
-        low = data['Low']
-        close = data['Close']
+        high = data["High"]
+        low = data["Low"]
+        close = data["Close"]
 
         upper = high.rolling(period).max()
         lower = low.rolling(period).min()
@@ -232,14 +260,17 @@ def donchian_channel(period: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
     return signal_func
 
 
-def range_breakout(lookback: int = 20, breakout_pct: float = 0.02) -> Callable[[pd.DataFrame], pd.Series]:
+def range_breakout(
+    lookback: int = 20, breakout_pct: float = 0.02
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Range breakout: Buy when price breaks above range by certain percentage.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        high = data['High']
-        low = data['Low']
-        close = data['Close']
+        high = data["High"]
+        low = data["Low"]
+        close = data["Close"]
 
         range_high = high.rolling(lookback).max()
         range_low = low.rolling(lookback).min()
@@ -255,14 +286,17 @@ def range_breakout(lookback: int = 20, breakout_pct: float = 0.02) -> Callable[[
     return signal_func
 
 
-def volume_breakout(price_period: int = 20, volume_mult: float = 2.0) -> Callable[[pd.DataFrame], pd.Series]:
+def volume_breakout(
+    price_period: int = 20, volume_mult: float = 2.0
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Volume breakout: Buy on high volume price breakout.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
-        volume = data['Volume']
-        high = data['High']
+        close = data["Close"]
+        volume = data["Volume"]
+        high = data["High"]
 
         price_high = high.rolling(price_period).max()
         avg_volume = volume.rolling(price_period).mean()
@@ -282,21 +316,24 @@ def volume_breakout(price_period: int = 20, volume_mult: float = 2.0) -> Callabl
 # TREND FOLLOWING STRATEGIES
 # ============================================================================
 
-def supertrend_strategy(atr_period: int = 10, multiplier: float = 3.0) -> Callable[[pd.DataFrame], pd.Series]:
+
+def supertrend_strategy(
+    atr_period: int = 10, multiplier: float = 3.0
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Supertrend indicator strategy.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        high = data['High']
-        low = data['Low']
-        close = data['Close']
+        high = data["High"]
+        low = data["Low"]
+        close = data["Close"]
 
         # Calculate ATR
-        tr = pd.concat([
-            high - low,
-            (high - close.shift(1)).abs(),
-            (low - close.shift(1)).abs()
-        ], axis=1).max(axis=1)
+        tr = pd.concat(
+            [high - low, (high - close.shift(1)).abs(), (low - close.shift(1)).abs()],
+            axis=1,
+        ).max(axis=1)
         atr = tr.rolling(atr_period).mean()
 
         # Basic bands
@@ -312,22 +349,28 @@ def supertrend_strategy(atr_period: int = 10, multiplier: float = 3.0) -> Callab
 
         for i in range(1, len(data)):
             # Upper band
-            if upper_band.iloc[i] < final_upper.iloc[i-1] or close.iloc[i-1] > final_upper.iloc[i-1]:
+            if (
+                upper_band.iloc[i] < final_upper.iloc[i - 1]
+                or close.iloc[i - 1] > final_upper.iloc[i - 1]
+            ):
                 final_upper.iloc[i] = upper_band.iloc[i]
             else:
-                final_upper.iloc[i] = final_upper.iloc[i-1]
+                final_upper.iloc[i] = final_upper.iloc[i - 1]
 
             # Lower band
-            if lower_band.iloc[i] > final_lower.iloc[i-1] or close.iloc[i-1] < final_lower.iloc[i-1]:
+            if (
+                lower_band.iloc[i] > final_lower.iloc[i - 1]
+                or close.iloc[i - 1] < final_lower.iloc[i - 1]
+            ):
                 final_lower.iloc[i] = lower_band.iloc[i]
             else:
-                final_lower.iloc[i] = final_lower.iloc[i-1]
+                final_lower.iloc[i] = final_lower.iloc[i - 1]
 
             # Direction and supertrend
             if i == 0:
                 supertrend.iloc[i] = final_lower.iloc[i]
                 direction.iloc[i] = 1
-            elif supertrend.iloc[i-1] == final_upper.iloc[i-1]:
+            elif supertrend.iloc[i - 1] == final_upper.iloc[i - 1]:
                 if close.iloc[i] > final_upper.iloc[i]:
                     supertrend.iloc[i] = final_lower.iloc[i]
                     direction.iloc[i] = 1
@@ -351,14 +394,17 @@ def supertrend_strategy(atr_period: int = 10, multiplier: float = 3.0) -> Callab
     return signal_func
 
 
-def adx_trend(period: int = 14, threshold: int = 25) -> Callable[[pd.DataFrame], pd.Series]:
+def adx_trend(
+    period: int = 14, threshold: int = 25
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     ADX trend following: Trade only when ADX > threshold.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        high = data['High']
-        low = data['Low']
-        close = data['Close']
+        high = data["High"]
+        low = data["Low"]
+        close = data["Close"]
 
         # +DM and -DM
         plus_dm = high.diff()
@@ -369,11 +415,10 @@ def adx_trend(period: int = 14, threshold: int = 25) -> Callable[[pd.DataFrame],
         minus_dm[(minus_dm < plus_dm)] = 0
 
         # ATR
-        tr = pd.concat([
-            high - low,
-            (high - close.shift(1)).abs(),
-            (low - close.shift(1)).abs()
-        ], axis=1).max(axis=1)
+        tr = pd.concat(
+            [high - low, (high - close.shift(1)).abs(), (low - close.shift(1)).abs()],
+            axis=1,
+        ).max(axis=1)
         atr = tr.rolling(period).mean()
 
         # +DI and -DI
@@ -398,16 +443,24 @@ def adx_trend(period: int = 14, threshold: int = 25) -> Callable[[pd.DataFrame],
 # VOLATILITY STRATEGIES
 # ============================================================================
 
-def volatility_contraction(lookback: int = 20, threshold: float = 0.5) -> Callable[[pd.DataFrame], pd.Series]:
+
+def volatility_contraction(
+    lookback: int = 20, threshold: float = 0.5
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Volatility contraction: Enter when volatility contracts (squeeze).
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
         returns = close.pct_change()
         volatility = returns.rolling(lookback).std()
         vol_percentile = volatility.rolling(252).apply(
-            lambda x: (x.iloc[-1] - x.min()) / (x.max() - x.min()) if x.max() != x.min() else 0.5
+            lambda x: (
+                (x.iloc[-1] - x.min()) / (x.max() - x.min())
+                if x.max() != x.min()
+                else 0.5
+            )
         )
 
         ma = close.rolling(lookback).mean()
@@ -422,20 +475,22 @@ def volatility_contraction(lookback: int = 20, threshold: float = 0.5) -> Callab
     return signal_func
 
 
-def atr_trailing_stop(atr_period: int = 14, multiplier: float = 2.0) -> Callable[[pd.DataFrame], pd.Series]:
+def atr_trailing_stop(
+    atr_period: int = 14, multiplier: float = 2.0
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     ATR trailing stop: Use ATR for stop placement.
     """
-    def signal_func(data: pd.DataFrame) -> pd.Series:
-        high = data['High']
-        low = data['Low']
-        close = data['Close']
 
-        tr = pd.concat([
-            high - low,
-            (high - close.shift(1)).abs(),
-            (low - close.shift(1)).abs()
-        ], axis=1).max(axis=1)
+    def signal_func(data: pd.DataFrame) -> pd.Series:
+        high = data["High"]
+        low = data["Low"]
+        close = data["Close"]
+
+        tr = pd.concat(
+            [high - low, (high - close.shift(1)).abs(), (low - close.shift(1)).abs()],
+            axis=1,
+        ).max(axis=1)
         atr = tr.rolling(atr_period).mean()
 
         # Trailing stop
@@ -456,13 +511,15 @@ def atr_trailing_stop(atr_period: int = 14, multiplier: float = 2.0) -> Callable
 # VOLUME-BASED STRATEGIES
 # ============================================================================
 
+
 def obv_trend(period: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
     """
     OBV (On Balance Volume) trend following.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
-        volume = data['Volume']
+        close = data["Close"]
+        volume = data["Volume"]
 
         # OBV calculation
         obv = (volume * np.sign(close.diff())).cumsum()
@@ -481,14 +538,17 @@ def vwap_reversion(period: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
     """
     VWAP mean reversion strategy.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
-        volume = data['Volume']
-        high = data['High']
-        low = data['Low']
+        close = data["Close"]
+        volume = data["Volume"]
+        high = data["High"]
+        low = data["Low"]
 
         typical_price = (high + low + close) / 3
-        vwap = (typical_price * volume).rolling(period).sum() / volume.rolling(period).sum()
+        vwap = (typical_price * volume).rolling(period).sum() / volume.rolling(
+            period
+        ).sum()
 
         deviation = (close - vwap) / vwap
 
@@ -505,13 +565,15 @@ def vwap_reversion(period: int = 20) -> Callable[[pd.DataFrame], pd.Series]:
 # PATTERN-BASED STRATEGIES
 # ============================================================================
 
+
 def gap_fade(min_gap: float = 0.02) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Gap fade: Trade against opening gaps.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        open_price = data['Open']
-        close = data['Close']
+        open_price = data["Open"]
+        close = data["Close"]
 
         gap = (open_price / close.shift(1)) - 1
 
@@ -530,10 +592,11 @@ def inside_day_breakout() -> Callable[[pd.DataFrame], pd.Series]:
     """
     Inside day breakout: Trade breakouts from narrow range days.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        high = data['High']
-        low = data['Low']
-        close = data['Close']
+        high = data["High"]
+        low = data["Low"]
+        close = data["Close"]
 
         # Inside day: today's range within yesterday's range
         inside_day = (high < high.shift(1)) & (low > low.shift(1))
@@ -553,10 +616,11 @@ def nr7_breakout() -> Callable[[pd.DataFrame], pd.Series]:
     """
     NR7 (Narrowest Range of 7 days) breakout.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        high = data['High']
-        low = data['Low']
-        close = data['Close']
+        high = data["High"]
+        low = data["Low"]
+        close = data["Close"]
 
         daily_range = high - low
         min_range_7 = daily_range.rolling(7).min()
@@ -579,19 +643,21 @@ def nr7_breakout() -> Callable[[pd.DataFrame], pd.Series]:
 # COMBINED STRATEGIES
 # ============================================================================
 
+
 def macd_rsi_combo(
     macd_fast: int = 12,
     macd_slow: int = 26,
     macd_signal: int = 9,
     rsi_period: int = 14,
     rsi_oversold: int = 30,
-    rsi_overbought: int = 70
+    rsi_overbought: int = 70,
 ) -> Callable[[pd.DataFrame], pd.Series]:
     """
     MACD + RSI combination strategy.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
 
         # MACD
         fast_ema = close.ewm(span=macd_fast).mean()
@@ -621,14 +687,14 @@ def macd_rsi_combo(
 
 
 def trend_momentum_filter(
-    trend_period: int = 200,
-    momentum_period: int = 20
+    trend_period: int = 200, momentum_period: int = 20
 ) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Trade momentum only in direction of long-term trend.
     """
+
     def signal_func(data: pd.DataFrame) -> pd.Series:
-        close = data['Close']
+        close = data["Close"]
 
         # Long-term trend
         trend_ma = close.rolling(trend_period).mean()
@@ -653,6 +719,7 @@ def trend_momentum_filter(
 # STRATEGY REGISTRY
 # ============================================================================
 
+
 def get_all_strategies() -> Dict[str, Tuple[Callable, Dict]]:
     """
     Get all available strategies with their default parameters.
@@ -668,7 +735,6 @@ def get_all_strategies() -> Dict[str, Tuple[Callable, Dict]]:
         "momentum_dual_10_30": (momentum_dual, {"fast": 10, "slow": 30}),
         "momentum_dual_20_60": (momentum_dual, {"fast": 20, "slow": 60}),
         "momentum_12_1": (momentum_12_1, {"skip_recent": 21, "lookback": 252}),
-
         # Moving Average
         "ma_cross_5_20": (ma_crossover, {"fast": 5, "slow": 20}),
         "ma_cross_10_50": (ma_crossover, {"fast": 10, "slow": 50}),
@@ -677,47 +743,48 @@ def get_all_strategies() -> Dict[str, Tuple[Callable, Dict]]:
         "ma_trend_20": (ma_trend, {"period": 20}),
         "ma_trend_50": (ma_trend, {"period": 50}),
         "triple_ma": (triple_ma, {"fast": 5, "mid": 20, "slow": 60}),
-
         # Mean Reversion
         "rsi_14": (rsi_reversal, {"period": 14, "oversold": 30, "overbought": 70}),
-        "rsi_14_extreme": (rsi_reversal, {"period": 14, "oversold": 20, "overbought": 80}),
+        "rsi_14_extreme": (
+            rsi_reversal,
+            {"period": 14, "oversold": 20, "overbought": 80},
+        ),
         "bollinger_20_2": (bollinger_bands, {"period": 20, "std_dev": 2.0}),
         "bollinger_20_2.5": (bollinger_bands, {"period": 20, "std_dev": 2.5}),
         "zscore_reversion": (mean_reversion_zscore, {"period": 20, "entry_z": -2.0}),
-
         # Breakout
         "donchian_20": (donchian_channel, {"period": 20}),
         "donchian_55": (donchian_channel, {"period": 55}),
         "range_breakout": (range_breakout, {"lookback": 20, "breakout_pct": 0.02}),
         "volume_breakout": (volume_breakout, {"price_period": 20, "volume_mult": 2.0}),
-
         # Trend Following
         "supertrend_10_3": (supertrend_strategy, {"atr_period": 10, "multiplier": 3.0}),
         "supertrend_14_2": (supertrend_strategy, {"atr_period": 14, "multiplier": 2.0}),
         "adx_trend": (adx_trend, {"period": 14, "threshold": 25}),
         "atr_trailing": (atr_trailing_stop, {"atr_period": 14, "multiplier": 2.0}),
-
         # Volatility
         "vol_contraction": (volatility_contraction, {"lookback": 20, "threshold": 0.3}),
-
         # Volume
         "obv_trend": (obv_trend, {"period": 20}),
         "vwap_reversion": (vwap_reversion, {"period": 20}),
-
         # Pattern
         "gap_fade": (gap_fade, {"min_gap": 0.02}),
         "inside_day": (inside_day_breakout, {}),
         "nr7_breakout": (nr7_breakout, {}),
-
         # Combined
         "macd_rsi": (macd_rsi_combo, {}),
-        "trend_momentum": (trend_momentum_filter, {"trend_period": 200, "momentum_period": 20}),
+        "trend_momentum": (
+            trend_momentum_filter,
+            {"trend_period": 200, "momentum_period": 20},
+        ),
     }
 
     return strategies
 
 
-def create_strategy(name: str, params: Optional[Dict] = None) -> Callable[[pd.DataFrame], pd.Series]:
+def create_strategy(
+    name: str, params: Optional[Dict] = None
+) -> Callable[[pd.DataFrame], pd.Series]:
     """
     Create a strategy by name.
 
@@ -731,7 +798,9 @@ def create_strategy(name: str, params: Optional[Dict] = None) -> Callable[[pd.Da
     strategies = get_all_strategies()
 
     if name not in strategies:
-        raise ValueError(f"Unknown strategy: {name}. Available: {list(strategies.keys())}")
+        raise ValueError(
+            f"Unknown strategy: {name}. Available: {list(strategies.keys())}"
+        )
 
     factory, default_params = strategies[name]
 

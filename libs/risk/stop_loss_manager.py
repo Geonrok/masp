@@ -115,7 +115,9 @@ class FixedPercentageStop(StopLossStrategy):
         self.take_profit_pct = take_profit_pct
         logger.info(
             f"[FixedPercentageStop] SL={stop_loss_pct:.1%}, "
-            f"TP={take_profit_pct:.1%}" if take_profit_pct else ""
+            f"TP={take_profit_pct:.1%}"
+            if take_profit_pct
+            else ""
         )
 
     def check_exit(self, position: Position, current_price: float) -> ExitSignal:
@@ -196,10 +198,14 @@ class TrailingStop(StopLossStrategy):
         if self.activation_pct is None:
             is_activated = True
         elif position.side == "long":
-            max_pnl = (position.highest_price - position.entry_price) / position.entry_price
+            max_pnl = (
+                position.highest_price - position.entry_price
+            ) / position.entry_price
             is_activated = max_pnl >= self.activation_pct
         else:
-            max_pnl = (position.entry_price - position.lowest_price) / position.entry_price
+            max_pnl = (
+                position.entry_price - position.lowest_price
+            ) / position.entry_price
             is_activated = max_pnl >= self.activation_pct
 
         if is_activated:
@@ -427,7 +433,9 @@ class CompositeStopManager:
         """
         self.strategies = strategies or []
         self.positions: dict[str, Position] = {}
-        logger.info(f"[CompositeStopManager] Initialized with {len(self.strategies)} strategies")
+        logger.info(
+            f"[CompositeStopManager] Initialized with {len(self.strategies)} strategies"
+        )
 
     def add_strategy(self, strategy: StopLossStrategy) -> None:
         """Add a stop loss strategy."""
@@ -581,5 +589,7 @@ def create_default_stop_manager() -> CompositeStopManager:
         )
     )
 
-    logger.info("[create_default_stop_manager] Created with trailing + fixed + time stops")
+    logger.info(
+        "[create_default_stop_manager] Created with trailing + fixed + time stops"
+    )
     return manager

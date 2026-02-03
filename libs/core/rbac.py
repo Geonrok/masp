@@ -210,12 +210,16 @@ class User:
                 Permission(p) for p in data.get("denied_permissions", [])
             },
             api_key_hash=data.get("api_key_hash", ""),
-            created_at=datetime.fromisoformat(data["created_at"])
-            if "created_at" in data
-            else datetime.now(timezone.utc),
-            last_login=datetime.fromisoformat(data["last_login"])
-            if data.get("last_login")
-            else None,
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if "created_at" in data
+                else datetime.now(timezone.utc)
+            ),
+            last_login=(
+                datetime.fromisoformat(data["last_login"])
+                if data.get("last_login")
+                else None
+            ),
             enabled=data.get("enabled", True),
             metadata=data.get("metadata", {}),
         )
@@ -602,7 +606,9 @@ class RBACManager:
 
     def invalidate_user_sessions(self, user_id: str) -> int:
         """Invalidate all sessions for a user."""
-        to_remove = [s.session_id for s in self._sessions.values() if s.user_id == user_id]
+        to_remove = [
+            s.session_id for s in self._sessions.values() if s.user_id == user_id
+        ]
         for session_id in to_remove:
             del self._sessions[session_id]
         return len(to_remove)
@@ -623,9 +629,7 @@ class RBACManager:
             return False
         return user.has_permission(permission)
 
-    def check_any_permission(
-        self, user_id: str, permissions: List[Permission]
-    ) -> bool:
+    def check_any_permission(self, user_id: str, permissions: List[Permission]) -> bool:
         """Check if a user has any of the specified permissions."""
         user = self._users.get(user_id)
         if not user:
@@ -650,6 +654,7 @@ class RBACManager:
 
 
 # FastAPI Integration
+
 
 def get_rbac_manager() -> RBACManager:
     """Get RBAC manager instance."""

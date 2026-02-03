@@ -1,4 +1,5 @@
 """Alert settings component for managing notification rules."""
+
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional
@@ -193,9 +194,7 @@ def render_new_rule_form(
                     "exchanges": [
                         e.strip() for e in exchanges_str.split(",") if e.strip()
                     ],
-                    "symbols": [
-                        s.strip() for s in symbols_str.split(",") if s.strip()
-                    ],
+                    "symbols": [s.strip() for s in symbols_str.split(",") if s.strip()],
                     "cooldown_seconds": cooldown,
                     "aggregate_count": aggregate,
                 }

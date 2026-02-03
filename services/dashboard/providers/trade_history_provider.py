@@ -1,4 +1,5 @@
 """Trade history provider - connects TradeLogger to trade_history component."""
+
 from __future__ import annotations
 
 import logging

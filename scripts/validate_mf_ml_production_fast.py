@@ -11,6 +11,7 @@ MF+ML Production-Ready Validation (Fast Version)
 5. Execution Lag Test (신호 지연)
 6. Drawdown Analysis
 """
+
 from __future__ import annotations
 
 import logging
@@ -24,7 +25,7 @@ import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.preprocessing import StandardScaler
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 
@@ -36,8 +37,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def calc_ema(s, p): return s.ewm(span=p, adjust=False).mean()
-def calc_sma(s, p): return s.rolling(p).mean()
+def calc_ema(s, p):
+    return s.ewm(span=p, adjust=False).mean()
+
+
+def calc_sma(s, p):
+    return s.rolling(p).mean()
+
+
 def calc_rsi(s, p=14):
     d = s.diff()
     g = d.where(d > 0, 0).rolling(p).mean()
@@ -47,6 +54,7 @@ def calc_rsi(s, p=14):
 
 class ProductionCostModel:
     """실제 Binance Futures 비용"""
+
     def __init__(self):
         self.taker_fee = 0.0004
         self.slippage = 0.001
@@ -70,7 +78,7 @@ class DataLoader:
         if not fp.exists():
             return pd.DataFrame()
         df = pd.read_csv(fp)
-        for col in ['datetime', 'timestamp', 'date']:
+        for col in ["datetime", "timestamp", "date"]:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col])
                 df = df.set_index(col).sort_index()
@@ -109,35 +117,44 @@ class DataLoader:
 
 
 class MultiFactorSignal:
-    def generate(self, df: pd.DataFrame, btc_df: pd.DataFrame,
-                 fear_greed: pd.DataFrame, macro: pd.DataFrame) -> pd.Series:
+    def generate(
+        self,
+        df: pd.DataFrame,
+        btc_df: pd.DataFrame,
+        fear_greed: pd.DataFrame,
+        macro: pd.DataFrame,
+    ) -> pd.Series:
         scores = pd.Series(0.0, index=df.index)
 
         # Technical
-        ema20, ema50 = calc_ema(df['close'], 20), calc_ema(df['close'], 50)
-        tech = np.where(df['close'] > ema50, 1, np.where(df['close'] < ema50, -1, 0))
-        rsi = calc_rsi(df['close'], 14)
+        ema20, ema50 = calc_ema(df["close"], 20), calc_ema(df["close"], 50)
+        tech = np.where(df["close"] > ema50, 1, np.where(df["close"] < ema50, -1, 0))
+        rsi = calc_rsi(df["close"], 14)
         tech_rsi = np.where(rsi < 30, 1.5, np.where(rsi > 70, -1.5, 0))
-        scores += (pd.Series(tech, index=df.index) + pd.Series(tech_rsi, index=df.index)) * 1.5
+        scores += (
+            pd.Series(tech, index=df.index) + pd.Series(tech_rsi, index=df.index)
+        ) * 1.5
 
         # Fear & Greed
         if not fear_greed.empty:
-            fg = fear_greed['fear_greed'].reindex(df.index, method='ffill')
+            fg = fear_greed["fear_greed"].reindex(df.index, method="ffill")
             fg_score = np.where(fg < 25, 2, np.where(fg > 75, -2, 0))
             scores += pd.Series(fg_score, index=df.index).fillna(0) * 1.2
 
         # BTC Correlation
         if not btc_df.empty:
-            btc_close = btc_df['close'].reindex(df.index, method='ffill')
+            btc_close = btc_df["close"].reindex(df.index, method="ffill")
             btc_ema50 = calc_ema(btc_close, 50)
-            btc_score = np.where(btc_close > btc_ema50, 1, np.where(btc_close < btc_ema50, -1, 0))
+            btc_score = np.where(
+                btc_close > btc_ema50, 1, np.where(btc_close < btc_ema50, -1, 0)
+            )
             scores += pd.Series(btc_score, index=df.index).fillna(0) * 1.0
 
         # Macro
         if not macro.empty:
-            macro_r = macro.reindex(df.index, method='ffill')
-            if 'vix' in macro_r.columns:
-                vix = macro_r['vix']
+            macro_r = macro.reindex(df.index, method="ffill")
+            if "vix" in macro_r.columns:
+                vix = macro_r["vix"]
                 scores += np.where(vix > 30, 1, np.where(vix < 15, -0.5, 0))
 
         return scores
@@ -150,18 +167,18 @@ class MLSignal:
 
     def _features(self, df: pd.DataFrame) -> pd.DataFrame:
         f = pd.DataFrame(index=df.index)
-        c = df['close']
-        v = df['volume']
+        c = df["close"]
+        v = df["volume"]
         for p in [5, 10, 20]:
-            f[f'r{p}'] = c.pct_change(p)
-            f[f'v{p}'] = v.pct_change(p)
-        f['rsi'] = calc_rsi(c, 14)
-        f['ema20'] = c / calc_ema(c, 20) - 1
+            f[f"r{p}"] = c.pct_change(p)
+            f[f"v{p}"] = v.pct_change(p)
+        f["rsi"] = calc_rsi(c, 14)
+        f["ema20"] = c / calc_ema(c, 20) - 1
         return f.replace([np.inf, -np.inf], np.nan).fillna(0)
 
     def train(self, df: pd.DataFrame, end_idx: int):
         feat = self._features(df)
-        fut = df['close'].shift(-6) / df['close'] - 1
+        fut = df["close"].shift(-6) / df["close"] - 1
         tgt = np.where(fut > 0.02, 1, np.where(fut < -0.02, -1, 0))
         tgt = pd.Series(tgt, index=df.index)
 
@@ -173,7 +190,9 @@ class MLSignal:
             return False
 
         self.scaler.fit(X)
-        self.model = GradientBoostingClassifier(n_estimators=30, max_depth=3, random_state=42)
+        self.model = GradientBoostingClassifier(
+            n_estimators=30, max_depth=3, random_state=42
+        )
         self.model.fit(self.scaler.transform(X), y)
         return True
 
@@ -186,9 +205,12 @@ class MLSignal:
         return pd.Series(pred * prob * 3, index=df.index)
 
 
-def backtest_sequential(df: pd.DataFrame, mf_scores: pd.Series,
-                        cost_model: ProductionCostModel,
-                        retrain_bars: int = 180) -> Dict:
+def backtest_sequential(
+    df: pd.DataFrame,
+    mf_scores: pd.Series,
+    cost_model: ProductionCostModel,
+    retrain_bars: int = 180,
+) -> Dict:
     """순차적 Walk-Forward 백테스트"""
     if len(df) < 800:
         return None
@@ -215,27 +237,32 @@ def backtest_sequential(df: pd.DataFrame, mf_scores: pd.Series,
             last_train = i
 
         score = mf_scores.iloc[i] + ml_scores.iloc[i] * 0.8
-        price = df['close'].iloc[i]
+        price = df["close"].iloc[i]
 
         if position:
-            bars = i - position['idx']
-            exit_cond = (position['dir'] == 1 and score < 0) or \
-                       (position['dir'] == -1 and score > 0) or bars >= 36
+            bars = i - position["idx"]
+            exit_cond = (
+                (position["dir"] == 1 and score < 0)
+                or (position["dir"] == -1 and score > 0)
+                or bars >= 36
+            )
 
             if exit_cond:
-                gross = (price / position['entry'] - 1) * position['dir']
+                gross = (price / position["entry"] - 1) * position["dir"]
                 cost = cost_model.calc_cost(bars)
                 net = gross - cost
-                pnl = position['val'] * net
-                trades.append({'pnl': pnl, 'pct': net, 'bars': bars})
+                pnl = position["val"] * net
+                trades.append({"pnl": pnl, "pct": net, "bars": bars})
                 capital += pnl
                 position = None
 
         if not position and abs(score) >= 4.0 and capital > 0:
             mult = min(abs(score) / 4.0, 2.0)
             position = {
-                'entry': price, 'dir': 1 if score > 0 else -1,
-                'idx': i, 'val': capital * 0.2 * 2 * mult
+                "entry": price,
+                "dir": 1 if score > 0 else -1,
+                "idx": i,
+                "val": capital * 0.2 * 2 * mult,
             }
 
         equity.append(max(capital, 0))
@@ -243,7 +270,7 @@ def backtest_sequential(df: pd.DataFrame, mf_scores: pd.Series,
     if len(trades) < 5:
         return None
 
-    pnls = [t['pnl'] for t in trades]
+    pnls = [t["pnl"] for t in trades]
     eq = pd.Series(equity)
     mdd = ((eq - eq.expanding().max()) / eq.expanding().max()).min() * 100
 
@@ -263,13 +290,13 @@ def backtest_sequential(df: pd.DataFrame, mf_scores: pd.Series,
             streak = 0
 
     return {
-        'pf': min(pf, 999),
-        'ret': (capital / init_cap - 1) * 100,
-        'wr': wins / len(trades) * 100,
-        'mdd': mdd,
-        'trades': len(trades),
-        'max_loss_streak': max_loss_streak,
-        'trade_pcts': [t['pct'] for t in trades]
+        "pf": min(pf, 999),
+        "ret": (capital / init_cap - 1) * 100,
+        "wr": wins / len(trades) * 100,
+        "mdd": mdd,
+        "trades": len(trades),
+        "max_loss_streak": max_loss_streak,
+        "trade_pcts": [t["pct"] for t in trades],
     }
 
 
@@ -284,7 +311,7 @@ def monte_carlo(trade_pcts: List[float], n_sim: int = 5000) -> Dict:
         peak = cap
         mdd = 0
         for pct in shuffled:
-            cap *= (1 + pct)
+            cap *= 1 + pct
             if cap > peak:
                 peak = cap
             dd = (peak - cap) / peak
@@ -294,20 +321,22 @@ def monte_carlo(trade_pcts: List[float], n_sim: int = 5000) -> Dict:
 
     finals = np.array(finals)
     return {
-        'mean': (np.mean(finals) / 10000 - 1) * 100,
-        'median': (np.median(finals) / 10000 - 1) * 100,
-        'p5': (np.percentile(finals, 5) / 10000 - 1) * 100,
-        'p25': (np.percentile(finals, 25) / 10000 - 1) * 100,
-        'p75': (np.percentile(finals, 75) / 10000 - 1) * 100,
-        'p95': (np.percentile(finals, 95) / 10000 - 1) * 100,
-        'prob_profit': (finals > 10000).mean() * 100,
-        'prob_loss_10': (finals < 9000).mean() * 100,
-        'mean_mdd': np.mean(mdds) * 100,
-        'worst_mdd': np.max(mdds) * 100
+        "mean": (np.mean(finals) / 10000 - 1) * 100,
+        "median": (np.median(finals) / 10000 - 1) * 100,
+        "p5": (np.percentile(finals, 5) / 10000 - 1) * 100,
+        "p25": (np.percentile(finals, 25) / 10000 - 1) * 100,
+        "p75": (np.percentile(finals, 75) / 10000 - 1) * 100,
+        "p95": (np.percentile(finals, 95) / 10000 - 1) * 100,
+        "prob_profit": (finals > 10000).mean() * 100,
+        "prob_loss_10": (finals < 9000).mean() * 100,
+        "mean_mdd": np.mean(mdds) * 100,
+        "worst_mdd": np.max(mdds) * 100,
     }
 
 
-def stress_test(df: pd.DataFrame, scores: pd.Series, cost_model: ProductionCostModel) -> Dict:
+def stress_test(
+    df: pd.DataFrame, scores: pd.Series, cost_model: ProductionCostModel
+) -> Dict:
     """위기 기간 테스트"""
     periods = [
         ("Luna Crash", "2022-05-01", "2022-05-31"),
@@ -329,34 +358,40 @@ def stress_test(df: pd.DataFrame, scores: pd.Series, cost_model: ProductionCostM
 
         for i in range(mask.sum()):
             idx = df[mask].index[i]
-            price = df.loc[idx, 'close']
+            price = df.loc[idx, "close"]
             score = scores.loc[idx] if idx in scores.index else 0
 
             if pos:
-                bars = i - pos['i']
-                exit_c = (pos['d'] == 1 and score < 0) or (pos['d'] == -1 and score > 0) or bars >= 36
+                bars = i - pos["i"]
+                exit_c = (
+                    (pos["d"] == 1 and score < 0)
+                    or (pos["d"] == -1 and score > 0)
+                    or bars >= 36
+                )
                 if exit_c:
-                    gross = (price / pos['e'] - 1) * pos['d']
+                    gross = (price / pos["e"] - 1) * pos["d"]
                     net = gross - cost_model.calc_cost(bars)
                     trades.append(cap * 0.4 * net)
                     cap += trades[-1]
                     pos = None
 
             if not pos and abs(score) >= 4.0:
-                pos = {'e': price, 'd': 1 if score > 0 else -1, 'i': i}
+                pos = {"e": price, "d": 1 if score > 0 else -1, "i": i}
 
         if trades:
             wins = sum(1 for t in trades if t > 0)
             results[name] = {
-                'ret': (cap / 10000 - 1) * 100,
-                'wr': wins / len(trades) * 100 if trades else 0,
-                'trades': len(trades)
+                "ret": (cap / 10000 - 1) * 100,
+                "wr": wins / len(trades) * 100 if trades else 0,
+                "trades": len(trades),
             }
 
     return results
 
 
-def lag_test(df: pd.DataFrame, scores: pd.Series, cost_model: ProductionCostModel, lag: int) -> Dict:
+def lag_test(
+    df: pd.DataFrame, scores: pd.Series, cost_model: ProductionCostModel, lag: int
+) -> Dict:
     """신호 지연 테스트"""
     if len(df) < 300:
         return None
@@ -367,20 +402,23 @@ def lag_test(df: pd.DataFrame, scores: pd.Series, cost_model: ProductionCostMode
 
     for i in range(50 + lag, len(df)):
         score = scores.iloc[i - lag]
-        price = df['close'].iloc[i]
+        price = df["close"].iloc[i]
 
         if pos:
-            bars = i - pos['i']
-            exit_c = (pos['d'] == 1 and scores.iloc[i - lag] < 0) or \
-                    (pos['d'] == -1 and scores.iloc[i - lag] > 0) or bars >= 36
+            bars = i - pos["i"]
+            exit_c = (
+                (pos["d"] == 1 and scores.iloc[i - lag] < 0)
+                or (pos["d"] == -1 and scores.iloc[i - lag] > 0)
+                or bars >= 36
+            )
             if exit_c:
-                gross = (price / pos['e'] - 1) * pos['d']
+                gross = (price / pos["e"] - 1) * pos["d"]
                 trades.append(cap * 0.4 * (gross - cost_model.calc_cost(bars)))
                 cap += trades[-1]
                 pos = None
 
         if not pos and abs(score) >= 4.0:
-            pos = {'e': price, 'd': 1 if score > 0 else -1, 'i': i}
+            pos = {"e": price, "d": 1 if score > 0 else -1, "i": i}
 
     if len(trades) < 3:
         return None
@@ -390,10 +428,10 @@ def lag_test(df: pd.DataFrame, scores: pd.Series, cost_model: ProductionCostMode
     gl = abs(sum(t for t in trades if t < 0))
 
     return {
-        'lag_h': lag * 4,
-        'pf': gp / gl if gl > 0 else 999,
-        'ret': (cap / 10000 - 1) * 100,
-        'wr': wins / len(trades) * 100
+        "lag_h": lag * 4,
+        "pf": gp / gl if gl > 0 else 999,
+        "ret": (cap / 10000 - 1) * 100,
+        "wr": wins / len(trades) * 100,
     }
 
 
@@ -410,12 +448,38 @@ def main():
     mf = MultiFactorSignal()
 
     # 주요 30개 심볼
-    symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT', 'SOLUSDT',
-               'ADAUSDT', 'DOGEUSDT', 'DOTUSDT', 'AVAXUSDT', 'LINKUSDT',
-               'MATICUSDT', 'LTCUSDT', 'ATOMUSDT', 'UNIUSDT', 'ETCUSDT',
-               'NEARUSDT', 'APTUSDT', 'ARBUSDT', 'OPUSDT', 'LDOUSDT',
-               'FILUSDT', 'AAVEUSDT', 'MKRUSDT', 'SNXUSDT', 'COMPUSDT',
-               'RUNEUSDT', 'INJUSDT', 'SUIUSDT', 'SEIUSDT', 'TIAUSDT']
+    symbols = [
+        "BTCUSDT",
+        "ETHUSDT",
+        "BNBUSDT",
+        "XRPUSDT",
+        "SOLUSDT",
+        "ADAUSDT",
+        "DOGEUSDT",
+        "DOTUSDT",
+        "AVAXUSDT",
+        "LINKUSDT",
+        "MATICUSDT",
+        "LTCUSDT",
+        "ATOMUSDT",
+        "UNIUSDT",
+        "ETCUSDT",
+        "NEARUSDT",
+        "APTUSDT",
+        "ARBUSDT",
+        "OPUSDT",
+        "LDOUSDT",
+        "FILUSDT",
+        "AAVEUSDT",
+        "MKRUSDT",
+        "SNXUSDT",
+        "COMPUSDT",
+        "RUNEUSDT",
+        "INJUSDT",
+        "SUIUSDT",
+        "SEIUSDT",
+        "TIAUSDT",
+    ]
 
     # =========================================================================
     # TEST 1: Sequential Walk-Forward
@@ -439,18 +503,22 @@ def main():
         r = backtest_sequential(df, mf_scores, cost, retrain_bars=180)
 
         if r:
-            r['symbol'] = sym
+            r["symbol"] = sym
             results.append(r)
-            all_trades.extend(r['trade_pcts'])
-            status = "PASS" if r['pf'] > 1.0 else "FAIL"
-            logger.info(f"  [{status}] {sym:<12} PF={r['pf']:5.2f} Ret={r['ret']:+6.1f}% "
-                       f"WR={r['wr']:.0f}% MDD={r['mdd']:.1f}%")
+            all_trades.extend(r["trade_pcts"])
+            status = "PASS" if r["pf"] > 1.0 else "FAIL"
+            logger.info(
+                f"  [{status}] {sym:<12} PF={r['pf']:5.2f} Ret={r['ret']:+6.1f}% "
+                f"WR={r['wr']:.0f}% MDD={r['mdd']:.1f}%"
+            )
 
     if results:
         df_r = pd.DataFrame(results)
-        profitable = (df_r['pf'] > 1.0).sum()
+        profitable = (df_r["pf"] > 1.0).sum()
         logger.info(f"\n[Summary]")
-        logger.info(f"  Profitable: {profitable}/{len(results)} ({profitable/len(results)*100:.1f}%)")
+        logger.info(
+            f"  Profitable: {profitable}/{len(results)} ({profitable/len(results)*100:.1f}%)"
+        )
         logger.info(f"  Avg PF: {df_r[df_r['pf'] < 999]['pf'].mean():.2f}")
         logger.info(f"  Avg Return: {df_r['ret'].mean():+.1f}%")
         logger.info(f"  Avg MDD: {df_r['mdd'].mean():.1f}%")
@@ -486,7 +554,7 @@ def main():
     logger.info("TEST 3: STRESS TEST (Crisis Periods)")
     logger.info("=" * 70)
 
-    for sym in ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']:
+    for sym in ["BTCUSDT", "ETHUSDT", "SOLUSDT"]:
         df = loader.load_ohlcv(sym)
         if df.empty:
             continue
@@ -502,8 +570,12 @@ def main():
         if stress:
             logger.info(f"\n[{sym}]")
             for name, r in stress.items():
-                status = "PASS" if r['ret'] > -15 else "WARN" if r['ret'] > -25 else "FAIL"
-                logger.info(f"  [{status}] {name:<15} Ret={r['ret']:+.1f}% WR={r['wr']:.0f}%")
+                status = (
+                    "PASS" if r["ret"] > -15 else "WARN" if r["ret"] > -25 else "FAIL"
+                )
+                logger.info(
+                    f"  [{status}] {name:<15} Ret={r['ret']:+.1f}% WR={r['wr']:.0f}%"
+                )
 
     # =========================================================================
     # TEST 4: Execution Lag
@@ -512,7 +584,7 @@ def main():
     logger.info("TEST 4: EXECUTION LAG TEST")
     logger.info("=" * 70)
 
-    for sym in ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']:
+    for sym in ["BTCUSDT", "ETHUSDT", "SOLUSDT"]:
         df = loader.load_ohlcv(sym)
         if df.empty:
             continue
@@ -527,8 +599,10 @@ def main():
         for lag in [0, 1, 2, 3]:
             r = lag_test(df, scores, cost, lag)
             if r:
-                status = "PASS" if r['ret'] > 0 else "FAIL"
-                logger.info(f"  [{status}] Lag {r['lag_h']:2d}h: PF={r['pf']:5.2f} Ret={r['ret']:+6.1f}%")
+                status = "PASS" if r["ret"] > 0 else "FAIL"
+                logger.info(
+                    f"  [{status}] Lag {r['lag_h']:2d}h: PF={r['pf']:5.2f} Ret={r['ret']:+6.1f}%"
+                )
 
     # =========================================================================
     # TEST 5: Kelly Criterion
@@ -571,34 +645,44 @@ def main():
     # C1: Walk-Forward Profitable >= 40%
     if results:
         df_r = pd.DataFrame(results)
-        wf_rate = (df_r['pf'] > 1.0).sum() / len(df_r) * 100
+        wf_rate = (df_r["pf"] > 1.0).sum() / len(df_r) * 100
         c1 = wf_rate >= 40
-        logger.info(f"\n  [{'PASS' if c1 else 'FAIL'}] Walk-Forward Profitable >= 40%: {wf_rate:.1f}%")
+        logger.info(
+            f"\n  [{'PASS' if c1 else 'FAIL'}] Walk-Forward Profitable >= 40%: {wf_rate:.1f}%"
+        )
         criteria.append(c1)
 
     # C2: Monte Carlo Profit Prob >= 55%
     if all_trades:
-        c2 = mc['prob_profit'] >= 55
-        logger.info(f"  [{'PASS' if c2 else 'FAIL'}] MC Profit Probability >= 55%: {mc['prob_profit']:.1f}%")
+        c2 = mc["prob_profit"] >= 55
+        logger.info(
+            f"  [{'PASS' if c2 else 'FAIL'}] MC Profit Probability >= 55%: {mc['prob_profit']:.1f}%"
+        )
         criteria.append(c2)
 
     # C3: Worst Case (5%) >= -30%
     if all_trades:
-        c3 = mc['p5'] >= -30
-        logger.info(f"  [{'PASS' if c3 else 'FAIL'}] MC 5% Percentile >= -30%: {mc['p5']:.1f}%")
+        c3 = mc["p5"] >= -30
+        logger.info(
+            f"  [{'PASS' if c3 else 'FAIL'}] MC 5% Percentile >= -30%: {mc['p5']:.1f}%"
+        )
         criteria.append(c3)
 
     # C4: Avg Return > 0
     if results:
-        avg_ret = df_r['ret'].mean()
+        avg_ret = df_r["ret"].mean()
         c4 = avg_ret > 0
-        logger.info(f"  [{'PASS' if c4 else 'FAIL'}] Average Return > 0%: {avg_ret:.1f}%")
+        logger.info(
+            f"  [{'PASS' if c4 else 'FAIL'}] Average Return > 0%: {avg_ret:.1f}%"
+        )
         criteria.append(c4)
 
     # C5: Kelly >= 5%
     if all_trades and wins and losses:
         c5 = half_kelly >= 0.05
-        logger.info(f"  [{'PASS' if c5 else 'FAIL'}] Half Kelly >= 5%: {max(0,half_kelly)*100:.1f}%")
+        logger.info(
+            f"  [{'PASS' if c5 else 'FAIL'}] Half Kelly >= 5%: {max(0,half_kelly)*100:.1f}%"
+        )
         criteria.append(c5)
 
     passed = sum(criteria)
@@ -619,7 +703,7 @@ def main():
     if results:
         logger.info(f"\n[Top 5 Performers]")
         df_r = pd.DataFrame(results)
-        top5 = df_r.nlargest(5, 'pf')
+        top5 = df_r.nlargest(5, "pf")
         for _, r in top5.iterrows():
             logger.info(f"  {r['symbol']:<12} PF={r['pf']:5.2f} Ret={r['ret']:+6.1f}%")
 
@@ -627,7 +711,12 @@ def main():
         df_r.to_csv(DATA_ROOT / "mf_ml_production_fast.csv", index=False)
         logger.info(f"\nSaved: {DATA_ROOT / 'mf_ml_production_fast.csv'}")
 
-    return {'results': results, 'mc': mc if all_trades else None, 'passed': passed, 'total': total}
+    return {
+        "results": results,
+        "mc": mc if all_trades else None,
+        "passed": passed,
+        "total": total,
+    }
 
 
 if __name__ == "__main__":

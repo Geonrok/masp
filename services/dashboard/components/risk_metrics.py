@@ -1,4 +1,5 @@
 """Risk metrics panel component for portfolio risk analysis."""
+
 from __future__ import annotations
 
 import math
@@ -57,6 +58,7 @@ def _sanitize_returns(returns: List[float]) -> List[float]:
 @dataclass
 class RiskMetrics:
     """Portfolio risk metrics."""
+
     sharpe_ratio: float
     sortino_ratio: float
     max_drawdown_pct: float
@@ -146,7 +148,7 @@ def calculate_sortino_ratio(
     if not downside:
         return 0.0  # No downside, return 0 instead of inf for display
 
-    downside_variance = sum(r ** 2 for r in downside) / len(downside)
+    downside_variance = sum(r**2 for r in downside) / len(downside)
     downside_std = _safe_sqrt(downside_variance)
 
     if downside_std == 0:
@@ -331,12 +333,36 @@ def _get_demo_returns() -> List[float]:
     """Generate deterministic demo daily returns."""
     # Fixed pattern: mix of positive and negative returns
     base_returns = [
-        0.012, -0.008, 0.005, 0.003, -0.015,
-        0.018, -0.002, 0.007, -0.010, 0.004,
-        0.009, -0.006, 0.011, 0.002, -0.012,
-        0.006, -0.004, 0.015, -0.003, 0.008,
-        -0.007, 0.010, 0.001, -0.009, 0.013,
-        0.004, -0.011, 0.006, 0.009, -0.005,
+        0.012,
+        -0.008,
+        0.005,
+        0.003,
+        -0.015,
+        0.018,
+        -0.002,
+        0.007,
+        -0.010,
+        0.004,
+        0.009,
+        -0.006,
+        0.011,
+        0.002,
+        -0.012,
+        0.006,
+        -0.004,
+        0.015,
+        -0.003,
+        0.008,
+        -0.007,
+        0.010,
+        0.001,
+        -0.009,
+        0.013,
+        0.004,
+        -0.011,
+        0.006,
+        0.009,
+        -0.005,
     ]
     # Repeat pattern to simulate 90 trading days (approx 4 months)
     return (base_returns * 3)[:90]
@@ -398,7 +424,9 @@ def _generate_returns_from_equity(equity_curve: List[float]) -> List[float]:
     return returns
 
 
-def _generate_dates_for_length(length: int, base_date: Optional[date] = None) -> List[date]:
+def _generate_dates_for_length(
+    length: int, base_date: Optional[date] = None
+) -> List[date]:
     """Generate date series for given length."""
     if base_date is None:
         base_date = date(2026, 1, 15)

@@ -227,7 +227,9 @@ class Validator:
             sanitized_value=sanitized_data,
         )
 
-    def validate_or_raise(self, data: Dict[str, Any], context: str = "") -> Dict[str, Any]:
+    def validate_or_raise(
+        self, data: Dict[str, Any], context: str = ""
+    ) -> Dict[str, Any]:
         """Validate and return sanitized data or raise ValidationError."""
         result = self.validate(data)
         if not result.valid:
@@ -236,6 +238,7 @@ class Validator:
 
 
 # Pre-built validators for common use cases
+
 
 class OrderValidator:
     """Validator for order parameters."""
@@ -326,7 +329,9 @@ class PriceValidator:
         validator.add_field("high", required=True, field_type=float, min_value=0)
         validator.add_field("low", required=True, field_type=float, min_value=0)
         validator.add_field("close", required=True, field_type=float, min_value=0)
-        validator.add_field("volume", required=False, field_type=float, min_value=0, default=0)
+        validator.add_field(
+            "volume", required=False, field_type=float, min_value=0, default=0
+        )
 
         result = validator.validate(data)
 
@@ -583,6 +588,8 @@ def sanitize_symbol(
         symbol = symbol.upper()
 
     if not symbol:
-        raise ValidationError("Symbol contains no valid characters", error_code="INVALID_SYMBOL")
+        raise ValidationError(
+            "Symbol contains no valid characters", error_code="INVALID_SYMBOL"
+        )
 
     return symbol

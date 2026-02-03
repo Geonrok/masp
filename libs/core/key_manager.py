@@ -146,9 +146,9 @@ class KeyManager:
                     key_data["api_key"].encode()
                 ).decode()
                 result[exchange] = {
-                    "api_key": decrypted_api[:8] + "..."
-                    if len(decrypted_api) > 8
-                    else "***",
+                    "api_key": (
+                        decrypted_api[:8] + "..." if len(decrypted_api) > 8 else "***"
+                    ),
                     "has_secret": bool(key_data.get("secret_key")),
                     "updated_at": key_data.get("updated_at", ""),
                 }
@@ -171,9 +171,7 @@ class KeyManager:
 
         try:
             return {
-                "api_key": self._fernet.decrypt(
-                    key_data["api_key"].encode()
-                ).decode(),
+                "api_key": self._fernet.decrypt(key_data["api_key"].encode()).decode(),
                 "secret_key": self._fernet.decrypt(
                     key_data["secret_key"].encode()
                 ).decode(),

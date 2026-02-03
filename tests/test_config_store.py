@@ -91,11 +91,7 @@ def test_config_store_bootstrap_when_exchanges_empty(tmp_path: Path):
     schedule_path = schedule_dir / "schedule_config.json"
     schedule_path.write_text(
         json.dumps(
-            {
-                "exchanges": {
-                    "test_upbit": {"enabled": True, "symbols": "ALL_KRW"}
-                }
-            }
+            {"exchanges": {"test_upbit": {"enabled": True, "symbols": "ALL_KRW"}}}
         ),
         encoding="utf-8",
     )

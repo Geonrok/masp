@@ -1,4 +1,5 @@
 """Scheduler status component for displaying scheduled job information."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -229,7 +230,9 @@ def _get_demo_jobs() -> List[ScheduledJob]:
             ),
             last_execution=JobExecution(
                 started_at=base_time - timedelta(minutes=2),
-                finished_at=base_time - timedelta(minutes=2) + timedelta(seconds=1, milliseconds=245),
+                finished_at=base_time
+                - timedelta(minutes=2)
+                + timedelta(seconds=1, milliseconds=245),
                 status=JobStatus.COMPLETED,
                 duration_ms=1245,
             ),
@@ -312,7 +315,9 @@ def _get_demo_jobs() -> List[ScheduledJob]:
             ),
             last_execution=JobExecution(
                 started_at=base_time - timedelta(minutes=2),
-                finished_at=base_time - timedelta(minutes=2) + timedelta(seconds=0, milliseconds=500),
+                finished_at=base_time
+                - timedelta(minutes=2)
+                + timedelta(seconds=0, milliseconds=500),
                 status=JobStatus.FAILED,
                 duration_ms=500,
                 error_message="API rate limit exceeded",
@@ -374,7 +379,9 @@ def _get_scheduler_summary(jobs: List[ScheduledJob]) -> Dict[str, Any]:
         "paused": status_counts.get(JobStatus.PAUSED, 0),
         "total_executions": total_executions,
         "total_failures": total_failures,
-        "overall_success_rate": _calculate_success_rate(total_executions, total_failures),
+        "overall_success_rate": _calculate_success_rate(
+            total_executions, total_failures
+        ),
     }
 
 

@@ -5,6 +5,7 @@ Cryptocurrency Options Strategy Backtester
 - Tests various options strategies: Covered Call, Protective Put, Straddle, etc.
 - Integrates with Multi-Factor signals for entry timing
 """
+
 from __future__ import annotations
 
 import logging
@@ -18,7 +19,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
 DATA_ROOT = Path("E:/data/crypto_ohlcv")
 
@@ -33,6 +34,7 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 # Black-Scholes Option Pricing
 # ============================================================================
+
 
 def black_scholes_call(S, K, T, r, sigma):
     """Calculate call option price using Black-Scholes"""
@@ -59,8 +61,14 @@ def calc_historical_volatility(prices: pd.Series, window: int = 30) -> pd.Series
     return returns.rolling(window).std() * np.sqrt(6 * 365)
 
 
-def calc_ema(s, p): return s.ewm(span=p, adjust=False).mean()
-def calc_sma(s, p): return s.rolling(p).mean()
+def calc_ema(s, p):
+    return s.ewm(span=p, adjust=False).mean()
+
+
+def calc_sma(s, p):
+    return s.rolling(p).mean()
+
+
 def calc_rsi(s, p=14):
     d = s.diff()
     g = d.where(d > 0, 0).rolling(p).mean()
@@ -71,6 +79,7 @@ def calc_rsi(s, p=14):
 # ============================================================================
 # Data Loader
 # ============================================================================
+
 
 class DataLoader:
     def __init__(self):
@@ -91,7 +100,9 @@ class DataLoader:
                         df[col] = pd.to_datetime(df[col])
                         df = df.set_index(col)
                         break
-                if all(c in df.columns for c in ["open", "high", "low", "close", "volume"]):
+                if all(
+                    c in df.columns for c in ["open", "high", "low", "close", "volume"]
+                ):
                     df = df[["open", "high", "low", "close", "volume"]].sort_index()
                     self._cache[key] = df
                     return df.copy()
@@ -115,6 +126,7 @@ class DataLoader:
 # ============================================================================
 # Options Strategies
 # ============================================================================
+
 
 class OptionStrategy(Enum):
     COVERED_CALL = "covered_call"
@@ -172,40 +184,44 @@ class OptionsBacktester:
         - Enter when signal > 0 (bullish but limited upside expected)
         - Strike: 5% OTM
         """
-        vol = calc_historical_volatility(df['close'], 30)
+        vol = calc_historical_volatility(df["close"], 30)
         trades = []
         equity = [10000]
         capital = 10000
         position = None
 
         for i in range(50, len(df) - self.expiry_bars):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             signal = signals.iloc[i] if i < len(signals) else 0
             sigma = vol.iloc[i] if not pd.isna(vol.iloc[i]) else 0.8
 
             # Check for expiry
-            if position and i >= position['expiry_idx']:
-                expiry_price = df['close'].iloc[position['expiry_idx']]
-                strike = position['strike']
-                premium = position['premium']
+            if position and i >= position["expiry_idx"]:
+                expiry_price = df["close"].iloc[position["expiry_idx"]]
+                strike = position["strike"]
+                premium = position["premium"]
 
                 # P&L calculation
-                underlying_pnl = (expiry_price - position['entry']) * position['contracts']
+                underlying_pnl = (expiry_price - position["entry"]) * position[
+                    "contracts"
+                ]
 
                 # Call assignment if ITM
                 if expiry_price > strike:
                     # Called away at strike
-                    call_pnl = -(expiry_price - strike) * position['contracts']
+                    call_pnl = -(expiry_price - strike) * position["contracts"]
                 else:
                     # Keep premium
                     call_pnl = 0
 
                 total_pnl = underlying_pnl + call_pnl + premium
-                trades.append({
-                    'pnl': total_pnl,
-                    'premium': premium,
-                    'assigned': expiry_price > strike
-                })
+                trades.append(
+                    {
+                        "pnl": total_pnl,
+                        "premium": premium,
+                        "assigned": expiry_price > strike,
+                    }
+                )
                 capital += total_pnl
                 position = None
 
@@ -217,11 +233,11 @@ class OptionsBacktester:
 
                 contracts = (capital * 0.3) / price  # 30% position size
                 position = {
-                    'entry': price,
-                    'strike': strike,
-                    'premium': premium * contracts,
-                    'contracts': contracts,
-                    'expiry_idx': i + self.expiry_bars
+                    "entry": price,
+                    "strike": strike,
+                    "premium": premium * contracts,
+                    "contracts": contracts,
+                    "expiry_idx": i + self.expiry_bars,
                 }
                 capital -= price * contracts * self.commission_rate
 
@@ -229,41 +245,45 @@ class OptionsBacktester:
 
         return self._calc_result("Covered Call", "BTCUSDT", trades, equity)
 
-    def run_cash_secured_put(self, df: pd.DataFrame, signals: pd.Series) -> StrategyResult:
+    def run_cash_secured_put(
+        self, df: pd.DataFrame, signals: pd.Series
+    ) -> StrategyResult:
         """
         Cash-Secured Put: Sell OTM puts with cash collateral
         - Enter when signal > 0 (want to buy dip)
         - Strike: 5% OTM (below current price)
         """
-        vol = calc_historical_volatility(df['close'], 30)
+        vol = calc_historical_volatility(df["close"], 30)
         trades = []
         equity = [10000]
         capital = 10000
         position = None
 
         for i in range(50, len(df) - self.expiry_bars):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             signal = signals.iloc[i] if i < len(signals) else 0
             sigma = vol.iloc[i] if not pd.isna(vol.iloc[i]) else 0.8
 
-            if position and i >= position['expiry_idx']:
-                expiry_price = df['close'].iloc[position['expiry_idx']]
-                strike = position['strike']
-                premium = position['premium']
+            if position and i >= position["expiry_idx"]:
+                expiry_price = df["close"].iloc[position["expiry_idx"]]
+                strike = position["strike"]
+                premium = position["premium"]
 
                 if expiry_price < strike:
                     # Assigned - must buy at strike
-                    assignment_loss = (strike - expiry_price) * position['contracts']
+                    assignment_loss = (strike - expiry_price) * position["contracts"]
                     total_pnl = premium - assignment_loss
                 else:
                     # Keep full premium
                     total_pnl = premium
 
-                trades.append({
-                    'pnl': total_pnl,
-                    'premium': premium,
-                    'assigned': expiry_price < strike
-                })
+                trades.append(
+                    {
+                        "pnl": total_pnl,
+                        "premium": premium,
+                        "assigned": expiry_price < strike,
+                    }
+                )
                 capital += total_pnl
                 position = None
 
@@ -275,51 +295,57 @@ class OptionsBacktester:
                 # Position size based on cash needed for assignment
                 contracts = (capital * 0.3) / strike
                 position = {
-                    'strike': strike,
-                    'premium': premium * contracts,
-                    'contracts': contracts,
-                    'expiry_idx': i + self.expiry_bars
+                    "strike": strike,
+                    "premium": premium * contracts,
+                    "contracts": contracts,
+                    "expiry_idx": i + self.expiry_bars,
                 }
 
             equity.append(capital)
 
         return self._calc_result("Cash-Secured Put", "BTCUSDT", trades, equity)
 
-    def run_protective_put(self, df: pd.DataFrame, signals: pd.Series) -> StrategyResult:
+    def run_protective_put(
+        self, df: pd.DataFrame, signals: pd.Series
+    ) -> StrategyResult:
         """
         Protective Put: Long underlying + Long ATM put (insurance)
         - Enter when signal > 2 (strong bullish but want protection)
         """
-        vol = calc_historical_volatility(df['close'], 30)
+        vol = calc_historical_volatility(df["close"], 30)
         trades = []
         equity = [10000]
         capital = 10000
         position = None
 
         for i in range(50, len(df) - self.expiry_bars):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             signal = signals.iloc[i] if i < len(signals) else 0
             sigma = vol.iloc[i] if not pd.isna(vol.iloc[i]) else 0.8
 
-            if position and i >= position['expiry_idx']:
-                expiry_price = df['close'].iloc[position['expiry_idx']]
-                strike = position['strike']
-                premium_paid = position['premium']
+            if position and i >= position["expiry_idx"]:
+                expiry_price = df["close"].iloc[position["expiry_idx"]]
+                strike = position["strike"]
+                premium_paid = position["premium"]
 
-                underlying_pnl = (expiry_price - position['entry']) * position['contracts']
+                underlying_pnl = (expiry_price - position["entry"]) * position[
+                    "contracts"
+                ]
 
                 # Put payoff
                 if expiry_price < strike:
-                    put_payoff = (strike - expiry_price) * position['contracts']
+                    put_payoff = (strike - expiry_price) * position["contracts"]
                 else:
                     put_payoff = 0
 
                 total_pnl = underlying_pnl + put_payoff - premium_paid
-                trades.append({
-                    'pnl': total_pnl,
-                    'premium': -premium_paid,
-                    'protected': expiry_price < strike
-                })
+                trades.append(
+                    {
+                        "pnl": total_pnl,
+                        "premium": -premium_paid,
+                        "protected": expiry_price < strike,
+                    }
+                )
                 capital += total_pnl
                 position = None
 
@@ -330,11 +356,11 @@ class OptionsBacktester:
 
                 contracts = (capital * 0.3) / price
                 position = {
-                    'entry': price,
-                    'strike': strike,
-                    'premium': premium * contracts,
-                    'contracts': contracts,
-                    'expiry_idx': i + self.expiry_bars
+                    "entry": price,
+                    "strike": strike,
+                    "premium": premium * contracts,
+                    "contracts": contracts,
+                    "expiry_idx": i + self.expiry_bars,
                 }
                 capital -= (price + premium) * contracts * self.commission_rate
 
@@ -348,7 +374,7 @@ class OptionsBacktester:
         - Profit from large moves in either direction
         - Enter when volatility is low but expected to increase
         """
-        vol = calc_historical_volatility(df['close'], 30)
+        vol = calc_historical_volatility(df["close"], 30)
         vol_ma = vol.rolling(60).mean()
         trades = []
         equity = [10000]
@@ -356,24 +382,26 @@ class OptionsBacktester:
         position = None
 
         for i in range(100, len(df) - self.expiry_bars):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             sigma = vol.iloc[i] if not pd.isna(vol.iloc[i]) else 0.8
             sigma_ma = vol_ma.iloc[i] if not pd.isna(vol_ma.iloc[i]) else sigma
 
-            if position and i >= position['expiry_idx']:
-                expiry_price = df['close'].iloc[position['expiry_idx']]
-                strike = position['strike']
-                premium_paid = position['premium']
+            if position and i >= position["expiry_idx"]:
+                expiry_price = df["close"].iloc[position["expiry_idx"]]
+                strike = position["strike"]
+                premium_paid = position["premium"]
 
-                call_payoff = max(expiry_price - strike, 0) * position['contracts']
-                put_payoff = max(strike - expiry_price, 0) * position['contracts']
+                call_payoff = max(expiry_price - strike, 0) * position["contracts"]
+                put_payoff = max(strike - expiry_price, 0) * position["contracts"]
 
                 total_pnl = call_payoff + put_payoff - premium_paid
-                trades.append({
-                    'pnl': total_pnl,
-                    'premium': -premium_paid,
-                    'move_pct': abs(expiry_price - strike) / strike * 100
-                })
+                trades.append(
+                    {
+                        "pnl": total_pnl,
+                        "premium": -premium_paid,
+                        "move_pct": abs(expiry_price - strike) / strike * 100,
+                    }
+                )
                 capital += total_pnl
                 position = None
 
@@ -387,23 +415,25 @@ class OptionsBacktester:
 
                 contracts = (capital * 0.2) / total_premium
                 position = {
-                    'strike': strike,
-                    'premium': total_premium * contracts,
-                    'contracts': contracts,
-                    'expiry_idx': i + self.expiry_bars
+                    "strike": strike,
+                    "premium": total_premium * contracts,
+                    "contracts": contracts,
+                    "expiry_idx": i + self.expiry_bars,
                 }
 
             equity.append(capital)
 
         return self._calc_result("Long Straddle", "BTCUSDT", trades, equity)
 
-    def run_short_straddle(self, df: pd.DataFrame, signals: pd.Series) -> StrategyResult:
+    def run_short_straddle(
+        self, df: pd.DataFrame, signals: pd.Series
+    ) -> StrategyResult:
         """
         Short Straddle: Short ATM call + Short ATM put
         - Profit from low volatility / sideways market
         - Enter when volatility is high and expected to decrease
         """
-        vol = calc_historical_volatility(df['close'], 30)
+        vol = calc_historical_volatility(df["close"], 30)
         vol_ma = vol.rolling(60).mean()
         trades = []
         equity = [10000]
@@ -411,24 +441,26 @@ class OptionsBacktester:
         position = None
 
         for i in range(100, len(df) - self.expiry_bars):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             sigma = vol.iloc[i] if not pd.isna(vol.iloc[i]) else 0.8
             sigma_ma = vol_ma.iloc[i] if not pd.isna(vol_ma.iloc[i]) else sigma
 
-            if position and i >= position['expiry_idx']:
-                expiry_price = df['close'].iloc[position['expiry_idx']]
-                strike = position['strike']
-                premium_received = position['premium']
+            if position and i >= position["expiry_idx"]:
+                expiry_price = df["close"].iloc[position["expiry_idx"]]
+                strike = position["strike"]
+                premium_received = position["premium"]
 
-                call_loss = max(expiry_price - strike, 0) * position['contracts']
-                put_loss = max(strike - expiry_price, 0) * position['contracts']
+                call_loss = max(expiry_price - strike, 0) * position["contracts"]
+                put_loss = max(strike - expiry_price, 0) * position["contracts"]
 
                 total_pnl = premium_received - call_loss - put_loss
-                trades.append({
-                    'pnl': total_pnl,
-                    'premium': premium_received,
-                    'move_pct': abs(expiry_price - strike) / strike * 100
-                })
+                trades.append(
+                    {
+                        "pnl": total_pnl,
+                        "premium": premium_received,
+                        "move_pct": abs(expiry_price - strike) / strike * 100,
+                    }
+                )
                 capital += total_pnl
                 position = None
 
@@ -442,10 +474,10 @@ class OptionsBacktester:
 
                 contracts = (capital * 0.15) / price  # Smaller size due to risk
                 position = {
-                    'strike': strike,
-                    'premium': total_premium * contracts,
-                    'contracts': contracts,
-                    'expiry_idx': i + self.expiry_bars
+                    "strike": strike,
+                    "premium": total_premium * contracts,
+                    "contracts": contracts,
+                    "expiry_idx": i + self.expiry_bars,
                 }
 
             equity.append(capital)
@@ -458,7 +490,7 @@ class OptionsBacktester:
         - Profit from range-bound market
         - Limited risk, limited reward
         """
-        vol = calc_historical_volatility(df['close'], 30)
+        vol = calc_historical_volatility(df["close"], 30)
         vol_ma = vol.rolling(60).mean()
         trades = []
         equity = [10000]
@@ -466,20 +498,20 @@ class OptionsBacktester:
         position = None
 
         for i in range(100, len(df) - self.expiry_bars):
-            price = df['close'].iloc[i]
+            price = df["close"].iloc[i]
             sigma = vol.iloc[i] if not pd.isna(vol.iloc[i]) else 0.8
             sigma_ma = vol_ma.iloc[i] if not pd.isna(vol_ma.iloc[i]) else sigma
 
-            if position and i >= position['expiry_idx']:
-                expiry_price = df['close'].iloc[position['expiry_idx']]
+            if position and i >= position["expiry_idx"]:
+                expiry_price = df["close"].iloc[position["expiry_idx"]]
 
                 # Calculate P&L for each leg
-                put_short_strike = position['put_short']
-                put_long_strike = position['put_long']
-                call_short_strike = position['call_short']
-                call_long_strike = position['call_long']
-                premium = position['premium']
-                contracts = position['contracts']
+                put_short_strike = position["put_short"]
+                put_long_strike = position["put_long"]
+                call_short_strike = position["call_short"]
+                call_long_strike = position["call_long"]
+                premium = position["premium"]
+                contracts = position["contracts"]
 
                 # Put spread P&L
                 put_short_loss = max(put_short_strike - expiry_price, 0)
@@ -492,11 +524,13 @@ class OptionsBacktester:
                 call_spread_pnl = (call_long_gain - call_short_loss) * contracts
 
                 total_pnl = premium + put_spread_pnl + call_spread_pnl
-                trades.append({
-                    'pnl': total_pnl,
-                    'premium': premium,
-                    'in_range': put_short_strike < expiry_price < call_short_strike
-                })
+                trades.append(
+                    {
+                        "pnl": total_pnl,
+                        "premium": premium,
+                        "in_range": put_short_strike < expiry_price < call_short_strike,
+                    }
+                )
                 capital += total_pnl
                 position = None
 
@@ -513,37 +547,53 @@ class OptionsBacktester:
                 # Calculate premiums
                 put_short_prem = black_scholes_put(price, put_short, T, self.r, sigma)
                 put_long_prem = black_scholes_put(price, put_long, T, self.r, sigma)
-                call_short_prem = black_scholes_call(price, call_short, T, self.r, sigma)
+                call_short_prem = black_scholes_call(
+                    price, call_short, T, self.r, sigma
+                )
                 call_long_prem = black_scholes_call(price, call_long, T, self.r, sigma)
 
-                net_credit = (put_short_prem - put_long_prem + call_short_prem - call_long_prem)
+                net_credit = (
+                    put_short_prem - put_long_prem + call_short_prem - call_long_prem
+                )
 
                 if net_credit > 0:
-                    contracts = (capital * 0.2) / (price * 0.05)  # Max loss = width of spread
+                    contracts = (capital * 0.2) / (
+                        price * 0.05
+                    )  # Max loss = width of spread
                     position = {
-                        'put_short': put_short,
-                        'put_long': put_long,
-                        'call_short': call_short,
-                        'call_long': call_long,
-                        'premium': net_credit * contracts,
-                        'contracts': contracts,
-                        'expiry_idx': i + self.expiry_bars
+                        "put_short": put_short,
+                        "put_long": put_long,
+                        "call_short": call_short,
+                        "call_long": call_long,
+                        "premium": net_credit * contracts,
+                        "contracts": contracts,
+                        "expiry_idx": i + self.expiry_bars,
                     }
 
             equity.append(capital)
 
         return self._calc_result("Iron Condor", "BTCUSDT", trades, equity)
 
-    def _calc_result(self, strategy: str, symbol: str, trades: List[dict], equity: List[float]) -> StrategyResult:
+    def _calc_result(
+        self, strategy: str, symbol: str, trades: List[dict], equity: List[float]
+    ) -> StrategyResult:
         if not trades:
             return StrategyResult(
-                strategy=strategy, symbol=symbol, total_trades=0, winning_trades=0,
-                total_pnl=0, total_premium_collected=0, total_premium_paid=0,
-                win_rate=0, avg_trade_pnl=0, max_drawdown=0, sharpe_ratio=0
+                strategy=strategy,
+                symbol=symbol,
+                total_trades=0,
+                winning_trades=0,
+                total_pnl=0,
+                total_premium_collected=0,
+                total_premium_paid=0,
+                win_rate=0,
+                avg_trade_pnl=0,
+                max_drawdown=0,
+                sharpe_ratio=0,
             )
 
-        pnls = [t['pnl'] for t in trades]
-        premiums = [t.get('premium', 0) for t in trades]
+        pnls = [t["pnl"] for t in trades]
+        premiums = [t.get("premium", 0) for t in trades]
 
         equity_s = pd.Series(equity)
         drawdown = (equity_s - equity_s.expanding().max()) / equity_s.expanding().max()
@@ -562,7 +612,7 @@ class OptionsBacktester:
             win_rate=sum(1 for p in pnls if p > 0) / len(pnls) * 100,
             avg_trade_pnl=np.mean(pnls),
             max_drawdown=drawdown.min() * 100,
-            sharpe_ratio=sharpe
+            sharpe_ratio=sharpe,
         )
 
 
@@ -571,19 +621,22 @@ def generate_signals(df: pd.DataFrame, fear_greed: pd.DataFrame) -> pd.Series:
     scores = pd.Series(0.0, index=df.index)
 
     # Technical
-    ema20 = calc_ema(df['close'], 20)
-    ema50 = calc_ema(df['close'], 50)
-    rsi = calc_rsi(df['close'], 14)
+    ema20 = calc_ema(df["close"], 20)
+    ema50 = calc_ema(df["close"], 50)
+    rsi = calc_rsi(df["close"], 14)
 
-    tech = np.where((df['close'] > ema20) & (ema20 > ema50), 1.5,
-           np.where((df['close'] < ema20) & (ema20 < ema50), -1.5, 0))
+    tech = np.where(
+        (df["close"] > ema20) & (ema20 > ema50),
+        1.5,
+        np.where((df["close"] < ema20) & (ema20 < ema50), -1.5, 0),
+    )
 
     rsi_score = np.where(rsi < 30, 1, np.where(rsi > 70, -1, 0))
-    scores += (tech + rsi_score)
+    scores += tech + rsi_score
 
     # Fear & Greed
     if not fear_greed.empty:
-        fg = fear_greed['fear_greed'].reindex(df.index, method='ffill')
+        fg = fear_greed["fear_greed"].reindex(df.index, method="ffill")
         fg_score = np.where(fg < 25, 1.5, np.where(fg > 75, -1.5, 0))
         scores += pd.Series(fg_score, index=df.index).fillna(0)
 
@@ -618,7 +671,9 @@ def main():
         logger.info(f"\n{'='*70}")
         logger.info(f"Testing {symbol}")
         logger.info(f"{'='*70}")
-        logger.info(f"Period: {df.index.min().strftime('%Y-%m-%d')} ~ {df.index.max().strftime('%Y-%m-%d')}")
+        logger.info(
+            f"Period: {df.index.min().strftime('%Y-%m-%d')} ~ {df.index.max().strftime('%Y-%m-%d')}"
+        )
         logger.info(f"Data points: {len(df)}")
 
         signals = generate_signals(df, fear_greed)
@@ -634,7 +689,9 @@ def main():
             ("Iron Condor", backtester.run_iron_condor),
         ]
 
-        logger.info(f"\n{'Strategy':<20} {'Trades':>8} {'Win%':>8} {'Total PnL':>12} {'Avg PnL':>10} {'MDD':>10} {'Sharpe':>8}")
+        logger.info(
+            f"\n{'Strategy':<20} {'Trades':>8} {'Win%':>8} {'Total PnL':>12} {'Avg PnL':>10} {'MDD':>10} {'Sharpe':>8}"
+        )
         logger.info("-" * 80)
 
         for name, func in strategies:
@@ -642,9 +699,11 @@ def main():
             result.symbol = symbol
             all_results.append(result)
 
-            logger.info(f"{result.strategy:<20} {result.total_trades:>8} {result.win_rate:>7.1f}% "
-                       f"${result.total_pnl:>11.0f} ${result.avg_trade_pnl:>9.0f} "
-                       f"{result.max_drawdown:>9.1f}% {result.sharpe_ratio:>7.2f}")
+            logger.info(
+                f"{result.strategy:<20} {result.total_trades:>8} {result.win_rate:>7.1f}% "
+                f"${result.total_pnl:>11.0f} ${result.avg_trade_pnl:>9.0f} "
+                f"{result.max_drawdown:>9.1f}% {result.sharpe_ratio:>7.2f}"
+            )
 
     # Summary
     logger.info("\n" + "=" * 70)
@@ -658,7 +717,9 @@ def main():
             strategy_summary[r.strategy] = []
         strategy_summary[r.strategy].append(r)
 
-    logger.info(f"\n{'Strategy':<20} {'Avg Win%':>10} {'Avg PnL':>12} {'Avg MDD':>10} {'Avg Sharpe':>10}")
+    logger.info(
+        f"\n{'Strategy':<20} {'Avg Win%':>10} {'Avg PnL':>12} {'Avg MDD':>10} {'Avg Sharpe':>10}"
+    )
     logger.info("-" * 65)
 
     best_strategy = None
@@ -670,13 +731,17 @@ def main():
         avg_mdd = np.mean([r.max_drawdown for r in results])
         avg_sharpe = np.mean([r.sharpe_ratio for r in results])
 
-        logger.info(f"{strategy:<20} {avg_wr:>9.1f}% ${avg_pnl:>11.0f} {avg_mdd:>9.1f}% {avg_sharpe:>9.2f}")
+        logger.info(
+            f"{strategy:<20} {avg_wr:>9.1f}% ${avg_pnl:>11.0f} {avg_mdd:>9.1f}% {avg_sharpe:>9.2f}"
+        )
 
         if avg_sharpe > best_sharpe:
             best_sharpe = avg_sharpe
             best_strategy = strategy
 
-    logger.info(f"\nBest Strategy by Sharpe Ratio: {best_strategy} (Sharpe: {best_sharpe:.2f})")
+    logger.info(
+        f"\nBest Strategy by Sharpe Ratio: {best_strategy} (Sharpe: {best_sharpe:.2f})"
+    )
 
     # Recommendations
     logger.info("\n" + "=" * 70)

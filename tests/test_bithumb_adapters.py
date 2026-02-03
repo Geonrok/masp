@@ -14,18 +14,18 @@ def main() -> bool:
     print("Bithumb Adapters Test (READ ONLY)")
     print("⚠️ No actual orders will be placed")
     print("=" * 60)
-    
+
     # 1. 시세 어댑터 테스트
     print("\n[1] 시세 어댑터 초기화")
     from libs.adapters.real_bithumb_spot import BithumbSpotMarketData
-    
+
     try:
         market_data = BithumbSpotMarketData()
         print("  ✅ PASS")
     except ImportError as e:
         print(f"  ❌ FAIL: {e}")
         return False
-    
+
     # 2. BTC 현재가 조회
     print("\n[2] BTC/KRW 현재가 조회")
     quote = market_data.get_quote("BTC/KRW")
@@ -36,7 +36,7 @@ def main() -> bool:
     else:
         print("  ❌ FAIL: Quote unavailable")
         return False
-    
+
     # 3. 호가창 조회
     print("\n[3] BTC/KRW 호가창 조회")
     orderbook = market_data.get_orderbook("BTC/KRW", depth=3)
@@ -47,7 +47,7 @@ def main() -> bool:
     else:
         print("  ❌ FAIL: Orderbook unavailable")
         return False
-    
+
     # 4. OHLCV 조회
     print("\n[4] BTC/KRW OHLCV 조회")
     ohlcv = market_data.get_ohlcv("BTC/KRW", interval="1d", limit=5)
@@ -55,24 +55,26 @@ def main() -> bool:
         print(f"  Candles: {len(ohlcv)}")
         if ohlcv:
             latest = ohlcv[-1]
-            print(f"  Latest: O={latest.open:,.0f} H={latest.high:,.0f} L={latest.low:,.0f} C={latest.close:,.0f}")
+            print(
+                f"  Latest: O={latest.open:,.0f} H={latest.high:,.0f} L={latest.low:,.0f} C={latest.close:,.0f}"
+            )
         print("  ✅ PASS")
     else:
         print("  ⚠️ SKIP: OHLCV unavailable (pybithumb API limitation)")
         print("  ✅ PASS (non-critical)")
-    
+
     # 5. 전체 종목 조회
     print("\n[5] 전체 종목 조회")
     tickers = market_data.get_tickers()
     print(f"  Total tickers: {len(tickers)}")
     print(f"  Sample: {tickers[:5]}")
     print("  ✅ PASS")
-    
+
     # 6. 실주문 어댑터 테스트 (API 키 필요)
     print("\n[6] 실주문 어댑터 초기화")
     from libs.core.config import Config
     from libs.adapters.real_bithumb_execution import BithumbExecutionAdapter
-    
+
     try:
         config = Config(asset_class="crypto_spot", strategy_name="bithumb_test")
         execution = BithumbExecutionAdapter(config)
@@ -88,24 +90,24 @@ def main() -> bool:
     except ImportError as e:
         print(f"  ❌ FAIL: {e}")
         return False
-    
+
     # 7. KRW 잔고 조회
     print("\n[7] KRW 잔고 조회")
     krw_balance = execution.get_balance("KRW")
     print(f"  KRW Balance: {krw_balance:,.0f} KRW")
     print("  ✅ PASS")
-    
+
     # 8. Kill-Switch 상태
     print("\n[8] Kill-Switch 상태")
     kill_switch = config.is_kill_switch_active()
     print(f"  Kill-Switch: {'🔴 ACTIVE' if kill_switch else '✅ INACTIVE'}")
     print("  ✅ PASS")
-    
+
     print("\n" + "=" * 60)
     print("✅ All Tests Complete (8/8 PASS)")
     print("=" * 60)
     print("\n⚠️ 실제 주문 테스트는 별도로 신중하게 진행하세요")
-    
+
     return True
 
 

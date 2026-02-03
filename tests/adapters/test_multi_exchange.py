@@ -1,11 +1,11 @@
 """Tests for multi-exchange functionality."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 
 # =============================================================================
 # Exchange Registry Tests
@@ -287,7 +287,9 @@ def test_get_exchange_list_returns_list():
 
 def test_get_registry_summary():
     """Test get_registry_summary returns dict."""
-    from services.dashboard.providers.multi_exchange_provider import get_registry_summary
+    from services.dashboard.providers.multi_exchange_provider import (
+        get_registry_summary,
+    )
 
     result = get_registry_summary()
 
@@ -325,7 +327,9 @@ def test_get_demo_exchanges():
 
 def test_get_demo_price_comparison():
     """Test demo price comparison generation."""
-    from services.dashboard.components.multi_exchange_view import _get_demo_price_comparison
+    from services.dashboard.components.multi_exchange_view import (
+        _get_demo_price_comparison,
+    )
 
     comparison = _get_demo_price_comparison()
 

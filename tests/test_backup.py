@@ -51,7 +51,7 @@ def temp_project(tmp_path):
     """)
     conn.execute(
         "INSERT INTO events VALUES (?, ?, ?, ?)",
-        ("evt_001", datetime.now(timezone.utc).isoformat(), "TEST", '{"data": 1}')
+        ("evt_001", datetime.now(timezone.utc).isoformat(), "TEST", '{"data": 1}'),
     )
     conn.commit()
     conn.close()
@@ -65,15 +65,21 @@ def temp_project(tmp_path):
 
     # Create trade logs
     trade_log = logs_dir / "trades_2024-01-15.csv"
-    trade_log.write_text("timestamp,exchange,symbol,side,quantity,price\n2024-01-15,upbit,BTC,BUY,0.1,50000000\n")
+    trade_log.write_text(
+        "timestamp,exchange,symbol,side,quantity,price\n2024-01-15,upbit,BTC,BUY,0.1,50000000\n"
+    )
 
     # Create backtest result
     backtest_file = backtests_dir / "bt_20240115_120000.json"
-    backtest_file.write_text(json.dumps({
-        "strategy": "momentum",
-        "sharpe_ratio": 1.5,
-        "max_drawdown": -0.12,
-    }))
+    backtest_file.write_text(
+        json.dumps(
+            {
+                "strategy": "momentum",
+                "sharpe_ratio": 1.5,
+                "max_drawdown": -0.12,
+            }
+        )
+    )
 
     return tmp_path
 

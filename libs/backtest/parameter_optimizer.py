@@ -400,8 +400,12 @@ class WalkForwardOptimizer:
 
         # Calculate overall metrics
         if out_of_sample_results:
-            overall_oos_return = np.mean([r.total_return for r in out_of_sample_results])
-            overall_oos_sharpe = np.mean([r.sharpe_ratio for r in out_of_sample_results])
+            overall_oos_return = np.mean(
+                [r.total_return for r in out_of_sample_results]
+            )
+            overall_oos_sharpe = np.mean(
+                [r.sharpe_ratio for r in out_of_sample_results]
+            )
 
             # Robustness score: how consistent are parameters across folds
             param_stability = self._calculate_param_stability(best_params_per_fold)
@@ -465,6 +469,7 @@ class WalkForwardOptimizer:
             else:
                 # Categorical: use mode frequency
                 from collections import Counter
+
                 counts = Counter(values)
                 mode_freq = counts.most_common(1)[0][1] / len(values)
                 stability_scores.append(mode_freq)
@@ -559,7 +564,8 @@ class MonteCarloAnalyzer:
             ),
             "mean_max_drawdown": np.mean(simulated_drawdowns),
             "worst_case_drawdown": sorted_drawdowns[upper_idx],
-            "probability_profit": sum(1 for t in simulated_totals if t > 0) / self.n_simulations,
+            "probability_profit": sum(1 for t in simulated_totals if t > 0)
+            / self.n_simulations,
             "n_simulations": self.n_simulations,
             "confidence_level": self.confidence_level,
         }

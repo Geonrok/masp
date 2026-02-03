@@ -1,4 +1,5 @@
 """Tests for strategy performance component."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -294,7 +295,9 @@ def test_calculate_win_rate_zero_total():
 
 def test_calculate_profit_factor():
     """Test _calculate_profit_factor."""
-    from services.dashboard.components.strategy_performance import _calculate_profit_factor
+    from services.dashboard.components.strategy_performance import (
+        _calculate_profit_factor,
+    )
 
     # Gross profit: 1000 * 60 = 60000, Gross loss: 500 * 40 = 20000
     result = _calculate_profit_factor(1000.0, 500.0, 60, 40)
@@ -307,7 +310,9 @@ def test_calculate_profit_factor():
 
 def test_calculate_profit_factor_zero_loss():
     """Test _calculate_profit_factor with zero losses."""
-    from services.dashboard.components.strategy_performance import _calculate_profit_factor
+    from services.dashboard.components.strategy_performance import (
+        _calculate_profit_factor,
+    )
 
     result = _calculate_profit_factor(1000.0, 500.0, 60, 0)
     assert result == 0.0  # Division by zero returns default
@@ -357,7 +362,9 @@ def test_get_performance_summary():
 
 def test_get_performance_summary_empty():
     """Test _get_performance_summary with empty list."""
-    from services.dashboard.components.strategy_performance import _get_performance_summary
+    from services.dashboard.components.strategy_performance import (
+        _get_performance_summary,
+    )
 
     summary = _get_performance_summary([])
 
@@ -377,7 +384,9 @@ def test_get_return_indicator():
 
 def test_get_quality_indicator():
     """Test _get_quality_indicator based on Sharpe ratio."""
-    from services.dashboard.components.strategy_performance import _get_quality_indicator
+    from services.dashboard.components.strategy_performance import (
+        _get_quality_indicator,
+    )
 
     assert _get_quality_indicator(2.5) == "[EXCELLENT]"
     assert _get_quality_indicator(1.5) == "[GOOD]"
@@ -388,7 +397,9 @@ def test_get_quality_indicator():
 
 def test_get_performance_export_data():
     """Test get_performance_export_data returns valid structure."""
-    from services.dashboard.components.strategy_performance import get_performance_export_data
+    from services.dashboard.components.strategy_performance import (
+        get_performance_export_data,
+    )
 
     data = get_performance_export_data()
 
@@ -400,7 +411,9 @@ def test_get_performance_export_data():
 
 def test_get_performance_export_data_strategy_structure():
     """Test get_performance_export_data strategy structure."""
-    from services.dashboard.components.strategy_performance import get_performance_export_data
+    from services.dashboard.components.strategy_performance import (
+        get_performance_export_data,
+    )
 
     data = get_performance_export_data()
     strategies = data["strategies"]

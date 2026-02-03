@@ -1,4 +1,5 @@
 """Multi-exchange view component for comparing prices across exchanges."""
+
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional
@@ -173,13 +174,15 @@ def render_price_comparison(
     # Create comparison table
     table_data = []
     for ex_name, prices in exchanges_data.items():
-        table_data.append({
-            "Exchange": ex_name.replace("_", " ").title(),
-            "Bid": f"{prices.get('bid', 0):,.0f}",
-            "Ask": f"{prices.get('ask', 0):,.0f}",
-            "Last": f"{prices.get('last', 0):,.0f}",
-            "Spread": f"{prices.get('spread_pct', 0):.3f}%",
-        })
+        table_data.append(
+            {
+                "Exchange": ex_name.replace("_", " ").title(),
+                "Bid": f"{prices.get('bid', 0):,.0f}",
+                "Ask": f"{prices.get('ask', 0):,.0f}",
+                "Last": f"{prices.get('last', 0):,.0f}",
+                "Spread": f"{prices.get('spread_pct', 0):.3f}%",
+            }
+        )
 
     st.dataframe(table_data, use_container_width=True, hide_index=True)
 
@@ -208,7 +211,9 @@ def render_price_comparison(
     spread = comparison.get("cross_exchange_spread_pct", 0)
     price_range = comparison.get("price_range_pct", 0)
 
-    st.caption(f"Cross-exchange spread: {spread:.3f}% | Price range: {price_range:.3f}%")
+    st.caption(
+        f"Cross-exchange spread: {spread:.3f}% | Price range: {price_range:.3f}%"
+    )
 
 
 def render_arbitrage_opportunities(
@@ -235,10 +240,14 @@ def render_arbitrage_opportunities(
 
             with col1:
                 st.markdown(f"**{opp.get('symbol')}**")
-                st.caption(f"Buy: {opp.get('buy_exchange')} @ {opp.get('buy_price'):,.0f}")
+                st.caption(
+                    f"Buy: {opp.get('buy_exchange')} @ {opp.get('buy_price'):,.0f}"
+                )
 
             with col2:
-                st.caption(f"Sell: {opp.get('sell_exchange')} @ {opp.get('sell_price'):,.0f}")
+                st.caption(
+                    f"Sell: {opp.get('sell_exchange')} @ {opp.get('sell_price'):,.0f}"
+                )
 
             with col3:
                 profit = opp.get("profit_pct", 0)

@@ -21,26 +21,30 @@ from datetime import datetime
 from dataclasses import dataclass, field
 
 from .core_strategies import (
-    TripleV5Strategy, TripleVolStrategy,
-    TradingSignal, create_validated_strategies
+    TripleV5Strategy,
+    TripleVolStrategy,
+    TradingSignal,
+    create_validated_strategies,
 )
 
 
 @dataclass
 class PortfolioConfig:
     """포트폴리오 설정"""
+
     initial_capital: float = 100_000_000  # 1억원
-    position_size_pct: float = 0.30       # 포지션당 30%
-    max_positions: int = 3                 # 최대 포지션 수
-    commission: float = 0.0001            # 수수료 0.01%
-    slippage: float = 0.001               # 슬리피지 0.1%
-    stop_loss_pct: float = 0.07           # 손절 7%
-    max_portfolio_mdd: float = 0.40       # 포트폴리오 MDD 40%
+    position_size_pct: float = 0.30  # 포지션당 30%
+    max_positions: int = 3  # 최대 포지션 수
+    commission: float = 0.0001  # 수수료 0.01%
+    slippage: float = 0.001  # 슬리피지 0.1%
+    stop_loss_pct: float = 0.07  # 손절 7%
+    max_portfolio_mdd: float = 0.40  # 포트폴리오 MDD 40%
 
 
 @dataclass
 class Position:
     """포지션 정보"""
+
     strategy: str
     direction: int
     entry_date: datetime
@@ -63,9 +67,9 @@ class KOSDAQ150EqualWeightPortfolio:
 
         # 전략 초기화
         self.strategies = {
-            'TripleV5_38': TripleV5Strategy(14, 38, 14, 78, 20),
-            'TripleV5_33': TripleV5Strategy(14, 33, 14, 73, 20),
-            'TripleVol_38': TripleVolStrategy(14, 38, 78, 0.8),
+            "TripleV5_38": TripleV5Strategy(14, 38, 14, 78, 20),
+            "TripleV5_33": TripleV5Strategy(14, 33, 14, 73, 20),
+            "TripleVol_38": TripleVolStrategy(14, 38, 78, 0.8),
         }
 
         # 가중치 (균등)
@@ -87,7 +91,9 @@ class KOSDAQ150EqualWeightPortfolio:
             all_signals[name] = strategy.generate_signals(df)
         return all_signals
 
-    def get_latest_signals(self, df: pd.DataFrame) -> Dict[str, Optional[TradingSignal]]:
+    def get_latest_signals(
+        self, df: pd.DataFrame
+    ) -> Dict[str, Optional[TradingSignal]]:
         """
         최신 신호 조회 (오늘 기준)
 
@@ -119,7 +125,7 @@ class KOSDAQ150EqualWeightPortfolio:
             일별 포트폴리오 가치
         """
         all_signals = self.generate_all_signals(df)
-        daily_returns = df['Close'].pct_change()
+        daily_returns = df["Close"].pct_change()
 
         # 각 전략별 수익률
         strategy_returns = {}
@@ -129,7 +135,7 @@ class KOSDAQ150EqualWeightPortfolio:
 
             for sig in signals:
                 if sig.date in position.index:
-                    position.loc[sig.date:] = sig.direction
+                    position.loc[sig.date :] = sig.direction
 
             # 신호 다음날 진입
             position = position.shift(1).fillna(0)
@@ -172,8 +178,11 @@ class KOSDAQ150EqualWeightPortfolio:
         else:
             cagr = 0
 
-        sharpe = (daily_returns.mean() / daily_returns.std() * np.sqrt(252)
-                  if daily_returns.std() > 0 else 0)
+        sharpe = (
+            daily_returns.mean() / daily_returns.std() * np.sqrt(252)
+            if daily_returns.std() > 0
+            else 0
+        )
 
         rolling_max = portfolio_value.cummax()
         drawdown = (portfolio_value - rolling_max) / rolling_max
@@ -188,16 +197,16 @@ class KOSDAQ150EqualWeightPortfolio:
             total_trades += len(signals)
 
         return {
-            'name': self.name,
-            'sharpe': sharpe,
-            'cagr': cagr,
-            'total_return': total_return,
-            'mdd': mdd,
-            'win_rate': win_rate,
-            'total_trades': total_trades,
-            'avg_trades_per_strategy': total_trades / len(self.strategies),
-            'final_value': portfolio_value.iloc[-1],
-            'portfolio_value': portfolio_value
+            "name": self.name,
+            "sharpe": sharpe,
+            "cagr": cagr,
+            "total_return": total_return,
+            "mdd": mdd,
+            "win_rate": win_rate,
+            "total_trades": total_trades,
+            "avg_trades_per_strategy": total_trades / len(self.strategies),
+            "final_value": portfolio_value.iloc[-1],
+            "portfolio_value": portfolio_value,
         }
 
     def get_summary(self) -> str:
@@ -230,6 +239,8 @@ class KOSDAQ150EqualWeightPortfolio:
         return summary
 
 
-def create_portfolio(config: Optional[PortfolioConfig] = None) -> KOSDAQ150EqualWeightPortfolio:
+def create_portfolio(
+    config: Optional[PortfolioConfig] = None,
+) -> KOSDAQ150EqualWeightPortfolio:
     """포트폴리오 인스턴스 생성"""
     return KOSDAQ150EqualWeightPortfolio(config)

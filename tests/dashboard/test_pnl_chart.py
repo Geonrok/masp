@@ -1,4 +1,5 @@
 """Tests for PnL chart component."""
+
 from __future__ import annotations
 
 

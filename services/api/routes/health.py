@@ -1,4 +1,5 @@
 """Health routes."""
+
 from datetime import datetime
 
 from fastapi import APIRouter

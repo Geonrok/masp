@@ -49,14 +49,18 @@ class CoinglassCollector:
         self.session = requests.Session()
 
         if api_key:
-            self.session.headers.update({
-                "coinglassSecret": api_key,
-            })
+            self.session.headers.update(
+                {
+                    "coinglassSecret": api_key,
+                }
+            )
 
-        self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "application/json",
-        })
+        self.session.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Accept": "application/json",
+            }
+        )
 
     def _request(self, endpoint: str, params: dict = None) -> dict:
         """Make API request with rate limiting."""
@@ -97,12 +101,16 @@ class CoinglassCollector:
 
         records = []
         for exchange_data in data:
-            records.append({
-                "exchange": exchange_data.get("exchangeName"),
-                "open_interest": float(exchange_data.get("openInterest", 0)),
-                "open_interest_usd": float(exchange_data.get("openInterestAmount", 0)),
-                "h24_change_pct": float(exchange_data.get("h24Change", 0)),
-            })
+            records.append(
+                {
+                    "exchange": exchange_data.get("exchangeName"),
+                    "open_interest": float(exchange_data.get("openInterest", 0)),
+                    "open_interest_usd": float(
+                        exchange_data.get("openInterestAmount", 0)
+                    ),
+                    "h24_change_pct": float(exchange_data.get("h24Change", 0)),
+                }
+            )
 
         df = pd.DataFrame(records)
         df["datetime"] = datetime.now()
@@ -116,7 +124,9 @@ class CoinglassCollector:
 
         return df
 
-    def get_liquidation_history(self, symbol: str = "BTC", time_type: str = "h24") -> pd.DataFrame:
+    def get_liquidation_history(
+        self, symbol: str = "BTC", time_type: str = "h24"
+    ) -> pd.DataFrame:
         """
         Get liquidation data.
 
@@ -124,22 +134,27 @@ class CoinglassCollector:
         """
         logger.info(f"Fetching liquidations for {symbol} ({time_type})...")
 
-        data = self._request("liquidation_history", {
-            "symbol": symbol,
-            "timeType": time_type,
-        })
+        data = self._request(
+            "liquidation_history",
+            {
+                "symbol": symbol,
+                "timeType": time_type,
+            },
+        )
 
         if not data:
             return pd.DataFrame()
 
         records = []
         for item in data:
-            records.append({
-                "datetime": pd.to_datetime(item.get("createTime"), unit="ms"),
-                "long_liquidation_usd": float(item.get("longLiquidationUsd", 0)),
-                "short_liquidation_usd": float(item.get("shortLiquidationUsd", 0)),
-                "total_liquidation_usd": float(item.get("liquidationUsd", 0)),
-            })
+            records.append(
+                {
+                    "datetime": pd.to_datetime(item.get("createTime"), unit="ms"),
+                    "long_liquidation_usd": float(item.get("longLiquidationUsd", 0)),
+                    "short_liquidation_usd": float(item.get("shortLiquidationUsd", 0)),
+                    "total_liquidation_usd": float(item.get("liquidationUsd", 0)),
+                }
+            )
 
         df = pd.DataFrame(records)
         df["symbol"] = symbol
@@ -163,13 +178,19 @@ class CoinglassCollector:
         for exchange_data in data:
             rate = exchange_data.get("rate")
             if rate is not None:
-                records.append({
-                    "exchange": exchange_data.get("exchangeName"),
-                    "funding_rate": float(rate),
-                    "next_funding_time": pd.to_datetime(
-                        exchange_data.get("nextFundingTime"), unit="ms"
-                    ) if exchange_data.get("nextFundingTime") else None,
-                })
+                records.append(
+                    {
+                        "exchange": exchange_data.get("exchangeName"),
+                        "funding_rate": float(rate),
+                        "next_funding_time": (
+                            pd.to_datetime(
+                                exchange_data.get("nextFundingTime"), unit="ms"
+                            )
+                            if exchange_data.get("nextFundingTime")
+                            else None
+                        ),
+                    }
+                )
 
         df = pd.DataFrame(records)
         df["datetime"] = datetime.now()
@@ -192,12 +213,14 @@ class CoinglassCollector:
 
         records = []
         for exchange_data in data:
-            records.append({
-                "exchange": exchange_data.get("exchangeName"),
-                "long_ratio": float(exchange_data.get("longRate", 0)),
-                "short_ratio": float(exchange_data.get("shortRate", 0)),
-                "long_short_ratio": float(exchange_data.get("longShortRatio", 0)),
-            })
+            records.append(
+                {
+                    "exchange": exchange_data.get("exchangeName"),
+                    "long_ratio": float(exchange_data.get("longRate", 0)),
+                    "short_ratio": float(exchange_data.get("shortRate", 0)),
+                    "long_short_ratio": float(exchange_data.get("longShortRatio", 0)),
+                }
+            )
 
         df = pd.DataFrame(records)
         df["datetime"] = datetime.now()
@@ -293,7 +316,9 @@ def main():
     parser = argparse.ArgumentParser(description="Coinglass Data Collector")
     parser.add_argument("--all", action="store_true", help="Collect all data")
     parser.add_argument("--oi", action="store_true", help="Collect Open Interest")
-    parser.add_argument("--liquidation", action="store_true", help="Collect liquidations")
+    parser.add_argument(
+        "--liquidation", action="store_true", help="Collect liquidations"
+    )
     parser.add_argument("--funding", action="store_true", help="Collect funding rates")
     parser.add_argument("--longshort", action="store_true", help="Collect L/S ratio")
     parser.add_argument("--symbols", type=str, default="BTC,ETH", help="Symbols")

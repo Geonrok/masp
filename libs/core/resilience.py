@@ -59,7 +59,7 @@ class RetryPolicy:
     def get_delay(self, attempt: int) -> float:
         """Calculate delay for given attempt number."""
         if self.exponential:
-            delay = self.base_delay * (2 ** attempt)
+            delay = self.base_delay * (2**attempt)
         else:
             delay = self.base_delay
 
@@ -134,7 +134,9 @@ class CircuitBreaker:
 
     def _transition_to_open(self) -> None:
         """Transition to open state."""
-        logger.warning(f"[CircuitBreaker:{self.name}] OPEN - failures: {self._failure_count}")
+        logger.warning(
+            f"[CircuitBreaker:{self.name}] OPEN - failures: {self._failure_count}"
+        )
         self._state = CircuitState.OPEN
         self._last_failure_time = time.monotonic()
 
@@ -357,7 +359,9 @@ def with_retry(
     return decorator
 
 
-def with_fallback(fallback_value: T = None, fallback_fn: Optional[Callable[..., T]] = None):
+def with_fallback(
+    fallback_value: T = None, fallback_fn: Optional[Callable[..., T]] = None
+):
     """
     Decorator for adding fallback behavior.
 
@@ -545,9 +549,7 @@ class ResilienceBuilder:
         decorators = []
 
         if self._fallback_value is not None or self._fallback_fn:
-            decorators.append(
-                with_fallback(self._fallback_value, self._fallback_fn)
-            )
+            decorators.append(with_fallback(self._fallback_value, self._fallback_fn))
 
         if self._retry_policy:
             decorators.append(with_retry(self._retry_policy))

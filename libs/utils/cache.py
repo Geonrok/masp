@@ -4,6 +4,7 @@ Caching utilities for performance optimization.
 - LRU cache with size limits
 - Cache decorator for functions
 """
+
 from __future__ import annotations
 
 import functools
@@ -171,9 +172,7 @@ class TTLCache(Generic[T]):
         Returns:
             Number of entries removed
         """
-        expired_keys = [
-            key for key, entry in self._cache.items() if entry.is_expired()
-        ]
+        expired_keys = [key for key, entry in self._cache.items() if entry.is_expired()]
 
         for key in expired_keys:
             del self._cache[key]
@@ -326,7 +325,10 @@ def make_cache_key(*args, **kwargs) -> str:
         Hash-based cache key
     """
     key_data = json.dumps(
-        {"args": [str(a) for a in args], "kwargs": {k: str(v) for k, v in sorted(kwargs.items())}},
+        {
+            "args": [str(a) for a in args],
+            "kwargs": {k: str(v) for k, v in sorted(kwargs.items())},
+        },
         sort_keys=True,
     )
     return hashlib.md5(key_data.encode()).hexdigest()

@@ -2,6 +2,7 @@
 
 Simple OAuth implementation using google-auth-oauthlib.
 """
+
 from __future__ import annotations
 
 import json
@@ -16,7 +17,10 @@ from googleapiclient.discovery import build
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 # Path to Google OAuth credentials JSON file
-CREDENTIALS_FILE = PROJECT_ROOT / "client_secret_67701556084-ppp3lb0g776m823a8jpml9os5k9vb4t7.apps.googleusercontent.com.json"
+CREDENTIALS_FILE = (
+    PROJECT_ROOT
+    / "client_secret_67701556084-ppp3lb0g776m823a8jpml9os5k9vb4t7.apps.googleusercontent.com.json"
+)
 
 # Path to store last login email (for login_hint)
 LAST_EMAIL_FILE = PROJECT_ROOT / "storage" / ".last_login_email"
@@ -70,6 +74,7 @@ def _clear_session() -> None:
             SESSION_FILE.unlink()
     except Exception:
         pass
+
 
 # OAuth scopes
 SCOPES = [
@@ -181,7 +186,8 @@ def render_firebase_login() -> dict | None:
     try:
         auth_url = _get_auth_url()
 
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style="display: flex; justify-content: center; margin: 40px 0;">
             <a href="{auth_url}" target="_self" style="
                 display: flex;
@@ -206,7 +212,9 @@ def render_firebase_login() -> dict | None:
                 Google로 로그인
             </a>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     except Exception as e:
         st.error(f"오류: {e}")

@@ -84,13 +84,15 @@ def test_request_raises_on_http_error():
     # Mock response with status_code attribute
     mock_response = MagicMock()
     mock_response.status_code = 401
-    mock_response.json.return_value = {"error": {"name": "jwt_verification", "message": "Invalid"}}
-    
+    mock_response.json.return_value = {
+        "error": {"name": "jwt_verification", "message": "Invalid"}
+    }
+
     def raise_on_status():
         err = requests.HTTPError("HTTP 401")
         err.response = mock_response
         raise err
-    
+
     mock_response.raise_for_status = raise_on_status
     session.get.return_value = mock_response
 

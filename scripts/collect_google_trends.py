@@ -78,7 +78,9 @@ def collect_google_trends(
         df = df.reset_index()
         df = df.rename(columns={"date": "datetime"})
 
-        logger.info(f"Collected {len(df)} records ({df['datetime'].min()} to {df['datetime'].max()})")
+        logger.info(
+            f"Collected {len(df)} records ({df['datetime'].min()} to {df['datetime'].max()})"
+        )
 
         return df
 
@@ -103,7 +105,11 @@ def collect_multiple_periods(
 
     for year in range(start_year, current_year + 1):
         start = f"{year}-01-01"
-        end = f"{year}-12-31" if year < current_year else datetime.now().strftime("%Y-%m-%d")
+        end = (
+            f"{year}-12-31"
+            if year < current_year
+            else datetime.now().strftime("%Y-%m-%d")
+        )
 
         logger.info(f"Collecting {year}...")
 
@@ -180,11 +186,17 @@ def main():
         bitcoin_df = bitcoin_df.rename(columns={"bitcoin": "search_interest"})
 
         # Calculate rolling averages
-        bitcoin_df["search_interest_ma4"] = bitcoin_df["search_interest"].rolling(4).mean()
-        bitcoin_df["search_interest_ma12"] = bitcoin_df["search_interest"].rolling(12).mean()
+        bitcoin_df["search_interest_ma4"] = (
+            bitcoin_df["search_interest"].rolling(4).mean()
+        )
+        bitcoin_df["search_interest_ma12"] = (
+            bitcoin_df["search_interest"].rolling(12).mean()
+        )
 
         # Calculate momentum (rate of change)
-        bitcoin_df["search_momentum"] = bitcoin_df["search_interest"].pct_change(4) * 100
+        bitcoin_df["search_momentum"] = (
+            bitcoin_df["search_interest"].pct_change(4) * 100
+        )
 
         # Save combined data
         output_path = OUTPUT_DIR / "google_trends_bitcoin_enhanced.csv"

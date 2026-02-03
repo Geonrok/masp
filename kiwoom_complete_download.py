@@ -28,20 +28,20 @@ async def download_daily_chart(api, ticker, name):
     all_data = []
 
     try:
-        response = await api.request("ka10081", {
-            "stk_cd": ticker,
-            "base_dt": "00000000",
-            "upd_stkpc_tp": "1"
-        })
+        response = await api.request(
+            "ka10081", {"stk_cd": ticker, "base_dt": "00000000", "upd_stkpc_tp": "1"}
+        )
 
         if response.return_code == 0 and response.body:
             body = response.body
             data = None
-            if 'output' in body:
-                data = body['output']
+            if "output" in body:
+                data = body["output"]
             else:
                 for key in body.keys():
-                    if key not in ['return_code', 'return_msg'] and isinstance(body[key], list):
+                    if key not in ["return_code", "return_msg"] and isinstance(
+                        body[key], list
+                    ):
                         data = body[key]
                         break
 
@@ -50,20 +50,23 @@ async def download_daily_chart(api, ticker, name):
 
                 # 연속조회
                 cont_count = 0
-                while response.cont_yn == 'Y' and response.next_key and cont_count < 30:
+                while response.cont_yn == "Y" and response.next_key and cont_count < 30:
                     await asyncio.sleep(0.3)
                     response = await api.request(
                         "ka10081",
                         {"stk_cd": ticker, "base_dt": "00000000", "upd_stkpc_tp": "1"},
                         cont_yn="Y",
-                        next_key=response.next_key
+                        next_key=response.next_key,
                     )
                     if response.return_code == 0 and response.body:
                         new_body = response.body
-                        new_data = new_body.get('output')
+                        new_data = new_body.get("output")
                         if not new_data:
                             for key in new_body.keys():
-                                if key not in ['return_code', 'return_msg'] and isinstance(new_body[key], list):
+                                if key not in [
+                                    "return_code",
+                                    "return_msg",
+                                ] and isinstance(new_body[key], list):
                                     new_data = new_body[key]
                                     break
                         if isinstance(new_data, list) and len(new_data) > 0:
@@ -79,9 +82,9 @@ async def download_daily_chart(api, ticker, name):
 
     if all_data:
         df = pd.DataFrame(all_data)
-        df['ticker'] = ticker
-        df['name'] = name
-        df.to_csv(filename, index=False, encoding='utf-8-sig')
+        df["ticker"] = ticker
+        df["name"] = name
+        df.to_csv(filename, index=False, encoding="utf-8-sig")
         print(f"    저장: {len(df)}건")
         return df
 
@@ -107,8 +110,16 @@ async def main():
         print("로그인 성공!\n")
 
         # 외국인 데이터가 있는 종목 확인
-        foreign_files = [f.replace('_foreign.csv', '') for f in os.listdir(SAVE_PATH) if f.endswith('_foreign.csv')]
-        daily_files = [f.replace('_daily.csv', '') for f in os.listdir(SAVE_PATH) if f.endswith('_daily.csv')]
+        foreign_files = [
+            f.replace("_foreign.csv", "")
+            for f in os.listdir(SAVE_PATH)
+            if f.endswith("_foreign.csv")
+        ]
+        daily_files = [
+            f.replace("_daily.csv", "")
+            for f in os.listdir(SAVE_PATH)
+            if f.endswith("_daily.csv")
+        ]
 
         # 일봉 데이터가 없는 종목
         missing_daily = set(foreign_files) - set(daily_files)
@@ -118,24 +129,24 @@ async def main():
 
         # 종목명 매핑
         ticker_names = {
-            '005930': '삼성전자',
-            '000660': 'SK하이닉스',
-            '035720': '카카오',
-            '005380': '현대차',
-            '051910': 'LG화학',
-            '006400': '삼성SDI',
-            '207940': '삼성바이오로직스',
-            '373220': 'LG에너지솔루션',
-            '247540': '에코프로비엠',
-            '196170': '알테오젠',
-            '263750': '펄어비스',
-            '086520': '에코프로',
-            '042700': '한미반도체',
-            '028300': 'HLB',
-            '293490': '카카오게임즈',
-            '091990': '셀트리온헬스케어',
-            '068270': '셀트리온제약',
-            '251270': '넷마블',
+            "005930": "삼성전자",
+            "000660": "SK하이닉스",
+            "035720": "카카오",
+            "005380": "현대차",
+            "051910": "LG화학",
+            "006400": "삼성SDI",
+            "207940": "삼성바이오로직스",
+            "373220": "LG에너지솔루션",
+            "247540": "에코프로비엠",
+            "196170": "알테오젠",
+            "263750": "펄어비스",
+            "086520": "에코프로",
+            "042700": "한미반도체",
+            "028300": "HLB",
+            "293490": "카카오게임즈",
+            "091990": "셀트리온헬스케어",
+            "068270": "셀트리온제약",
+            "251270": "넷마블",
         }
 
         # 일봉 데이터 다운로드
@@ -150,9 +161,9 @@ async def main():
         print("최종 데이터 현황")
         print("=" * 60)
 
-        foreign_files = [f for f in os.listdir(SAVE_PATH) if f.endswith('_foreign.csv')]
-        daily_files = [f for f in os.listdir(SAVE_PATH) if f.endswith('_daily.csv')]
-        merged_files = [f for f in os.listdir(SAVE_PATH) if f.endswith('_merged.csv')]
+        foreign_files = [f for f in os.listdir(SAVE_PATH) if f.endswith("_foreign.csv")]
+        daily_files = [f for f in os.listdir(SAVE_PATH) if f.endswith("_daily.csv")]
+        merged_files = [f for f in os.listdir(SAVE_PATH) if f.endswith("_merged.csv")]
 
         print(f"외국인 데이터: {len(foreign_files)}개 종목")
         print(f"일봉 데이터: {len(daily_files)}개 종목")
@@ -172,6 +183,7 @@ async def main():
     except Exception as e:
         print(f"오류: {e}")
         import traceback
+
         traceback.print_exc()
 
     finally:

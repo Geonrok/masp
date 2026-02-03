@@ -1,4 +1,5 @@
 """Bithumb public market data - KRW symbol loader with fallback."""
+
 from __future__ import annotations
 
 import logging
@@ -41,9 +42,7 @@ class BithumbPublic:
                 if tickers:
                     symbols = [f"{t}/KRW" for t in tickers if t]
                     symbols = list(dict.fromkeys(symbols))
-                    logger.info(
-                        "[BithumbPublic] pybithumb: %d symbols", len(symbols)
-                    )
+                    logger.info("[BithumbPublic] pybithumb: %d symbols", len(symbols))
             except Exception as exc:
                 logger.warning("[BithumbPublic] pybithumb failed: %s", exc)
 
@@ -61,9 +60,7 @@ class BithumbPublic:
                         if k not in ("date", "timestamp")
                     ]
                     symbols = list(dict.fromkeys(symbols))
-                    logger.info(
-                        "[BithumbPublic] HTTP API: %d symbols", len(symbols)
-                    )
+                    logger.info("[BithumbPublic] HTTP API: %d symbols", len(symbols))
             except Exception as exc:
                 logger.warning("[BithumbPublic] HTTP API failed: %s", exc)
 

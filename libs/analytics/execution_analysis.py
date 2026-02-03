@@ -251,8 +251,14 @@ class ExecutionAnalyzer:
         execs = executions or self.executions
         if not execs:
             return SlippageStats(
-                mean=0, median=0, std=0, min=0, max=0,
-                percentile_95=0, total_slippage_cost=0, count=0,
+                mean=0,
+                median=0,
+                std=0,
+                min=0,
+                max=0,
+                percentile_95=0,
+                total_slippage_cost=0,
+                count=0,
             )
 
         slippages = [e.slippage_percent for e in execs]
@@ -277,8 +283,11 @@ class ExecutionAnalyzer:
         execs = executions or self.executions
         if not execs:
             return FillRateStats(
-                mean_fill_rate=0, full_fill_rate=0,
-                partial_fill_rate=0, zero_fill_rate=0, count=0,
+                mean_fill_rate=0,
+                full_fill_rate=0,
+                partial_fill_rate=0,
+                zero_fill_rate=0,
+                count=0,
             )
 
         fill_rates = [e.fill_rate for e in execs]
@@ -304,8 +313,13 @@ class ExecutionAnalyzer:
 
         if not times:
             return ExecutionTimeStats(
-                mean_ms=0, median_ms=0, std_ms=0,
-                min_ms=0, max_ms=0, percentile_95_ms=0, count=0,
+                mean_ms=0,
+                median_ms=0,
+                std_ms=0,
+                min_ms=0,
+                max_ms=0,
+                percentile_95_ms=0,
+                count=0,
             )
 
         return ExecutionTimeStats(
@@ -326,10 +340,16 @@ class ExecutionAnalyzer:
         execs = executions or self.executions
         if not execs:
             return CostAnalysis(
-                total_commission=0, total_slippage_cost=0, total_cost=0,
-                avg_commission_per_trade=0, avg_slippage_per_trade=0,
-                avg_cost_per_trade=0, commission_as_pct_of_volume=0,
-                slippage_as_pct_of_volume=0, total_volume=0, count=0,
+                total_commission=0,
+                total_slippage_cost=0,
+                total_cost=0,
+                avg_commission_per_trade=0,
+                avg_slippage_per_trade=0,
+                avg_cost_per_trade=0,
+                commission_as_pct_of_volume=0,
+                slippage_as_pct_of_volume=0,
+                total_volume=0,
+                count=0,
             )
 
         total_commission = sum(e.commission for e in execs)
@@ -345,8 +365,12 @@ class ExecutionAnalyzer:
             avg_commission_per_trade=total_commission / count,
             avg_slippage_per_trade=total_slippage_cost / count,
             avg_cost_per_trade=total_cost / count,
-            commission_as_pct_of_volume=total_commission / total_volume if total_volume > 0 else 0,
-            slippage_as_pct_of_volume=total_slippage_cost / total_volume if total_volume > 0 else 0,
+            commission_as_pct_of_volume=(
+                total_commission / total_volume if total_volume > 0 else 0
+            ),
+            slippage_as_pct_of_volume=(
+                total_slippage_cost / total_volume if total_volume > 0 else 0
+            ),
             total_volume=total_volume,
             count=count,
         )
@@ -561,10 +585,12 @@ def format_execution_report(report: ExecutionReport) -> str:
             f"fill={stats['avg_fill_rate']:.1%}"
         )
 
-    lines.extend([
-        "",
-        "--- RECOMMENDATIONS ---",
-    ])
+    lines.extend(
+        [
+            "",
+            "--- RECOMMENDATIONS ---",
+        ]
+    )
     for i, rec in enumerate(report.recommendations, 1):
         lines.append(f"  {i}. {rec}")
 

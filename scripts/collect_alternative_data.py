@@ -35,10 +35,12 @@ class FreeDataCollector:
 
     def __init__(self):
         self.session = requests.Session()
-        self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "application/json",
-        })
+        self.session.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Accept": "application/json",
+            }
+        )
 
     def _request(self, url: str, params: dict = None) -> dict:
         """Make request with error handling."""
@@ -148,10 +150,12 @@ class FreeDataCollector:
 
         records = []
         for item in data:
-            records.append({
-                "datetime": pd.to_datetime(item.get("date"), unit="s"),
-                "tvl_usd": item.get("tvl"),
-            })
+            records.append(
+                {
+                    "datetime": pd.to_datetime(item.get("date"), unit="s"),
+                    "tvl_usd": item.get("tvl"),
+                }
+            )
 
         df = pd.DataFrame(records)
         logger.info(f"  Collected {len(df)} TVL records")
@@ -170,10 +174,12 @@ class FreeDataCollector:
 
         records = []
         for item in data:
-            records.append({
-                "datetime": pd.to_datetime(item.get("date"), unit="s"),
-                "tvl_usd": item.get("tvl"),
-            })
+            records.append(
+                {
+                    "datetime": pd.to_datetime(item.get("date"), unit="s"),
+                    "tvl_usd": item.get("tvl"),
+                }
+            )
 
         df = pd.DataFrame(records)
         df["chain"] = chain
@@ -195,8 +201,10 @@ class FreeDataCollector:
         url = "https://api.blockchain.info/charts/hash-rate?timespan=1year&format=json"
         data = self._request(url)
         if data and "values" in data:
-            records = [{"datetime": pd.to_datetime(v["x"], unit="s"), "hash_rate": v["y"]}
-                      for v in data["values"]]
+            records = [
+                {"datetime": pd.to_datetime(v["x"], unit="s"), "hash_rate": v["y"]}
+                for v in data["values"]
+            ]
             metrics["hash_rate"] = pd.DataFrame(records)
             logger.info(f"  Hash rate: {len(records)} records")
 
@@ -206,8 +214,10 @@ class FreeDataCollector:
         url = "https://api.blockchain.info/charts/n-transactions?timespan=1year&format=json"
         data = self._request(url)
         if data and "values" in data:
-            records = [{"datetime": pd.to_datetime(v["x"], unit="s"), "tx_count": v["y"]}
-                      for v in data["values"]]
+            records = [
+                {"datetime": pd.to_datetime(v["x"], unit="s"), "tx_count": v["y"]}
+                for v in data["values"]
+            ]
             metrics["tx_count"] = pd.DataFrame(records)
             logger.info(f"  TX count: {len(records)} records")
 
@@ -217,8 +227,13 @@ class FreeDataCollector:
         url = "https://api.blockchain.info/charts/n-unique-addresses?timespan=1year&format=json"
         data = self._request(url)
         if data and "values" in data:
-            records = [{"datetime": pd.to_datetime(v["x"], unit="s"), "active_addresses": v["y"]}
-                      for v in data["values"]]
+            records = [
+                {
+                    "datetime": pd.to_datetime(v["x"], unit="s"),
+                    "active_addresses": v["y"],
+                }
+                for v in data["values"]
+            ]
             metrics["active_addresses"] = pd.DataFrame(records)
             logger.info(f"  Active addresses: {len(records)} records")
 
@@ -244,16 +259,20 @@ class FreeDataCollector:
 
         records = []
         for item in data["data"]:
-            records.append({
-                "datetime": pd.to_datetime(int(item["timestamp"]), unit="s"),
-                "value": int(item["value"]),
-                "classification": item["value_classification"],
-            })
+            records.append(
+                {
+                    "datetime": pd.to_datetime(int(item["timestamp"]), unit="s"),
+                    "value": int(item["value"]),
+                    "classification": item["value_classification"],
+                }
+            )
 
         df = pd.DataFrame(records)
         df = df.sort_values("datetime").reset_index(drop=True)
 
-        logger.info(f"  Collected {len(df)} F&G records ({df['datetime'].min()} to {df['datetime'].max()})")
+        logger.info(
+            f"  Collected {len(df)} F&G records ({df['datetime'].min()} to {df['datetime'].max()})"
+        )
 
         return df
 
@@ -261,10 +280,18 @@ class FreeDataCollector:
 def main():
     parser = argparse.ArgumentParser(description="Alternative Data Collector")
     parser.add_argument("--all", action="store_true", help="Collect all data")
-    parser.add_argument("--coingecko", action="store_true", help="Collect CoinGecko data")
-    parser.add_argument("--defillama", action="store_true", help="Collect DefiLlama TVL")
-    parser.add_argument("--blockchain", action="store_true", help="Collect Blockchain.com metrics")
-    parser.add_argument("--fear-greed", action="store_true", help="Update Fear & Greed Index")
+    parser.add_argument(
+        "--coingecko", action="store_true", help="Collect CoinGecko data"
+    )
+    parser.add_argument(
+        "--defillama", action="store_true", help="Collect DefiLlama TVL"
+    )
+    parser.add_argument(
+        "--blockchain", action="store_true", help="Collect Blockchain.com metrics"
+    )
+    parser.add_argument(
+        "--fear-greed", action="store_true", help="Update Fear & Greed Index"
+    )
 
     args = parser.parse_args()
 

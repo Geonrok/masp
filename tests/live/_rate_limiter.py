@@ -1,6 +1,7 @@
 """
 Rate limit controller for live tests (v2.2 Final).
 """
+
 from __future__ import annotations
 
 import random
@@ -35,13 +36,15 @@ class RateLimiter:
         """Pre-emptive wait when remaining sec is low."""
         if self.remaining_sec <= self.THRESHOLD_SEC:
             wait_time = 1.1
-            print(f"⏳ Rate limit threshold (sec={self.remaining_sec}): wait {wait_time}s")
+            print(
+                f"⏳ Rate limit threshold (sec={self.remaining_sec}): wait {wait_time}s"
+            )
             time.sleep(wait_time)
             self.remaining_sec = 8
 
     def exponential_backoff(self, attempt: int) -> float:
         """Exponential backoff with jitter."""
-        wait = min(self.cap, self.base * (2 ** attempt))
+        wait = min(self.cap, self.base * (2**attempt))
         jitter = random.uniform(0, self.base)
         return wait + jitter
 
@@ -58,10 +61,14 @@ class RateLimiter:
                 error_str = str(exc).lower()
                 if "418" in str(exc):
                     print(" 418 IP Ban detected - abort")
-                    raise RuntimeError("IP Banned - Immediate Shutdown Required") from exc
+                    raise RuntimeError(
+                        "IP Banned - Immediate Shutdown Required"
+                    ) from exc
                 if "429" in str(exc) or "too many" in error_str:
                     wait = self.exponential_backoff(attempt)
-                    print(f"⚠️ 429 Rate Limit ({attempt + 1}/{self.max_attempts}), wait {wait:.2f}s")
+                    print(
+                        f"⚠️ 429 Rate Limit ({attempt + 1}/{self.max_attempts}), wait {wait:.2f}s"
+                    )
                     time.sleep(wait)
                     continue
                 raise

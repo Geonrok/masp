@@ -109,11 +109,15 @@ class TestEnvConfigSource:
 
     def test_load_with_prefix(self):
         """Test loading all vars with prefix."""
-        with patch.dict(os.environ, {
-            "APP_A": "1",
-            "APP_B": "2",
-            "OTHER_C": "3",
-        }, clear=True):
+        with patch.dict(
+            os.environ,
+            {
+                "APP_A": "1",
+                "APP_B": "2",
+                "OTHER_C": "3",
+            },
+            clear=True,
+        ):
             source = EnvConfigSource(prefix="APP_")
             loaded = source.load()
             assert "A" in loaded
@@ -345,7 +349,9 @@ class TestConfigValidator:
     def test_validation_exception(self):
         """Test handling validation exceptions."""
         validator = ConfigValidator()
-        validator.add_rule("value", lambda v: v["nested"], "Check failed", required=True)
+        validator.add_rule(
+            "value", lambda v: v["nested"], "Check failed", required=True
+        )
 
         result = validator.validate({"value": "not_a_dict"})
         assert result.is_valid is False
@@ -497,11 +503,15 @@ class TestIntegration:
         """Test full config hierarchy with validation."""
         # Create hierarchy
         hierarchy = ConfigHierarchy()
-        hierarchy.add_source(DefaultConfigSource({
-            "timeout": 30,
-            "retries": 3,
-            "debug": False,
-        }))
+        hierarchy.add_source(
+            DefaultConfigSource(
+                {
+                    "timeout": 30,
+                    "retries": 3,
+                    "debug": False,
+                }
+            )
+        )
 
         with patch.dict(os.environ, {"APP_TIMEOUT": "60"}):
             hierarchy.add_source(EnvConfigSource(prefix="APP_"))
@@ -513,7 +523,9 @@ class TestIntegration:
             # Create validator
             validator = ConfigValidator()
             validator.add_rule("timeout", lambda v: v > 0, "Timeout must be positive")
-            validator.add_rule("retries", lambda v: v >= 0, "Retries must be non-negative")
+            validator.add_rule(
+                "retries", lambda v: v >= 0, "Retries must be non-negative"
+            )
 
             # Get and validate config
             config = hierarchy.get_all()
@@ -522,7 +534,7 @@ class TestIntegration:
             assert result.is_valid is True
             assert hierarchy.get("timeout") == 60  # From env
             assert hierarchy.get("debug") is True  # From runtime
-            assert hierarchy.get("retries") == 3   # From defaults
+            assert hierarchy.get("retries") == 3  # From defaults
 
     def test_config_diff_after_reload(self):
         """Test detecting changes after reload."""

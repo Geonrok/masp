@@ -52,10 +52,13 @@ class TestResourceThresholds:
         assert t.disk_warning_pct == 80.0
         assert t.disk_critical_pct == 95.0
 
-    @patch.dict("os.environ", {
-        "MASP_CPU_WARNING_PCT": "50",
-        "MASP_CPU_CRITICAL_PCT": "80",
-    })
+    @patch.dict(
+        "os.environ",
+        {
+            "MASP_CPU_WARNING_PCT": "50",
+            "MASP_CPU_CRITICAL_PCT": "80",
+        },
+    )
     def test_from_env(self):
         """Test loading from environment."""
         t = ResourceThresholds.from_env()

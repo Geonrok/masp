@@ -376,9 +376,13 @@ class TestCompositeStopManager:
         manager = CompositeStopManager()
 
         # Add tight stop first
-        manager.add_strategy(FixedPercentageStop(stop_loss_pct=0.02, take_profit_pct=0.05))
+        manager.add_strategy(
+            FixedPercentageStop(stop_loss_pct=0.02, take_profit_pct=0.05)
+        )
         # Add wider stop second
-        manager.add_strategy(FixedPercentageStop(stop_loss_pct=0.05, take_profit_pct=0.10))
+        manager.add_strategy(
+            FixedPercentageStop(stop_loss_pct=0.05, take_profit_pct=0.10)
+        )
 
         manager.open_position(
             symbol="BTC/KRW",
@@ -395,7 +399,9 @@ class TestCompositeStopManager:
     def test_check_all_positions(self):
         """Test checking all positions at once."""
         manager = CompositeStopManager()
-        manager.add_strategy(FixedPercentageStop(stop_loss_pct=0.05, take_profit_pct=0.10))
+        manager.add_strategy(
+            FixedPercentageStop(stop_loss_pct=0.05, take_profit_pct=0.10)
+        )
 
         manager.open_position("BTC/KRW", "long", 50000000, 0.1)
         manager.open_position("ETH/KRW", "long", 3000000, 1.0)

@@ -370,10 +370,7 @@ class PortfolioSimulator:
         executed_trades = []
 
         # Process pending orders for this symbol
-        pending_orders = [
-            o for o in self.orders
-            if o.symbol == symbol and not o.filled
-        ]
+        pending_orders = [o for o in self.orders if o.symbol == symbol and not o.filled]
 
         for order in pending_orders:
             fill_price = self._get_fill_price(order, close, high, low)
@@ -465,7 +462,11 @@ class PortfolioSimulator:
                     return None
 
                 # Calculate realized PnL
-                sell_qty = min(order.quantity, pos.quantity) if pos.quantity > 0 else order.quantity
+                sell_qty = (
+                    min(order.quantity, pos.quantity)
+                    if pos.quantity > 0
+                    else order.quantity
+                )
                 if pos.quantity > 0:
                     realized_pnl = (fill_price - pos.avg_cost) * sell_qty
                     pos.realized_pnl += realized_pnl
@@ -554,7 +555,9 @@ class PortfolioSimulator:
             self.peak_equity = equity
 
         drawdown = self.peak_equity - equity
-        drawdown_pct = (drawdown / self.peak_equity) * 100 if self.peak_equity > 0 else 0
+        drawdown_pct = (
+            (drawdown / self.peak_equity) * 100 if self.peak_equity > 0 else 0
+        )
 
         # Calculate daily PnL
         if self.equity_curve:
@@ -610,7 +613,7 @@ class PortfolioSimulator:
                 "low": row["low"],
                 "close": row["close"],
                 "volume": row["volume"],
-                "closes": dataset.closes[:i+1] if i > 0 else [row["close"]],
+                "closes": dataset.closes[: i + 1] if i > 0 else [row["close"]],
             }
 
             # Get strategy signal
@@ -652,14 +655,16 @@ class PortfolioSimulator:
 
             # Record state
             state = self.get_portfolio_state(timestamp, {symbol: row["close"]})
-            results.append({
-                "timestamp": timestamp,
-                "equity": state.equity,
-                "cash": state.cash,
-                "total_pnl": state.total_pnl,
-                "total_pnl_pct": state.total_pnl_pct,
-                "drawdown_pct": state.drawdown_pct,
-            })
+            results.append(
+                {
+                    "timestamp": timestamp,
+                    "equity": state.equity,
+                    "cash": state.cash,
+                    "total_pnl": state.total_pnl,
+                    "total_pnl_pct": state.total_pnl_pct,
+                    "drawdown_pct": state.drawdown_pct,
+                }
+            )
 
         return pd.DataFrame(results)
 
@@ -703,6 +708,8 @@ class PortfolioSimulator:
             "total_trades": len(self.trades),
             "winning_trades": len(winning_trades),
             "losing_trades": len(losing_trades),
-            "win_rate": len(winning_trades) / len(self.trades) * 100 if self.trades else 0,
+            "win_rate": (
+                len(winning_trades) / len(self.trades) * 100 if self.trades else 0
+            ),
             "total_commission": sum(t.commission for t in self.trades),
         }

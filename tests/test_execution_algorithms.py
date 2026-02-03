@@ -86,7 +86,9 @@ class TestVWAPAlgorithm:
 
         assert plan.algorithm == "vwap"
         assert len(plan.slices) == 6
-        assert sum(s.target_quantity for s in plan.slices) == pytest.approx(50, rel=0.01)
+        assert sum(s.target_quantity for s in plan.slices) == pytest.approx(
+            50, rel=0.01
+        )
 
     def test_volume_profile_weighting(self):
         """Test that slices are weighted by volume profile."""

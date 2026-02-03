@@ -1,6 +1,7 @@
 """
 Upbit spot execution adapter tests.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -53,7 +54,12 @@ class FakeSession:
         return result
 
 
-def _make_adapter(monkeypatch, session: FakeSession | None = None, access: str | None = "test-access", secret: str | None = "test-secret") -> UpbitSpotExecution:
+def _make_adapter(
+    monkeypatch,
+    session: FakeSession | None = None,
+    access: str | None = "test-access",
+    secret: str | None = "test-secret",
+) -> UpbitSpotExecution:
     monkeypatch.setenv("MASP_ENABLE_LIVE_TRADING", "1")
     adapter = UpbitSpotExecution(access_key=access, secret_key=secret)
     if session is not None:
@@ -152,8 +158,12 @@ def test_rate_limit_uses_order_bucket(monkeypatch):
         return FakeResponse(json_data={"uuid": "order-1"})
 
     adapter = _make_adapter(monkeypatch, session=FakeSession(handler))
-    adapter._order_bucket.consume = lambda: calls.__setitem__("order", calls["order"] + 1)
-    adapter._default_bucket.consume = lambda: calls.__setitem__("default", calls["default"] + 1)
+    adapter._order_bucket.consume = lambda: calls.__setitem__(
+        "order", calls["order"] + 1
+    )
+    adapter._default_bucket.consume = lambda: calls.__setitem__(
+        "default", calls["default"] + 1
+    )
     adapter.get_order_status("order-1")
     assert calls["order"] == 1
     assert calls["default"] == 0
@@ -166,8 +176,12 @@ def test_rate_limit_uses_default_bucket(monkeypatch):
         return FakeResponse(json_data=[])
 
     adapter = _make_adapter(monkeypatch, session=FakeSession(handler))
-    adapter._order_bucket.consume = lambda: calls.__setitem__("order", calls["order"] + 1)
-    adapter._default_bucket.consume = lambda: calls.__setitem__("default", calls["default"] + 1)
+    adapter._order_bucket.consume = lambda: calls.__setitem__(
+        "order", calls["order"] + 1
+    )
+    adapter._default_bucket.consume = lambda: calls.__setitem__(
+        "default", calls["default"] + 1
+    )
     adapter.get_all_balances()
     assert calls["default"] == 1
     assert calls["order"] == 0
@@ -452,7 +466,9 @@ def test_get_all_balances_returns_list(monkeypatch):
 
 def test_order_result_mapping_done_state(monkeypatch):
     def handler(call):
-        return FakeResponse(json_data={"uuid": "order-7", "state": "done", "price": "1000"})
+        return FakeResponse(
+            json_data={"uuid": "order-7", "state": "done", "price": "1000"}
+        )
 
     adapter = _make_adapter(monkeypatch, session=FakeSession(handler))
     result = adapter.place_order("BTC/KRW", "BUY", 0.01, order_type="LIMIT", price=1000)
@@ -640,11 +656,16 @@ def test_market_data_429_while_loop_retry(monkeypatch):
             attempt["count"] += 1
             if attempt["count"] <= 2:
                 return FakeMarketDataResponse(429)
-            return FakeMarketDataResponse(200, [{
-                "trade_price": 50000000,
-                "acc_trade_volume_24h": 1000,
-                "timestamp": "1234567890"
-            }])
+            return FakeMarketDataResponse(
+                200,
+                [
+                    {
+                        "trade_price": 50000000,
+                        "acc_trade_volume_24h": 1000,
+                        "timestamp": "1234567890",
+                    }
+                ],
+            )
 
     adapter = UpbitSpotMarketData()
     adapter.session = FakeMarketDataSession()

@@ -2,6 +2,7 @@
 Phase 4C Integration Tests.
 Contract-level integration for StrategyEngine + ATLASFuturesStrategy + BinanceFuturesAdapter.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -32,8 +33,8 @@ from libs.exchanges.binance_futures import (
 from libs.engine.strategy_engine import StrategyEngine
 from libs.strategies.loader import get_strategy, load_strategy_class
 
-
 # ============== Fixtures ==============
+
 
 def _generate_ohlcv_data(n: int = 300) -> list[dict]:
     """Generate sample OHLCV data with fixed seed."""
@@ -44,14 +45,16 @@ def _generate_ohlcv_data(n: int = 300) -> list[dict]:
 
     for i in range(n):
         price += float(rng.normal(0, 100))
-        data.append({
-            "timestamp": base_ts + i * 14400000,
-            "open": price + float(rng.normal(0, 20)),
-            "high": price + abs(float(rng.normal(0, 50))),
-            "low": price - abs(float(rng.normal(0, 50))),
-            "close": price,
-            "volume": abs(float(rng.normal(0, 1_000_000))) + 500_000,
-        })
+        data.append(
+            {
+                "timestamp": base_ts + i * 14400000,
+                "open": price + float(rng.normal(0, 20)),
+                "high": price + abs(float(rng.normal(0, 50))),
+                "low": price - abs(float(rng.normal(0, 50))),
+                "close": price,
+                "volume": abs(float(rng.normal(0, 1_000_000))) + 500_000,
+            }
+        )
     return data
 
 
@@ -67,7 +70,9 @@ def mock_adapter() -> MagicMock:
     adapter.initialize = AsyncMock()
     adapter.close = AsyncMock()
     adapter.fetch_ohlcv = AsyncMock(return_value=_generate_ohlcv_data())
-    adapter.get_balance = AsyncMock(return_value={"total": 10000, "free": 10000, "used": 0})
+    adapter.get_balance = AsyncMock(
+        return_value={"total": 10000, "free": 10000, "used": 0}
+    )
     adapter.set_leverage = AsyncMock(return_value=True)
 
     now = datetime.now(timezone.utc)
@@ -114,11 +119,14 @@ def engine(strategy: ATLASFuturesStrategy, mock_adapter: MagicMock) -> StrategyE
 
 # ============== StrategyEngine Tests ==============
 
+
 class TestStrategyEngineIntegration:
     """StrategyEngine integration tests."""
 
     @pytest.mark.asyncio
-    async def test_engine_start_stop(self, engine: StrategyEngine, mock_adapter: MagicMock):
+    async def test_engine_start_stop(
+        self, engine: StrategyEngine, mock_adapter: MagicMock
+    ):
         """Engine start/stop lifecycle."""
         await engine.start()
         assert engine._running is True
@@ -129,7 +137,9 @@ class TestStrategyEngineIntegration:
         mock_adapter.close.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_execute_trading_cycle(self, engine: StrategyEngine, mock_adapter: MagicMock):
+    async def test_execute_trading_cycle(
+        self, engine: StrategyEngine, mock_adapter: MagicMock
+    ):
         """Full trading cycle execution."""
         await engine.start()
 
@@ -150,7 +160,9 @@ class TestStrategyEngineIntegration:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_multi_symbol_execution(self, engine: StrategyEngine, mock_adapter: MagicMock):
+    async def test_multi_symbol_execution(
+        self, engine: StrategyEngine, mock_adapter: MagicMock
+    ):
         """Execute trading cycles for multiple symbols."""
         await engine.start()
 
@@ -166,6 +178,7 @@ class TestStrategyEngineIntegration:
 
 
 # ============== Loader Tests ==============
+
 
 class TestLoaderIntegration:
     """Strategy loader integration tests."""
@@ -192,6 +205,7 @@ class TestLoaderIntegration:
 
 
 # ============== Serialization Tests ==============
+
 
 class TestSerializationIntegration:
     """JSON serialization integration tests."""
@@ -259,6 +273,7 @@ class TestSerializationIntegration:
 
 # ============== Sandbox Mode Tests ==============
 
+
 class TestSandboxModeIntegration:
     """Sandbox mode verification tests."""
 
@@ -269,11 +284,14 @@ class TestSandboxModeIntegration:
 
 # ============== Deterministic Tests ==============
 
+
 class TestDeterministicFlow:
     """Deterministic order flow tests with monkeypatch."""
 
     @pytest.mark.asyncio
-    async def test_forced_long_signal(self, engine: StrategyEngine, mock_adapter: MagicMock, monkeypatch):
+    async def test_forced_long_signal(
+        self, engine: StrategyEngine, mock_adapter: MagicMock, monkeypatch
+    ):
         """Force LONG signal to test order execution."""
         await engine.start()
 
@@ -299,11 +317,14 @@ class TestDeterministicFlow:
 
 # ============== Error Handling Tests ==============
 
+
 class TestErrorHandling:
     """Error handling integration tests."""
 
     @pytest.mark.asyncio
-    async def test_engine_handles_adapter_error(self, engine: StrategyEngine, mock_adapter: MagicMock):
+    async def test_engine_handles_adapter_error(
+        self, engine: StrategyEngine, mock_adapter: MagicMock
+    ):
         """Engine should handle adapter errors gracefully."""
         mock_adapter.fetch_ohlcv = AsyncMock(side_effect=Exception("Network error"))
 

@@ -95,14 +95,32 @@ class MetricsRegistry:
     _lock = threading.Lock()
 
     def __init__(self):
-        self._counters: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
-        self._gauges: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        self._counters: Dict[str, Dict[str, float]] = defaultdict(
+            lambda: defaultdict(float)
+        )
+        self._gauges: Dict[str, Dict[str, float]] = defaultdict(
+            lambda: defaultdict(float)
+        )
         self._histograms: Dict[str, Dict[str, HistogramBuckets]] = defaultdict(dict)
-        self._timings: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        self._timings: Dict[str, Dict[str, List[float]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
         self._lock = threading.Lock()
 
         # Default histogram buckets for latency (milliseconds)
-        self.default_latency_buckets = [5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000]
+        self.default_latency_buckets = [
+            5,
+            10,
+            25,
+            50,
+            100,
+            250,
+            500,
+            1000,
+            2500,
+            5000,
+            10000,
+        ]
         # Default buckets for general measurements
         self.default_buckets = [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
 
@@ -326,13 +344,9 @@ class MetricsRegistry:
         with self._lock:
             return {
                 "counters": {
-                    name: dict(values)
-                    for name, values in self._counters.items()
+                    name: dict(values) for name, values in self._counters.items()
                 },
-                "gauges": {
-                    name: dict(values)
-                    for name, values in self._gauges.items()
-                },
+                "gauges": {name: dict(values) for name, values in self._gauges.items()},
                 "histograms": {
                     name: {
                         label_key: {
@@ -447,6 +461,7 @@ def timed(
                 registry.record_timing(name, duration_ms, labels)
 
         import inspect
+
         if inspect.iscoroutinefunction(func):
             return async_wrapper
         return sync_wrapper
@@ -487,6 +502,7 @@ def counted(
             return await func(*args, **kwargs)
 
         import inspect
+
         if inspect.iscoroutinefunction(func):
             return async_wrapper
         return sync_wrapper
@@ -600,7 +616,10 @@ class HealthChecker:
                 # Update overall status
                 if result.status == HealthStatus.UNHEALTHY:
                     overall_status = HealthStatus.UNHEALTHY
-                elif result.status == HealthStatus.DEGRADED and overall_status != HealthStatus.UNHEALTHY:
+                elif (
+                    result.status == HealthStatus.DEGRADED
+                    and overall_status != HealthStatus.UNHEALTHY
+                ):
                     overall_status = HealthStatus.DEGRADED
 
         return {

@@ -118,71 +118,85 @@ class IntegratedResult:
         ]
 
         if self.metrics:
-            lines.extend([
-                "",
-                "PERFORMANCE METRICS:",
-                f"  Total Return:     {self.metrics.total_return * 100:+.1f}%",
-                f"  Sharpe Ratio:     {self.metrics.sharpe_ratio:.2f}",
-                f"  Max Drawdown:     {self.metrics.max_drawdown * 100:.1f}%",
-                f"  Win Rate:         {self.metrics.win_rate * 100:.1f}%",
-                f"  Trading Days:     {self.metrics.trading_days}",
-                f"  Invested Days:    {self.metrics.invested_days}",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "PERFORMANCE METRICS:",
+                    f"  Total Return:     {self.metrics.total_return * 100:+.1f}%",
+                    f"  Sharpe Ratio:     {self.metrics.sharpe_ratio:.2f}",
+                    f"  Max Drawdown:     {self.metrics.max_drawdown * 100:.1f}%",
+                    f"  Win Rate:         {self.metrics.win_rate * 100:.1f}%",
+                    f"  Trading Days:     {self.metrics.trading_days}",
+                    f"  Invested Days:    {self.metrics.invested_days}",
+                ]
+            )
 
         if self.validation:
             verdict = self.validation.get("verdict", {})
-            lines.extend([
-                "",
-                "VALIDATION RESULTS:",
-                f"  Is Robust:        {verdict.get('is_robust', 'N/A')}",
-                f"  Confidence:       {verdict.get('confidence', 'N/A')}",
-                f"  Warnings:         {len(verdict.get('warnings', []))}",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "VALIDATION RESULTS:",
+                    f"  Is Robust:        {verdict.get('is_robust', 'N/A')}",
+                    f"  Confidence:       {verdict.get('confidence', 'N/A')}",
+                    f"  Warnings:         {len(verdict.get('warnings', []))}",
+                ]
+            )
 
             wfo = self.validation.get("wfo", {})
             if wfo:
-                lines.extend([
-                    "",
-                    "  WFO:",
-                    f"    OOS Sharpe:     {wfo.get('oos_sharpe', 0):.2f}",
-                    f"    Efficiency:     {wfo.get('efficiency_ratio', 0):.2f}",
-                    f"    Robustness:     {wfo.get('robustness_score', 0):.1%}",
-                ])
+                lines.extend(
+                    [
+                        "",
+                        "  WFO:",
+                        f"    OOS Sharpe:     {wfo.get('oos_sharpe', 0):.2f}",
+                        f"    Efficiency:     {wfo.get('efficiency_ratio', 0):.2f}",
+                        f"    Robustness:     {wfo.get('robustness_score', 0):.1%}",
+                    ]
+                )
 
             cpcv = self.validation.get("cpcv", {})
             if cpcv:
-                lines.extend([
-                    "",
-                    "  CPCV:",
-                    f"    Mean Sharpe:    {cpcv.get('mean_sharpe', 0):.2f}",
-                    f"    PBO:            {cpcv.get('pbo', 0):.1%}",
-                ])
+                lines.extend(
+                    [
+                        "",
+                        "  CPCV:",
+                        f"    Mean Sharpe:    {cpcv.get('mean_sharpe', 0):.2f}",
+                        f"    PBO:            {cpcv.get('pbo', 0):.1%}",
+                    ]
+                )
 
             dsr = self.validation.get("dsr", {})
             if dsr and "error" not in dsr:
-                lines.extend([
-                    "",
-                    "  DSR:",
-                    f"    Raw Sharpe:     {dsr.get('raw_sharpe', 0):.2f}",
-                    f"    Deflated:       {dsr.get('deflated_sharpe', 0):.2f}",
-                    f"    Haircut:        {dsr.get('haircut_pct', 0):.1f}%",
-                    f"    Significant:    {dsr.get('is_significant', False)}",
-                ])
+                lines.extend(
+                    [
+                        "",
+                        "  DSR:",
+                        f"    Raw Sharpe:     {dsr.get('raw_sharpe', 0):.2f}",
+                        f"    Deflated:       {dsr.get('deflated_sharpe', 0):.2f}",
+                        f"    Haircut:        {dsr.get('haircut_pct', 0):.1f}%",
+                        f"    Significant:    {dsr.get('is_significant', False)}",
+                    ]
+                )
 
         if self.veto_stats:
-            lines.extend([
-                "",
-                "VETO STATISTICS:",
-                f"  Total Checks:     {self.veto_stats.get('total_checks', 0)}",
-                f"  Vetoed:           {self.veto_stats.get('vetoed_count', 0)}",
-                f"  Veto Rate:        {self.veto_stats.get('veto_rate', 0):.1%}",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "VETO STATISTICS:",
+                    f"  Total Checks:     {self.veto_stats.get('total_checks', 0)}",
+                    f"  Vetoed:           {self.veto_stats.get('vetoed_count', 0)}",
+                    f"  Veto Rate:        {self.veto_stats.get('veto_rate', 0):.1%}",
+                ]
+            )
 
-        lines.extend([
-            "",
-            f"Run Time: {self.run_time:.2f}s",
-            "=" * 60,
-        ])
+        lines.extend(
+            [
+                "",
+                f"Run Time: {self.run_time:.2f}s",
+                "=" * 60,
+            ]
+        )
 
         return "\n".join(lines)
 
@@ -257,6 +271,7 @@ class IntegratedStrategy:
             IntegratedResult
         """
         import time
+
         start_time = time.time()
 
         result = IntegratedResult(config=self.config)

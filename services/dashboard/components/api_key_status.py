@@ -1,4 +1,5 @@
 """API Key status panel for MASP Dashboard."""
+
 from __future__ import annotations
 
 import os
@@ -104,8 +105,7 @@ def render_api_key_status_panel() -> None:
                 st.text("Secret:  ******** (encrypted)")
 
     with st.expander("Setup Guide"):
-        st.markdown(
-            """
+        st.markdown("""
 **Quick Setup (Development):**
 ```powershell
 $env:UPBIT_API_KEY = "your-key"
@@ -114,5 +114,4 @@ $env:MASP_DASHBOARD_LIVE = "1"
 ```
 
 See `docs/API_KEY_SETUP.md` for production setup.
-"""
-        )
+""")
