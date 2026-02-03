@@ -51,6 +51,7 @@ from libs.strategies.vix_sma10_stocks import (
     VIXSMA10Tier2Strategy,
     VIXSMA10AllTiersStrategy,
 )
+from libs.strategies.sept_v3_rsi50_gate import SeptV3Rsi50GateStrategy
 
 
 # Strategy registry - maps strategy_id to class
@@ -74,6 +75,8 @@ STRATEGY_REGISTRY: dict[str, type[BaseStrategy]] = {
     "vix_sma10_tier1": VIXSMA10Tier1Strategy,
     "vix_sma10_tier2": VIXSMA10Tier2Strategy,
     "vix_sma10_all": VIXSMA10AllTiersStrategy,
+    # Crypto Spot - Sept v3 RSI50 Gate (7-Signal OR Ensemble)
+    "sept_v3_rsi50_gate": SeptV3Rsi50GateStrategy,
 }
 
 # KOSPI200 Futures strategies (A+ Grade validated) - conditional
@@ -550,6 +553,59 @@ AVAILABLE_STRATEGIES.append({
     "validated_performance": {
         "min_sharpe": 0.3,
         "stocks_count": 25,
+    },
+})
+
+# Sept v3 RSI50 Gate v3 - 7중 OR + 거래량 상위 30% 필터
+AVAILABLE_STRATEGIES.append({
+    "strategy_id": "sept_v3_rsi50_gate",
+    "id": "sept_v3_rsi50_gate",
+    "name": "Sept-v3-RSI50-Gate",
+    "version": "3.0.0",
+    "description": (
+        "7중 OR 신호 + 거래량 상위 30% 필터 전략. "
+        "신호: KAMA, TSMOM, EMA Cross, Momentum, SMA Cross, RSI>50, Higher Low (7개 중 1개 이상). "
+        "리스크 관리: 포트폴리오 -15% 손절 + 3일 쿨다운. "
+        "OOS Sharpe 2.27, MDD -37.0%, Return 11,763%."
+    ),
+    "module": "libs.strategies.sept_v3_rsi50_gate",
+    "class_name": "SeptV3Rsi50GateStrategy",
+    "markets": ["spot"],
+    "exchanges": ["upbit_spot", "bithumb_spot", "binance_spot", "paper"],
+    "status": "production_ready",
+    "features": [
+        "7_signal_or",
+        "volume_filter_top_30pct",
+        "btc_gate_entry",
+        "btc_gate_exit",
+        "portfolio_stop_loss",
+        "cooldown_period",
+        "unlimited_positions",
+        "oos_validated",
+    ],
+    "validated_performance": {
+        "oos_sharpe": 2.27,
+        "oos_mdd": "-37.0%",
+        "oos_return": "11763%",
+        "avg_positions": 4.1,
+    },
+    "risk_management": {
+        "btc_gate_exit": True,
+        "portfolio_stop": "-15%",
+        "cooldown_days": 3,
+        "volume_filter": "top 30%",
+        "max_positions": "unlimited",
+    },
+    "recommendation": {
+        "capital_allocation": "30-50%",
+        "expected_mdd": "-37%",
+        "live_trading_ready": True,
+        "notes": [
+            "소액으로 3개월 테스트 후 증액 권장",
+            "백테스트 성과의 70-80% 수준 기대",
+            "거래량 상위 30%만 선별하여 유동성 확보",
+            "평균 4.1개 보유 (7중 OR + 상위 30%)",
+        ],
     },
 })
 

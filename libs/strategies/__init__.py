@@ -30,6 +30,7 @@ __all__ = [
     "TSMOM",
     "TSMOM_signal",
     "KamaTsmomGateStrategy",
+    "SeptV3Rsi50GateStrategy",
     "load_strategies",
 ]
 
@@ -40,6 +41,7 @@ _LAZY_IMPORTS = {
     "TSMOM": "libs.strategies.indicators",
     "TSMOM_signal": "libs.strategies.indicators",
     "KamaTsmomGateStrategy": "libs.strategies.kama_tsmom_gate",
+    "SeptV3Rsi50GateStrategy": "libs.strategies.sept_v3_rsi50_gate",
 }
 
 
