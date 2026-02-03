@@ -8,12 +8,11 @@ Usage:
 This script initializes and manages the Ralph-Loop autonomous research cycle.
 """
 
-import glob
 import json
 import warnings
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -95,7 +94,7 @@ def task_1_1_enumerate_symbols() -> Dict:
 
     # Find all CSV files
     csv_files = list(futures_path.glob("*.csv"))
-    symbols = [
+    [
         f.stem.replace("_1h", "").replace("USDT", "").upper() + "USDT"
         for f in csv_files
     ]
@@ -205,7 +204,7 @@ def task_1_3_check_data_quality() -> Dict:
 
     for symbol in major_symbols:
         # Find file (could be named differently)
-        pattern = (
+        (
             f"*{symbol.lower()}*"
             if symbol.lower() in str(futures_path).lower()
             else f"*{symbol}*"
@@ -297,7 +296,7 @@ def task_1_4_calculate_liquidity() -> Dict:
                     "last_price": float(df["close"].iloc[-1]),
                     "adv_notional_millions": float(adv * df["close"].iloc[-1] / 1e6),
                 }
-        except Exception as e:
+        except Exception:
             pass  # Skip files with issues
 
     # Rank by ADV
@@ -324,7 +323,7 @@ def task_1_4_calculate_liquidity() -> Dict:
         "details": dict(sorted_by_adv[:50]),  # Top 50 details
     }
 
-    print(f"Liquidity tiers:")
+    print("Liquidity tiers:")
     print(
         f"  Tier 1 ($100M+ ADV): {len(result['liquidity_tiers']['tier1_100m_plus'])} symbols"
     )

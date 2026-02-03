@@ -44,6 +44,6 @@ if err != 0:
     sys.exit(1)
 
 if buy == 0 and sell == 0:
-    print(f"B3 결과: PASS_WITH_WARN (ERROR=0 but BUY/SELL=0; 시장상황 가능)")
+    print("B3 결과: PASS_WITH_WARN (ERROR=0 but BUY/SELL=0; 시장상황 가능)")
 else:
     print(f"B3 결과: PASS (ERROR=0, BUY={buy}, SELL={sell}, HOLD={hold})")

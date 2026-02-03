@@ -16,7 +16,7 @@ import time
 from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional
+from typing import Optional
 
 try:
     import pybithumb

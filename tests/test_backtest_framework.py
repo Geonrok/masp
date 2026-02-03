@@ -2,14 +2,13 @@
 Tests for the enhanced backtesting framework.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import numpy as np
 import pytest
 
-from libs.backtest.historical_data import HistoricalDataLoader, OHLCVDataset
+from libs.backtest.historical_data import HistoricalDataLoader
 from libs.backtest.parameter_optimizer import (
-    GridSearchOptimizer,
     MonteCarloAnalyzer,
     OptimizationResult,
 )

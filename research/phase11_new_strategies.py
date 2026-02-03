@@ -608,7 +608,7 @@ def strategy_4_altcoin_rotation():
             i = 0
             while i + rebal_days <= len(oos_dates):
                 period_dates = oos_dates[i : i + rebal_days]
-                lookback_start = max(0, i - mom_period)
+                max(0, i - mom_period)
                 lookback_dates = (
                     oos_dates[max(0, i - mom_period) : i] if i > 0 else oos_dates[:1]
                 )
@@ -851,7 +851,7 @@ def strategy_7_grid():
                 np.maximum(np.abs(high[1:] - close[:-1]), np.abs(low[1:] - close[:-1])),
             )
             tr = np.insert(tr, 0, high[0] - low[0])
-            atr = pd.Series(tr).rolling(n).mean().values
+            pd.Series(tr).rolling(n).mean().values
 
             # +DM / -DM
             up_move = high[1:] - high[:-1]

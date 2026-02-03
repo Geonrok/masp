@@ -10,7 +10,6 @@ import logging
 import sys
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:

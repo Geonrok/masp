@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from unittest.mock import MagicMock, patch
 
-import pytest
 
 
 def test_alert_priority_values():
@@ -262,7 +259,7 @@ def test_alert_manager_trade_alert(tmp_path):
 
 def test_alert_manager_error_alert(tmp_path):
     """Test error_alert convenience method."""
-    from libs.notifications.alert_manager import AlertManager, AlertPriority, AlertType
+    from libs.notifications.alert_manager import AlertManager, AlertPriority
 
     manager = AlertManager(notifier=None, history_dir=str(tmp_path))
 
@@ -469,8 +466,6 @@ def test_alert_settings_component_import():
     from services.dashboard.components.alert_settings import (
         render_alert_rule_card,
         render_alert_settings,
-        render_anomaly_thresholds,
-        render_new_rule_form,
     )
 
     assert callable(render_alert_settings)

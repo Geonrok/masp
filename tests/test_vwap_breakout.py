@@ -3,7 +3,6 @@ Tests for VwapBreakoutStrategy.
 """
 
 import numpy as np
-import pytest
 
 from libs.strategies.base import Signal
 from libs.strategies.vwap_breakout import VwapBreakoutStrategy

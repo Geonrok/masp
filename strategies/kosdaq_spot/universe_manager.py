@@ -8,7 +8,6 @@ import json
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import Dict, List, Optional
 
 import pandas as pd
@@ -227,7 +226,7 @@ class KOSDAQUniverseManager:
 
         print("=" * 70)
         print("코스닥 현물 전략 유니버스")
-        print(f"기준: 유동성 상위 50% 내 시총 상위 1/8")
+        print("기준: 유동성 상위 50% 내 시총 상위 1/8")
         print("=" * 70)
 
         print(f"\n총 종목 수: {stats['total_stocks']}개")

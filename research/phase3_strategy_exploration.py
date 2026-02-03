@@ -92,7 +92,7 @@ def backtest_walk_forward(
         # Generate signals using only training data for any parameter fitting
         try:
             signals = signal_func(train_df, test_df, **kwargs)
-        except Exception as e:
+        except Exception:
             i += test_bars
             step += 1
             continue
@@ -749,7 +749,7 @@ def main():
     print(f"\n  Promising strategies: {len(promising)}")
     print(f"  Failed strategies: {len(failed)}")
     print(f"  Report saved: {report_path}")
-    print(f"  Next: Phase 4 - Validation Framework")
+    print("  Next: Phase 4 - Validation Framework")
 
     return report
 

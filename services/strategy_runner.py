@@ -32,7 +32,6 @@ from libs.notifications.telegram import (
 )
 from libs.risk.stop_loss_manager import (
     CompositeStopManager,
-    ExitReason,
     FixedPercentageStop,
     TimeBasedStop,
     TrailingStop,

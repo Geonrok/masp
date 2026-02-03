@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 from libs.adapters.mock import MockExecutionAdapter, MockMarketDataAdapter
-from libs.core.config import AssetClass, Config, load_config
+from libs.core.config import AssetClass, load_config
 from libs.core.event_logger import EventLogger
 from libs.core.event_store import EventStore
 from libs.core.paths import find_repo_root
@@ -72,7 +72,7 @@ class StrategyService:
         kill_switch_path = Path(self.config.kill_switch_file)
         if kill_switch_path.exists():
             print(f"[KILL-SWITCH] File detected: {kill_switch_path}")
-            print(f"[KILL-SWITCH] Terminating service immediately")
+            print("[KILL-SWITCH] Terminating service immediately")
             return True
         return False
 

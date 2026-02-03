@@ -14,11 +14,10 @@ AI 검수 합의:
 """
 
 import logging
-import os
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional
+from typing import Optional
 
 try:
     import pybithumb

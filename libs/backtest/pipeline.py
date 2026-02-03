@@ -11,10 +11,8 @@ Provides automated backtesting capabilities:
 
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
-import os
 import threading
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone

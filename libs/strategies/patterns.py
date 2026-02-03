@@ -17,9 +17,7 @@ from libs.strategies.base import (
     Action,
     BaseStrategy,
     Decision,
-    Signal,
     StrategyContext,
-    TradeSignal,
 )
 
 logger = logging.getLogger(__name__)

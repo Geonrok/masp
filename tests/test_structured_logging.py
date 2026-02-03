@@ -4,9 +4,7 @@ Tests for structured logging module.
 
 import json
 import logging
-from unittest.mock import MagicMock, patch
 
-import pytest
 
 from libs.core.structured_logging import (
     AuditLogger,

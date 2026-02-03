@@ -23,12 +23,11 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -38,12 +37,10 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from libs.strategies.binance_futures_v6 import (
-    BinanceFuturesV6Config,
     BinanceFuturesV6Strategy,
     MarketRegime,
     SignalType,
 )
-from libs.strategies.indicators import ATR
 
 try:
     import requests
@@ -728,7 +725,7 @@ class BinanceFuturesV6Backtester:
         if self.trade_log:
             trade_pnls = [t["pnl_pct"] for t in self.trade_log]
             wins = sum(1 for p in trade_pnls if p > 0)
-            losses = sum(1 for p in trade_pnls if p <= 0)
+            sum(1 for p in trade_pnls if p <= 0)
             win_rate = wins / len(trade_pnls) if trade_pnls else 0
 
             gross_profit = sum(p for p in trade_pnls if p > 0)

@@ -67,7 +67,7 @@ def load_market_data(market_folder: Path) -> dict:
             if symbol and symbol != "":
                 data[symbol] = df
 
-        except Exception as e:
+        except Exception:
             continue
 
     return data
@@ -189,7 +189,7 @@ def run_backtest_original_method(
 
         # Update state for next day
         was_invested = len(selected_today) > 0
-        prev_selected = selected_today.copy() if selected_today else []
+        selected_today.copy() if selected_today else []
 
     portfolio_values = np.array(portfolio_values)
     daily_returns = np.array(daily_returns)

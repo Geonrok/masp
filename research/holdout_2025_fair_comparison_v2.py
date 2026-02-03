@@ -5,9 +5,7 @@ KAMA=10, TSMOM=60 vs KAMA=5, TSMOM=90
 Fixed: Handle different column names across markets
 """
 
-import os
 import warnings
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -69,7 +67,7 @@ def load_market_data(market_folder: Path) -> dict:
             if symbol and symbol != "":
                 data[symbol] = df
 
-        except Exception as e:
+        except Exception:
             continue
 
     return data

@@ -6,8 +6,6 @@
 import asyncio
 import logging
 import os
-import time
-from datetime import datetime, timedelta
 
 import pandas as pd
 from ebest import OpenApi
@@ -85,7 +83,7 @@ async def get_investor_trend(api, ticker, start_date, end_date):
                     df = pd.DataFrame(data)
                     return df
 
-    except Exception as e:
+    except Exception:
         pass
 
     return None
@@ -116,7 +114,7 @@ async def get_foreign_trend_t1764(api, ticker, start_date, end_date):
                     df = pd.DataFrame(data)
                     return df
 
-    except Exception as e:
+    except Exception:
         pass
 
     return None

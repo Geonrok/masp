@@ -2,7 +2,6 @@
 Tests for exception handling utilities.
 """
 
-import asyncio
 import logging
 
 import pytest

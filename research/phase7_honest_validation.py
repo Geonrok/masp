@@ -13,8 +13,6 @@ This phase fixes that with:
 5. Regime analysis: does it work in all market conditions?
 """
 
-import json
-import os
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -233,7 +231,7 @@ def test_1_true_oos():
     print(f"  Selection period: {len(selected_profitable)} profitable symbols")
 
     # STEP B: TRUE OOS on last 40% of data (NEVER seen during selection)
-    print(f"\n  --- TRUE OUT-OF-SAMPLE (last 40% of data) ---")
+    print("\n  --- TRUE OUT-OF-SAMPLE (last 40% of data) ---")
 
     for universe_name, universe_symbols in [
         ("top_30_oos", selected_top30),
@@ -541,7 +539,7 @@ def test_4_capacity():
     ]
 
     print(
-        f"  Assuming $100K portfolio, 5 positions max, 2% per position = $2K per trade\n"
+        "  Assuming $100K portfolio, 5 positions max, 2% per position = $2K per trade\n"
     )
 
     for symbol in symbols:

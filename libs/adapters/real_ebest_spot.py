@@ -90,7 +90,7 @@ class EbestSpotMarketData(MarketDataAdapter):
         Reuses API connection when possible for efficiency.
         """
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             # Already in async context - use nest_asyncio or thread
             import concurrent.futures
 

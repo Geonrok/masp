@@ -119,7 +119,7 @@ print(f"추정 테스트 횟수: {estimated_tests:,}")
 dsr_upbit, p_upbit, exp_max_upbit = deflated_sharpe_ratio(
     observed_sharpe_upbit, estimated_tests, years
 )
-print(f"\n[Upbit]")
+print("\n[Upbit]")
 print(f"  Expected Max Sharpe (우연): {exp_max_upbit:.3f}")
 print(f"  Deflated Sharpe Ratio: {dsr_upbit:.3f}")
 print(f"  P-value: {p_upbit:.6f}")
@@ -129,7 +129,7 @@ print(f"  통과 여부: {'[PASS]' if p_upbit < 0.05 else '[FAIL]'}")
 dsr_bithumb, p_bithumb, exp_max_bithumb = deflated_sharpe_ratio(
     observed_sharpe_bithumb, estimated_tests, years
 )
-print(f"\n[Bithumb]")
+print("\n[Bithumb]")
 print(f"  Expected Max Sharpe (우연): {exp_max_bithumb:.3f}")
 print(f"  Deflated Sharpe Ratio: {dsr_bithumb:.3f}")
 print(f"  P-value: {p_bithumb:.6f}")
@@ -205,7 +205,7 @@ random_max_sharpes = np.array(random_max_sharpes)
 
 print(f"시뮬레이션 횟수: {n_simulations:,}")
 print(f"전략 수: {n_strategies_simulated:,}")
-print(f"\n무작위 전략 중 최대 Sharpe 분포:")
+print("\n무작위 전략 중 최대 Sharpe 분포:")
 print(f"  평균: {random_max_sharpes.mean():.3f}")
 print(f"  표준편차: {random_max_sharpes.std():.3f}")
 print(f"  95th percentile: {np.percentile(random_max_sharpes, 95):.3f}")
@@ -217,7 +217,7 @@ percentile_bithumb = stats.percentileofscore(
     random_max_sharpes, observed_sharpe_bithumb
 )
 
-print(f"\n실제 전략의 위치:")
+print("\n실제 전략의 위치:")
 print(f"  Upbit Sharpe {observed_sharpe_upbit}: {percentile_upbit:.1f}th percentile")
 print(
     f"  Bithumb Sharpe {observed_sharpe_bithumb}: {percentile_bithumb:.1f}th percentile"

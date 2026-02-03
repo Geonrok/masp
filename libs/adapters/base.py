@@ -5,7 +5,7 @@ These define the contract for real adapters in future phases.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Optional
 
 
 @dataclass

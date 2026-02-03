@@ -114,12 +114,12 @@ class TestTSMOM:
     def test_signal_positive(self):
         """Test TSMOM signal for positive momentum."""
         data = list(range(100, 200))
-        assert TSMOM_signal(data, lookback=50) == True
+        assert TSMOM_signal(data, lookback=50)
 
     def test_signal_negative(self):
         """Test TSMOM signal for negative momentum."""
         data = list(range(200, 100, -1))
-        assert TSMOM_signal(data, lookback=50) == False
+        assert not TSMOM_signal(data, lookback=50)
 
     def test_insufficient_data(self):
         """Test TSMOM with insufficient data."""

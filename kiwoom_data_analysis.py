@@ -4,7 +4,6 @@
 """
 
 import os
-from datetime import datetime
 
 import pandas as pd
 
@@ -207,10 +206,10 @@ def main():
     foreign_summary = analyze_foreign_data()
 
     # 2. 일봉 데이터 분석
-    daily_summary = analyze_daily_data()
+    analyze_daily_data()
 
     # 3. 전략용 데이터 병합
-    merged_data = merge_data_for_strategy()
+    merge_data_for_strategy()
 
     # 4. 외국인 순매수 상위/하위 종목
     if foreign_summary is not None and len(foreign_summary) > 0:

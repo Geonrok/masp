@@ -95,21 +95,17 @@ def simulate_with_stops(
                 lowest_since_entry = min(lowest_since_entry, c)
 
             should_exit = False
-            exit_reason = ""
 
             # Max hold time
             if bars_held >= max_bars:
                 should_exit = True
-                exit_reason = "max_bars"
 
             # ATR stop loss
             elif atr_stop_mult > 0:
                 if position == 1 and c < entry_price - atr_stop_mult * current_atr:
                     should_exit = True
-                    exit_reason = "atr_stop"
                 elif position == -1 and c > entry_price + atr_stop_mult * current_atr:
                     should_exit = True
-                    exit_reason = "atr_stop"
 
             # Trailing stop
             elif trailing_atr_mult > 0:
@@ -118,21 +114,17 @@ def simulate_with_stops(
                     and c < highest_since_entry - trailing_atr_mult * current_atr
                 ):
                     should_exit = True
-                    exit_reason = "trailing_stop"
                 elif (
                     position == -1
                     and c > lowest_since_entry + trailing_atr_mult * current_atr
                 ):
                     should_exit = True
-                    exit_reason = "trailing_stop"
 
             # Signal reversal
             elif sig != 0 and sig != position:
                 should_exit = True
-                exit_reason = "reversal"
             elif sig == 0:
                 should_exit = True
-                exit_reason = "flat"
 
             if should_exit:
                 exit_price = c * (1 - SLIPPAGE * np.sign(position))
@@ -576,7 +568,7 @@ def main():
             )
 
     # Also test aggressive vol target
-    print(f"\n--- Aggressive vol target (15%) ---")
+    print("\n--- Aggressive vol target (15%) ---")
     for strat_key in ["tsmom_regime", "tsmom_multifactor", "adaptive_tsmom", "xsmom"]:
         for stop_key in ["no_stop", "trail_3x"]:
             stop_cfg = stop_configs[stop_key]
@@ -640,7 +632,7 @@ def main():
             print(f"  {c}: {'PASS' if v else 'FAIL'}")
 
         # Compare vs Phase 4 baseline
-        print(f"\n  vs Phase 4 baseline (top_10_aggressive: Sharpe=0.64, 4/6):")
+        print("\n  vs Phase 4 baseline (top_10_aggressive: Sharpe=0.64, 4/6):")
         print(
             f"  Sharpe: 0.64 → {best['sharpe']:.2f} ({'improved' if best['sharpe'] > 0.64 else 'worse'})"
         )

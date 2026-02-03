@@ -18,7 +18,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict, List
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -61,7 +61,7 @@ class BithumbIntegrationTest:
     def run(self) -> bool:
         """Run all tests."""
         print("=" * 60)
-        print(f"Bithumb Integration Test Suite")
+        print("Bithumb Integration Test Suite")
         print(f"Mode: {self.mode}")
         print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         print("=" * 60)

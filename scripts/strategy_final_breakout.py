@@ -417,7 +417,7 @@ def main():
     # =========================================================================
     # 1. 개별 심볼 테스트
     # =========================================================================
-    logger.info(f"\n[1] 개별 심볼 테스트 (Kelly 2% 포지션)")
+    logger.info("\n[1] 개별 심볼 테스트 (Kelly 2% 포지션)")
     logger.info("-" * 50)
 
     results = []
@@ -439,7 +439,7 @@ def main():
         df_r = pd.DataFrame(results)
         profitable = (df_r["pf"] > 1.0).sum()
 
-        logger.info(f"\n[개별 심볼 결과]")
+        logger.info("\n[개별 심볼 결과]")
         logger.info(f"  테스트: {len(results)}개")
         logger.info(
             f"  수익: {profitable}/{len(results)} ({profitable/len(results)*100:.1f}%)"
@@ -467,7 +467,7 @@ def main():
     port_result = backtest_portfolio(loader, selected_symbols, strategy, cost)
 
     if port_result:
-        logger.info(f"\n[포트폴리오 결과]")
+        logger.info("\n[포트폴리오 결과]")
         logger.info(f"  총 거래: {port_result['trades']}회")
         logger.info(f"  거래 심볼: {port_result['symbols_traded']}개")
         logger.info(f"  PF: {port_result['pf']:.2f}")
@@ -487,21 +487,21 @@ def main():
     if all_trades:
         mc = monte_carlo(all_trades, 5000)
 
-        logger.info(f"\n[수익률 분포]")
+        logger.info("\n[수익률 분포]")
         logger.info(f"  평균: {mc['mean']:+.1f}%")
         logger.info(f"  중앙값: {mc['median']:+.1f}%")
 
-        logger.info(f"\n[신뢰구간]")
+        logger.info("\n[신뢰구간]")
         logger.info(f"  5% (최악): {mc['p5']:+.1f}%")
         logger.info(f"  25%: {mc['p25']:+.1f}%")
         logger.info(f"  75%: {mc['p75']:+.1f}%")
         logger.info(f"  95% (최선): {mc['p95']:+.1f}%")
 
-        logger.info(f"\n[확률]")
+        logger.info("\n[확률]")
         logger.info(f"  수익 확률: {mc['prob_profit']:.1f}%")
         logger.info(f"  10%+ 손실 확률: {mc['prob_loss_10']:.1f}%")
 
-        logger.info(f"\n[Drawdown]")
+        logger.info("\n[Drawdown]")
         logger.info(f"  평균 MDD: {mc['mean_mdd']:.1f}%")
         logger.info(f"  최악 MDD: {mc['worst_mdd']:.1f}%")
 
@@ -557,15 +557,15 @@ def main():
     if passed >= total - 1:
         logger.info("\n>>> STRATEGY VALIDATED - READY FOR PRODUCTION <<<")
 
-        logger.info(f"\n[실전 매매 설정]")
-        logger.info(f"  전략: Donchian Channel Breakout (25일)")
-        logger.info(f"  필터: Volume + Trend (100 EMA)")
-        logger.info(f"  포지션: 자본의 2% per trade")
-        logger.info(f"  동시 포지션: 최대 5개")
-        logger.info(f"  스탑로스: ATR x 2.0")
-        logger.info(f"  최대 보유: 8일 (48봉)")
+        logger.info("\n[실전 매매 설정]")
+        logger.info("  전략: Donchian Channel Breakout (25일)")
+        logger.info("  필터: Volume + Trend (100 EMA)")
+        logger.info("  포지션: 자본의 2% per trade")
+        logger.info("  동시 포지션: 최대 5개")
+        logger.info("  스탑로스: ATR x 2.0")
+        logger.info("  최대 보유: 8일 (48봉)")
 
-        logger.info(f"\n[거래 대상 심볼]")
+        logger.info("\n[거래 대상 심볼]")
         for sym in selected_symbols:
             logger.info(f"  - {sym}")
 

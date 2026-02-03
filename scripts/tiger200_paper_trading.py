@@ -29,7 +29,7 @@ from typing import Optional
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from libs.strategies.tiger200_etf import TIGER200Config, TIGER200Strategy
+from libs.strategies.tiger200_etf import TIGER200Strategy
 
 # 로깅 설정
 logging.basicConfig(
@@ -124,7 +124,7 @@ class TIGER200PaperTrader:
         # 상태 로드
         self.state = self._load_state()
 
-        logger.info(f"[TIGER200] Paper Trader 초기화")
+        logger.info("[TIGER200] Paper Trader 초기화")
         logger.info(f"[TIGER200] 초기 자본: {self.state.cash:,.0f}원")
 
     def _load_state(self) -> TradingState:
@@ -354,7 +354,7 @@ class TIGER200PaperTrader:
     def run_once(self) -> dict:
         """1회 실행."""
         logger.info("=" * 60)
-        logger.info(f"[TIGER200] Paper Trading 실행")
+        logger.info("[TIGER200] Paper Trading 실행")
         logger.info("=" * 60)
 
         # 데이터 로드
@@ -545,12 +545,12 @@ def main():
         print("=" * 60)
 
         # 기본 정보
-        print(f"\n[ETF 정보]")
+        print("\n[ETF 정보]")
         print(f"  종목: {status.get('etf')} ({status.get('etf_code')})")
         print(f"  현재가: {status.get('etf_price', 0):,.0f}원")
 
         # 계좌 정보
-        print(f"\n[계좌 현황]")
+        print("\n[계좌 현황]")
         print(f"  총 자산: {status.get('equity', 0):,.0f}원")
         print(f"  현금: {status.get('cash', 0):,.0f}원")
         print(f"  수익률: {status.get('return_pct', 0):+.2f}%")
@@ -558,12 +558,12 @@ def main():
         print(f"  최대 낙폭: {status.get('max_drawdown_pct', 0):.2f}%")
 
         # 거래 통계
-        print(f"\n[거래 통계]")
+        print("\n[거래 통계]")
         print(f"  총 거래: {status.get('total_trades', 0)}회")
         print(f"  승률: {status.get('win_rate', 0):.1f}%")
 
         # 포지션
-        print(f"\n[포지션]")
+        print("\n[포지션]")
         pos = status.get("position")
         if pos:
             print(f"  보유: {pos['shares']}주 @ {pos['avg_price']:,.0f}원")
@@ -575,13 +575,13 @@ def main():
             print("  없음 (현금 보유)")
 
         # 시그널
-        print(f"\n[마지막 시그널]")
+        print("\n[마지막 시그널]")
         print(f"  Composite: {status.get('last_composite', 0):.0%}")
         print(f"  Action: {status.get('last_action', 'N/A')}")
         print(f"  시간: {status.get('last_update', 'N/A')}")
 
         # 지표
-        print(f"\n[현재 지표]")
+        print("\n[현재 지표]")
         indicators = status.get("indicators", {})
         for key, value in indicators.items():
             if isinstance(value, float):

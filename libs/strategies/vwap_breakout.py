@@ -35,8 +35,6 @@ from libs.strategies.base import BaseStrategy, Signal, TradeSignal
 from libs.strategies.indicators import (
     ATR,
     EMA,
-    ATR_series,
-    EMA_series,
     KAMA_series,
 )
 

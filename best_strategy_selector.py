@@ -9,12 +9,10 @@ Usage:
     python best_strategy_selector.py --build-db
 """
 
-import argparse
 import json
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 DATA_DIR = Path("E:/투자/data")

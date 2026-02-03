@@ -8,7 +8,6 @@
 - 펀딩비 없음
 """
 
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -216,7 +215,7 @@ def main():
         print(f"\n{exchange.upper()} 테스트 중...")
         data = load_ohlcv(exchange, "1d", 100)
         if not data:
-            print(f"  데이터 없음")
+            print("  데이터 없음")
             continue
         print(f"  심볼: {len(data)}개")
 

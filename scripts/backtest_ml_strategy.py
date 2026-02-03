@@ -16,16 +16,13 @@ from __future__ import annotations
 
 import logging
 import warnings
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Tuple
 
-import joblib
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.model_selection import TimeSeriesSplit
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 
 warnings.filterwarnings("ignore")

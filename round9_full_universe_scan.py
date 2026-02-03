@@ -16,8 +16,6 @@ Criteria for Viable:
 - Test MDD > -30%
 """
 
-import logging
-import time
 import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from datetime import datetime
@@ -289,12 +287,12 @@ def main():
         & (final_df["train_sharpe"] > 0.3)
     ].sort_values("sharpe", ascending=False)
 
-    print(f"\nAnalysis Complete!")
+    print("\nAnalysis Complete!")
     print(f"Total Strategies Tested: {len(test_res)}")
     print(f"Viable Strategies Found: {len(viable)}")
 
     if not viable.empty:
-        print(f"\nTOP 20 Strategies:")
+        print("\nTOP 20 Strategies:")
         print(
             viable[["ticker", "strategy", "sharpe", "cagr", "mdd", "trades"]].head(20)
         )

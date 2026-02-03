@@ -18,7 +18,7 @@ import logging
 import random
 import warnings
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -127,7 +127,7 @@ class MultiFactorSignal:
         scores = pd.Series(0.0, index=df.index)
 
         # Technical
-        ema20, ema50 = calc_ema(df["close"], 20), calc_ema(df["close"], 50)
+        _ema20, ema50 = calc_ema(df["close"], 20), calc_ema(df["close"], 50)
         tech = np.where(df["close"] > ema50, 1, np.where(df["close"] < ema50, -1, 0))
         rsi = calc_rsi(df["close"], 14)
         tech_rsi = np.where(rsi < 30, 1.5, np.where(rsi > 70, -1.5, 0))
@@ -515,7 +515,7 @@ def main():
     if results:
         df_r = pd.DataFrame(results)
         profitable = (df_r["pf"] > 1.0).sum()
-        logger.info(f"\n[Summary]")
+        logger.info("\n[Summary]")
         logger.info(
             f"  Profitable: {profitable}/{len(results)} ({profitable/len(results)*100:.1f}%)"
         )
@@ -532,18 +532,18 @@ def main():
 
     if all_trades:
         mc = monte_carlo(all_trades, 5000)
-        logger.info(f"\n[Return Distribution]")
+        logger.info("\n[Return Distribution]")
         logger.info(f"  Mean: {mc['mean']:+.1f}%")
         logger.info(f"  Median: {mc['median']:+.1f}%")
-        logger.info(f"\n[Confidence Interval]")
+        logger.info("\n[Confidence Interval]")
         logger.info(f"  5% (Worst): {mc['p5']:+.1f}%")
         logger.info(f"  25%: {mc['p25']:+.1f}%")
         logger.info(f"  75%: {mc['p75']:+.1f}%")
         logger.info(f"  95% (Best): {mc['p95']:+.1f}%")
-        logger.info(f"\n[Probability]")
+        logger.info("\n[Probability]")
         logger.info(f"  Profit: {mc['prob_profit']:.1f}%")
         logger.info(f"  Loss > 10%: {mc['prob_loss_10']:.1f}%")
-        logger.info(f"\n[Drawdown]")
+        logger.info("\n[Drawdown]")
         logger.info(f"  Mean MDD: {mc['mean_mdd']:.1f}%")
         logger.info(f"  Worst MDD: {mc['worst_mdd']:.1f}%")
 
@@ -623,15 +623,15 @@ def main():
             kelly = wr - (1 - wr) / ratio
             half_kelly = kelly / 2
 
-            logger.info(f"\n[Stats]")
+            logger.info("\n[Stats]")
             logger.info(f"  Win Rate: {wr*100:.1f}%")
             logger.info(f"  Avg Win: {avg_win*100:.2f}%")
             logger.info(f"  Avg Loss: {avg_loss*100:.2f}%")
             logger.info(f"  Win/Loss Ratio: {ratio:.2f}")
-            logger.info(f"\n[Kelly]")
+            logger.info("\n[Kelly]")
             logger.info(f"  Full Kelly: {kelly*100:.1f}%")
             logger.info(f"  Half Kelly (Recommended): {max(0, half_kelly)*100:.1f}%")
-            logger.info(f"  Current Setting: 20%")
+            logger.info("  Current Setting: 20%")
 
     # =========================================================================
     # FINAL ASSESSMENT
@@ -701,7 +701,7 @@ def main():
 
     # Top performers
     if results:
-        logger.info(f"\n[Top 5 Performers]")
+        logger.info("\n[Top 5 Performers]")
         df_r = pd.DataFrame(results)
         top5 = df_r.nlargest(5, "pf")
         for _, r in top5.iterrows():

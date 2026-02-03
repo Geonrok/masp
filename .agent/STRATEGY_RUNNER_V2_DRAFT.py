@@ -12,10 +12,10 @@ StrategyRunner 주문 실행 부분 수정 초안
 def _execute_trade_signal_OLD(self, symbol: str, signal, quote) -> Dict:
     """문제: quantity가 코인 수량인지 KRW인지 불명확"""
     action, _gate_pass = self._parse_signal(signal, True)
-    current_price = self._extract_price(quote)
+    self._extract_price(quote)
 
     if action == "BUY":
-        order = self.execution.place_order(
+        self.execution.place_order(
             symbol,
             "BUY",
             self.position_size_krw,  # ❌ 이게 KRW인데, Adapter는 quantity로 받음

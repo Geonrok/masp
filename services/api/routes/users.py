@@ -13,7 +13,6 @@ from pydantic import BaseModel, Field
 
 from libs.core.rbac import (
     Permission,
-    RBACManager,
     Role,
     User,
     get_rbac_manager,
@@ -21,7 +20,6 @@ from libs.core.rbac import (
 from services.api.middleware.auth import (
     get_current_user,
     require_permission,
-    require_role,
 )
 
 router = APIRouter()

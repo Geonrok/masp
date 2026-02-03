@@ -11,7 +11,7 @@ Phase 1에서 실거래 구현 시 이 파일을 채워넣습니다.
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from libs.adapters.base import ExecutionAdapter, MarketDataAdapter
 

@@ -408,7 +408,7 @@ def render_portfolio_summary(
         except ImportError:
             # Fallback to manual refresh hint
             st.info(
-                f"💡 깜빡임 없는 자동 새로고침을 위해: `pip install streamlit-autorefresh`"
+                "💡 깜빡임 없는 자동 새로고침을 위해: `pip install streamlit-autorefresh`"
             )
             now = time.time()
             last = float(st.session_state.get("portfolio_last_refresh_ts", 0.0))

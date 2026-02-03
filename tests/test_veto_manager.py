@@ -8,11 +8,9 @@ Tests all veto layers:
 4. Derivatives (Funding Rate)
 """
 
-from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from libs.risk.veto_manager import (
     VetoConfig,

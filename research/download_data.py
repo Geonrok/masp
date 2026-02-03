@@ -7,7 +7,6 @@ Download free data for strategy testing:
 """
 
 import io
-import os
 import time
 import warnings
 import zipfile
@@ -16,7 +15,6 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
-import numpy as np
 import pandas as pd
 
 # Use project HTTP wrapper if available, else requests
@@ -274,7 +272,7 @@ def main():
     print(f"Started: {datetime.now().isoformat()}\n")
 
     # 1. Fear & Greed (refresh)
-    fgi = download_fear_greed_full()
+    download_fear_greed_full()
 
     # 2. Binance aggregate trades (BTC, ETH - last 24 months)
     for symbol in ["BTCUSDT", "ETHUSDT"]:

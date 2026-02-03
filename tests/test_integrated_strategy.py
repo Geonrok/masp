@@ -7,11 +7,10 @@ Tests the combination of:
 - Veto Manager
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from libs.risk.veto_manager import VetoResult
 from libs.strategy.integrated_strategy import (

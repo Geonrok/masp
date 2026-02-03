@@ -447,7 +447,6 @@ def main():
                 all_data_4h[symbol] = df
     print(f"Loaded {len(all_data_4h)} symbols (4H)\n")
 
-    exit_default = {"max_bars": 72, "atr_stop": 3.0, "profit_target_atr": 8.0}
     exit_tight = {"max_bars": 48, "atr_stop": 2.0, "profit_target_atr": 6.0}
     exit_wide = {"max_bars": 96, "atr_stop": 4.0, "profit_target_atr": 10.0}
     # For 4H: scale bars proportionally (72 bars 1H = 18 bars 4H)

@@ -11,7 +11,6 @@ C. DVOL + Vol Profile 복합: 기존 전략에 DVOL 필터 추가
 D. DVOL 레짐 전환: 변동성 수축→확장 전환점 포착
 """
 
-import json
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -580,18 +579,18 @@ def main():
         # Compare vs Vol Profile baseline (Sharpe 2.52)
         better = [(n, r) for n, p, r in six_six if r["sharpe"] > 2.52]
         if better:
-            print(f"\n*** BEATS VOL PROFILE (Sharpe > 2.52) ***")
+            print("\n*** BEATS VOL PROFILE (Sharpe > 2.52) ***")
             for name, r in better:
                 print(f"  {name}: Sharpe={r['sharpe']:.2f}")
         else:
-            print(f"\nNo DVOL strategy beats Vol Profile (Sharpe=2.52)")
+            print("\nNo DVOL strategy beats Vol Profile (Sharpe=2.52)")
     else:
         print("\nNo strategy passed 6/6")
         best = all_results[0] if all_results else None
         if best:
             print(f"Best: {best[0]} [{best[1]}/6] Sharpe={best[2]['sharpe']:.2f}")
 
-    print(f"\nVol Profile baseline reminder: Sharpe=2.52, 6/6 PASS")
+    print("\nVol Profile baseline reminder: Sharpe=2.52, 6/6 PASS")
     print(f"\nFinished: {datetime.now().isoformat()}")
 
 

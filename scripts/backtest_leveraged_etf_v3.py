@@ -314,8 +314,8 @@ def strategy_j_spot_then_lev(data):
 
     # 강세 시 레버리지, 아니면 현물
     strat_ret = pd.Series(0.0, index=common_idx)
-    strat_ret[bullish == True] = lev2x_ret[bullish == True]
-    strat_ret[bullish == False] = spot_ret[bullish == False]
+    strat_ret[bullish] = lev2x_ret[bullish]
+    strat_ret[not bullish] = spot_ret[not bullish]
 
     # 비용 (스위칭 시에만)
     switch = bullish.astype(int).diff().abs().fillna(0)

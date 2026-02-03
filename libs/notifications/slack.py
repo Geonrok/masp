@@ -6,8 +6,6 @@ Sends notifications to Slack via incoming webhooks.
 
 from __future__ import annotations
 
-import html
-import json
 import logging
 import os
 from dataclasses import dataclass

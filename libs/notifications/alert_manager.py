@@ -11,11 +11,11 @@ from __future__ import annotations
 import html
 import json
 import logging
-from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -352,7 +352,7 @@ class AlertManager:
         count = len(alerts)
         first = alerts[0]
 
-        summary = self.create_alert(
+        self.create_alert(
             alert_type=first.alert_type,
             priority=first.priority,
             title=f"[Aggregated] {count} alerts",

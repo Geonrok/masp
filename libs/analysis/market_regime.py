@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -523,7 +523,7 @@ class MarketRegimeDetector:
         }[analysis.momentum]
 
         lines = [
-            f"<b>[MASP] 시장 국면 분석</b>",
+            "<b>[MASP] 시장 국면 분석</b>",
             f"시간: {analysis.timestamp.strftime('%Y-%m-%d %H:%M')}",
             "",
             f"<b>국면: {regime_kr}</b>",
@@ -536,7 +536,7 @@ class MarketRegimeDetector:
             f"  MA50: {analysis.ma50:,.0f}원 ({(analysis.price - analysis.ma50) / analysis.ma50 * 100:+.1f}%)",
             f"  MA200: {analysis.ma200:,.0f}원 ({(analysis.price - analysis.ma200) / analysis.ma200 * 100:+.1f}%)",
             "",
-            f"<b>모멘텀</b>",
+            "<b>모멘텀</b>",
             f"  30일: {analysis.tsmom_30d:+.1f}%",
             f"  90일: {analysis.tsmom_90d:+.1f}%",
             "",
@@ -572,7 +572,7 @@ def main():
     print(f"  MA50: {analysis.ma50:,.0f}")
     print(f"  MA200: {analysis.ma200:,.0f}")
 
-    print(f"\nMomentum")
+    print("\nMomentum")
     print(f"  30D: {analysis.tsmom_30d:+.1f}%")
     print(f"  90D: {analysis.tsmom_90d:+.1f}%")
     print(f"  ATR: {analysis.atr_pct:.1f}%")

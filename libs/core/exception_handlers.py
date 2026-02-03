@@ -10,16 +10,14 @@ from __future__ import annotations
 import functools
 import inspect
 import logging
-import traceback
 from contextlib import contextmanager
-from typing import Any, Callable, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Callable, Optional, Tuple, Type, TypeVar
 
 from libs.core.exceptions import (
     AdapterError,
     ConfigurationError,
     DataError,
     ExchangeError,
-    ExecutionError,
     MASPError,
     NetworkError,
     ValidationError,
@@ -275,7 +273,6 @@ def handle_adapter_exceptions(
                     )
                 return None
 
-        import asyncio
 
         if inspect.iscoroutinefunction(func):
             return async_wrapper  # type: ignore

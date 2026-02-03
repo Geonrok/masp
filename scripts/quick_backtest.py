@@ -2,8 +2,6 @@
 빠른 종합 백테스트 - 주요 조합만 테스트
 """
 
-import sys
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -186,7 +184,7 @@ def backtest(
                     prev_pos_value += shares * cost
 
         port_value = cash + pos_value
-        prev_port_value = cash + prev_pos_value
+        cash + prev_pos_value
 
         # 일간 수익률 계산
         if i > 0:
@@ -272,7 +270,7 @@ def main():
         data, btc_data = load_data(exchange)
 
         if not data:
-            print(f"  데이터 없음")
+            print("  데이터 없음")
             continue
 
         print(f"  심볼: {len(data)}개")

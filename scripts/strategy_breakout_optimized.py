@@ -414,7 +414,7 @@ def main():
 
     # 최적 파라미터
     best = opt_results.iloc[0]
-    logger.info(f"\n최적 파라미터:")
+    logger.info("\n최적 파라미터:")
     logger.info(f"  Lookback: {best['lookback']}")
     logger.info(f"  Volume Filter: {best['vol_filter']}")
     logger.info(f"  Trend Filter: {best['trend_filter']}")
@@ -433,7 +433,7 @@ def main():
     )
 
     # 유동성 상위 40개 심볼
-    all_symbols = loader.get_symbols()
+    loader.get_symbols()
     test_symbols = [
         "BTCUSDT",
         "ETHUSDT",
@@ -496,7 +496,7 @@ def main():
         df_r = pd.DataFrame(results)
         profitable = (df_r["pf"] > 1.0).sum()
 
-        logger.info(f"\n[결과 요약]")
+        logger.info("\n[결과 요약]")
         logger.info(f"  테스트 심볼: {len(results)}")
         logger.info(
             f"  수익 심볼: {profitable}/{len(results)} ({profitable/len(results)*100:.1f}%)"
@@ -507,7 +507,7 @@ def main():
         logger.info(f"  평균 MDD: {df_r['mdd'].mean():.1f}%")
 
         # 상세 결과
-        logger.info(f"\n[심볼별 상세]")
+        logger.info("\n[심볼별 상세]")
         logger.info(
             f"{'Symbol':<12} {'PF':>8} {'Return':>10} {'WR':>8} {'Trades':>8} {'MDD':>10}"
         )
@@ -552,10 +552,10 @@ def main():
         logger.info(f"  평균 이익: {np.mean(wins)*100:.2f}%")
         logger.info(f"  평균 손실: {np.mean([abs(l) for l in losses])*100:.2f}%")
         logger.info(f"  Half Kelly: {kelly*100:.1f}%")
-        logger.info(f"  현재 설정: 15% * 2x = 30%")
+        logger.info("  현재 설정: 15% * 2x = 30%")
 
         if kelly > 0.15:
-            logger.info(f"  >>> Kelly 충족: 현재 포지션 적정 <<<")
+            logger.info("  >>> Kelly 충족: 현재 포지션 적정 <<<")
         else:
             logger.info(
                 f"  >>> 경고: 포지션 크기 조정 필요 (권장: {kelly*100:.0f}%) <<<"
@@ -618,7 +618,7 @@ def main():
         df_r = pd.DataFrame(results)
         recommended = df_r[df_r["pf"] > 1.0].nlargest(10, "pf")
 
-        logger.info(f"\n[권장 거래 심볼 TOP 10]")
+        logger.info("\n[권장 거래 심볼 TOP 10]")
         for _, r in recommended.iterrows():
             logger.info(f"  {r['symbol']:<12} PF={r['pf']:.2f} Ret={r['ret']:+.1f}%")
 

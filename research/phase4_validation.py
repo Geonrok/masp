@@ -206,7 +206,7 @@ def task_4_3_walk_forward(df, signal_func, name, train_bars=1080, test_bars=180)
         test = df.iloc[i : i + test_bars].copy().reset_index(drop=True)
 
         # Signals from full history up to test start
-        all_signals = signal_func(train)
+        signal_func(train)
         # For test: extend signals using available data
         combined = pd.concat([train, test]).reset_index(drop=True)
         full_signals = signal_func(combined)
@@ -483,7 +483,7 @@ def main():
             ),
         }
 
-        print(f"\n  SUCCESS CRITERIA:")
+        print("\n  SUCCESS CRITERIA:")
         passed = 0
         for c, v in criteria.items():
             status = "PASS" if v else "FAIL"
@@ -597,7 +597,7 @@ def main():
     print(f"\n  Best strategy: {all_results[best]['name'] if best else 'None'}")
     print(f"  Best performers: {len(best_performers)} symbols")
     print(f"  Report saved: {report_path}")
-    print(f"  Next: Phase 5 - Production Readiness")
+    print("  Next: Phase 5 - Production Readiness")
 
     return report
 

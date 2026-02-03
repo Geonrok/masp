@@ -18,15 +18,14 @@ Automated Risk Management Service
 
 from __future__ import annotations
 
-import json
 import logging
 import sys
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
@@ -419,7 +418,7 @@ class RiskManagementService:
 
     def format_telegram_status(self) -> str:
         """텔레그램 상태 메시지 포맷팅"""
-        state = self.check_risk()
+        self.check_risk()
         metrics = self.drawdown_guard.get_metrics()
         risk_level = self.assess_risk_level()
 
@@ -432,19 +431,19 @@ class RiskManagementService:
         }
 
         lines = [
-            f"<b>[MASP] Risk Status Report</b>",
+            "<b>[MASP] Risk Status Report</b>",
             f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M')}",
             "",
             f"<b>Risk Level: {risk_level.value.upper()} {level_emoji[risk_level]}</b>",
             f"Can Trade: {'Yes' if self.can_trade() else 'NO'}",
             f"Position Multiplier: {self.get_position_size_multiplier()*100:.0f}%",
             "",
-            f"<b>Portfolio</b>",
+            "<b>Portfolio</b>",
             f"  Current: {metrics['current_capital']:,.0f}",
             f"  Peak: {metrics['peak_capital']:,.0f}",
             f"  Drawdown: {metrics['current_drawdown']*100:.1f}%",
             "",
-            f"<b>P&L Limits</b>",
+            "<b>P&L Limits</b>",
             f"  Daily: {metrics['daily_pnl']:+,.0f} / Limit: {metrics['daily_limit']*100:.1f}%",
             f"  Weekly: {metrics['weekly_pnl']:+,.0f} / Limit: {metrics['weekly_limit']*100:.1f}%",
             f"  Max DD: {metrics['current_drawdown']*100:.1f}% / Limit: {metrics['max_drawdown_limit']*100:.1f}%",
@@ -530,7 +529,7 @@ def main():
     print("Running risk monitor...")
     alert = service.monitor()
     if alert:
-        print(f"\nAlert Triggered!")
+        print("\nAlert Triggered!")
         print(f"Level: {alert.level.value}")
         print(f"Title: {alert.title}")
         print(f"Message:\n{alert.message}")

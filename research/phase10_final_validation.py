@@ -587,7 +587,7 @@ def main():
     )
     if r2:
         c, p = check_criteria(r2)
-        print(f"\n  #2 dual_ma_72_default_pos15_rb360:")
+        print("\n  #2 dual_ma_72_default_pos15_rb360:")
         print(
             f"    [{p}/6] Sharpe={r2['sharpe']:.2f}  Ret={r2['total_return']*100:+.1f}%  "
             f"DD={r2['max_drawdown']*100:.1f}%  WR={r2['win_rate']*100:.0f}%  "
@@ -601,7 +601,7 @@ def main():
     )
     if r3:
         c, p = check_criteria(r3)
-        print(f"\n  #3 dual_ma_72_wide_pos15_rb360:")
+        print("\n  #3 dual_ma_72_wide_pos15_rb360:")
         print(
             f"    [{p}/6] Sharpe={r3['sharpe']:.2f}  Ret={r3['total_return']*100:+.1f}%  "
             f"DD={r3['max_drawdown']*100:.1f}%  WR={r3['win_rate']*100:.0f}%  "

@@ -12,7 +12,7 @@ import signal
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

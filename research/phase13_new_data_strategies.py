@@ -92,7 +92,7 @@ def strat_obv_trend(df, lookback=48):
     ema_s = close.ewm(span=200, adjust=False).mean()
 
     # Price breakout + OBV breakout
-    price_upper = close.rolling(lookback).max().shift(1) * close.rolling(
+    close.rolling(lookback).max().shift(1) * close.rolling(
         lookback
     ).max().shift(1)
     upper = df["high"].rolling(lookback).max().shift(1)

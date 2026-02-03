@@ -22,7 +22,7 @@ import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -462,7 +462,7 @@ class MultiTimeframeTrendStrategy:
             trend_4h = df["trend_4h"].iloc[i]
             trend_daily = df["trend_daily"].iloc[i]
             close = df["close"].iloc[i]
-            ema50 = df["ema50"].iloc[i]
+            df["ema50"].iloc[i]
 
             # Exit on trend break
             if position == 1 and (trend_4h == -1 or trend_daily == -1):
@@ -630,7 +630,6 @@ class BreakoutVolumeStrategy:
         df["atr"] = calc_atr(df["high"], df["low"], df["close"], 14)
 
         position = 0
-        entry_price = 0
         trail_stop = 0
 
         for i in range(self.breakout_period + 20, len(df)):
@@ -655,12 +654,10 @@ class BreakoutVolumeStrategy:
                 if high > highest:
                     signals.iloc[i, signals.columns.get_loc("signal")] = 1
                     position = 1
-                    entry_price = close
                     trail_stop = close - self.atr_multiplier * atr
                 elif low < lowest:
                     signals.iloc[i, signals.columns.get_loc("signal")] = -1
                     position = -1
-                    entry_price = close
                     trail_stop = close + self.atr_multiplier * atr
 
             # Update trailing stop

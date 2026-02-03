@@ -553,14 +553,14 @@ def main():
     if six_six:
         six_six.sort(key=lambda x: -x[1]["total_return"])
         print(f"\n*** {len(six_six)} configs passed 6/6 ***")
-        print(f"\nBest by return:")
+        print("\nBest by return:")
         for name, r in six_six[:5]:
             print(
                 f"  {name}: Sharpe={r['sharpe']:.2f}  Ret={r['total_return']*100:+.1f}%  "
                 f"DD={r['max_drawdown']*100:.1f}%  T={r['trade_count']}"
             )
 
-        print(f"\nBest by Sharpe:")
+        print("\nBest by Sharpe:")
         six_six_sharpe = sorted(six_six, key=lambda x: -x[1]["sharpe"])
         for name, r in six_six_sharpe[:5]:
             print(

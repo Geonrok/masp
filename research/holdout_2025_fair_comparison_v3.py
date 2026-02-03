@@ -70,7 +70,7 @@ def load_market_data(market_folder: Path) -> dict:
             if symbol and symbol != "":
                 data[symbol] = df
 
-        except Exception as e:
+        except Exception:
             continue
 
     return data

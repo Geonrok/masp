@@ -5,7 +5,6 @@ Tests for EventStore module.
 import os
 import tempfile
 from datetime import datetime, timezone
-from pathlib import Path
 
 import pytest
 
@@ -30,7 +29,7 @@ class TestEventStore:
 
     def test_initialization(self, temp_db):
         """Test store initialization creates database."""
-        store = EventStore(dsn=temp_db)
+        EventStore(dsn=temp_db)
 
         assert os.path.exists(temp_db)
 
@@ -335,7 +334,6 @@ class TestEventStore:
 
     def test_timestamp_filtering(self, store):
         """Test filtering by timestamp."""
-        import time
 
         # Create event with specific timestamp
         now = datetime.now(timezone.utc)
@@ -378,6 +376,6 @@ class TestEventStoreConnection:
         """Test database directory is created."""
         with tempfile.TemporaryDirectory() as tmpdir:
             nested_path = os.path.join(tmpdir, "nested", "dir", "test.db")
-            store = EventStore(dsn=nested_path)
+            EventStore(dsn=nested_path)
 
             assert os.path.exists(os.path.dirname(nested_path))

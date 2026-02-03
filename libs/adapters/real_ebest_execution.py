@@ -86,7 +86,7 @@ class EbestSpotExecution(ExecutionAdapter):
         Reuses API connection when possible for efficiency.
         """
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             # Already in async context - use thread
             import concurrent.futures
 
@@ -321,7 +321,7 @@ class EbestSpotExecution(ExecutionAdapter):
 
             result = await self._api.request("CSPAT00800", data, path="/stock/order")
             if not result:
-                logger.error(f"[eBest] Cancel order failed: no response")
+                logger.error("[eBest] Cancel order failed: no response")
                 return False
 
             # ResponseValue has .body attribute containing the parsed JSON

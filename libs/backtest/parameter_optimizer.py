@@ -11,9 +11,8 @@ import itertools
 import logging
 from abc import ABC, abstractmethod
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Any, Dict, Generator, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd

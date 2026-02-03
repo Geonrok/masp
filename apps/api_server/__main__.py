@@ -77,7 +77,7 @@ def main():
                 uvicorn_config["ssl_keyfile_password"] = args.ssl_key_password
             ssl_enabled = True
         else:
-            print(f"Warning: SSL certificate or key file not found")
+            print("Warning: SSL certificate or key file not found")
             if not cert_path.exists():
                 print(f"  Certificate: {args.ssl_cert} (not found)")
             if not key_path.exists():

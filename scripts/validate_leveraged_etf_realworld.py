@@ -190,7 +190,7 @@ def walk_forward_11fold(signal: pd.Series, etf_prices: pd.DataFrame) -> dict:
         train_end_idx = i * fold_size
         test_end_idx = (i + 1) * fold_size
 
-        train_dates = common_idx[:train_end_idx]
+        common_idx[:train_end_idx]
         test_dates = common_idx[train_end_idx:test_end_idx]
 
         if len(test_dates) < 20:
@@ -450,7 +450,7 @@ def main():
     print("=" * 80)
     print()
     print(f"거래비용: {TOTAL_COST*100:.2f}% (왕복)")
-    print(f"체결가정: 익일 시가")
+    print("체결가정: 익일 시가")
     print()
 
     # 데이터 로드
@@ -613,7 +613,7 @@ def main():
             if best is not None:
                 print(f'차선책: {best["strategy"]}')
                 print(f'  Sharpe: {best["sharpe"]:.3f}, MDD: {best["mdd"]*100:.1f}%')
-                print(f"  개선 필요: ", end="")
+                print("  개선 필요: ", end="")
                 issues = []
                 if best["sharpe"] <= 0.8:
                     issues.append("Sharpe < 0.8")

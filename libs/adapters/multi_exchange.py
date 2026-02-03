@@ -12,12 +12,10 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from libs.adapters.base import MarketDataAdapter, MarketQuote
 from libs.adapters.exchange_registry import (
-    ExchangeInfo,
-    ExchangeRegistry,
     ExchangeStatus,
     get_registry,
 )

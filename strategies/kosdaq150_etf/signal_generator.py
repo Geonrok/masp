@@ -13,7 +13,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
-import numpy as np
 import pandas as pd
 
 from .etf_strategy import (
@@ -126,7 +125,7 @@ class KOSDAQ150ETFSignalGenerator:
 
             # 포지션 크기
             pos = self.calculate_position_size(7000)
-            print(f"\n  [주문 가이드]")
+            print("\n  [주문 가이드]")
             print(f"  - 투자금액: {pos['invest_amount']:,.0f}원")
             print(f"  - 예상 수량: {pos['shares']:,}주")
             print(f"  - 예비 현금: {pos['reserve']:,.0f}원")
@@ -137,18 +136,18 @@ class KOSDAQ150ETFSignalGenerator:
             print(f"  종목코드: {rec.etf_code}")
 
             pos = self.calculate_position_size(3500)
-            print(f"\n  [주문 가이드]")
+            print("\n  [주문 가이드]")
             print(f"  - 투자금액: {pos['invest_amount']:,.0f}원")
             print(f"  - 예상 수량: {pos['shares']:,}주")
             print(f"  - 예비 현금: {pos['reserve']:,.0f}원")
 
         else:
-            print(f"\n  ━━━ HOLD (관망)")
-            print(f"\n  기존 포지션이 있다면 유지")
-            print(f"  신규 진입 대기")
+            print("\n  ━━━ HOLD (관망)")
+            print("\n  기존 포지션이 있다면 유지")
+            print("  신규 진입 대기")
 
         # 사유
-        print(f"\n  [사유]")
+        print("\n  [사유]")
         for reason in rec.reasons:
             print(f"  - {reason}")
 

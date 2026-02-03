@@ -14,12 +14,11 @@
 - Day T 시그널 → Day T+1 실행 (바이어스 프리)
 """
 
-import sys
 import warnings
 from datetime import datetime
-from itertools import combinations, product
+from itertools import product
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -513,7 +512,6 @@ def backtest(
     capital = 10000.0
     cash = capital
     positions = {}
-    prev_prices = {}
     values = [capital]
     returns = []
     trades = 0
@@ -587,7 +585,7 @@ def backtest(
                         positions[sym] = (shares, buy_price)
                         trades += 1
 
-        prev_prices = prices_today.copy()
+        prices_today.copy()
 
     # 결과 계산
     final = values[-1]
@@ -814,8 +812,8 @@ def main():
     # 필터별 평균
     print("\n[필터별 평균 샤프비율]")
     for filter_name in filter_names:
-        on_avg = df[df[filter_name] == True]["sharpe"].mean()
-        off_avg = df[df[filter_name] == False]["sharpe"].mean()
+        on_avg = df[df[filter_name]]["sharpe"].mean()
+        off_avg = df[not df[filter_name]]["sharpe"].mean()
         diff = on_avg - off_avg
         print(f"  {filter_name}: ON={on_avg:.3f}, OFF={off_avg:.3f}, 차이={diff:+.3f}")
 

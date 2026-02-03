@@ -39,11 +39,11 @@ def identify_patterns(df):
     """Adds boolean columns for patterns."""
     o, h, l, c = df["Open"], df["High"], df["Low"], df["Close"]
     prev_o, prev_c = o.shift(1), c.shift(1)
-    prev_h, prev_l = h.shift(1), l.shift(1)
+    prev_h, _prev_l = h.shift(1), l.shift(1)
 
     # Body Size
     body = np.abs(c - o)
-    prev_body = np.abs(prev_c - prev_o)
+    np.abs(prev_c - prev_o)
 
     # 1. Bullish Engulfing
     # Prev: Red, Curr: Green
@@ -175,7 +175,7 @@ def main():
     ].sort_values("score", ascending=False)
 
     print(f"\nTotal Viable Patterns: {len(viable)}")
-    print(f"\nTOP 20 Price Action Patterns:")
+    print("\nTOP 20 Price Action Patterns:")
     print(viable.head(20))
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

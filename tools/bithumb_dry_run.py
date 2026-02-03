@@ -87,7 +87,7 @@ def main():
         except Exception as e:
             print(f"  ❌ 매도 실패: {e}")
     else:
-        print(f"  ⚠️ 잔고 부족 (최소 0.00001 BTC 필요)")
+        print("  ⚠️ 잔고 부족 (최소 0.00001 BTC 필요)")
 
     # 8. 최종 잔고 확인
     print("\n=== Step 8: 최종 잔고 ===")

@@ -34,8 +34,8 @@ for ex, sym in tests:
         else:
             print(f"{ex} Rate Limit: WARN (errors={errors}, elapsed={dt:.2f}s)")
 
-print(f"\n=== Rate Limit 정량 분석 ===")
-print(f"현재 설정: 0.1s/symbol = 10 symbols/s")
+print("\n=== Rate Limit 정량 분석 ===")
+print("현재 설정: 0.1s/symbol = 10 symbols/s")
 print(f"447개 심볼 예상 처리: {447 * 0.1:.1f}s = {447 * 0.1 / 60:.1f}분")
-print(f"Bithumb 제한: 30/s -> 현재 10/s < 30/s (안전)")
-print(f"Upbit 제한: 10/s (주문) -> 현재 10/s == 10/s (한계치)")
+print("Bithumb 제한: 30/s -> 현재 10/s < 30/s (안전)")
+print("Upbit 제한: 10/s (주문) -> 현재 10/s == 10/s (한계치)")

@@ -29,3 +29,17 @@ exclude = '''
   | __pycache__
 )/
 '''
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+exclude = [".venv", ".venv311", "venv", "__pycache__", ".git"]
+
+[tool.ruff.lint]
+# Ignore common legacy code issues
+ignore = [
+    "E722",  # bare except
+    "E501",  # line too long (handled by black)
+    "F401",  # unused import (may be intentional re-exports)
+    "F841",  # unused variable
+]

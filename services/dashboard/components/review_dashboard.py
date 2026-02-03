@@ -6,7 +6,6 @@ Displays review status and history in the MASP dashboard.
 
 import json
 import subprocess
-from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 

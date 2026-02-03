@@ -642,7 +642,7 @@ class PortfolioOptimizer:
 
         # Find min and max returns
         min_var_result = self.optimize(OptimizationMethod.MIN_VARIANCE, constraints)
-        max_sharpe_result = self.optimize(OptimizationMethod.MAX_SHARPE, constraints)
+        self.optimize(OptimizationMethod.MAX_SHARPE, constraints)
 
         min_ret = min_var_result.expected_return
         max_ret = max(self.mean_returns)

@@ -495,8 +495,8 @@ def atr_trailing_stop(
         atr = tr.rolling(atr_period).mean()
 
         # Trailing stop
-        stop_long = close - multiplier * atr
-        stop_short = close + multiplier * atr
+        close - multiplier * atr
+        close + multiplier * atr
 
         signal = pd.Series(0, index=data.index)
         # Simple trend following with ATR stop

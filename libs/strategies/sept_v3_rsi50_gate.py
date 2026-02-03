@@ -37,7 +37,6 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 
-import numpy as np
 
 from libs.adapters.factory import AdapterFactory
 from libs.strategies.base import BaseStrategy, Signal, TradeSignal
@@ -46,8 +45,6 @@ from libs.strategies.indicators import (
     KAMA,
     MA,
     RSI,
-    EMA_series,
-    KAMA_series,
     TSMOM_signal,
 )
 

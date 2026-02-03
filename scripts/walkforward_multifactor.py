@@ -9,12 +9,9 @@ Multi-Factor Strategy Walk-Forward Validation
 from __future__ import annotations
 
 import logging
-import sys
 import warnings
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -490,7 +487,7 @@ def main():
         )
 
         logger.info(f"Total symbol-period combinations: {len(all_train_pfs)}")
-        logger.info(f"")
+        logger.info("")
         logger.info(
             f"{'Metric':<25} {'In-Sample (Train)':>20} {'Out-of-Sample (Test)':>20}"
         )
@@ -502,7 +499,7 @@ def main():
         logger.info(
             f"{'Median PF':<25} {np.median(all_train_pfs):>20.2f} {np.median(all_test_pfs):>20.2f}"
         )
-        logger.info(f"")
+        logger.info("")
         logger.info(f"Overall Degradation: {overall_degradation:.1f}%")
 
         # Stability assessment
@@ -549,7 +546,7 @@ def main():
             )
 
         passed = sum(1 for _, check, _ in criteria if check)
-        logger.info(f"")
+        logger.info("")
         for name, check, value in criteria:
             status = "PASS" if check else "FAIL"
             logger.info(f"  [{status}] {name}: {value}")

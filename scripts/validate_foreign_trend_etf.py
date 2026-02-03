@@ -32,8 +32,6 @@ import argparse
 import glob as glob_module
 import json
 import math
-import os
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -259,7 +257,7 @@ def _infer_foreign_net_from_df(df: pd.DataFrame) -> Tuple[pd.Series, Dict[str, s
     # Foreign net candidates
     # Accept both Korean/English patterns
     colnames = list(df.columns)
-    lower = [c.lower() for c in colnames]
+    [c.lower() for c in colnames]
 
     # 1) direct net column
     net_patterns = [
@@ -847,7 +845,7 @@ def verdict(
     # Win rate ambiguity: accept either daily(in-position) or trade win rate
     wr_daily = m.get("daily_win_rate_in_position", float("nan"))
     wr_trade = m.get("trade_win_rate", float("nan"))
-    ok_wr = check_close(wr_daily, claimed.win_rate, tol_abs=0.05) or check_close(
+    check_close(wr_daily, claimed.win_rate, tol_abs=0.05) or check_close(
         wr_trade, claimed.win_rate, tol_abs=0.05
     )
 

@@ -72,9 +72,9 @@ def calculate_realistic_metrics(
 
         # 현재 포트폴리오 가치
         if position == 1:
-            current_value = capital + shares * price
+            capital + shares * price
         else:
-            current_value = capital
+            pass
 
         if position == 0 and signal == 1:
             # 매수 - 슬리피지 적용
@@ -479,7 +479,7 @@ def run_validation():
             & (results_df["sharpe_ratio"] > 0.5)
         ].copy()
 
-        print(f"\n[전체 기간 테스트]")
+        print("\n[전체 기간 테스트]")
         print(f"  총 테스트: {len(results_df)}개")
         print(
             f"  실거래 가능 기준 통과: {len(practical)}개 ({len(practical)/len(results_df)*100:.1f}%)"
@@ -518,7 +518,7 @@ def run_validation():
             & (wf_df["avg_sharpe"] > 0.3)
         ].copy()
 
-        print(f"\n[워크포워드 검증]")
+        print("\n[워크포워드 검증]")
         print(f"  총 테스트: {len(wf_df)}개")
         print(
             f"  일관성 기준 통과: {len(consistent)}개 ({len(consistent)/len(wf_df)*100:.1f}%)"
@@ -604,7 +604,7 @@ def run_validation():
                 index=False,
                 encoding="utf-8-sig",
             )
-            print(f"\n결과 저장: practical_strategies.csv")
+            print("\n결과 저장: practical_strategies.csv")
 
         else:
             print("\n두 기준을 모두 통과한 전략이 없습니다.")

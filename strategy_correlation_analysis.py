@@ -7,11 +7,9 @@
 4. 검증 방법론 점검
 """
 
-import json
 import warnings
 from collections import defaultdict
-from datetime import datetime
-from typing import Any, Dict, List
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -660,10 +658,10 @@ def run_correlation_analysis():
     print("=" * 80)
 
     print("\n전략 유형별 분류:")
-    print(f"  - TripleV5 (기본 Triple): 3개 - 파라미터만 다름")
-    print(f"  - TripleVol (거래량 필터): 2개 - 거래량 조건 추가")
-    print(f"  - TripleADX (ADX 필터): 2개 - 트렌드 강도 필터")
-    print(f"  - CombBest (5지표 복합): 1개 - 5개 지표 사용")
+    print("  - TripleV5 (기본 Triple): 3개 - 파라미터만 다름")
+    print("  - TripleVol (거래량 필터): 2개 - 거래량 조건 추가")
+    print("  - TripleADX (ADX 필터): 2개 - 트렌드 강도 필터")
+    print("  - CombBest (5지표 복합): 1개 - 5개 지표 사용")
 
     print("\n핵심 차이점:")
     print("  1. TripleV5: CMO + WR + BB (3개 지표)")

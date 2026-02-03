@@ -7,24 +7,19 @@ import os
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
 
 from libs.core.config_utils import (
-    ConfigChange,
     ConfigDiff,
     ConfigHierarchy,
     ConfigPriority,
-    ConfigSource,
     ConfigValidator,
     ConfigWatcher,
     DefaultConfigSource,
     EnvConfigSource,
     FileConfigSource,
     RuntimeConfigSource,
-    ValidationResult,
-    ValidationRule,
 )
 
 
@@ -279,7 +274,7 @@ class TestConfigHierarchy:
         runtime.set("key", "new")
         runtime.invalidate_cache()
 
-        changes = hierarchy.reload()
+        hierarchy.reload()
         # Note: Changes may not be detected if cache wasn't cleared
         # This tests the mechanism exists
 

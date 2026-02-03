@@ -129,9 +129,9 @@ if __name__ == "__main__":
         print(f"  Symbol: {quote.symbol}")
         print(f"  Last: {quote.last:,.0f} KRW")
         print(f"  Volume 24h: {quote.volume_24h:,.2f}")
-        print(f"  ✅ PASS\n")
+        print("  ✅ PASS\n")
     else:
-        print(f"  ❌ FAIL: Quote is None\n")
+        print("  ❌ FAIL: Quote is None\n")
 
     # Test 2: Multiple quotes
     print("[Test 2] Multiple quotes:")
@@ -148,9 +148,9 @@ if __name__ == "__main__":
         print(f"  Asks: {len(orderbook['asks'])} levels")
         print(f"  Best bid: {orderbook['bids'][0]['price']:,.0f} KRW")
         print(f"  Best ask: {orderbook['asks'][0]['price']:,.0f} KRW")
-        print(f"  ✅ PASS\n")
+        print("  ✅ PASS\n")
     else:
-        print(f"  ❌ FAIL: Orderbook is None\n")
+        print("  ❌ FAIL: Orderbook is None\n")
 
     # Test 4: Order execution disabled
     print("[Test 4] Order execution disabled:")

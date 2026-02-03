@@ -5,7 +5,6 @@ Bithumb 실주문 어댑터
 - Kill-Switch 연동
 """
 
-import functools
 import logging
 import random
 import time
@@ -963,8 +962,8 @@ class BithumbExecutionAdapter:
             복구 결과 {"recovered": bool, "action": str, "details": ...}
         """
         error_type = type(error).__name__
-        symbol = context.get("symbol", "")
-        side = context.get("side", "")
+        context.get("symbol", "")
+        context.get("side", "")
         order_id = context.get("order_id", "")
 
         logger.info(f"[BithumbExecution] Attempting recovery from {error_type}")

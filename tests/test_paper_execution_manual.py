@@ -20,14 +20,14 @@ if order.price:
     print(f"  Fill Price: {order.price:,.0f} KRW")
 
 # Check PnL
-print(f"\n[2] PnL after order:")
+print("\n[2] PnL after order:")
 pnl = pe.get_pnl()
 print(f"  Equity: {pnl['equity']:,.0f} KRW")
 print(f"  PnL: {pnl['total_pnl']:,.0f} KRW ({pnl['total_pnl_pct']:.2f}%)")
 print(f"  Fees: {pnl['fees_paid']:,.0f} KRW")
 
 # Check positions
-print(f"\n[3] Positions:")
+print("\n[3] Positions:")
 positions = pe.get_positions()
 for symbol, pos in positions.items():
     print(f"  {symbol}: {pos.quantity} @ {pos.avg_price:,.0f} KRW avg")

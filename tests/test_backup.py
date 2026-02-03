@@ -16,7 +16,6 @@ from libs.storage.backup import (
     RestoreResult,
     create_backup,
     list_backups,
-    restore_backup,
 )
 
 

@@ -2,7 +2,7 @@
 Tests for ML integration framework.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,6 @@ from libs.ml.features import (
 )
 from libs.ml.models import (
     EnsembleModel,
-    ModelInterface,
     ModelMetadata,
     ModelRegistry,
     SklearnModel,

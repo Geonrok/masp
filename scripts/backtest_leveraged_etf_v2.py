@@ -93,8 +93,8 @@ def backtest_with_stoploss(
     peak_price = None
 
     for i in range(1, len(data)):
-        idx = data.index[i]
-        prev_idx = data.index[i - 1]
+        data.index[i]
+        data.index[i - 1]
 
         # 이전 포지션
         prev_pos = position.iloc[i - 1]

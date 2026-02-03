@@ -13,7 +13,6 @@ Phase 18c: 수정된 기준 + 수정된 OOS로 전 전략 재검증
 OOS: min_oos_bars=16000 (장기 종목, 18윈도우, ~2년)
 """
 
-import json
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -458,7 +457,7 @@ def main():
             c_rev, p_rev = check_criteria_revised(r)
             results.append((name, p_orig, p_rev, r))
 
-            fails_orig = [k.split("_")[0] for k, v in c_orig.items() if not v]
+            [k.split("_")[0] for k, v in c_orig.items() if not v]
             fails_rev = [k.split("_")[0] for k, v in c_rev.items() if not v]
 
             print(

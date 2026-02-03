@@ -17,10 +17,9 @@ Usage:
 """
 
 import argparse
-import json
 import logging
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -234,7 +233,7 @@ def collect_and_save(collector: CoinglassCollector, symbol: str = "BTC"):
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    date_str = datetime.now().strftime("%Y-%m-%d")
+    datetime.now().strftime("%Y-%m-%d")
 
     # 1. Open Interest
     df_oi = collector.get_open_interest(symbol)

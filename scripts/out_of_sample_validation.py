@@ -9,7 +9,6 @@ Out-of-Sample (OOS) 검증
 목적: KAMA5/TSMOM90/MA30 전략이 과적합인지 검증
 """
 
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -252,12 +251,12 @@ def main():
     # OOS 효율성
     if is_result["sharpe"] > 0:
         oos_efficiency = oos_result["sharpe"] / is_result["sharpe"]
-        print(f"\n[OOS 효율성]")
+        print("\n[OOS 효율성]")
         print(f"  OOS Sharpe / IS Sharpe = {oos_efficiency:.2f}")
         if oos_efficiency >= 0.5:
-            print(f"  -> [PASS] 양호 (0.5 이상이면 과적합 아님)")
+            print("  -> [PASS] 양호 (0.5 이상이면 과적합 아님)")
         else:
-            print(f"  -> [WARN] 주의 필요 (0.5 미만)")
+            print("  -> [WARN] 주의 필요 (0.5 미만)")
 
     # ============================================================
     # 2. 연도별 성과 분석
@@ -380,7 +379,7 @@ def main():
             btc_return = (
                 btc_2024["close"].iloc[-1] / btc_2024["close"].iloc[0] - 1
             ) * 100
-            print(f"\n[2024년 이후]")
+            print("\n[2024년 이후]")
             print(f"  BTC Buy & Hold: {btc_return:.1f}%")
             print(f'  OR_LOOSE 전략: {oos_result["return"]*100:.1f}%')
             print(f'  초과 수익: {oos_result["return"]*100 - btc_return:.1f}%')

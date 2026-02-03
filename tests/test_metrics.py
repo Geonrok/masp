@@ -13,8 +13,6 @@ from libs.core.metrics import (
     HealthStatus,
     HistogramBuckets,
     MetricsRegistry,
-    MetricType,
-    TimerContext,
     counted,
     get_health_checker,
     get_metrics,

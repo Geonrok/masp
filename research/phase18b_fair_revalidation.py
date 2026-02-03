@@ -15,7 +15,6 @@ Phase 18b: 공정한 재검증
 3. 기존 방식 그대로 (OOS > 2000봉) 단, min_len 대신 median_len 사용
 """
 
-import json
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -290,7 +289,7 @@ def main():
         oos_len = int(len(df) * 0.4)
         oos_dist.append(oos_len)
     oos_dist.sort()
-    print(f"OOS length distribution:")
+    print("OOS length distribution:")
     for pct in [10, 25, 50, 75, 90, 100]:
         idx = min(int(len(oos_dist) * pct / 100), len(oos_dist) - 1)
         bars = oos_dist[idx]

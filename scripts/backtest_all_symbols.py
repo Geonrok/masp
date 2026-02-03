@@ -7,7 +7,6 @@ Tests on all available symbols in binance_futures_1d
 from __future__ import annotations
 
 import logging
-import sys
 import warnings
 from dataclasses import dataclass
 from datetime import datetime
@@ -299,7 +298,7 @@ def main():
             if result and result.num_trades >= 10:  # Minimum 10 trades
                 results.append(result)
 
-        except Exception as e:
+        except Exception:
             errors += 1
             continue
 
@@ -332,7 +331,7 @@ def main():
 
     # PF distribution
     pfs = [r.profit_factor for r in results if r.profit_factor < 999]
-    logger.info(f"\nProfit Factor Distribution:")
+    logger.info("\nProfit Factor Distribution:")
     logger.info(f"  Mean: {np.mean(pfs):.2f}")
     logger.info(f"  Median: {np.median(pfs):.2f}")
     logger.info(f"  Std: {np.std(pfs):.2f}")
@@ -341,20 +340,20 @@ def main():
 
     # Return distribution
     rets = [r.total_return for r in results]
-    logger.info(f"\nReturn Distribution:")
+    logger.info("\nReturn Distribution:")
     logger.info(f"  Mean: {np.mean(rets):+.1f}%")
     logger.info(f"  Median: {np.median(rets):+.1f}%")
     logger.info(f"  Positive returns: {sum(1 for r in rets if r > 0)}/{len(rets)}")
 
     # Win rate distribution
     wrs = [r.win_rate for r in results]
-    logger.info(f"\nWin Rate Distribution:")
+    logger.info("\nWin Rate Distribution:")
     logger.info(f"  Mean: {np.mean(wrs):.1f}%")
     logger.info(f"  Median: {np.median(wrs):.1f}%")
 
     # MDD distribution
     mdds = [r.mdd for r in results]
-    logger.info(f"\nMDD Distribution:")
+    logger.info("\nMDD Distribution:")
     logger.info(f"  Mean: {np.mean(mdds):.1f}%")
     logger.info(f"  Worst: {min(mdds):.1f}%")
 

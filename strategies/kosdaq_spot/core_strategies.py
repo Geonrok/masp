@@ -6,9 +6,8 @@ Multi_TF_Short 및 대안 전략 구현
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
-import numpy as np
 import pandas as pd
 
 from .indicators import calc_foreign_wght_mas, calc_price_ma, check_multi_tf_conditions
@@ -107,7 +106,7 @@ class MultiTFShortStrategy:
         price_ma = calc_price_ma(df, self.params.price_ma)
 
         # 최신값
-        latest_idx = df.index[-1]
+        df.index[-1]
         cond1 = wght_s1.iloc[-1] > wght_l1.iloc[-1]
         cond2 = wght_s2.iloc[-1] > wght_l2.iloc[-1]
         cond3 = df["close"].iloc[-1] > price_ma.iloc[-1]

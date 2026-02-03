@@ -4,7 +4,7 @@ API key management routes (admin-only).
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel

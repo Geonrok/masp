@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -319,7 +319,7 @@ class CPCVValidator:
                 continue
 
             # Filter data
-            train_data = self._filter_data_by_dates(data, train_dates)
+            self._filter_data_by_dates(data, train_dates)
             test_data = self._filter_data_by_dates(data, test_dates)
 
             # Run strategy on test data

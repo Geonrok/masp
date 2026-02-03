@@ -17,7 +17,6 @@ from __future__ import annotations
 import logging
 import random
 import warnings
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -782,7 +781,7 @@ def main():
         df_wf = pd.DataFrame(wf_results)
         profitable = (df_wf["pf"] > 1.0).sum()
 
-        logger.info(f"\n[Walk-Forward 결과]")
+        logger.info("\n[Walk-Forward 결과]")
         logger.info(f"  테스트 심볼: {len(wf_results)}")
         logger.info(
             f"  수익 심볼: {profitable}/{len(wf_results)} ({profitable/len(wf_results)*100:.1f}%)"
@@ -805,19 +804,19 @@ def main():
         mc_result = monte_carlo_simulation(all_trades, n_simulations=10000)
 
         if mc_result:
-            logger.info(f"\n[수익률 분포]")
+            logger.info("\n[수익률 분포]")
             logger.info(f"  평균: {mc_result['mean_return']:+.1f}%")
             logger.info(f"  중앙값: {mc_result['median_return']:+.1f}%")
             logger.info(f"  표준편차: {mc_result['std_return']:.1f}%")
-            logger.info(f"\n[신뢰구간]")
+            logger.info("\n[신뢰구간]")
             logger.info(f"  5% 백분위 (최악): {mc_result['percentile_5']:+.1f}%")
             logger.info(f"  25% 백분위: {mc_result['percentile_25']:+.1f}%")
             logger.info(f"  75% 백분위: {mc_result['percentile_75']:+.1f}%")
             logger.info(f"  95% 백분위 (최선): {mc_result['percentile_95']:+.1f}%")
-            logger.info(f"\n[확률]")
+            logger.info("\n[확률]")
             logger.info(f"  수익 확률: {mc_result['prob_profit']:.1f}%")
             logger.info(f"  10%+ 손실 확률: {mc_result['prob_loss_10pct']:.1f}%")
-            logger.info(f"\n[Drawdown]")
+            logger.info("\n[Drawdown]")
             logger.info(f"  평균 MDD: {mc_result['mean_max_dd']:.1f}%")
             logger.info(f"  최악 MDD: {mc_result['worst_max_dd']:.1f}%")
 
@@ -894,20 +893,20 @@ def main():
 
             kelly = kelly_criterion(win_rate, avg_win, avg_loss)
 
-            logger.info(f"\n[통계]")
+            logger.info("\n[통계]")
             logger.info(f"  승률: {win_rate*100:.1f}%")
             logger.info(f"  평균 이익: {avg_win*100:.2f}%")
             logger.info(f"  평균 손실: {avg_loss*100:.2f}%")
             logger.info(f"  손익비: {avg_win/avg_loss:.2f}")
-            logger.info(f"\n[Kelly Criterion]")
+            logger.info("\n[Kelly Criterion]")
             logger.info(f"  Full Kelly: {kelly*2*100:.1f}%")
             logger.info(f"  Half Kelly (권장): {kelly*100:.1f}%")
-            logger.info(f"  현재 설정: 20% (레버리지 2x = 실효 40%)")
+            logger.info("  현재 설정: 20% (레버리지 2x = 실효 40%)")
 
             if kelly * 100 < 20:
-                logger.info(f"  >>> 경고: 현재 포지션이 Kelly 권장치보다 큼 <<<")
+                logger.info("  >>> 경고: 현재 포지션이 Kelly 권장치보다 큼 <<<")
             else:
-                logger.info(f"  >>> 현재 포지션 크기 적정 <<<")
+                logger.info("  >>> 현재 포지션 크기 적정 <<<")
 
     # =========================================================================
     # Test 5: Execution Lag

@@ -3,15 +3,13 @@ Tests for Circuit Breaker.
 """
 
 import os
-from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from libs.risk.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
-    CircuitBreakerState,
     CircuitState,
     TriggerReason,
     create_circuit_breaker,

@@ -14,11 +14,10 @@ Daily Signal Alert Service
 from __future__ import annotations
 
 import logging
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -239,7 +238,7 @@ class DailySignalAlertService:
 
         # Header
         lines = [
-            f"<b>[MASP] 일간 시그널 리포트</b>",
+            "<b>[MASP] 일간 시그널 리포트</b>",
             f"시간: {meta['timestamp']}",
             f"전략: KAMA{meta['kama_period']}/TSMOM{meta['tsmom_lookback']}/MA{meta['btc_ma_period']}",
             "",

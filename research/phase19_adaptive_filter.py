@@ -16,7 +16,6 @@ G. KAMA + VWAP 복합
 OOS: min_oos_bars=16000 (19종목, 18윈도우, ~2년)
 """
 
-import json
 import warnings
 from datetime import datetime
 from pathlib import Path

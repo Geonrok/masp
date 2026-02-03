@@ -4,10 +4,8 @@ Tests for startup API key validation.
 
 import json
 import os
-from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 
 from libs.core.startup_validator import (
     EXCHANGE_KEY_CONFIGS,

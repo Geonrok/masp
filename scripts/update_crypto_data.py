@@ -9,7 +9,6 @@ Updates existing CSV files in E:/data/crypto_ohlcv/
 """
 
 import logging
-import os
 import sys
 import time
 from datetime import datetime, timedelta

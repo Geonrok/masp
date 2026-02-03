@@ -237,14 +237,14 @@ def task_1_4_liquidity_metrics():
                     "volatility_pct": volatility,
                 }
             )
-        except Exception as e:
+        except Exception:
             pass
 
     # Sort by ADV
     results = sorted(results, key=lambda x: x["adv_usd"], reverse=True)
 
     print(f"  Total symbols analyzed: {len(results)}")
-    print(f"\n  Top 10 by ADV:")
+    print("\n  Top 10 by ADV:")
     for r in results[:10]:
         print(
             f"    {r['symbol']:<12} ADV=${r['adv_usd']/1e6:.1f}M  Spread={r['spread_proxy_pct']:.2f}%"
@@ -352,7 +352,7 @@ def main():
     print(f"  Total symbols: {report['summary']['total_symbols']}")
     print(f"  Avg history: {report['summary']['avg_history_days']:.0f} days")
     print(f"  Tier 1 symbols: {len(report['tiers']['tier_1_top20'])}")
-    print(f"  Next: Phase 2 - Feature Engineering")
+    print("  Next: Phase 2 - Feature Engineering")
 
     return report
 

@@ -12,11 +12,9 @@ Settings:
 - Selection Logic: Top Sharpe Priority
 """
 
-import json
 import warnings
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -269,7 +267,7 @@ def run_simulation():
     cagr = (final_equity / INITIAL_CAPITAL) ** (1 / years) - 1
 
     print(f"\n{'='*40}")
-    print(f"Final Verification Results (Stress Test)")
+    print("Final Verification Results (Stress Test)")
     print(f"{'='*40}")
     print(f"Initial Capital: {INITIAL_CAPITAL:,.0f} KRW")
     print(f"Final Equity:    {final_equity:,.0f} KRW")

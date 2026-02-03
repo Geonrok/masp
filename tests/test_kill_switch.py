@@ -6,7 +6,6 @@ Tests kill-switch detection and order blocking functionality.
 
 import os
 import tempfile
-from pathlib import Path
 
 import pytest
 
@@ -152,7 +151,7 @@ if __name__ == "__main__":
     print("[Test 1] No kill-switch configured:")
     config1 = Config(asset_class=AssetClass.CRYPTO_SPOT)
     print(f"  Active: {config1.is_kill_switch_active()}")
-    print(f"  ✅ PASS\n")
+    print("  ✅ PASS\n")
 
     # Test 2: Non-existent file
     print("[Test 2] Non-existent kill-switch file:")
@@ -161,7 +160,7 @@ if __name__ == "__main__":
         kill_switch_file="/tmp/nonexistent_kill_switch.txt",
     )
     print(f"  Active: {config2.is_kill_switch_active()}")
-    print(f"  ✅ PASS\n")
+    print("  ✅ PASS\n")
 
     # Test 3: Create and detect
     print("[Test 3] Create kill-switch and detect:")
@@ -181,6 +180,6 @@ if __name__ == "__main__":
     print(f"  Validator: {result.valid}, Reason: {result.reason}")
 
     os.unlink(temp_path)
-    print(f"  ✅ PASS\n")
+    print("  ✅ PASS\n")
 
     print("=== All Manual Tests Complete ===")

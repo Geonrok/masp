@@ -10,15 +10,12 @@
 6. 거시경제 데이터 (DXY, VIX 등)
 """
 
-import json
-import os
 import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List
 
-import numpy as np
 import pandas as pd
 import requests
 
@@ -50,7 +47,7 @@ def download_binance_funding_rate(symbols: List[str] = None):
     output_dir = DATA_ROOT / "binance_funding_rate"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    exchange = ccxt.binance(
+    ccxt.binance(
         {"enableRateLimit": True, "options": {"defaultType": "future"}}
     )
 
@@ -385,7 +382,7 @@ def download_binance_multi_timeframe(
                 log(f"    에러: {e}")
                 continue
 
-    log(f"\n다중 시간프레임 다운로드 완료")
+    log("\n다중 시간프레임 다운로드 완료")
 
 
 # ============================================================

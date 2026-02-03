@@ -12,10 +12,9 @@ import logging
 import statistics
 import threading
 import time
-from collections import defaultdict, deque
+from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Any, Callable, Deque, Dict, List, Optional
 
 logger = logging.getLogger(__name__)

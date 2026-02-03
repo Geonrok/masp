@@ -2,7 +2,6 @@
 Tests for the Risk Management Module.
 """
 
-from datetime import datetime, timedelta
 
 import pytest
 

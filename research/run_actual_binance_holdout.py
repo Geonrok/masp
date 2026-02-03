@@ -7,7 +7,6 @@ import sys
 sys.path.insert(0, "E:/투자/Multi-Asset Strategy Platform")
 
 import warnings
-from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
@@ -48,7 +47,7 @@ def fetch_ohlcv(symbol: str, days: int = 500) -> pd.DataFrame:
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values("date").reset_index(drop=True)
         return df
-    except Exception as e:
+    except Exception:
         return pd.DataFrame()
 
 

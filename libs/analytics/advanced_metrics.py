@@ -15,10 +15,8 @@ Provides additional risk-adjusted performance metrics including:
 from __future__ import annotations
 
 import logging
-import math
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import List, Optional
 
 import numpy as np
 
@@ -402,7 +400,7 @@ def calculate_kurtosis(returns: List[float]) -> float:
         return 0.0
 
     returns_arr = np.array(returns)
-    n = len(returns_arr)
+    len(returns_arr)
     mean = np.mean(returns_arr)
     std = np.std(returns_arr)
 

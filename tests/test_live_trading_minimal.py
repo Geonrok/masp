@@ -203,8 +203,8 @@ def main() -> bool:
     reporter = DailyReportGenerator(
         logger, health, report_dir=str(live_log_dir / "reports")
     )
-    report = reporter.generate()
-    print(f"  Report 저장: logs/live_trades/reports/")
+    reporter.generate()
+    print("  Report 저장: logs/live_trades/reports/")
     print("  ✅ PASS")
 
     # 최종 결과
@@ -213,7 +213,7 @@ def main() -> bool:
     print("=" * 60)
     print(f"\n총 PnL: {pnl:+,.0f} KRW ({pnl_pct:+.2f}%)")
     print(f"거래 기록: {len(trades)}건")
-    print(f"로그 위치: logs/live_trades/")
+    print("로그 위치: logs/live_trades/")
 
     return True
 

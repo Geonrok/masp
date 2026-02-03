@@ -22,7 +22,7 @@ import warnings
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -459,7 +459,6 @@ class MomentumStrategy:
         df["atr"] = calc_atr(df["high"], df["low"], df["close"])
 
         position = 0
-        entry_price = 0
         trail_stop = 0
 
         for i in range(self.breakout_period + 14, len(df)):
@@ -484,12 +483,10 @@ class MomentumStrategy:
                 if high > prev_highest:  # Breakout up
                     signals.iloc[i, signals.columns.get_loc("signal")] = 1
                     position = 1
-                    entry_price = close
                     trail_stop = close - self.atr_multiplier * atr
                 elif low < prev_lowest:  # Breakout down
                     signals.iloc[i, signals.columns.get_loc("signal")] = -1
                     position = -1
-                    entry_price = close
                     trail_stop = close + self.atr_multiplier * atr
 
             # Update trailing stop
@@ -889,7 +886,7 @@ def run_all_strategies():
     logger.info("=" * 70)
     logger.info("MULTI-STRATEGY BACKTEST - ALL SYMBOLS")
     logger.info("=" * 70)
-    logger.info(f"Period: 2020-01-01 ~ Present")
+    logger.info("Period: 2020-01-01 ~ Present")
     logger.info(f"Symbols: {len(symbols)}")
     logger.info(f"Strategies: {list(strategies.keys())}")
     logger.info("=" * 70)

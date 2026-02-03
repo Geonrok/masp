@@ -216,7 +216,7 @@ class TrendFollowingStrategy:
 
             is_fear = fear_greed <= self.fear_entry
             rsi_ok = curr_rsi < 65  # Not overbought
-            pullback = price > curr_ema50 * 0.98  # Not broken below EMA50
+            price > curr_ema50 * 0.98  # Not broken below EMA50
             funding_ok = funding is None or funding < 0.002  # Not overcrowded
 
             if is_fear and rsi_ok and funding_ok:
@@ -236,7 +236,7 @@ class TrendFollowingStrategy:
         elif trend == "BEAR":
             is_greed = fear_greed >= self.greed_entry
             rsi_ok = curr_rsi > 35  # Not oversold
-            rally = price < curr_ema50 * 1.02  # Not broken above EMA50
+            price < curr_ema50 * 1.02  # Not broken above EMA50
             funding_ok = funding is None or funding > -0.002  # Not overcrowded shorts
 
             if is_greed and rsi_ok and funding_ok:

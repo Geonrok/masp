@@ -18,7 +18,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -571,7 +570,7 @@ class SignalGenerator:
         # 5. Funding Rate Score
         if not funding_df.empty:
             latest_funding = funding_df["funding_rate"].iloc[-1]
-            avg_funding = funding_df["funding_rate"].tail(10).mean()
+            funding_df["funding_rate"].tail(10).mean()
 
             if latest_funding < -0.001:  # Negative funding = bullish
                 funding_score = 1.5
@@ -658,13 +657,13 @@ async def main():
         generator = SignalGenerator()
         signals = generator.generate_all_signals(args.symbols)
 
-        logger.info(f"\nTop 10 BUY signals:")
+        logger.info("\nTop 10 BUY signals:")
         for _, row in signals.head(10).iterrows():
             logger.info(
                 f"  {row['symbol']:<14} Signal={row['signal']:+.2f} ({row['recommendation']})"
             )
 
-        logger.info(f"\nTop 10 SELL signals:")
+        logger.info("\nTop 10 SELL signals:")
         for _, row in signals.tail(10).iterrows():
             logger.info(
                 f"  {row['symbol']:<14} Signal={row['signal']:+.2f} ({row['recommendation']})"
@@ -677,7 +676,7 @@ async def main():
         sell = len(signals[(signals["signal"] <= -2) & (signals["signal"] > -4)])
         strong_sell = len(signals[signals["signal"] <= -4])
 
-        logger.info(f"\nSignal Distribution:")
+        logger.info("\nSignal Distribution:")
         logger.info(f"  STRONG_BUY:  {strong_buy}")
         logger.info(f"  BUY:         {buy}")
         logger.info(f"  NEUTRAL:     {neutral}")

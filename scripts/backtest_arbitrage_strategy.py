@@ -15,9 +15,8 @@ from __future__ import annotations
 
 import logging
 import warnings
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -457,7 +456,7 @@ def main():
 
         logger.info(f"Total strategies tested: {len(all_results)}")
         logger.info(f"Profitable: {len(df_all[df_all['pf'] > 1.0])}")
-        logger.info(f"\nTop 10 Arbitrage Opportunities:")
+        logger.info("\nTop 10 Arbitrage Opportunities:")
 
         top = df_all.nlargest(10, "pf")
         for _, r in top.iterrows():

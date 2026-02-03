@@ -9,13 +9,13 @@ import json
 import logging
 import signal
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from apscheduler.events import EVENT_JOB_MISSED
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from libs.core.startup_validator import validate_api_keys, validate_startup
+from libs.core.startup_validator import validate_api_keys
 from services.strategy_runner import StrategyRunner
 
 logger = logging.getLogger(__name__)

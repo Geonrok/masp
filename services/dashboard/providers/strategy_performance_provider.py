@@ -123,7 +123,7 @@ def _calculate_sharpe_ratio(
         return 0.0
 
     # Annualize (assuming daily returns)
-    annual_return = mean_return * 252
+    mean_return * 252
     annual_std = std_dev * math.sqrt(252)
     daily_rf = risk_free_rate / 252
 
@@ -161,7 +161,7 @@ def _calculate_sortino_ratio(
         return 0.0
 
     # Annualize
-    annual_return = mean_return * 252
+    mean_return * 252
     annual_downside_std = downside_std * math.sqrt(252)
     daily_rf = risk_free_rate / 252
 

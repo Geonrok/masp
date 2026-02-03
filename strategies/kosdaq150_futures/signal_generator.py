@@ -6,15 +6,15 @@ KOSDAQ 150 선물 일일 신호 생성기
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import numpy as np
 import pandas as pd
 
-from .core_strategies import TradingSignal, create_validated_strategies
-from .equal_weight_portfolio import KOSDAQ150EqualWeightPortfolio, PortfolioConfig
+from .core_strategies import TradingSignal
+from .equal_weight_portfolio import KOSDAQ150EqualWeightPortfolio
 
 
 class KOSDAQ150SignalGenerator:
@@ -111,7 +111,7 @@ class KOSDAQ150SignalGenerator:
         summary = self.get_signal_summary()
 
         print("=" * 60)
-        print(f"KOSDAQ 150 선물 일일 신호")
+        print("KOSDAQ 150 선물 일일 신호")
         print(f"기준일: {summary['date']}")
         print("=" * 60)
 

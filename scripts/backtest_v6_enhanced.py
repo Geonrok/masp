@@ -16,7 +16,6 @@ import argparse
 import logging
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -271,7 +270,7 @@ class EnhancedStrategy:
         """Calculate ADX."""
         high = df["high"].values
         low = df["low"].values
-        close = df["close"].values
+        df["close"].values
 
         plus_dm = np.zeros(len(high))
         minus_dm = np.zeros(len(high))

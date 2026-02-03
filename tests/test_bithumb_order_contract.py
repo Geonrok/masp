@@ -322,7 +322,7 @@ class TestOrderStatusTracking:
 
             from datetime import datetime
 
-            from libs.adapters.real_bithumb_execution import OrderState, OrderStatus
+            from libs.adapters.real_bithumb_execution import OrderStatus
 
             # Test pending order
             pending_status = OrderStatus(

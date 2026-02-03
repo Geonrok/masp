@@ -427,14 +427,14 @@ def main():
         per_symbol.items(), key=lambda x: x[1]["total_return"], reverse=True
     )
 
-    print(f"\n  Top 15 symbols:")
+    print("\n  Top 15 symbols:")
     for s, r in ranked_symbols[:15]:
         print(
             f"    {s:<15} Ret={r['total_return']*100:+.1f}%  WR={r['win_rate']*100:.0f}%  "
             f"PF={r['profit_factor']:.2f}  T={r['trade_count']}"
         )
 
-    print(f"\n  Bottom 5 symbols:")
+    print("\n  Bottom 5 symbols:")
     for s, r in ranked_symbols[-5:]:
         print(
             f"    {s:<15} Ret={r['total_return']*100:+.1f}%  WR={r['win_rate']*100:.0f}%  "
@@ -517,7 +517,7 @@ def main():
     best_portfolio = max(
         portfolio_results.items(), key=lambda x: x[1]["criteria_passed"]
     )
-    best_name = best_portfolio[0]
+    best_portfolio[0]
     # Reconstruct trades for MC (use top_10 as representative)
     top10_syms = [s for s, _ in ranked_symbols[:10]]
     # Quick re-run to get trades

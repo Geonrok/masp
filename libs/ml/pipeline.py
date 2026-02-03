@@ -9,13 +9,13 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
 from libs.ml.features import FeatureConfig, FeatureEngineering
-from libs.ml.models import ModelInterface, ModelMetadata, SklearnModel
+from libs.ml.models import ModelInterface, SklearnModel
 
 logger = logging.getLogger(__name__)
 

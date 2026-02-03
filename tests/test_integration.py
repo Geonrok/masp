@@ -5,7 +5,6 @@ Contract-level integration for StrategyEngine + ATLASFuturesStrategy + BinanceFu
 
 from __future__ import annotations
 
-import asyncio
 import json
 import sys
 from datetime import datetime, timezone

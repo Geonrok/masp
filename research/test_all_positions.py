@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Test vol_profile with varying max_positions: 10, 30, 50, 100, ALL"""
 
-import json
 import warnings
 from datetime import datetime
 from pathlib import Path

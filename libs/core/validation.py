@@ -9,9 +9,8 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Type
 
 from libs.core.exceptions import ValidationError
 

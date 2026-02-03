@@ -125,7 +125,7 @@ def main(argv: list[str]) -> int:
 
     if actions is None:
         print("B3 결과: FAIL (could not parse Actions/Result)")
-        print(f"[DEBUG] 마지막 20줄:\n" + "\n".join(text.splitlines()[-20:]))
+        print("[DEBUG] 마지막 20줄:\n" + "\n".join(text.splitlines()[-20:]))
         return 1
 
     buy = int(actions.get("BUY", 0))

@@ -15,7 +15,7 @@ from __future__ import annotations
 import logging
 import warnings
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -859,7 +859,7 @@ def main():
         c2 = avg_pf >= 1.2
         c3 = avg_ret >= 0
 
-        logger.info(f"\n[MF+ML with Realistic Costs]")
+        logger.info("\n[MF+ML with Realistic Costs]")
         logger.info(
             f"  [{'PASS' if c1 else 'FAIL'}] Profitable >= 50%: {profitable_rate:.1f}%"
         )
@@ -880,7 +880,7 @@ def main():
         c5 = avg_pf >= 1.2
         c6 = avg_ret >= 0
 
-        logger.info(f"\n[MF+OnChain+ML with Realistic Costs]")
+        logger.info("\n[MF+OnChain+ML with Realistic Costs]")
         logger.info(
             f"  [{'PASS' if c4 else 'FAIL'}] Profitable >= 50%: {profitable_rate:.1f}%"
         )

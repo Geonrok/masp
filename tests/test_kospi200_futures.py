@@ -9,9 +9,8 @@ Tests cover:
 """
 
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -22,7 +21,6 @@ from libs.strategies.kospi200_futures import (
     KOSPI200FuturesStrategy,
     KOSPI200HourlyStrategy,
     KOSPI200StablePortfolioStrategy,
-    KOSPI200SubStrategy,
     SemiconForeignStrategy,
     VIXBelowSMA20Strategy,
     VIXDecliningStrategy,

@@ -2,11 +2,9 @@
 Tests for RBAC (Role-Based Access Control) System.
 """
 
-import json
 import tempfile
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -18,9 +16,6 @@ from libs.core.rbac import (
     Session,
     User,
     get_rbac_manager,
-    require_any_permission,
-    require_permission,
-    require_role,
 )
 
 

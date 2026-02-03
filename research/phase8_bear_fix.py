@@ -16,7 +16,6 @@ E) Relax entry: test multiple ATR expansion thresholds
 """
 
 import json
-import os
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -110,7 +109,6 @@ def strat_regime_filter(df, lookback=96, ema_period=200, atr_expansion=1.3):
 
     # Regime: 30-day return of price
     ret_30d = close.pct_change(720)
-    bull = ret_30d > 0.05
     bear = ret_30d < -0.15  # Only short in strong bear
 
     signals = np.where(
@@ -626,7 +624,7 @@ def main():
         )
     ranked_configs.sort(key=lambda x: (-x[1], -x[3].get("sharpe", 0)))
 
-    print(f"\nTop 10 configs by criteria passed:")
+    print("\nTop 10 configs by criteria passed:")
     for i, (config_name, passed, univ, r) in enumerate(ranked_configs[:10]):
         print(
             f"  {i+1}. [{passed}/6] {config_name} ({univ}) "
@@ -639,7 +637,7 @@ def main():
             print(f"     FAILS: {', '.join(fails)}")
 
     # Regime test for top 5
-    print(f"\nRegime analysis for top 5:")
+    print("\nRegime analysis for top 5:")
     for config_name, passed, univ, r in ranked_configs[:5]:
         strat_name = config_name.rsplit("_", 1)[0]
         # Find the strategy function
@@ -691,8 +689,8 @@ def main():
         )
 
         if passed == 6:
-            print(f"\n*** 6/6 PASSED ON TRUE OUT-OF-SAMPLE! ***")
-            print(f"Strategy is a candidate for paper trading.")
+            print("\n*** 6/6 PASSED ON TRUE OUT-OF-SAMPLE! ***")
+            print("Strategy is a candidate for paper trading.")
         else:
             print(f"\nStill {6-passed} criteria failing. More work needed.")
     else:

@@ -4,16 +4,12 @@ Binance 2025 Holdout Test for KAMA=10, TSMOM=60, Gate=30
 This script fetches Binance spot data for 2025 and runs the holdout test.
 """
 
-import os
 import sys
 
 sys.path.insert(0, "E:/투자/Multi-Asset Strategy Platform")
 
 import warnings
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
 
-import numpy as np
 import pandas as pd
 
 warnings.filterwarnings("ignore")
@@ -112,7 +108,7 @@ print(f"  Estimated Holdout: {method_c:.3f}")
 
 # Final estimate: weighted average
 estimated_holdout = method_a * 0.4 + method_b * 0.4 + method_c * 0.2
-print(f"\nFinal Estimate (weighted avg):")
+print("\nFinal Estimate (weighted avg):")
 print(f"  {estimated_holdout:.3f}")
 
 # Confidence interval
@@ -139,7 +135,7 @@ try:
     btc_data = adapter.get_ohlcv("BTC/USDT", interval="1d", limit=30)
 
     if btc_data:
-        print(f"[OK] Successfully connected to Binance API")
+        print("[OK] Successfully connected to Binance API")
         print(f"     Retrieved {len(btc_data)} candles for BTC/USDT")
         print(f"     Latest close: ${btc_data[-1].close:,.2f}")
 

@@ -9,11 +9,9 @@ Data Source: KRX (via pykrx)
 
 import time
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
 from pykrx import stock
 from tqdm import tqdm
 
@@ -99,7 +97,7 @@ def download_investor_data():
 
             time.sleep(0.5)  # Politeness delay
 
-        except Exception as e:
+        except Exception:
             # print(f"Error {ticker}: {e}")
             time.sleep(1)
             continue

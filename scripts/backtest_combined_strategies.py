@@ -12,9 +12,8 @@ from __future__ import annotations
 
 import logging
 import warnings
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -353,7 +352,7 @@ class KoreanPremiumSignal:
 
         # Calculate premium
         premium = (korean_price / binance_price - 1) * 100
-        premium_ma = premium.rolling(20).mean()
+        premium.rolling(20).mean()
 
         scores = pd.Series(0.0, index=binance_df.index)
 

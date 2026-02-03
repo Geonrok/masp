@@ -151,7 +151,7 @@ class KiwoomSpotMarketData(MarketDataAdapter):
         Handles the case where we may or may not already be in an async context.
         """
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             # Already in async context - use thread
             import concurrent.futures
 
@@ -496,7 +496,7 @@ class KiwoomSpotExecution(ExecutionAdapter):
     def _run_async(self, coro):
         """Run async coroutine synchronously."""
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             import concurrent.futures
 
             with concurrent.futures.ThreadPoolExecutor() as executor:

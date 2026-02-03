@@ -15,7 +15,6 @@ from fastapi.security import APIKeyHeader
 
 from libs.core.rbac import (
     Permission,
-    RBACManager,
     Role,
     User,
     get_rbac_manager,

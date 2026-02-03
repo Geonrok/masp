@@ -154,7 +154,7 @@ class TestEbestExecution:
         with patch.dict(os.environ, {"MASP_ENABLE_LIVE_TRADING": "1"}):
             balances = adapter.get_all_balances()
 
-            print(f"\n=== Account Balances ===")
+            print("\n=== Account Balances ===")
             for b in balances:
                 if b.get("currency") == "KRW":
                     print(

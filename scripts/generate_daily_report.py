@@ -46,7 +46,7 @@ def generate_reports(report_date: date = None) -> dict:
             trade_count = logger.get_trade_count(d)
 
             if trade_count > 0:
-                report = reporter.generate(d)
+                reporter.generate(d)
                 results[exchange] = {
                     "status": "generated",
                     "trades": trade_count,
@@ -84,10 +84,10 @@ def main():
     else:
         report_date = date.today()
 
-    print(f"=" * 60)
-    print(f"Daily Report Generator")
+    print("=" * 60)
+    print("Daily Report Generator")
     print(f"Date: {report_date}")
-    print(f"=" * 60)
+    print("=" * 60)
 
     results = generate_reports(report_date)
 

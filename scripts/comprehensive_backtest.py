@@ -12,11 +12,11 @@
 import logging
 import sys
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from itertools import product
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 warnings.filterwarnings("ignore")
 
@@ -442,7 +442,7 @@ def load_exchange_data(
                 if symbol.upper() in ["BTC", "BTCUSDT", "BTC-KRW"]:
                     btc_data = df
 
-        except Exception as e:
+        except Exception:
             continue
 
     # BTC 찾기 (없으면 이름으로 검색)
@@ -542,7 +542,7 @@ def run_comprehensive_backtest():
         data, btc_data = load_exchange_data(exchange)
 
         if not data:
-            print(f"  데이터 없음, 건너뜀")
+            print("  데이터 없음, 건너뜀")
             continue
 
         print(f"  로드된 심볼: {len(data)}개")

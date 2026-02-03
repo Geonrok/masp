@@ -9,7 +9,7 @@ Optimized with class caching for faster repeated instantiation.
 import logging
 import os
 import warnings
-from typing import Literal, Optional, Type
+from typing import Literal, Type
 
 from libs.adapters.base import ExecutionAdapter, MarketDataAdapter
 

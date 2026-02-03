@@ -89,7 +89,7 @@ async def download_daily_chart(api, ticker, name):
         print(f"    저장: {len(df)}건")
         return df
 
-    print(f"    데이터 없음")
+    print("    데이터 없음")
     return None
 
 

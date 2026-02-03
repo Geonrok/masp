@@ -172,7 +172,7 @@ impl_sharpe = impl_upbit["sharpe"].values[0] if not impl_upbit.empty else 3.83
 dsr_impl, p_impl, exp_max = deflated_sharpe_ratio(
     impl_sharpe, estimated_total_tests, years
 )
-print(f"\n[IMPLEMENTED] KAMA=5, TSMOM=90:")
+print("\n[IMPLEMENTED] KAMA=5, TSMOM=90:")
 print(f"  In-Sample Sharpe: {impl_sharpe:.3f}")
 print(f"  Expected Max (chance): {exp_max:.3f}")
 print(f"  Deflated Sharpe: {dsr_impl:.3f}")
@@ -184,7 +184,7 @@ valid_sharpe_holdout = 3.16  # 2025 holdout result
 dsr_valid, p_valid, _ = deflated_sharpe_ratio(
     valid_sharpe_holdout, estimated_total_tests, years
 )
-print(f"\n[VALIDATED] KAMA=10, TSMOM=60 (using 2025 Holdout Sharpe):")
+print("\n[VALIDATED] KAMA=10, TSMOM=60 (using 2025 Holdout Sharpe):")
 print(f"  Holdout Sharpe: {valid_sharpe_holdout:.3f}")
 print(f"  Deflated Sharpe: {dsr_valid:.3f}")
 print(f"  P-value: {p_valid:.6f}")
@@ -210,7 +210,7 @@ random_max_sharpes = np.array(random_max_sharpes)
 
 print(f"Simulations: {n_simulations:,}")
 print(f"Strategies per simulation: {n_strategies_simulated:,}")
-print(f"\nRandom Strategy Max Sharpe Distribution:")
+print("\nRandom Strategy Max Sharpe Distribution:")
 print(f"  Mean: {random_max_sharpes.mean():.3f}")
 print(f"  95th percentile: {np.percentile(random_max_sharpes, 95):.3f}")
 print(f"  99th percentile: {np.percentile(random_max_sharpes, 99):.3f}")
@@ -314,14 +314,14 @@ print(
 # Test 4: Holdout Validation
 score_impl += 0  # NO holdout
 score_valid += 1  # Has holdout
-print(f"[4/5] 2025 Holdout Test: IMPL=[NO DATA], VALID=[PASS]")
+print("[4/5] 2025 Holdout Test: IMPL=[NO DATA], VALID=[PASS]")
 
 # Test 5: Cross-Market Consistency
 score_impl += 0  # Unknown
 score_valid += 1  # Passed
-print(f"[5/5] Cross-Market Validation: IMPL=[UNKNOWN], VALID=[PASS]")
+print("[5/5] Cross-Market Validation: IMPL=[UNKNOWN], VALID=[PASS]")
 
-print(f"\nFINAL SCORES:")
+print("\nFINAL SCORES:")
 print(f"  IMPLEMENTED (KAMA=5, TSMOM=90): {score_impl}/{max_score}")
 print(f"  VALIDATED (KAMA=10, TSMOM=60):  {score_valid}/{max_score}")
 

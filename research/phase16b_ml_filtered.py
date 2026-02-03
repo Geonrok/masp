@@ -747,10 +747,10 @@ def main():
                 f"\n  → ML BEATS Vol Profile baseline (Sharpe {best[1]['sharpe']:.2f} > 2.52)!"
             )
         else:
-            print(f"\n  → Vol Profile baseline still better (Sharpe 2.52)")
+            print("\n  → Vol Profile baseline still better (Sharpe 2.52)")
     else:
         print(
-            f"\n*** No ML config passed 6/6. Vol Profile (Sharpe=2.52) remains best. ***"
+            "\n*** No ML config passed 6/6. Vol Profile (Sharpe=2.52) remains best. ***"
         )
 
     save_data = {

@@ -334,13 +334,13 @@ futures_data = load_market(FUTURES_FOLDER, start_dt, end_dt)
 r = run_long_short(futures_data, start_dt, end_dt)
 
 if r:
-    print(f"\n2025 Futures Long/Short:")
+    print("\n2025 Futures Long/Short:")
     print(f"  Total Return: {r['return']*100:+.1f}%")
     print(f"  Sharpe Ratio: {r['sharpe']:.3f}")
     print(f"  Max Drawdown: {r['mdd']*100:.1f}%")
     print(f"  Long Days:    {r['long_days']}")
     print(f"  Short Days:   {r['short_days']}")
-    print(f"\n  Short 포지션이 하락장 손실을 상쇄했는가?")
+    print("\n  Short 포지션이 하락장 손실을 상쇄했는가?")
 
     spot_data = load_market(SPOT_FOLDER, start_dt, end_dt)
     r_spot = run_long_only(spot_data, start_dt, end_dt)

@@ -19,7 +19,6 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from libs.strategies.base import (
-    Action,
     BaseStrategy,
     Decision,
     Signal,
@@ -27,8 +26,6 @@ from libs.strategies.base import (
     TradeSignal,
 )
 from libs.strategies.indicators import (
-    MACD,
-    RSI,
     MACD_series,
     RSI_series,
 )

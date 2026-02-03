@@ -446,7 +446,7 @@ if len(viable_2x) > 0:
         "mdd": best_2x["mdd"],
         "note": "2x ETF 사용 가능 (단, MDD 주의)",
     }
-    print(f"\n결론: 2x ETF 사용 가능")
+    print("\n결론: 2x ETF 사용 가능")
     print(f"\n추천 전략: {best_2x['strategy']} (2x ETF)")
     print(f"  Sharpe: {best_2x['sharpe']:.3f}")
     print(f"  CAGR: {best_2x['cagr']*100:.1f}%")
@@ -462,12 +462,12 @@ elif len(viable_1x_relaxed) > 0:
         "mdd": best_1x["mdd"],
         "note": "1x ETF 권장 (2x는 MDD 과다)",
     }
-    print(f"\n결론: 1x ETF(TIGER 200) 사용 권장")
+    print("\n결론: 1x ETF(TIGER 200) 사용 권장")
     print(f"\n추천 전략: {best_1x['strategy']} (1x ETF)")
     print(f"  Sharpe: {best_1x['sharpe']:.3f}")
     print(f"  CAGR: {best_1x['cagr']*100:.1f}%")
     print(f"  MDD: {best_1x['mdd']*100:.1f}%")
-    print(f"\n이유: 2x ETF는 모든 전략에서 MDD -25% 초과")
+    print("\n이유: 2x ETF는 모든 전략에서 MDD -25% 초과")
 
 else:
     # 원본 검증 결과와 비교
@@ -490,7 +490,7 @@ else:
             "mdd": vix_1x["mdd"],
             "note": "원본 검증과 차이 있음, 추가 검증 필요",
         }
-        print(f"\n현재 백테스트 결과:")
+        print("\n현재 백테스트 결과:")
         print(
             f"  VIX_Below_SMA20 (1x): Sharpe {vix_1x['sharpe']:.3f}, MDD {vix_1x['mdd']*100:.1f}%"
         )

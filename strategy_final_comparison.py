@@ -4,7 +4,6 @@
 2. 시장 구간별 (상승/횡보/하락) 성과 분석
 """
 
-import json
 import sys
 from pathlib import Path
 
@@ -15,8 +14,6 @@ sys.path.insert(0, r"E:\투자\Multi-Asset Strategy Platform")
 
 from kosdaq_live_trading_validation import (
     CombBestStrategy,
-    LiveTradingConfig,
-    LiveTradingValidator,
     TripleADXStrategy,
     TripleV5Strategy,
     TripleVolStrategy,
@@ -67,13 +64,13 @@ data["Market"] = data.apply(classify_market, axis=1)
 
 # 구간별 일수
 market_counts = data["Market"].value_counts()
-print(f"\n시장 구간별 일수:")
+print("\n시장 구간별 일수:")
 for market, count in market_counts.items():
     pct = count / len(data) * 100
     print(f"  {market:>10}: {count:>5}일 ({pct:.1f}%)")
 
 # 주요 시장 구간 기간
-print(f"\n주요 시장 구간:")
+print("\n주요 시장 구간:")
 market_periods = {
     "2010-2011": "횡보/하락",
     "2012-2013": "상승장",
@@ -223,7 +220,7 @@ bull_data = data[data["Market"] == "bull"]
 bear_data = data[data["Market"] == "bear"]
 sideways_data = data[data["Market"] == "sideways"]
 
-print(f"\n분석 대상:")
+print("\n분석 대상:")
 print(f"  상승장: {len(bull_data)}일")
 print(f"  하락장: {len(bear_data)}일")
 print(f"  횡보장: {len(sideways_data)}일")
@@ -270,7 +267,7 @@ print("=" * 80)
 
 best_strategy = TripleV5Strategy(14, 38, 14, 78, 20, "both")
 
-print(f"\n### 시장 구간별 성과 ###")
+print("\n### 시장 구간별 성과 ###")
 print(
     f"{'구간':<12} {'Sharpe':>10} {'수익률':>12} {'승률':>10} {'거래수':>10} {'평균손익':>12}"
 )
@@ -406,7 +403,7 @@ worst_market = min(
     key=lambda x: x[1],
 )
 
-print(f"결론:")
+print("결론:")
 print(f"  - 가장 강한 구간: {best_market[0]} (Sharpe {best_market[1]:.3f})")
 print(f"  - 가장 약한 구간: {worst_market[0]} (Sharpe {worst_market[1]:.3f})")
 
@@ -415,7 +412,7 @@ rank = next(i for i, r in enumerate(full_results, 1) if "V5_14_38" in r["name"])
 print(f"  - 전체 {len(full_results)}개 전략 중 순위: {rank}위")
 
 if rank == 1:
-    print(f"\n[결론] TripleV5_14_38_14_78_20이 테스트된 전략 중 최선입니다.")
+    print("\n[결론] TripleV5_14_38_14_78_20이 테스트된 전략 중 최선입니다.")
 else:
     best_overall = full_results[0]
     print(

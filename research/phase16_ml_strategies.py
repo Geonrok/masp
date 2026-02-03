@@ -34,7 +34,7 @@ warnings.filterwarnings("ignore")
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier, VotingClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
@@ -301,7 +301,7 @@ def ml_walk_forward_signals(
                     if prob > prob_threshold:
                         signals[idx] = 1
 
-        except Exception as e:
+        except Exception:
             pass
 
         i += test_bars
@@ -931,7 +931,7 @@ def main():
                 if fails:
                     print(f"    FAILS: {', '.join(fails)}")
             else:
-                print(f"    SKIP")
+                print("    SKIP")
 
     # -----------------------------------------------------------------
     # PART B: ML as ensemble
@@ -1069,7 +1069,7 @@ def main():
 
         best_ml = max(six_six, key=lambda x: x[1]["sharpe"])
         print(f"\n  Best ML: {best_ml[0]} Sharpe={best_ml[1]['sharpe']:.2f}")
-        print(f"  Baseline Vol Profile: Sharpe=2.52")
+        print("  Baseline Vol Profile: Sharpe=2.52")
         if best_ml[1]["sharpe"] > 2.52:
             print("  → ML BEATS BASELINE!")
         else:

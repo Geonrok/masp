@@ -2,7 +2,6 @@
 Tests for strategy patterns module.
 """
 
-from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytest

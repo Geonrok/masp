@@ -2,8 +2,6 @@
 Tests for API routes.
 """
 
-from datetime import datetime
-from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -205,7 +203,7 @@ class TestStrategyManager:
             except ValueError:
                 pass
 
-        count = manager.stop_all()
+        manager.stop_all()
         assert manager.active_strategies == set()
 
 

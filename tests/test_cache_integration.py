@@ -16,7 +16,7 @@ else:
     print("  FAIL: No quote")
 
 # Second call - should be HIT (from cache)
-print(f"\n[2] Second call (Cache HIT):")
+print("\n[2] Second call (Cache HIT):")
 q2 = adapter.get_quote("BTC/KRW")
 if q2:
     print(f"  BTC/KRW: {q2.last:,.0f} KRW")
@@ -24,7 +24,7 @@ else:
     print("  FAIL: No quote")
 
 # Check cache stats
-print(f"\n[3] Cache Statistics:")
+print("\n[3] Cache Statistics:")
 stats = adapter._cache.get_stats()
 print(f"  Size: {stats['size']}")
 print(f"  Hits: {stats['hits']}")

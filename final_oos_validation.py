@@ -8,7 +8,6 @@
 import os
 import warnings
 
-import numpy as np
 import pandas as pd
 
 warnings.filterwarnings("ignore")
@@ -214,7 +213,7 @@ def run_oos_validation():
     # OOS 기간: 2024-01-01 이후
     oos_start = "2024-01-01"
 
-    print(f"\n[2] In-Sample (~ 2023-12-31) vs Out-of-Sample (2024-01-01 ~) 비교")
+    print("\n[2] In-Sample (~ 2023-12-31) vs Out-of-Sample (2024-01-01 ~) 비교")
     print("-" * 100)
 
     results = []
@@ -275,7 +274,7 @@ def run_oos_validation():
         # 3. OOS 수익률이 IS의 20% 이상
         is_profitable = r["oos_return"] > 0
         mdd_acceptable = r["oos_mdd"] > -30
-        consistent = (
+        (
             r["oos_return"] > r["is_return"] * 0.2
             if r["is_return"] > 0
             else r["oos_return"] > 0

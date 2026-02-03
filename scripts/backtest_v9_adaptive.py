@@ -191,7 +191,7 @@ class AdaptiveStrategy:
         atr = self.calculate_atr(df_4h, self.atr_period)
         rsi = self.calculate_rsi(close, self.rsi_period)
 
-        current_ema50 = ema_fast[-1]
+        ema_fast[-1]
         current_ema200 = ema_slow[-1]
         current_atr = atr[-1]
         current_rsi = rsi[-1]

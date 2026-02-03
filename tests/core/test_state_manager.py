@@ -2,7 +2,6 @@
 Tests for state manager.
 """
 
-import pytest
 
 from libs.core.state_manager import (
     StateContext,

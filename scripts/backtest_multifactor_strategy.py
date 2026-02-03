@@ -23,12 +23,11 @@ Scoring System:
 from __future__ import annotations
 
 import logging
-import sys
 import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -395,7 +394,7 @@ class MultiFactorScorer:
             return scores
 
         gt = gtrends.reindex(idx, method="ffill")
-        gt_ma = gt.rolling(4).mean()  # Weekly average
+        gt.rolling(4).mean()  # Weekly average
         gt_pct = gt.rolling(52).apply(
             lambda x: pd.Series(x).rank(pct=True).iloc[-1] * 100, raw=False
         )
@@ -687,7 +686,7 @@ def main():
 
         df = loader.load_ohlcv(symbol, "4h")
         if df.empty or len(df) < 500:
-            logger.warning(f"  Insufficient price data")
+            logger.warning("  Insufficient price data")
             continue
 
         df = df[df.index >= "2020-01-01"]
@@ -808,7 +807,7 @@ def main():
                 f"WR={result.wr:.0f}%, MDD={result.mdd:.1f}%, Trades={result.trades}"
             )
         else:
-            logger.info(f"\n  RESULT: Insufficient trades")
+            logger.info("\n  RESULT: Insufficient trades")
 
     # Summary
     logger.info("\n" + "=" * 70)

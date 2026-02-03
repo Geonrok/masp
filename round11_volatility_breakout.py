@@ -158,7 +158,7 @@ def main():
     ].sort_values("sharpe", ascending=False)
 
     print(f"\nTotal Viable Strategies: {len(viable)}")
-    print(f"\nTOP 20 Volatility Breakout Candidates:")
+    print("\nTOP 20 Volatility Breakout Candidates:")
     print(viable.head(20))
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

@@ -578,7 +578,7 @@ def main():
         for c, v in best["criteria"].items():
             print(f"  {c}: {'PASS' if v else 'FAIL'}")
 
-        print(f"\n  vs 4h baseline (Sharpe=0.64, 4/6):")
+        print("\n  vs 4h baseline (Sharpe=0.64, 4/6):")
         imp = (
             "IMPROVED"
             if best["criteria_passed"] > 4 or best["sharpe"] > 0.64

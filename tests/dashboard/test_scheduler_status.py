@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-import pytest
 
 
 def test_import_scheduler_status():
@@ -103,7 +102,6 @@ def test_job_execution_with_error():
 def test_scheduled_job_dataclass():
     """Test ScheduledJob dataclass."""
     from services.dashboard.components.scheduler_status import (
-        JobSchedule,
         JobStatus,
         JobType,
         ScheduledJob,

@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
 
 # =============================================================================
 # Exchange Registry Tests
@@ -261,13 +259,9 @@ def test_create_multi_exchange_coordinator():
 def test_multi_exchange_provider_import():
     """Test multi-exchange provider imports."""
     from services.dashboard.providers.multi_exchange_provider import (
-        find_arbitrage_opportunities,
-        get_best_exchange,
         get_exchange_list,
         get_exchange_status,
         get_price_comparison,
-        get_registry_summary,
-        perform_health_check,
     )
 
     assert callable(get_exchange_list)
@@ -305,10 +299,8 @@ def test_get_registry_summary():
 def test_multi_exchange_view_import():
     """Test multi-exchange view component imports."""
     from services.dashboard.components.multi_exchange_view import (
-        render_arbitrage_opportunities,
         render_exchange_list,
         render_multi_exchange_view,
-        render_price_comparison,
     )
 
     assert callable(render_multi_exchange_view)

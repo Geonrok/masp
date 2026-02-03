@@ -7,7 +7,6 @@
 
 import os
 import warnings
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -255,7 +254,7 @@ class ForeignRatioAcceleration(AdvancedStrategy):
     """
 
     def generate_signals(self, df):
-        period = self.params.get("period", 5)
+        self.params.get("period", 5)
 
         df = df.copy()
 
@@ -298,7 +297,7 @@ def backtest_strategy(df, strategy, initial_capital=100_000_000, fee_rate=0.001)
     """전략 백테스트 수행"""
     try:
         df = strategy.generate_signals(df)
-    except Exception as e:
+    except Exception:
         return None
 
     df = df.dropna(subset=["chg_qty", "signal"])

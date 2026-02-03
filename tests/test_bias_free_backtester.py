@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from libs.backtest.bias_free_backtester import (
     BacktestConfig,

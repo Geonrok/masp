@@ -8,7 +8,6 @@
 
 import os
 import warnings
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -295,7 +294,7 @@ def backtest_strategy(
 
     try:
         df = strategy.generate_signals(df)
-    except Exception as e:
+    except Exception:
         return None
 
     capital = initial_capital

@@ -6,9 +6,7 @@ Using local data from E:\data\crypto_ohlcv
 Testing on all 3 markets: Binance, Upbit, Bithumb
 """
 
-import os
 import warnings
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -53,7 +51,7 @@ def load_market_data(market_folder: Path) -> dict:
                 df = df.sort_values("date").reset_index(drop=True)
                 symbol = csv_file.stem  # filename without extension
                 data[symbol] = df
-        except Exception as e:
+        except Exception:
             continue
 
     return data

@@ -5,10 +5,8 @@ Upbit spot execution adapter tests.
 from __future__ import annotations
 
 import hashlib
-import os
 import sys
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict
 

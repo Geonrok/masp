@@ -3,7 +3,6 @@ KOSDAQ 150 선물 전략용 기술적 지표
 ==================================
 """
 
-import numpy as np
 import pandas as pd
 
 

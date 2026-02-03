@@ -15,8 +15,6 @@ sys.path.insert(0, r"E:\투자\Multi-Asset Strategy Platform")
 
 from kosdaq_live_trading_validation import (
     CombBestStrategy,
-    LiveTradingConfig,
-    LiveTradingValidator,
     TripleADXStrategy,
     TripleV5Strategy,
     TripleVolStrategy,
@@ -223,7 +221,7 @@ for strategy in strategies[:4]:  # 처음 4개만
         yearly_sharpes.append(result["sharpe"])
     yearly_data[strategy.name] = yearly_sharpes
 
-print(f"\n연도별 Sharpe (2010-2026):")
+print("\n연도별 Sharpe (2010-2026):")
 print(f"{'연도':<6}", end="")
 for name in list(yearly_data.keys()):
     short = name[:15]
@@ -275,7 +273,7 @@ periods = [
     ("2022-2024", "2025"),
 ]
 
-print(f"\nWalk-Forward 기간별 OS Sharpe (상위 3 전략):")
+print("\nWalk-Forward 기간별 OS Sharpe (상위 3 전략):")
 print(f"{'기간':<20}", end="")
 for strategy in strategies[:3]:
     short = strategy.name[:12]

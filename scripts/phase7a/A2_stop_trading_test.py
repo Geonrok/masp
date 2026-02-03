@@ -1,6 +1,6 @@
 ﻿import os
 
-print(f"\n=== A2-2: STOP_TRADING=1 차단 테스트 ===")
+print("\n=== A2-2: STOP_TRADING=1 차단 테스트 ===")
 print(f"STOP_TRADING env: {os.getenv('STOP_TRADING')}")
 
 from services.strategy_runner import StrategyRunner

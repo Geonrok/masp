@@ -9,12 +9,9 @@ Multi-Factor Strategy Extended Test
 from __future__ import annotations
 
 import logging
-import sys
 import warnings
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
 
 import numpy as np
 import pandas as pd

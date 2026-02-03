@@ -19,13 +19,12 @@ Strategies:
 from __future__ import annotations
 
 import logging
-import sys
 import warnings
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -392,7 +391,6 @@ class Strategy3_Momentum:
         df["atr"] = calc_atr(df["high"], df["low"], df["close"])
 
         pos = 0
-        entry_price = 0
         trail = 0
 
         for i in range(50, len(df)):
@@ -899,7 +897,7 @@ def main():
                         strategy_stats[name]["pfs"].append(result.pf)
                     strategy_stats[name]["rets"].append(result.ret)
 
-            except Exception as e:
+            except Exception:
                 continue
 
     # ========================================================================
@@ -965,7 +963,7 @@ def main():
     # Sort by PF
     top_symbols = sorted(symbol_best.values(), key=lambda x: -x.pf)[:50]
 
-    logger.info(f"\nTop 50 symbols with best single-strategy performance:\n")
+    logger.info("\nTop 50 symbols with best single-strategy performance:\n")
     for r in top_symbols:
         logger.info(
             f"  {r.symbol:14s} {r.strategy:16s} PF={r.pf:5.2f} Ret={r.ret:+8.1f}% "
@@ -1039,7 +1037,7 @@ def main():
         logger.info(f"  - Average PF: {best_strategy['avg_pf']:.2f}")
 
     if robust:
-        logger.info(f"\nMost Robust Symbols (trade these with any strategy):")
+        logger.info("\nMost Robust Symbols (trade these with any strategy):")
         for symbol, data in robust[:10]:
             logger.info(f"  - {symbol} (profitable in {data['count']} strategies)")
 

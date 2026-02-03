@@ -23,7 +23,7 @@ import json
 import warnings
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -208,8 +208,8 @@ def strategy_a_vix_switching(
 
     # 포지션
     position = pd.Series(0, index=common_idx)
-    position[long_signal == True] = 1  # 레버리지
-    position[short_signal == True] = -1  # 인버스
+    position[long_signal] = 1  # 레버리지
+    position[short_signal] = -1  # 인버스
 
     # 최대 보유 기간 제한
     position = apply_max_holding(position, max_holding)
@@ -250,8 +250,8 @@ def strategy_b_volatility_breakout(
 
     # 포지션
     position = pd.Series(0, index=common_idx)
-    position[vix_spike == True] = -1  # 인버스 (VIX 급등 = 시장 하락)
-    position[vix_crash == True] = 1  # 레버리지 (VIX 급락 = 시장 상승)
+    position[vix_spike] = -1  # 인버스 (VIX 급등 = 시장 하락)
+    position[vix_crash] = 1  # 레버리지 (VIX 급락 = 시장 상승)
 
     # 최대 보유 기간 제한
     position = apply_max_holding(position, max_holding)
@@ -292,8 +292,8 @@ def strategy_c_trend_following(
 
     # 포지션
     position = pd.Series(0, index=common_idx)
-    position[uptrend == True] = 1
-    position[downtrend == True] = -1
+    position[uptrend] = 1
+    position[downtrend] = -1
 
     # 최대 보유 기간 제한
     position = apply_max_holding(position, max_holding)
@@ -333,8 +333,8 @@ def strategy_d_momentum(
 
     # 포지션
     position = pd.Series(0, index=common_idx)
-    position[long_signal == True] = 1
-    position[short_signal == True] = -1
+    position[long_signal] = 1
+    position[short_signal] = -1
 
     # 최대 보유 기간 제한
     position = apply_max_holding(position, max_holding)
@@ -374,10 +374,10 @@ def strategy_e_hedge(data: Dict) -> Tuple[pd.Series, pd.Series]:
     # 헷지 ON: 현물 70% + 인버스 30%
     # 헷지 OFF: 현물 100%
     returns = pd.Series(0.0, index=common_idx)
-    returns[hedge_on == True] = (
-        0.7 * spot_ret[hedge_on == True] + 0.3 * inv1x_ret[hedge_on == True]
+    returns[hedge_on] = (
+        0.7 * spot_ret[hedge_on] + 0.3 * inv1x_ret[hedge_on]
     )
-    returns[hedge_on == False] = spot_ret[hedge_on == False]
+    returns[not hedge_on] = spot_ret[not hedge_on]
 
     # 포지션 (헷지 여부)
     position = pd.Series(1, index=common_idx)  # 항상 투자 중

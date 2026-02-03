@@ -328,7 +328,7 @@ def backtest(
     for i in range(test_start, len(df)):
         price = df["close"].iloc[i]
         sig = signals.iloc[i]
-        prev_sig = signals.iloc[i - 1] if i > 0 else 0
+        signals.iloc[i - 1] if i > 0 else 0
 
         if position:
             bars = i - position["idx"]
@@ -579,7 +579,7 @@ def main():
             df_combo = pd.DataFrame(combo_results)
             profitable = (df_combo["pf"] > 1.0).sum()
 
-            logger.info(f"\n[조합 전략 결과]")
+            logger.info("\n[조합 전략 결과]")
             logger.info(f"  테스트 심볼: {len(combo_results)}")
             logger.info(
                 f"  수익 심볼: {profitable}/{len(combo_results)} ({profitable/len(combo_results)*100:.1f}%)"
@@ -589,7 +589,7 @@ def main():
             logger.info(f"  평균 승률: {df_combo['wr'].mean():.1f}%")
 
             # 상세
-            logger.info(f"\n심볼별 상세:")
+            logger.info("\n심볼별 상세:")
             for _, r in df_combo.sort_values("pf", ascending=False).head(10).iterrows():
                 status = "PASS" if r["pf"] > 1.0 else "FAIL"
                 logger.info(
@@ -606,7 +606,7 @@ def main():
         profitable_strategies = df_summary[df_summary["profitable_pct"] >= 50]
 
         if len(profitable_strategies) > 0:
-            logger.info(f"\n50% 이상 수익 전략:")
+            logger.info("\n50% 이상 수익 전략:")
             for _, s in profitable_strategies.iterrows():
                 logger.info(
                     f"  - {s['strategy']}: {s['profitable_pct']:.1f}% 수익, PF {s['avg_pf']:.2f}"

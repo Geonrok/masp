@@ -18,7 +18,7 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum, auto
+from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
 
@@ -168,7 +168,7 @@ class FileConfigSource(ConfigSource):
             self._last_modified = self.file_path.stat().st_mtime
             self._last_load = datetime.now()
 
-        except (json.JSONDecodeError, IOError) as e:
+        except (json.JSONDecodeError, IOError):
             self._cache = {}
 
         return self._cache.copy()
@@ -637,15 +637,15 @@ def print_config_summary():
     print("=" * 60)
 
     limits = get_trading_limits()
-    print(f"\nTrading Limits:")
+    print("\nTrading Limits:")
     print(f"  Max Order Value: {limits['max_order_value_krw']:,} KRW")
     print(f"  Max Position: {limits['max_position_pct']*100:.0f}%")
     print(f"  Max Daily Loss: {limits['max_daily_loss_krw']:,} KRW")
 
-    print(f"\nAdapter Mode:")
+    print("\nAdapter Mode:")
     print(f"  {get_adapter_mode_description()}")
 
-    print(f"\nAPI Keys:")
+    print("\nAPI Keys:")
     for exchange in ["upbit", "bithumb", "binance"]:
         status = "✅ SET" if validate_api_keys(exchange) else "❌ NOT SET"
         print(f"  {exchange.capitalize()}: {status}")

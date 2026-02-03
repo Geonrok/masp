@@ -5,13 +5,10 @@ Downloads OHLCV data for all listed stocks in KOSPI and KOSDAQ.
 Skips already downloaded files to save time.
 """
 
-import os
-import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import pandas as pd
 from pykrx import stock
 from tqdm import tqdm
 
@@ -88,7 +85,7 @@ def download_ticker(ticker, market, save_dir):
         df.to_csv(file_path, index=False, encoding="utf-8-sig")
         return "downloaded"
 
-    except Exception as e:
+    except Exception:
         # print(f"Error {ticker}: {e}")
         return "error"
 

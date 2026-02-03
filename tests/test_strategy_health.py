@@ -2,12 +2,9 @@
 Strategy Health Monitor 테스트
 """
 
-from datetime import datetime, timedelta
 
-import pytest
 
 from libs.analytics.strategy_health import (
-    HealthCheckResult,
     HealthStatus,
     StrategyHealthMonitor,
 )
@@ -122,7 +119,7 @@ if __name__ == "__main__":
         m1.add_trade({"pnl": 10000, "pnl_pct": 0.01})
     r1 = m1.check_health()
     print(f"  Status: {r1.status.value}")
-    print(f"  ✅ PASS\n")
+    print("  ✅ PASS\n")
 
     # Test 2: Warning
     print("[2] Warning (5 consecutive losses)")
@@ -132,7 +129,7 @@ if __name__ == "__main__":
     r2 = m2.check_health()
     print(f"  Status: {r2.status.value}")
     print(f"  Consecutive Losses: {r2.consecutive_losses}")
-    print(f"  ✅ PASS\n")
+    print("  ✅ PASS\n")
 
     # Test 3: Critical
     print("[3] Critical (8 consecutive losses)")
@@ -142,6 +139,6 @@ if __name__ == "__main__":
     r3 = m3.check_health()
     print(f"  Status: {r3.status.value}")
     print(f"  Triggers: {r3.triggers}")
-    print(f"  ✅ PASS\n")
+    print("  ✅ PASS\n")
 
     print("✅ All manual tests passed")

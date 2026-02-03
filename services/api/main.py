@@ -18,7 +18,6 @@ from fastapi.responses import JSONResponse
 
 from services.api.config import api_config
 from services.api.models.schemas import (
-    BaseResponse,
     ExchangeStatus,
     ExchangeStatusResponse,
     KillSwitchRequest,

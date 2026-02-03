@@ -44,7 +44,7 @@ def get_access_token():
 
         if response.status_code == 200:
             result = response.json()
-            logger.info(f"토큰 발급 성공!")
+            logger.info("토큰 발급 성공!")
             logger.info(f"응답: {json.dumps(result, indent=2, ensure_ascii=False)}")
             return result.get("access_token") or result.get("token")
         else:

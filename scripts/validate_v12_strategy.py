@@ -453,7 +453,7 @@ def run_walk_forward_validation():
                 f"Trades: {result['total_trades']}"
             )
         else:
-            logger.info(f"  No trades in this period")
+            logger.info("  No trades in this period")
             results.append(
                 {
                     "period": label,
@@ -736,7 +736,7 @@ def main():
     ms_results = run_multi_symbol_test()
 
     # 4. Robustness analysis
-    rob_results = run_robustness_analysis()
+    run_robustness_analysis()
 
     # Final verdict
     logger.info("\n" + "=" * 70)

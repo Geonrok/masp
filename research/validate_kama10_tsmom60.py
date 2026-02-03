@@ -143,14 +143,14 @@ def check_cross_market_consistency(sharpes):
 k10_mean, k10_cv = check_cross_market_consistency(kama10_sharpes)
 k5_mean, k5_cv = check_cross_market_consistency(kama5_sharpes)
 
-print(f"\nKAMA=10, TSMOM=60:")
+print("\nKAMA=10, TSMOM=60:")
 print(f"  Mean Sharpe across markets: {k10_mean:.3f}")
 print(f"  Coefficient of Variation: {k10_cv:.3f}")
 print(
     f"  Consistency: {'GOOD' if k10_cv < 0.15 else 'MODERATE' if k10_cv < 0.25 else 'POOR'}"
 )
 
-print(f"\nKAMA=5, TSMOM=90:")
+print("\nKAMA=5, TSMOM=90:")
 print(f"  Mean Sharpe across markets: {k5_mean:.3f}")
 print(f"  Coefficient of Variation: {k5_cv:.3f}")
 print(
@@ -250,13 +250,13 @@ print("-" * 60)
 k10_decay = (k10_insample - k10_holdout) / k10_insample * 100
 k5_decay = (k5_insample - k5_holdout) / k5_insample * 100
 
-print(f"KAMA=10, TSMOM=60:")
+print("KAMA=10, TSMOM=60:")
 print(f"  In-Sample → Holdout Sharpe Decay: {k10_decay:.1f}%")
 print(
     f"  Overfitting Risk: {'LOW' if k10_decay < 20 else 'MODERATE' if k10_decay < 40 else 'HIGH'}"
 )
 
-print(f"\nKAMA=5, TSMOM=90:")
+print("\nKAMA=5, TSMOM=90:")
 print(f"  In-Sample → Holdout Sharpe Decay: {k5_decay:.1f}%")
 print(
     f"  Overfitting Risk: {'LOW' if k5_decay < 20 else 'MODERATE' if k5_decay < 40 else 'HIGH'}"
@@ -281,10 +281,10 @@ k5_oos_pct = stats.percentileofscore(random_max_sharpes, k5_holdout)
 print(
     f"Random Max Sharpe: Mean={random_max_sharpes.mean():.2f}, 95th pct={np.percentile(random_max_sharpes, 95):.2f}"
 )
-print(f"\nKAMA=10, TSMOM=60:")
+print("\nKAMA=10, TSMOM=60:")
 print(f"  In-Sample {k10_insample:.2f} at {k10_is_pct:.0f}th percentile")
 print(f"  Holdout {k10_holdout:.2f} at {k10_oos_pct:.0f}th percentile")
-print(f"\nKAMA=5, TSMOM=90:")
+print("\nKAMA=5, TSMOM=90:")
 print(f"  In-Sample {k5_insample:.2f} at {k5_is_pct:.0f}th percentile")
 print(f"  Holdout {k5_holdout:.2f} at {k5_oos_pct:.0f}th percentile")
 
@@ -440,7 +440,7 @@ def get_grade(score, max_score):
         return "D"
 
 
-print(f"\nFINAL GRADES:")
+print("\nFINAL GRADES:")
 print(
     f"  KAMA=10, TSMOM=60: {k10_score}/{k10_max} = Grade {get_grade(k10_score, k10_max)}"
 )

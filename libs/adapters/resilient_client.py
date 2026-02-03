@@ -12,7 +12,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Optional, Set, Tuple, Type
+from typing import Any, Dict, Optional, Set, Tuple, Type
 
 import aiohttp
 import requests
@@ -22,12 +22,10 @@ from libs.core.exceptions import (
     NetworkError,
     RateLimitError,
 )
-from libs.core.metrics import MetricsRegistry, get_metrics
+from libs.core.metrics import get_metrics
 from libs.core.resilience import (
-    CircuitBreaker,
     CircuitBreakerConfig,
     CircuitBreakerRegistry,
-    RetryPolicy,
 )
 
 logger = logging.getLogger(__name__)

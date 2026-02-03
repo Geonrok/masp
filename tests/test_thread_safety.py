@@ -16,7 +16,6 @@ from libs.core.thread_safety import (
     ThreadSafeCounter,
     ThreadSafeDict,
     ThreadSafeList,
-    get_lock_manager,
     read_write_lock,
     synchronized,
 )

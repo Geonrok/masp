@@ -4,22 +4,17 @@ Tests for exception hierarchy and structured logging.
 
 import json
 import logging
-from io import StringIO
 
-import pytest
 
 from libs.core.exceptions import (
-    AdapterError,
     APIError,
     ConfigurationError,
-    ConnectionError,
     InsufficientFundsError,
     MASPError,
     MissingConfigError,
     OrderRejectedError,
     RateLimitError,
     RiskLimitExceededError,
-    TradingError,
     ValidationError,
     wrap_exception,
 )

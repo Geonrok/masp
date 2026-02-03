@@ -7,7 +7,6 @@ Phase 18d: 수정 기준 6/6 통과 7개 전략의 시장 레짐별 성과 분�
 - 횡보/하락장 생존 능력이 채택 기준
 """
 
-import json
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -375,7 +374,7 @@ def main():
             print(f"  {r}: {cnt} windows ({cnt/len(regimes)*100:.0f}%)")
 
         # 윈도우 상세
-        print(f"\n  Window BTC returns:")
+        print("\n  Window BTC returns:")
         for w in sample:
             print(
                 f"    W{w['window_idx']:>2}: BTC {w['btc_return']*100:>+6.1f}% → {w['regime']}"
@@ -478,7 +477,7 @@ def main():
         )
 
     composite.sort(key=lambda x: x[1])
-    print(f"\n  RANKING (best to worst):")
+    print("\n  RANKING (best to worst):")
     for i, (name, score, r, ret) in enumerate(composite):
         neg_regimes = [
             reg for reg in ["BULL", "BEAR", "SIDEWAYS"] if ret.get(reg, 0) < 0

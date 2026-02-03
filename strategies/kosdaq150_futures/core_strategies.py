@@ -12,9 +12,8 @@ KOSDAQ 150 선물 핵심 전략
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 
-import numpy as np
 import pandas as pd
 
 from .indicators import bollinger_percent_b, chande_momentum, williams_r

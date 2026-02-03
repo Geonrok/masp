@@ -13,7 +13,7 @@ import threading
 import time
 from collections import OrderedDict
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import (
     Any,
     Callable,
@@ -23,7 +23,6 @@ from typing import (
     List,
     Optional,
     TypeVar,
-    Union,
 )
 
 logger = logging.getLogger(__name__)

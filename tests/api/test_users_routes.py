@@ -3,16 +3,14 @@ Tests for User management API routes.
 """
 
 import tempfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from libs.core.rbac import (
-    Permission,
     RBACManager,
     Role,
-    User,
 )
 
 

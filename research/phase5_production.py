@@ -183,7 +183,7 @@ def portfolio_backtest(
 
         if selected:
             # Equal volatility-weighted allocation
-            total_inv_vol = sum(s[2] for s in selected)
+            sum(s[2] for s in selected)
             target_per_position = target_vol / np.sqrt(len(selected))
 
             for symbol, signal, inv_vol in selected:

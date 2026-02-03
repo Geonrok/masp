@@ -13,7 +13,6 @@ Windows 작업 스케줄러에 등록하여 사용
 import asyncio
 import json
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
 

@@ -5,7 +5,6 @@ KAMA=5, TSMOM=90 vs KAMA=10, TSMOM=60
 This script compares both strategies with ALL available validation data.
 """
 
-import numpy as np
 from scipy import stats
 
 print("=" * 80)

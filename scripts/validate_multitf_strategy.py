@@ -13,12 +13,11 @@ Now performing rigorous validation:
 from __future__ import annotations
 
 import logging
-import sys
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -342,7 +341,7 @@ def run_validation():
         overall_profitable = (
             sum(r[3] for r in wf_results) / sum(r[4] for r in wf_results) * 100
         )
-        logger.info(f"\n  WALK-FORWARD SUMMARY:")
+        logger.info("\n  WALK-FORWARD SUMMARY:")
         logger.info(f"    Overall Avg PF: {overall_pf:.2f}")
         logger.info(f"    Overall Profitable: {overall_profitable:.0f}%")
 
@@ -469,7 +468,7 @@ def run_validation():
 
     if param_results:
         pfs = [r[4] for r in param_results]
-        logger.info(f"\n  Parameter Stability:")
+        logger.info("\n  Parameter Stability:")
         logger.info(f"    PF Range: {min(pfs):.2f} ~ {max(pfs):.2f}")
         logger.info(f"    PF Std: {np.std(pfs):.2f}")
         if np.std(pfs) < 0.2:
@@ -528,7 +527,7 @@ def run_validation():
     avg_pf_all = np.mean([d["pf"] for d in symbol_details if d["pf"] < float("inf")])
     avg_ret_all = np.mean([d["return"] for d in symbol_details])
 
-    logger.info(f"\n  Overall Statistics:")
+    logger.info("\n  Overall Statistics:")
     logger.info(
         f"    Profitable Symbols: {profitable_count}/{len(symbol_details)} ({profitable_count/len(symbol_details)*100:.0f}%)"
     )
@@ -539,35 +538,35 @@ def run_validation():
     criteria_met = 0
     total_criteria = 5
 
-    logger.info(f"\n  Validation Criteria:")
+    logger.info("\n  Validation Criteria:")
 
     # 1. > 60% symbols profitable
     if profitable_count / len(symbol_details) > 0.6:
-        logger.info(f"    ✓ >60% symbols profitable")
+        logger.info("    ✓ >60% symbols profitable")
         criteria_met += 1
     else:
-        logger.info(f"    ✗ <60% symbols profitable")
+        logger.info("    ✗ <60% symbols profitable")
 
     # 2. Average PF > 1.1
     if avg_pf_all > 1.1:
-        logger.info(f"    ✓ Average PF > 1.1")
+        logger.info("    ✓ Average PF > 1.1")
         criteria_met += 1
     else:
-        logger.info(f"    ✗ Average PF < 1.1")
+        logger.info("    ✗ Average PF < 1.1")
 
     # 3. OOS profitable
     if oos_avg_pf > 1.0:
-        logger.info(f"    ✓ Out-of-sample profitable")
+        logger.info("    ✓ Out-of-sample profitable")
         criteria_met += 1
     else:
-        logger.info(f"    ✗ Out-of-sample not profitable")
+        logger.info("    ✗ Out-of-sample not profitable")
 
     # 4. Parameters stable
     if param_results and np.std([r[4] for r in param_results]) < 0.3:
-        logger.info(f"    ✓ Parameters stable")
+        logger.info("    ✓ Parameters stable")
         criteria_met += 1
     else:
-        logger.info(f"    ⚠ Parameters sensitive")
+        logger.info("    ⚠ Parameters sensitive")
 
     # 5. Reasonable trade count
     avg_trades = np.mean([d["trades"] for d in symbol_details])

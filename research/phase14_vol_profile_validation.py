@@ -649,7 +649,7 @@ def main():
     )
     if baseline_r:
         c, p = check_criteria(baseline_r)
-        print(f"\n  Baseline Dual MA (5x):")
+        print("\n  Baseline Dual MA (5x):")
         print(
             f"    [{p}/6] Sharpe={baseline_r['sharpe']:.2f}  Ret={baseline_r['total_return']*100:+.1f}%  "
             f"DD={baseline_r['max_drawdown']*100:.1f}%  WR={baseline_r['win_rate']*100:.0f}%  "
@@ -658,7 +658,7 @@ def main():
 
     if main_result:
         c_main, p_main = check_criteria(main_result)
-        print(f"\n  Vol Profile (5x):")
+        print("\n  Vol Profile (5x):")
         print(
             f"    [{p_main}/6] Sharpe={main_result['sharpe']:.2f}  Ret={main_result['total_return']*100:+.1f}%  "
             f"DD={main_result['max_drawdown']*100:.1f}%  WR={main_result['win_rate']*100:.0f}%  "

@@ -18,7 +18,6 @@ try:
 except ImportError:  # pragma: no cover
     pytest = None
 
-from _helpers import get_fee_rates, resolve_market
 from _live_test_utils import live_test_enabled, log_event, require_live_guard
 from _rate_limiter import RateLimiter
 

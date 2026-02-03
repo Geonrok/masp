@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from typing import Callable, List, Optional
 
 from services.dashboard.components.scheduler_status import (
-    JobExecution,
     JobSchedule,
     JobStatus,
     JobType,

@@ -16,7 +16,7 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from libs.adapters.base import (
     OHLCV,
@@ -289,7 +289,7 @@ class BinanceFuturesExecution(ExecutionAdapter):
             binance_symbol = self._convert_symbol(symbol)
 
             # Set leverage
-            actual_leverage = self._ensure_leverage(symbol, leverage)
+            self._ensure_leverage(symbol, leverage)
 
             # Calculate quantity from USDT amount if needed
             quantity = units

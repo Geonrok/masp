@@ -3,7 +3,6 @@ Tests for advanced performance metrics.
 """
 
 import numpy as np
-import pytest
 
 from libs.analytics.advanced_metrics import (
     analyze_drawdowns,

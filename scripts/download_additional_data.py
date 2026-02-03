@@ -82,7 +82,7 @@ try:
                 )
                 time.sleep(1)
 
-        except Exception as e:
+        except Exception:
             errors += 1
             continue
 
@@ -128,7 +128,7 @@ try:
                 )
                 time.sleep(1)
 
-        except Exception as e:
+        except Exception:
             continue
 
     print(f"Investor data downloaded: {downloaded} stocks")

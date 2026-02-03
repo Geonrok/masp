@@ -77,7 +77,7 @@ def main():
     tier2 = VIXSMA10Tier2Strategy()
     all_tiers = VIXSMA10AllTiersStrategy()
 
-    print(f"[종목 수 요약]")
+    print("[종목 수 요약]")
     print(f"  Tier 1: {len(strategy.get_valid_symbols())}개 (Sharpe >= 1.0)")
     print(f"  Tier 2: {len(tier2.get_valid_symbols())}개 (Sharpe >= 0.5)")
     print(f"  전체:   {len(all_tiers.get_valid_symbols())}개 (Sharpe >= 0.3)")

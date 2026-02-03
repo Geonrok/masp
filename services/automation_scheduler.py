@@ -20,7 +20,6 @@ import signal
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger

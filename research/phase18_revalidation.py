@@ -8,7 +8,6 @@ Phase 18: OOS 재검증 (min_len 함정 수정)
      → 후기 윈도우: 신규 종목도 합류
 """
 
-import json
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -183,7 +182,7 @@ def run_portfolio_oos_fixed(
     # 하지만 종목마다 OOS 시작이 다르므로, 각 종목의 로컬 인덱스를 사용
 
     # 가장 긴 OOS를 가진 종목 기준으로 윈도우 수 결정
-    max_oos_len = max(v["length"] for v in symbol_oos.values())
+    max(v["length"] for v in symbol_oos.values())
 
     equity = [1.0]
     period_returns = []
@@ -204,7 +203,6 @@ def run_portfolio_oos_fixed(
     # 이게 가장 공정한 방법
 
     # 종목별 독립 WFA
-    symbol_results = {}
     all_period_pnls = {}  # {window_idx: [pnl1, pnl2, ...]}
 
     for symbol, info in symbol_oos.items():
@@ -431,7 +429,7 @@ def main():
     print("Data coverage (top 10 longest):")
     for sym, total, oos, start, end in data_lengths[:10]:
         print(f"  {sym:<15} {total:>7} bars  OOS={oos:>6}  {start} ~ {end}")
-    print(f"\nShortest 5:")
+    print("\nShortest 5:")
     data_lengths.sort(key=lambda x: x[1])
     for sym, total, oos, start, end in data_lengths[:5]:
         print(f"  {sym:<15} {total:>7} bars  OOS={oos:>6}  {start} ~ {end}")
@@ -462,7 +460,7 @@ def main():
                 print(f"  FAILS: {', '.join(fails)}")
 
             # 윈도우별 상세
-            print(f"\n  Window details:")
+            print("\n  Window details:")
             print(
                 f"  {'#':>3} {'Start':>12} {'End':>12} {'Syms':>5} {'Cands':>6} {'PnL':>8} {'Trades':>6}"
             )
@@ -486,7 +484,7 @@ def main():
             long_data[sym] = df
     print(f"\nSymbols with data before 2021: {len(long_data)}")
 
-    print(f"\n--- Scale 5x ---")
+    print("\n--- Scale 5x ---")
     r = run_portfolio_oos_fixed(
         long_data, max_positions=10, test_bars=720, position_scale=5.0
     )
@@ -506,7 +504,7 @@ def main():
         if fails:
             print(f"  FAILS: {', '.join(fails)}")
 
-        print(f"\n  Window details:")
+        print("\n  Window details:")
         print(
             f"  {'#':>3} {'Start':>12} {'End':>12} {'Syms':>5} {'Cands':>6} {'PnL':>8} {'Trades':>6}"
         )

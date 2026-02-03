@@ -34,7 +34,6 @@ def test_portfolio_provider_returns_none_when_disabled():
 
 def test_parse_holdings_to_positions():
     """Test parsing raw holdings to PortfolioPosition objects."""
-    from services.dashboard.components.portfolio_summary import PortfolioPosition
     from services.dashboard.providers.portfolio_provider import (
         _parse_holdings_to_positions,
     )
@@ -111,7 +110,6 @@ def test_get_system_resources_with_psutil():
     """Test system resources returns valid data when psutil is available."""
     import importlib.util
 
-    import pytest
 
     from services.dashboard.components.system_status import ResourceUsage
     from services.dashboard.providers.system_provider import get_system_resources
@@ -134,7 +132,6 @@ def test_get_system_resources_with_psutil():
 
 def test_get_system_resources_without_psutil():
     """Test system resources returns zeros when psutil not available."""
-    from services.dashboard.providers.system_provider import get_system_resources
 
     with patch.dict("sys.modules", {"psutil": None}):
         # Force reimport to trigger ImportError path
@@ -144,7 +141,7 @@ def test_get_system_resources_without_psutil():
 
         importlib.reload(system_provider)
 
-        result = system_provider.get_system_resources()
+        system_provider.get_system_resources()
 
         # Should not crash, returns resource object
 
@@ -263,7 +260,6 @@ def test_is_live_trading_enabled():
 def test_order_execution_wrapper_place_order():
     """Test OrderExecutionWrapper place_order method."""
     from dataclasses import dataclass
-    from datetime import datetime
 
     from services.dashboard.providers.order_provider import OrderExecutionWrapper
 
@@ -304,7 +300,6 @@ def test_trade_history_provider_import():
 
 def test_trade_history_api_client_with_mock():
     """Test TradeHistoryApiClient with mock logger."""
-    from datetime import date
 
     from services.dashboard.providers.trade_history_provider import (
         TradeHistoryApiClient,

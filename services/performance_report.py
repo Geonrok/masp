@@ -21,12 +21,11 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import os
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -150,7 +149,7 @@ class PerformanceReportService:
         self.exchange = exchange
         self.notifier = TelegramNotifier()
 
-        logger.info(f"[PerformanceReport] Initialized")
+        logger.info("[PerformanceReport] Initialized")
 
     def load_trade_log(self) -> List[TradeRecord]:
         """거래 로그 로드"""
@@ -297,7 +296,7 @@ class PerformanceReportService:
 
         # 수익률 계산
         returns = period_data["strategy_return"].values
-        btc_returns = period_data["btc_return"].values
+        period_data["btc_return"].values
 
         total_return = (
             period_data["portfolio_value"].iloc[-1]
@@ -462,14 +461,14 @@ class PerformanceReportService:
             f"  vs BTC: {metrics.btc_return*100:+.2f}%",
             f"  Alpha: {metrics.excess_return*100:+.2f}%",
             "",
-            f"<b>Risk Metrics</b>",
+            "<b>Risk Metrics</b>",
             f"  Sharpe: {metrics.sharpe_ratio:.2f}",
             f"  Sortino: {metrics.sortino_ratio:.2f}",
             f"  Calmar: {metrics.calmar_ratio:.2f}",
             f"  Max DD: {metrics.max_drawdown*100:.1f}%",
             f"  DD Duration: {metrics.max_drawdown_duration} days",
             "",
-            f"<b>Daily Stats</b>",
+            "<b>Daily Stats</b>",
             f"  Best Day: {metrics.best_day:+.2f}%",
             f"  Worst Day: {metrics.worst_day:+.2f}%",
             f"  Avg Daily: {metrics.avg_daily_return:+.3f}%",
@@ -481,7 +480,7 @@ class PerformanceReportService:
             lines.extend(
                 [
                     "",
-                    f"<b>Trade Stats</b>",
+                    "<b>Trade Stats</b>",
                     f"  Total Trades: {metrics.total_trades}",
                     f"  Win Rate: {metrics.win_rate*100:.1f}%",
                     f"  Profit Factor: {metrics.profit_factor:.2f}",

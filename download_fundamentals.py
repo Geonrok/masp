@@ -8,11 +8,9 @@ Source: KRX (via pykrx)
 import time
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
 from pykrx import stock
 from tqdm import tqdm
 
@@ -54,7 +52,7 @@ def download_fundamental(ticker):
         df.to_csv(save_path)
         time.sleep(0.1)
         return "downloaded"
-    except Exception as e:
+    except Exception:
         # print(f"Error {ticker}: {e}")
         return "error"
 

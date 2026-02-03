@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-import pytest
 
 
 def test_import_log_viewer():
@@ -62,7 +61,7 @@ def test_log_entry_with_details():
 
 def test_log_filter_defaults():
     """Test LogFilter dataclass defaults."""
-    from services.dashboard.components.log_viewer import LogFilter, LogLevel
+    from services.dashboard.components.log_viewer import LogFilter
 
     log_filter = LogFilter()
 
@@ -608,7 +607,7 @@ def test_filter_logs_case_insensitive():
 
 def test_count_by_level_empty():
     """Test _count_by_level with empty list."""
-    from services.dashboard.components.log_viewer import LogLevel, _count_by_level
+    from services.dashboard.components.log_viewer import _count_by_level
 
     counts = _count_by_level([])
 
@@ -647,7 +646,6 @@ def test_format_relative_time_mixed_timezone():
 
 def test_safe_datetime_compare():
     """Test _safe_datetime_compare handles various cases."""
-    from datetime import timezone
 
     from services.dashboard.components.log_viewer import _safe_datetime_compare
 
@@ -718,9 +716,7 @@ def test_sorting_mixed_timezone_logs():
 
     from services.dashboard.components.log_viewer import (
         LogEntry,
-        LogFilter,
         LogLevel,
-        _filter_logs,
     )
 
     # Mix of naive and tz-aware timestamps

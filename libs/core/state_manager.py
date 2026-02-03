@@ -13,7 +13,7 @@ all global state to a clean state.
 from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List
 
 logger = logging.getLogger(__name__)
 

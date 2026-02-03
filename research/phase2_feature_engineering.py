@@ -332,7 +332,7 @@ def task_2_3_derivatives_features(symbol: str, df: pd.DataFrame) -> pd.DataFrame
     - Basis (futures vs spot)
     """
     features = pd.DataFrame(index=df.index)
-    dt_col = df["datetime"]
+    df["datetime"]
 
     # === Funding Rate ===
     fr_path = DATA_ROOT / "binance_funding_rate" / f"{symbol}.csv"
@@ -375,7 +375,7 @@ def task_2_3_derivatives_features(symbol: str, df: pd.DataFrame) -> pd.DataFrame
                         fr - fr.rolling(window).mean()
                     ) / (fr.rolling(window).std() + 1e-10)
                     features[f"fr_abs_mean_{window}"] = fr.abs().rolling(window).mean()
-        except Exception as e:
+        except Exception:
             pass
 
     # === Open Interest ===
@@ -411,7 +411,7 @@ def task_2_3_derivatives_features(symbol: str, df: pd.DataFrame) -> pd.DataFrame
                     features[f"oi_zscore_{window}"] = (
                         oi - oi.rolling(window).mean()
                     ) / (oi.rolling(window).std() + 1e-10)
-        except Exception as e:
+        except Exception:
             pass
 
     # === Long/Short Ratio ===
@@ -447,7 +447,7 @@ def task_2_3_derivatives_features(symbol: str, df: pd.DataFrame) -> pd.DataFrame
                         lsr - lsr.rolling(window).mean()
                     ) / (lsr.rolling(window).std() + 1e-10)
                     features[f"lsr_change_{window}"] = lsr.pct_change(window)
-        except Exception as e:
+        except Exception:
             pass
 
     # === Taker Volume ===
@@ -488,7 +488,7 @@ def task_2_3_derivatives_features(symbol: str, df: pd.DataFrame) -> pd.DataFrame
                     features[f"taker_zscore_{window}"] = (
                         tr - tr.rolling(window).mean()
                     ) / (tr.rolling(window).std() + 1e-10)
-        except Exception as e:
+        except Exception:
             pass
 
     # === Basis (Futures vs Spot) ===
@@ -519,7 +519,7 @@ def task_2_3_derivatives_features(symbol: str, df: pd.DataFrame) -> pd.DataFrame
                     basis - basis.rolling(window).mean()
                 ) / (basis.rolling(window).std() + 1e-10)
                 features[f"basis_momentum_{window}"] = basis.diff(window)
-        except Exception as e:
+        except Exception:
             pass
 
     return features
@@ -597,7 +597,7 @@ def task_2_5_alternative_features(df: pd.DataFrame) -> pd.DataFrame:
     - Social sentiment
     """
     features = pd.DataFrame(index=df.index)
-    dt_col = df["datetime"]
+    df["datetime"]
 
     # === Fear & Greed Index ===
     fg_path = DATA_ROOT / "sentiment" / "fear_greed.csv"
@@ -636,7 +636,7 @@ def task_2_5_alternative_features(df: pd.DataFrame) -> pd.DataFrame:
                         fg - fg.rolling(window).mean()
                     ) / (fg.rolling(window).std() + 1e-10)
                     features[f"fg_momentum_{window}"] = fg.diff(window)
-        except Exception as e:
+        except Exception:
             pass
 
     # === DeFi TVL ===
@@ -669,7 +669,7 @@ def task_2_5_alternative_features(df: pd.DataFrame) -> pd.DataFrame:
                 tvl = features["defi_tvl"]
                 for window in [6, 24, 42]:
                     features[f"tvl_change_{window}"] = tvl.pct_change(window)
-        except Exception as e:
+        except Exception:
             pass
 
     return features
@@ -720,7 +720,7 @@ def task_2_6_macro_features(df: pd.DataFrame) -> pd.DataFrame:
                     features[f"dxy_zscore_{window}"] = (
                         dxy - dxy.rolling(window).mean()
                     ) / (dxy.rolling(window).std() + 1e-10)
-        except Exception as e:
+        except Exception:
             pass
 
     # === US10Y Yield ===
@@ -753,7 +753,7 @@ def task_2_6_macro_features(df: pd.DataFrame) -> pd.DataFrame:
                 us10y = features["us10y"]
                 for window in [6, 24, 42]:
                     features[f"us10y_change_{window}"] = us10y.diff(window)
-        except Exception as e:
+        except Exception:
             pass
 
     # === SPX (S&P 500) ===
@@ -794,7 +794,7 @@ def task_2_6_macro_features(df: pd.DataFrame) -> pd.DataFrame:
                         ret_spx
                     )
                     features[f"spx_momentum_{window}"] = spx.pct_change(window)
-        except Exception as e:
+        except Exception:
             pass
 
     return features
@@ -874,7 +874,7 @@ def main():
         features = generate_features_for_symbol(symbol)
 
         if features.empty:
-            print(f"    Skipped (no data)")
+            print("    Skipped (no data)")
             continue
 
         # Count features by category
@@ -1069,9 +1069,9 @@ def main():
             feature_counts
         )
         print(f"  Average features per symbol: {avg_features}")
-        print(f"  Feature categories: 6")
+        print("  Feature categories: 6")
     print(f"  Report saved: {report_path}")
-    print(f"  Next: Phase 3 - Strategy Exploration")
+    print("  Next: Phase 3 - Strategy Exploration")
 
     return summary
 

@@ -10,9 +10,7 @@ Logic:
 4. Rebalance monthly.
 """
 
-import time
 import warnings
-from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
@@ -42,7 +40,6 @@ def get_sector_map():
     print("Fetching sector information...")
     date = "20241231"  # Use recent date for classification
 
-    sector_map = {}
 
     for market in ["KOSPI", "KOSDAQ"]:
         tickers = stock.get_market_ticker_list(date, market=market)
@@ -123,7 +120,6 @@ def run_sector_rotation_backtest():
     print("Running Portfolio Simulation...")
 
     capital = 1.0
-    portfolio = []  # List of tickers
     history = []
 
     # Rebalance every month
@@ -197,7 +193,7 @@ def run_sector_rotation_backtest():
     mdd = dd.min()
 
     print(f"\n{'='*40}")
-    print(f"Round 10: Momentum Rotation Results")
+    print("Round 10: Momentum Rotation Results")
     print(f"{'='*40}")
     print(f"CAGR: {cagr*100:.2f}%")
     print(f"Sharpe: {sharpe:.2f}")

@@ -2,10 +2,8 @@
 전체 조합 백테스트 - 4시간봉 버전
 """
 
-import sys
 import warnings
 from datetime import datetime
-from itertools import product
 from pathlib import Path
 
 import numpy as np

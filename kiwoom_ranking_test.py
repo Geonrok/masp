@@ -4,7 +4,6 @@
 """
 
 import asyncio
-import os
 
 import pandas as pd
 

@@ -488,7 +488,7 @@ def main():
     all_symbols_path = DATA_ROOT / "binance_futures_1h"
     available = []
     for f in sorted(all_symbols_path.glob("*USDT.csv")):
-        df = pd.read_csv(f, nrows=5)
+        pd.read_csv(f, nrows=5)
         # Check row count from file size (rough estimate)
         import os
 
@@ -610,14 +610,13 @@ def main():
         label = r["name"]
         # Parse config from name
         parts = label.split("_")
-        strat_key = "_".join(parts[:-1])
-        exit_key = parts[-1] if len(parts) > 1 else "atr3"
+        "_".join(parts[:-1])
+        parts[-1] if len(parts) > 1 else "atr3"
 
         # Find the matching strategy and exit
         for sn, sf in strategies.items():
             if label.startswith(sn):
                 strat_func = sf
-                strat_key = sn
                 exit_label = label[len(sn) + 1 :]
                 break
 

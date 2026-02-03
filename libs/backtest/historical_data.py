@@ -10,10 +10,10 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -442,7 +442,6 @@ class HistoricalDataLoader:
         np.random.seed(42)  # Reproducible
 
         # Generate prices using GBM
-        dt = 1.0  # Daily
         n_periods = days
 
         # Random returns

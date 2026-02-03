@@ -150,7 +150,7 @@ print("=" * 80)
 signal = strategy_foreign_sma(data, 30, 100)
 result = backtest(data, signal)
 
-print(f"\nForeign_30d_SMA_100:")
+print("\nForeign_30d_SMA_100:")
 print(f"  Sharpe:     {result['sharpe']:.3f}")
 print(f"  CAGR:       {result['cagr']*100:.1f}%")
 print(f"  MDD:        {result['mdd']*100:.1f}%")
@@ -164,12 +164,12 @@ print(f"  Trades:     {result['trades']}")
 bh_signal = pd.Series(1, index=data.index)
 bh_result = backtest(data, bh_signal)
 
-print(f"\nBuy & Hold:")
+print("\nBuy & Hold:")
 print(
     f"  Sharpe: {bh_result['sharpe']:.3f}, CAGR: {bh_result['cagr']*100:.1f}%, MDD: {bh_result['mdd']*100:.1f}%"
 )
 
-print(f"\n전략 vs B&H:")
+print("\n전략 vs B&H:")
 print(f"  Sharpe: {result['sharpe'] - bh_result['sharpe']:+.3f}")
 print(f"  CAGR:   {(result['cagr'] - bh_result['cagr'])*100:+.1f}%p")
 print(f"  MDD:    {(result['mdd'] - bh_result['mdd'])*100:+.1f}%p (개선)")
@@ -226,7 +226,7 @@ is_mean = np.mean([r["is_sharpe"] for r in wf_results])
 oos_mean = np.mean([r["oos_sharpe"] for r in wf_results])
 wf_ratio = oos_mean / is_mean if is_mean > 0 else 0
 
-print(f"\n  WF Summary:")
+print("\n  WF Summary:")
 print(f"    IS Mean Sharpe:  {is_mean:.3f}")
 print(f"    OOS Mean Sharpe: {oos_mean:.3f}")
 print(f"    WF Ratio (OOS/IS): {wf_ratio:.2f}")

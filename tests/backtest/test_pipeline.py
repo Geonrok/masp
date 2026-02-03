@@ -2,17 +2,13 @@
 Tests for Backtest Pipeline.
 """
 
-import json
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
-from libs.backtest.engine import BacktestResult
 from libs.backtest.pipeline import (
-    BacktestComparison,
     BacktestJob,
     BacktestPipeline,
     BacktestResultStore,

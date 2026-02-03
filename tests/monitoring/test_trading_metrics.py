@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 import pytest
 
 from libs.monitoring.trading_metrics import (
-    LatencyMetrics,
     OrderMetrics,
     OrderStatus,
     TradingMetricsAggregator,
