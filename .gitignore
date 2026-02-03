@@ -56,3 +56,4 @@ outputs/phase7A/
 # Test 2026년 01월 21일 수 오후  4:06:33
 storage/.session.json
 nul
+.env.production
