@@ -39,8 +39,11 @@ exclude = [".venv", ".venv311", "venv", "__pycache__", ".git"]
 # Ignore common legacy code issues
 ignore = [
     "E402",  # module level import not at top of file
+    "E721",  # type comparison (use isinstance instead)
     "E722",  # bare except
+    "E741",  # ambiguous variable name
     "E501",  # line too long (handled by black)
     "F401",  # unused import (may be intentional re-exports)
+    "F821",  # undefined name (many false positives in research scripts)
     "F841",  # unused variable
 ]
