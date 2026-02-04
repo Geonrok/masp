@@ -2,7 +2,7 @@
   "exchanges": {
     "upbit": {
       "enabled": true,
-      "strategy": "KAMA-TSMOM-Gate",
+      "strategy": "Sept-v3-RSI50-Gate",
       "symbols": "ALL_KRW",
       "position_size_krw": 10000,
       "schedule": {
@@ -14,7 +14,7 @@
     },
     "bithumb": {
       "enabled": true,
-      "strategy": "KAMA-TSMOM-Gate",
+      "strategy": "Sept-v3-RSI50-Gate",
       "symbols": "ALL_KRW",
       "position_size_krw": 10000,
       "schedule": {
@@ -26,7 +26,7 @@
     },
     "binance_spot": {
       "enabled": true,
-      "strategy": "KAMA-TSMOM-Gate",
+      "strategy": "Sept-v3-RSI50-Gate",
       "symbols": "ALL_USDT",
       "position_size_usdt": 100,
       "schedule": {
@@ -38,7 +38,7 @@
     },
     "binance_futures": {
       "enabled": true,
-      "strategy": "KAMA-TSMOM-Gate",
+      "strategy": "Sept-v3-RSI50-Gate",
       "symbols": "ALL_USDT_PERP",
       "position_size_usdt": 100,
       "leverage": 10,
@@ -50,7 +50,7 @@
       }
     },
     "binance_futures_v6": {
-      "enabled": false,
+      "enabled": true,
       "strategy": "binance_futures_v6",
       "symbols": ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT"],
       "position_size_usdt": 100,
@@ -63,7 +63,7 @@
         "timezone": "UTC",
         "jitter": 30
       },
-      "_comment": "AI Consensus Strategy v6 - Enable after backtest validation"
+      "_comment": "AI Consensus Strategy v6 - Enabled 2026-02-04"
     },
     "kiwoom_spot": {
       "enabled": false,
@@ -79,6 +79,21 @@
         "jitter": 0
       },
       "_comment": "Monthly Sector Rotation - Rebalance at month end 15:20 KST (closing auction)"
+    },
+    "binance_futures_mr": {
+      "enabled": true,
+      "strategy": "mr_adaptive_aggressive",
+      "symbols": "ALL_USDT_PERP",
+      "position_size_usdt": 50,
+      "leverage": 2,
+      "max_positions": 30,
+      "schedule": {
+        "hour": 0,
+        "minute": 5,
+        "timezone": "UTC",
+        "jitter": 60
+      },
+      "_comment": "MR_ADAPTIVE_AGGRESSIVE - Mean Reversion with Trend Filter (R&D Validated 2026-02-04)"
     }
   },
   "telegram": {

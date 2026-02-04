@@ -11,6 +11,7 @@ from libs.strategies.base import BaseStrategy
 from libs.strategies.binance_futures_v6 import BinanceFuturesV6Strategy
 from libs.strategies.ma_crossover_strategy import MACrossoverStrategy
 from libs.strategies.mock_strategy import MockStrategy, TrendFollowingMockStrategy
+from libs.strategies.mr_adaptive_aggressive import MRAdaptiveAggressiveStrategy
 from libs.strategies.vwap_breakout import VwapBreakoutStrategy
 
 # KOSPI200 Futures - optional import (may not exist)
@@ -67,6 +68,7 @@ STRATEGY_REGISTRY: dict[str, type[BaseStrategy]] = {
     "ma_crossover_v1": MACrossoverStrategy,
     "atlas_futures_p04": ATLASFuturesStrategy,
     "binance_futures_v6": BinanceFuturesV6Strategy,
+    "mr_adaptive_aggressive": MRAdaptiveAggressiveStrategy,
     "vwap_breakout": VwapBreakoutStrategy,
     # TIGER 200 ETF strategies
     "tiger200_etf_v1": TIGER200Strategy,
@@ -170,6 +172,62 @@ AVAILABLE_STRATEGIES.append(
     }
 )
 
+
+# MR_ADAPTIVE_AGGRESSIVE - Mean Reversion with Trend Filter (R&D Validated)
+AVAILABLE_STRATEGIES.append(
+    {
+        "strategy_id": "mr_adaptive_aggressive",
+        "id": "mr_adaptive_aggressive",
+        "name": "MR Adaptive Aggressive",
+        "version": "1.0.0",
+        "description": (
+            "Mean reversion strategy with adaptive trend filter. "
+            "Long-only, buys oversold (RSI<35, below BB lower), "
+            "exits at RSI>55 or above BB mid. "
+            "Position scales by trend: 100% uptrend, 30% downtrend. "
+            "Validated via R&D: Sharpe 0.312 (+31.2% vs baseline), MDD -19.9%."
+        ),
+        "module": "libs.strategies.mr_adaptive_aggressive",
+        "class_name": "MRAdaptiveAggressiveStrategy",
+        "config_class": "MRAdaptiveConfig",
+        "markets": ["futures"],
+        "exchanges": ["binance_futures", "paper"],
+        "status": "production_ready",
+        "features": [
+            "bollinger_bands_oversold",
+            "rsi_mean_reversion",
+            "trend_adaptive_sizing",
+            "long_only",
+            "daily_timeframe",
+            "parameter_robustness_validated",
+            "slippage_sensitivity_tested",
+        ],
+        "validated_performance": {
+            "sharpe": 0.312,
+            "vs_baseline": "+31.2%",
+            "max_drawdown": "-19.9%",
+            "coverage": "99%",
+            "parameter_cv": 0.21,
+            "slippage_3x_sharpe": 0.328,
+        },
+        "parameters": {
+            "bb_period": 20,
+            "bb_std": 2.0,
+            "rsi_period": 14,
+            "rsi_low": 35,
+            "rsi_exit": 55,
+            "trend_ma": 50,
+            "trend_scale": 0.3,
+        },
+        "recommendation": {
+            "capital_range": "300K-500K KRW",
+            "leverage": "2x (isolated)",
+            "max_positions": 30,
+            "paper_trading_period": "2 weeks",
+            "mdd_limit": "-35%",
+        },
+    }
+)
 
 # VWAP Breakout - KAMA+EMA Hybrid (Phase 18-19 validated)
 AVAILABLE_STRATEGIES.append(

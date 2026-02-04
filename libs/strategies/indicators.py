@@ -856,6 +856,78 @@ def BBWP_series(
     return bbwp
 
 
+def BollingerBands(
+    close: Union[List[float], np.ndarray],
+    period: int = 20,
+    std_dev: float = 2.0,
+) -> tuple[float, float, float]:
+    """
+    Bollinger Bands.
+
+    Args:
+        close: Close prices.
+        period: MA period (default 20).
+        std_dev: Standard deviation multiplier (default 2.0).
+
+    Returns:
+        Tuple of (upper band, middle band, lower band).
+    """
+    c = np.array(close, dtype=float)
+    n = len(c)
+
+    if n < period:
+        last = c[-1] if n > 0 else 0.0
+        return (last, last, last)
+
+    window = c[-period:]
+    middle = np.mean(window)
+    std = np.std(window, ddof=0)
+
+    upper = middle + std_dev * std
+    lower = middle - std_dev * std
+
+    return (float(upper), float(middle), float(lower))
+
+
+def BollingerBands_series(
+    close: Union[List[float], np.ndarray],
+    period: int = 20,
+    std_dev: float = 2.0,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Full Bollinger Bands series.
+
+    Args:
+        close: Close prices.
+        period: MA period (default 20).
+        std_dev: Standard deviation multiplier (default 2.0).
+
+    Returns:
+        Tuple of (upper array, middle array, lower array).
+    """
+    c = np.array(close, dtype=float)
+    n = len(c)
+
+    upper = np.zeros(n)
+    middle = np.zeros(n)
+    lower = np.zeros(n)
+
+    for i in range(n):
+        if i < period - 1:
+            upper[i] = c[i]
+            middle[i] = c[i]
+            lower[i] = c[i]
+        else:
+            window = c[i - period + 1 : i + 1]
+            mid = np.mean(window)
+            std = np.std(window, ddof=0)
+            middle[i] = mid
+            upper[i] = mid + std_dev * std
+            lower[i] = mid - std_dev * std
+
+    return (upper, middle, lower)
+
+
 def TSMOM_volume_weighted(
     close: Union[List[float], np.ndarray],
     volume: Union[List[float], np.ndarray],
