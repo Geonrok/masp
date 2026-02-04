@@ -94,7 +94,7 @@ def _check_upbit_api() -> Tuple[ServiceStatus, Optional[float], str]:
         quote = market_data.get_quote("BTC/KRW")
         latency_ms = (time.time() - start_time) * 1000
 
-        if quote and "price" in quote:
+        if quote and quote.last is not None:
             return ServiceStatus.HEALTHY, latency_ms, ""
         return ServiceStatus.DEGRADED, latency_ms, "No price data"
 

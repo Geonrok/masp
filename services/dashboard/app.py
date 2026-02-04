@@ -93,7 +93,7 @@ if not enforce_auth():
     st.stop()
 
 st.title("MASP 대시보드")
-st.caption("멀티에셋 전략 플랫폼 - Phase 7E")
+st.caption("멀티에셋 전략 플랫폼")
 
 api = ConfigApiClient()
 
@@ -292,7 +292,6 @@ with st.sidebar:
 
     st.subheader("정보")
     st.text("버전: 5.2.0")
-    st.text("Phase: 7D")
 
     st.divider()
 
