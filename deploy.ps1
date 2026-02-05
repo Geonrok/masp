@@ -31,7 +31,7 @@ Write-Host "`n[3/3] Deploying to EC2..." -ForegroundColor Yellow
 $commands = @(
     "cd /opt/masp/app",
     "sudo -u masp git pull origin master",
-    "sudo -u masp docker compose build",
+    "sudo -u masp docker compose --profile scheduler build",
     "sudo -u masp docker compose --profile scheduler up -d --force-recreate"
 )
 
