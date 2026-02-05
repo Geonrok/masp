@@ -245,7 +245,9 @@ class DailySignalAlertService:
 
         data = self._load_from_file(min_days)
         if data:
-            logger.info(f"[DailySignalAlert] Loaded {len(data)} symbols from local files")
+            logger.info(
+                f"[DailySignalAlert] Loaded {len(data)} symbols from local files"
+            )
             return data
 
         logger.warning("[DailySignalAlert] No data loaded")
@@ -265,7 +267,7 @@ class DailySignalAlertService:
             # BTC를 항상 포함
             btc_ticker = "KRW-BTC"
             target_tickers = [btc_ticker] if btc_ticker in tickers else []
-            target_tickers += [t for t in tickers[:self.top_n] if t != btc_ticker]
+            target_tickers += [t for t in tickers[: self.top_n] if t != btc_ticker]
 
             for ticker in target_tickers:
                 try:
@@ -273,13 +275,15 @@ class DailySignalAlertService:
                     if df is None or df.empty or len(df) < min_days:
                         continue
 
-                    df = df.rename(columns={
-                        "open": "open",
-                        "high": "high",
-                        "low": "low",
-                        "close": "close",
-                        "volume": "volume",
-                    })
+                    df = df.rename(
+                        columns={
+                            "open": "open",
+                            "high": "high",
+                            "low": "low",
+                            "close": "close",
+                            "volume": "volume",
+                        }
+                    )
 
                     required = ["open", "high", "low", "close", "volume"]
                     if all(c in df.columns for c in required):
@@ -369,7 +373,9 @@ class DailySignalAlertService:
 
         # 거래대금 랭킹
         volume_ranks = self._get_volume_rank(data)
-        sorted_by_volume = sorted(volume_ranks.items(), key=lambda x: x[1], reverse=True)
+        sorted_by_volume = sorted(
+            volume_ranks.items(), key=lambda x: x[1], reverse=True
+        )
 
         # 시그널 계산 (BTC 제외)
         candidates = []
@@ -380,7 +386,9 @@ class DailySignalAlertService:
                 continue
 
             prices = df["close"].values
-            min_len = max(self.tsmom_lookback, self.sma_slow, self.higher_low_period) + 10
+            min_len = (
+                max(self.tsmom_lookback, self.sma_slow, self.higher_low_period) + 10
+            )
 
             if len(prices) < min_len:
                 continue
@@ -485,7 +493,8 @@ class DailySignalAlertService:
         else:
             # 시그널은 있지만 볼륨 필터 미통과
             volume_filtered = [
-                (s, d) for s, d in signals.items()
+                (s, d)
+                for s, d in signals.items()
                 if s != "_META"
                 and d.get("signal_count", 0) >= meta["min_signals"]
                 and not d.get("in_volume_top")
@@ -570,7 +579,9 @@ def main():
 
     print(f"\nTimestamp: {summary['timestamp']}")
     print(f"Strategy: {summary['strategy']}")
-    print(f"Settings: 7중 OR (min {summary['min_signals']}), Vol Top {summary['volume_filter_pct']*100:.0f}%")
+    print(
+        f"Settings: 7중 OR (min {summary['min_signals']}), Vol Top {summary['volume_filter_pct']*100:.0f}%"
+    )
     print(f"\nBTC Gate: {'PASS' if summary['btc_gate'] else 'FAIL'}")
     print(f"BTC Price: {summary['btc_price']:,.0f}")
     print(f"BTC MA30: {summary['btc_ma']:,.0f}")
@@ -581,7 +592,9 @@ def main():
     print("Entry Signals (7중 OR + Vol Top 30%):")
     print("-" * 60)
 
-    entry_list = [(s, d) for s, d in summary["signals"].items() if d.get("entry_signal")]
+    entry_list = [
+        (s, d) for s, d in summary["signals"].items() if d.get("entry_signal")
+    ]
     entry_list.sort(key=lambda x: x[1]["change_7d"], reverse=True)
 
     for symbol, data in entry_list:
@@ -600,9 +613,7 @@ def main():
             success = service.send_daily_alert()
             print(f"Telegram sent: {success}")
     else:
-        print(
-            "Telegram not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID."
-        )
+        print("Telegram not configured. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.")
 
 
 if __name__ == "__main__":

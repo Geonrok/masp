@@ -56,10 +56,12 @@ class TestMRAdaptiveAggressiveStrategy:
         np.random.seed(44)
         n = 100
         # Start high, then sharp drop to create oversold
-        base = np.concatenate([
-            np.linspace(100, 120, 70),  # Rise
-            np.linspace(120, 80, 30),   # Sharp drop
-        ])
+        base = np.concatenate(
+            [
+                np.linspace(100, 120, 70),  # Rise
+                np.linspace(120, 80, 30),  # Sharp drop
+            ]
+        )
         return {
             "close": base,
             "high": base * 1.01,

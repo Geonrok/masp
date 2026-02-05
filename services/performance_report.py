@@ -578,9 +578,7 @@ class PerformanceReportService:
     ) -> Path:
         """리포트를 파일로 저장"""
         if output_dir is None:
-            output_dir = Path(
-                os.environ.get("REPORT_OUTPUT_DIR", "/app/data/reports")
-            )
+            output_dir = Path(os.environ.get("REPORT_OUTPUT_DIR", "/app/data/reports"))
 
         output_dir.mkdir(parents=True, exist_ok=True)
 

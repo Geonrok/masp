@@ -623,7 +623,9 @@ def render_risk_metrics_panel(
         equity_curve = _generate_equity_from_returns(returns)
 
     if use_demo:
-        st.caption("📊 백테스트 참고 성과 (Sept-v3-RSI50-Gate, 2019~2024 OOS) - 실거래 시작 시 실제 지표로 전환")
+        st.caption(
+            "📊 백테스트 참고 성과 (Sept-v3-RSI50-Gate, 2019~2024 OOS) - 실거래 시작 시 실제 지표로 전환"
+        )
     else:
         st.caption("📈 실거래 성과 - 최근 30일 거래 기록 기준")
 

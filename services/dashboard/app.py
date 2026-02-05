@@ -300,6 +300,8 @@ with st.sidebar:
     if st.button("새로고침", use_container_width=True):  # Button API unchanged
         st.rerun()
 
-    if st.button("로그아웃", use_container_width=True, type="secondary"):  # Button API unchanged
+    if st.button(
+        "로그아웃", use_container_width=True, type="secondary"
+    ):  # Button API unchanged
         logout()
         st.rerun()

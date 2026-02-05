@@ -254,13 +254,15 @@ class MarketRegimeDetector:
                 return None
 
             # 컬럼명 표준화
-            df = df.rename(columns={
-                "open": "open",
-                "high": "high",
-                "low": "low",
-                "close": "close",
-                "volume": "volume",
-            })
+            df = df.rename(
+                columns={
+                    "open": "open",
+                    "high": "high",
+                    "low": "low",
+                    "close": "close",
+                    "volume": "volume",
+                }
+            )
 
             # 필수 컬럼 확인
             required = ["open", "high", "low", "close", "volume"]
