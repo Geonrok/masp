@@ -14,7 +14,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from services.dashboard.components.alert_history import render_alert_history_panel
 from services.dashboard.components.alert_settings import render_alert_settings
-from services.dashboard.constants import SIGNAL_PREVIEW_EXCHANGES, get_version
 
 # Existing components
 from services.dashboard.components.api_key_status import render_api_key_status_panel
@@ -45,6 +44,7 @@ from services.dashboard.components.strategy_performance import (
 from services.dashboard.components.system_status import render_system_status
 from services.dashboard.components.telegram_settings import render_telegram_settings
 from services.dashboard.components.trade_history import render_trade_history_panel
+from services.dashboard.constants import SIGNAL_PREVIEW_EXCHANGES, get_version
 from services.dashboard.providers.alert_manager_provider import (
     get_alert_rules,
     get_alert_settings_callbacks,

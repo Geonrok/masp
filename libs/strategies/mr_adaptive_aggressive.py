@@ -34,9 +34,9 @@ from libs.strategies.base import BaseStrategy, Signal, TradeSignal
 from libs.strategies.indicators import (
     MA,
     RSI,
-    RSI_series,
     BollingerBands,
     BollingerBands_series,
+    RSI_series,
 )
 
 logger = logging.getLogger(__name__)

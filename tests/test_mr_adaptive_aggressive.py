@@ -5,12 +5,12 @@ Unit tests for MR_ADAPTIVE_AGGRESSIVE Strategy.
 import numpy as np
 import pytest
 
+from libs.strategies.base import Signal
+from libs.strategies.indicators import MA, RSI, BollingerBands
 from libs.strategies.mr_adaptive_aggressive import (
     MRAdaptiveAggressiveStrategy,
     MRAdaptiveConfig,
 )
-from libs.strategies.base import Signal
-from libs.strategies.indicators import BollingerBands, RSI, MA
 
 
 class TestMRAdaptiveAggressiveStrategy:
