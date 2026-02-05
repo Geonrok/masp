@@ -264,7 +264,9 @@ class KiwoomSpotMarketData(MarketDataAdapter):
                 result = await resp.json()
 
                 if result.get("return_code") != 0:
-                    logger.warning(f"[Kiwoom] API error for {symbol}: {result.get('return_msg')}")
+                    logger.warning(
+                        f"[Kiwoom] API error for {symbol}: {result.get('return_msg')}"
+                    )
                     return None
 
                 # Parse price (remove sign prefix)
@@ -362,12 +364,19 @@ class KiwoomSpotMarketData(MarketDataAdapter):
                 result = await resp.json()
 
                 # Check for error (return_code only present on error)
-                if result.get("return_code") is not None and result.get("return_code") != 0:
-                    logger.warning(f"[Kiwoom] OHLCV API error for {symbol}: {result.get('return_msg')}")
+                if (
+                    result.get("return_code") is not None
+                    and result.get("return_code") != 0
+                ):
+                    logger.warning(
+                        f"[Kiwoom] OHLCV API error for {symbol}: {result.get('return_msg')}"
+                    )
                     return []
 
                 # Response data is in stk_dt_pole_chart_qry field
-                output_list = result.get("stk_dt_pole_chart_qry", []) or result.get("output", [])
+                output_list = result.get("stk_dt_pole_chart_qry", []) or result.get(
+                    "output", []
+                )
 
                 if not output_list or not isinstance(output_list, list):
                     logger.warning(f"[Kiwoom] No OHLCV data for {symbol}")
@@ -391,11 +400,23 @@ class KiwoomSpotMarketData(MarketDataAdapter):
                         candles.append(
                             OHLCVCandle(
                                 timestamp=ts,
-                                open=parse_price(item.get("open_pric", 0) or item.get("stck_oprc", 0)),
-                                high=parse_price(item.get("high_pric", 0) or item.get("stck_hgpr", 0)),
-                                low=parse_price(item.get("low_pric", 0) or item.get("stck_lwpr", 0)),
-                                close=parse_price(item.get("cur_prc", 0) or item.get("cur_pric", 0) or item.get("stck_clpr", 0)),
-                                volume=parse_price(item.get("trde_qty", 0) or item.get("acml_vol", 0)),
+                                open=parse_price(
+                                    item.get("open_pric", 0) or item.get("stck_oprc", 0)
+                                ),
+                                high=parse_price(
+                                    item.get("high_pric", 0) or item.get("stck_hgpr", 0)
+                                ),
+                                low=parse_price(
+                                    item.get("low_pric", 0) or item.get("stck_lwpr", 0)
+                                ),
+                                close=parse_price(
+                                    item.get("cur_prc", 0)
+                                    or item.get("cur_pric", 0)
+                                    or item.get("stck_clpr", 0)
+                                ),
+                                volume=parse_price(
+                                    item.get("trde_qty", 0) or item.get("acml_vol", 0)
+                                ),
                             )
                         )
                     except (KeyError, ValueError) as e:

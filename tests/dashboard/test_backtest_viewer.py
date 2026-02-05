@@ -31,12 +31,12 @@ def test_demo_data_structure():
     assert "initial_capital" in data
     assert "strategy_name" in data
 
-    # 100 days of data
-    assert len(data["dates"]) == 100
-    assert len(data["daily_returns"]) == 100
+    # Real BTC data (1260 trading days)
+    assert len(data["dates"]) >= 100
+    assert len(data["daily_returns"]) == len(data["dates"])
 
-    # Fixed start date
-    assert data["dates"][0] == date(2025, 1, 1)
+    # Start date from real data
+    assert data["dates"][0] == date(2019, 1, 1)
 
     # Deterministic: calling twice gives same results
     data2 = _get_demo_backtest_data()

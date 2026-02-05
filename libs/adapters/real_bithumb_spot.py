@@ -372,7 +372,9 @@ class BithumbSpotExecution:
             )
 
         self._last_request_time: Optional[datetime] = None
-        self._kill_switch_file = os.getenv("KILL_SWITCH_FILE", "storage/kill_switch.flag")
+        self._kill_switch_file = os.getenv(
+            "KILL_SWITCH_FILE", "storage/kill_switch.flag"
+        )
 
         logger.info("[BithumbExecution] Adapter v3.0 (API 2.0 JWT) initialized")
 
@@ -394,9 +396,7 @@ class BithumbSpotExecution:
 
         # 파라미터가 있으면 query_hash 추가
         if query_params:
-            query_string = "&".join(
-                f"{k}={v}" for k, v in sorted(query_params.items())
-            )
+            query_string = "&".join(f"{k}={v}" for k, v in sorted(query_params.items()))
             query_hash = hashlib.sha512(query_string.encode()).hexdigest()
             payload["query_hash"] = query_hash
             payload["query_hash_alg"] = "SHA512"
@@ -566,7 +566,9 @@ class BithumbSpotExecution:
 
         # 2. API 키 확인
         if not self._initialized:
-            return self._rejected_order(symbol, side, quantity, 0, "API credentials not set")
+            return self._rejected_order(
+                symbol, side, quantity, 0, "API credentials not set"
+            )
 
         # 3. Kill-Switch 체크
         if self._is_kill_switch_active():
@@ -607,8 +609,11 @@ class BithumbSpotExecution:
                 "market": market,
                 "side": "bid" if side.upper() == "BUY" else "ask",
                 "volume": str(quantity),
-                "ord_type": "price" if order_type == "MARKET" and side.upper() == "BUY" else
-                           "market" if order_type == "MARKET" else "limit",
+                "ord_type": (
+                    "price"
+                    if order_type == "MARKET" and side.upper() == "BUY"
+                    else "market" if order_type == "MARKET" else "limit"
+                ),
             }
 
             # MARKET BUY는 price(총 금액) 사용, MARKET SELL은 volume만 사용
@@ -628,7 +633,11 @@ class BithumbSpotExecution:
 
             if "error" in result:
                 return self._rejected_order(
-                    symbol, side, quantity, krw_amount, result.get("message", "Unknown error")
+                    symbol,
+                    side,
+                    quantity,
+                    krw_amount,
+                    result.get("message", "Unknown error"),
                 )
 
             order_result = self._parse_result(
@@ -667,8 +676,14 @@ class BithumbSpotExecution:
         return symbol.split("/")[0]
 
     def _parse_result(
-        self, result: Dict, symbol: str, side: str, quantity: float,
-        krw_amount: float, order_type: str, price: float
+        self,
+        result: Dict,
+        symbol: str,
+        side: str,
+        quantity: float,
+        krw_amount: float,
+        order_type: str,
+        price: float,
     ) -> BithumbOrderResult:
         """API 2.0 응답 파싱"""
         # API 2.0 응답 필드:
