@@ -158,6 +158,12 @@ class KiwoomSpotMarketData(MarketDataAdapter):
             import concurrent.futures
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
+                # P2 Fix: Close existing session before creating new one
+                if self._session is not None:
+                    try:
+                        asyncio.run(self._session.close())
+                    except Exception:
+                        pass  # Ignore close errors
                 self._session = None
                 self._access_token = None
                 future = executor.submit(asyncio.run, coro)
@@ -518,6 +524,12 @@ class KiwoomSpotExecution(ExecutionAdapter):
             import concurrent.futures
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
+                # P2 Fix: Close existing session before creating new one
+                if self._session is not None:
+                    try:
+                        asyncio.run(self._session.close())
+                    except Exception:
+                        pass  # Ignore close errors
                 self._session = None
                 self._access_token = None
                 future = executor.submit(asyncio.run, coro)
