@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import streamlit as st
 
+from services.dashboard.constants import SUPPORTED_EXCHANGES
+
 
 class StrategyConfigPanel:
     def __init__(self, api_client) -> None:
@@ -12,7 +14,7 @@ class StrategyConfigPanel:
     def render(self) -> None:
         st.subheader("Strategy Configuration")
 
-        exchanges = ["upbit", "bithumb", "binance", "binance_futures"]
+        exchanges = SUPPORTED_EXCHANGES
         selected = st.selectbox("Exchange", exchanges)
 
         config = self.api.get_exchange_config(selected)

@@ -1,17 +1,29 @@
 """Firebase configuration for Streamlit dashboard.
 
 SSOT: All Firebase config values in one place.
+Reads from environment variables for security.
 """
 
-# Firebase Web App Configuration (SSOT)
+import os
+
+# Firebase Web App Configuration (from environment variables)
 FIREBASE_CONFIG = {
-    "apiKey": "AIzaSyCYWvu2O8weVk5yMGev5rP5NS9DS-3TBlQ",
-    "authDomain": "multi-asset-strategy-platform.firebaseapp.com",
-    "projectId": "multi-asset-strategy-platform",
-    "storageBucket": "multi-asset-strategy-platform.firebasestorage.app",
-    "messagingSenderId": "67701556084",
-    "appId": "1:67701556084:web:4c19b0aea5a95434a9a221",
-    "measurementId": "G-3DCFN2HLR3",
+    "apiKey": os.getenv("FIREBASE_API_KEY", ""),
+    "authDomain": os.getenv(
+        "FIREBASE_AUTH_DOMAIN", "multi-asset-strategy-platform.firebaseapp.com"
+    ),
+    "projectId": os.getenv("FIREBASE_PROJECT_ID", "multi-asset-strategy-platform"),
+    "storageBucket": os.getenv(
+        "FIREBASE_STORAGE_BUCKET", "multi-asset-strategy-platform.firebasestorage.app"
+    ),
+    "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID", ""),
+    "appId": os.getenv("FIREBASE_APP_ID", ""),
+    "measurementId": os.getenv("FIREBASE_MEASUREMENT_ID", ""),
     # Required for pyrebase
-    "databaseURL": "",
+    "databaseURL": os.getenv("FIREBASE_DATABASE_URL", ""),
 }
+
+
+def is_firebase_configured() -> bool:
+    """Check if Firebase is properly configured."""
+    return bool(FIREBASE_CONFIG.get("apiKey"))

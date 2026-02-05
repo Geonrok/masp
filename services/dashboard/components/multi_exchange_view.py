@@ -184,7 +184,7 @@ def render_price_comparison(
             }
         )
 
-    st.dataframe(table_data, use_container_width=True, hide_index=True)
+    st.dataframe(table_data, width="stretch", hide_index=True)
 
     # Best prices
     col1, col2 = st.columns(2)

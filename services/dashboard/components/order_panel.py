@@ -550,4 +550,4 @@ def render_order_panel(
             }
             for h in history[:10]  # Show last 10
         ]
-        st.dataframe(history_data, use_container_width=True, hide_index=True)
+        st.dataframe(history_data, width="stretch", hide_index=True)

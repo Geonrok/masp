@@ -247,7 +247,7 @@ def _render_allocation_chart(
         legend=dict(orientation="h", yanchor="bottom", y=-0.2),
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _render_position_table(positions: List[PortfolioPosition]) -> None:

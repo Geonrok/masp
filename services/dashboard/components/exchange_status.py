@@ -9,14 +9,19 @@ from typing import Any, Dict, Optional
 
 import streamlit as st
 
+from services.dashboard.constants import (
+    DEFAULT_AUTO_REFRESH_INTERVAL,
+    SUPPORTED_EXCHANGES,
+)
+
 
 def _get_refresh_interval() -> float:
     """Safely get auto refresh interval from environment."""
-    raw = os.getenv("MASP_AUTO_REFRESH_INTERVAL", "10.0")
+    raw = os.getenv("MASP_AUTO_REFRESH_INTERVAL", str(DEFAULT_AUTO_REFRESH_INTERVAL))
     try:
         v = float(raw)
         if not math.isfinite(v) or v <= 0:
-            return 10.0
+            return DEFAULT_AUTO_REFRESH_INTERVAL
         return v
     except ValueError:
         return 10.0
@@ -44,7 +49,7 @@ _DEMO_EXCHANGE_CONFIGS: Dict[str, Dict[str, Any]] = {
 
 
 class ExchangeStatusPanel:
-    EXCHANGES = ["upbit", "bithumb", "binance", "binance_futures"]
+    EXCHANGES = SUPPORTED_EXCHANGES
     _LAST_RERUN_TS_KEY = "masp_last_auto_refresh_rerun_ts"
     _DEMO_MODE_KEY = "exchange_status_demo_mode"
 

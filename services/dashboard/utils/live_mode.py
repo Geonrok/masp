@@ -36,8 +36,21 @@ def check_live_conditions(exchange: str) -> Tuple[bool, str]:
             logger.debug("KeyManager check failed: %s", type(exc).__name__)
 
     if not has_keys:
+        # Check standard naming convention
         api_key = os.getenv(f"{exchange.upper()}_API_KEY")
         secret_key = os.getenv(f"{exchange.upper()}_SECRET_KEY")
+        has_keys = bool(api_key and secret_key)
+
+    if not has_keys and exchange.lower() == "upbit":
+        # Upbit uses ACCESS_KEY naming convention
+        api_key = os.getenv("UPBIT_ACCESS_KEY")
+        secret_key = os.getenv("UPBIT_SECRET_KEY")
+        has_keys = bool(api_key and secret_key)
+
+    if not has_keys and exchange.lower() == "binance":
+        # Binance uses API_SECRET naming convention
+        api_key = os.getenv("BINANCE_API_KEY")
+        secret_key = os.getenv("BINANCE_API_SECRET")
         has_keys = bool(api_key and secret_key)
 
     if not has_keys:

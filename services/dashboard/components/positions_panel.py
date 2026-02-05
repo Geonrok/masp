@@ -74,6 +74,6 @@ def render_positions_panel(
                 }
                 for p in pnl_list
             ]
-            st.dataframe(data, use_container_width=True, hide_index=True)
+            st.dataframe(data, width="stretch", hide_index=True)
         else:
             st.info("No active positions.")

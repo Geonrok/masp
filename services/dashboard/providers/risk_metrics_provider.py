@@ -163,6 +163,13 @@ def get_risk_metrics_data(
     if not returns:
         return None
 
+    # Check if data is meaningful (at least some non-zero returns)
+    # If all returns are 0 or nearly 0, use demo mode instead
+    non_zero_returns = [r for r in returns if abs(r) > 0.0001]
+    if len(non_zero_returns) < 5:  # Need at least 5 meaningful data points
+        logger.debug("Insufficient meaningful returns data, using demo mode")
+        return None
+
     # Calculate equity curve
     equity_curve = _calculate_equity_curve(returns)
 

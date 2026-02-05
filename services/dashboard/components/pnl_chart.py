@@ -43,7 +43,7 @@ def render_pnl_chart(pnl_list: List[PositionPnL]) -> None:
         margin=dict(l=40, r=40, t=60, b=40),
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def render_pnl_summary(total_pnl: Dict[str, float]) -> None:

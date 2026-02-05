@@ -6,6 +6,11 @@ from datetime import datetime
 
 import streamlit as st
 
+from services.dashboard.constants import (
+    MAX_SYMBOLS_DEMO,
+    MAX_SYMBOLS_LIVE,
+    SIGNAL_PREVIEW_EXCHANGES,
+)
 from services.dashboard.utils.holdings import (
     get_holding_symbols,
     is_private_api_enabled,
@@ -29,7 +34,7 @@ def render_signal_preview_panel() -> None:
 
     exchange = st.selectbox(
         "Exchange",
-        options=["upbit", "bithumb"],
+        options=SIGNAL_PREVIEW_EXCHANGES,
         key="signal_exchange_select",
     )
 
@@ -88,40 +93,49 @@ def render_signal_preview_panel() -> None:
 
             st.dataframe(
                 [{"Symbol": symbol} for symbol in filtered],
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
             )
 
-    max_symbols = 20 if can_live else 50
+    max_symbols = MAX_SYMBOLS_LIVE if can_live else MAX_SYMBOLS_DEMO
     n_symbols = st.slider(
         "Number of symbols",
         min_value=5,
         max_value=max_symbols,
-        value=10,
+        value=max_symbols,
         step=5,
         key="signal_n_symbols",
     )
     if can_live and max_symbols < 50:
         st.caption("LIVE mode limits to 20 symbols to prevent rate-limiting.")
 
-    if st.button("Generate Signals", key="signal_generate_btn", type="primary"):
+    # Auto-generate signals on load or exchange change
+    cache_key = f"signal_cache_{exchange}_{n_symbols}"
+    if (
+        "signal_cache_key" not in st.session_state
+        or st.session_state.get("signal_cache_key") != cache_key
+    ):
         with st.spinner("Generating signals..."):
             try:
                 symbols = get_cached_symbols(
                     exchange, limit=n_symbols, allow_live=can_live, show_all=False
                 )
-                if not symbols:
-                    st.warning("No symbols available")
-                    return
-
-                signals = get_cached_signals(
-                    exchange, tuple(symbols), allow_live=can_live
-                )
-                st.session_state["signal_results"] = signals
-                st.session_state["signal_timestamp"] = datetime.now().isoformat()
+                if symbols:
+                    signals = get_cached_signals(
+                        exchange, tuple(symbols), allow_live=can_live
+                    )
+                    st.session_state["signal_results"] = signals
+                    st.session_state["signal_timestamp"] = datetime.now().isoformat()
+                    st.session_state["signal_cache_key"] = cache_key
+                else:
+                    st.session_state["signal_results"] = []
             except Exception:
                 st.error("Failed to generate signals. Please check configuration.")
                 st.session_state["signal_results"] = []
+
+    if st.button("Refresh Signals", key="signal_generate_btn", type="primary"):
+        st.session_state["signal_cache_key"] = None
+        st.rerun()
 
     if "signal_results" in st.session_state and st.session_state["signal_results"]:
         signals = st.session_state["signal_results"]
@@ -167,7 +181,7 @@ def render_signal_preview_panel() -> None:
                 }
                 for s in signals
             ],
-            use_container_width=True,
+            width="stretch",
             hide_index=True,
         )
 

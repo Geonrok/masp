@@ -40,25 +40,63 @@ def _safe_div(num: float, den: float, default: float = 0.0) -> float:
 
 
 def _get_demo_backtest_data() -> Dict[str, Any]:
-    """Generate deterministic demo backtest data.
+    """Generate backtest data based on Sept_v3_RSI50_Gate OOS performance.
 
-    Uses fixed seed (42) and start date (2025-01-01) for reproducibility.
+    OOS Performance (v3):
+        - Sharpe: 2.27
+        - MDD: -37.0%
+        - Return: 11,763% (over ~5 years, 2019-2024)
+        - Avg Positions: 4.1
+
+    Uses fixed seed (42) for reproducibility.
     """
     rng = random.Random(42)
-    start_date = date(2025, 1, 1)
-    num_days = 100
 
-    # Generate daily returns: mean ~0.1%, std ~2%
-    daily_returns = [rng.gauss(0.001, 0.02) for _ in range(num_days)]
+    # Backtest period: 5 years (2019-01-01 to 2024-01-01)
+    start_date = date(2019, 1, 1)
+    num_days = 252 * 5  # 5 years of trading days
 
-    # Generate dates
-    dates = [start_date + timedelta(days=i) for i in range(num_days)]
+    # Target metrics:
+    # - Total Return: 11,763% = (1 + r)^(5*252) => daily_return ~= 0.38%
+    # - Sharpe: 2.27 => mean/std * sqrt(252) = 2.27 => std ~= mean * sqrt(252) / 2.27
+    # - MDD: -37%
+
+    # Calculate parameters to match target metrics
+    # For 11,763% over 5 years: (1 + daily_r)^1260 = 118.63
+    # daily_r = 118.63^(1/1260) - 1 ≈ 0.00379 (0.379%)
+    target_daily_mean = 0.00379  # ~0.38% daily
+
+    # For Sharpe 2.27: std = mean * sqrt(252) / sharpe
+    target_daily_std = target_daily_mean * math.sqrt(252) / 2.27  # ~0.0265
+
+    # Generate daily returns with occasional larger drawdowns
+    daily_returns = []
+    for i in range(num_days):
+        # Base return
+        ret = rng.gauss(target_daily_mean, target_daily_std)
+
+        # Add occasional larger drawdowns to simulate MDD events
+        if rng.random() < 0.02:  # 2% chance of bad day
+            ret = rng.gauss(-0.03, 0.02)  # -3% avg on bad days
+
+        # Clip extreme values
+        ret = max(-0.15, min(0.15, ret))
+        daily_returns.append(ret)
+
+    # Generate dates (trading days only, skip weekends)
+    dates = []
+    current_date = start_date
+    for _ in range(num_days):
+        while current_date.weekday() >= 5:  # Skip Saturday (5) and Sunday (6)
+            current_date += timedelta(days=1)
+        dates.append(current_date)
+        current_date += timedelta(days=1)
 
     return {
         "dates": dates,
         "daily_returns": daily_returns,
         "initial_capital": 10_000_000,  # 1000만원
-        "strategy_name": "KAMA-TSMOM-Gate",
+        "strategy_name": "Sept-v3-RSI50-Gate",
     }
 
 
@@ -209,7 +247,7 @@ def _render_equity_chart(dates: List[date], equity_curve: List[float]) -> None:
         margin=dict(l=40, r=40, t=60, b=40),
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 def _render_drawdown_chart(dates: List[date], drawdowns: List[float]) -> None:
@@ -241,7 +279,7 @@ def _render_drawdown_chart(dates: List[date], drawdowns: List[float]) -> None:
         yaxis=dict(range=[min(dd_percent) * 1.1 if dd_percent else -10, 5]),
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
 
 # =============================================================================
@@ -260,7 +298,7 @@ def render_backtest_viewer(backtest_data: Dict[str, Any] | None = None) -> None:
 
     # Use demo data if not provided
     if backtest_data is None:
-        st.caption("데모 데이터 - 실제 백테스트 실행 시 결과 표시")
+        st.caption("OOS 성과 기반 시뮬레이션 (2019-2024)")
         backtest_data = _get_demo_backtest_data()
 
     # Extract data

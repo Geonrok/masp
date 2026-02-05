@@ -332,7 +332,7 @@ def render_alert_history_panel(
             }
             for a in page_items
         ]
-        st.dataframe(data, use_container_width=True, hide_index=True)
+        st.dataframe(data, width="stretch", hide_index=True)
 
         col_prev, col_info, col_next = st.columns([1, 2, 1])
         with col_prev:

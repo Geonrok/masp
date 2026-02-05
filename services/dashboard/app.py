@@ -14,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from services.dashboard.components.alert_history import render_alert_history_panel
 from services.dashboard.components.alert_settings import render_alert_settings
+from services.dashboard.constants import SIGNAL_PREVIEW_EXCHANGES, get_version
 
 # Existing components
 from services.dashboard.components.api_key_status import render_api_key_status_panel
@@ -279,7 +280,7 @@ with tabs[4]:
         )
 
     with settings_subtabs[4]:
-        render_exchange_controls(["upbit", "bithumb"])
+        render_exchange_controls(SIGNAL_PREVIEW_EXCHANGES[:2])
 
 # =============================================================================
 # Sidebar
@@ -291,14 +292,14 @@ with st.sidebar:
     st.divider()
 
     st.subheader("정보")
-    st.text("버전: 5.2.0")
+    st.text(f"버전: {get_version()}")
 
     st.divider()
 
     st.subheader("작업")
-    if st.button("새로고침", use_container_width=True):
+    if st.button("새로고침", use_container_width=True):  # Button API unchanged
         st.rerun()
 
-    if st.button("로그아웃", use_container_width=True, type="secondary"):
+    if st.button("로그아웃", use_container_width=True, type="secondary"):  # Button API unchanged
         logout()
         st.rerun()

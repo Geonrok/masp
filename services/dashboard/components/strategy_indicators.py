@@ -6,6 +6,7 @@ import os
 
 import streamlit as st
 
+from services.dashboard.constants import SIGNAL_PREVIEW_EXCHANGES
 from services.dashboard.utils.api_client import ConfigApiClient
 
 
@@ -23,7 +24,7 @@ def render_strategy_indicators() -> None:
         st.warning("MASP_ADMIN_TOKEN is required.")
         return
 
-    exchanges = ["upbit", "bithumb"]
+    exchanges = SIGNAL_PREVIEW_EXCHANGES[:2]  # upbit, bithumb only
     selected = st.selectbox("Select Exchange", exchanges, key="strategy_exchange")
 
     config = api.get_exchange_config(selected)
@@ -33,7 +34,7 @@ def render_strategy_indicators() -> None:
 
     st.subheader(f"{selected.upper()} Strategy Configuration")
 
-    current_strategy = config.get("strategy", "KAMA-TSMOM-Gate")
+    current_strategy = config.get("strategy", "Sept-v3-RSI50-Gate")
     st.info(f"Active Strategy: {current_strategy}")
 
     st.divider()

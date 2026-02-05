@@ -7,6 +7,8 @@ from typing import Optional, Tuple
 
 import streamlit as st
 
+from services.dashboard.constants import SIGNAL_PREVIEW_EXCHANGES
+
 
 def _check_key_status(exchange: str) -> Tuple[bool, bool, str]:
     """
@@ -70,7 +72,7 @@ def render_api_key_status_panel() -> None:
         help="Show first 4 and last 4 characters of keys",
     )
 
-    exchanges = ["upbit", "bithumb"]
+    exchanges = SIGNAL_PREVIEW_EXCHANGES[:2]  # upbit, bithumb
 
     for exchange in exchanges:
         has_api, has_secret, source = _check_key_status(exchange)
