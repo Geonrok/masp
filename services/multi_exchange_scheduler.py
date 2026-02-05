@@ -276,7 +276,10 @@ class MultiExchangeScheduler:
                 return ["BTC/USDT", "ETH/USDT"]
 
         # ALL_USDT_PERP for Binance Futures
-        if symbols_cfg == "ALL_USDT_PERP" and exchange_name == "binance_futures":
+        if symbols_cfg == "ALL_USDT_PERP" and exchange_name in (
+            "binance_futures",
+            "binance_futures_mr",
+        ):
             try:
                 from libs.adapters.real_binance_futures import BinanceFuturesMarketData
 
