@@ -90,6 +90,13 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
       - TRADE_LOG_DIR=/app/logs/trades
+      - KIWOOM_APP_KEY=${KIWOOM_APP_KEY}
+      - KIWOOM_APP_SECRET=${KIWOOM_APP_SECRET}
+      - KIWOOM_ACCOUNT_NO=${KIWOOM_ACCOUNT_NO}
+      - EBEST_APP_KEY=${EBEST_APP_KEY}
+      - EBEST_APP_SECRET=${EBEST_APP_SECRET}
+      - EBEST_ACCOUNT_NO=${EBEST_ACCOUNT_NO}
+      - EBEST_ACCOUNT_PWD=${EBEST_ACCOUNT_PWD}
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
