@@ -114,7 +114,7 @@ class AdapterFactory:
                 from libs.adapters.real_binance_spot import BinanceSpotMarketData
 
                 _market_data_classes[exchange_name] = BinanceSpotMarketData
-            elif exchange_name == "binance_futures":
+            elif exchange_name in ("binance_futures", "binance_futures_mr"):
                 from libs.adapters.real_binance_futures import BinanceFuturesMarketData
 
                 _market_data_classes[exchange_name] = BinanceFuturesMarketData
@@ -291,7 +291,8 @@ class AdapterFactory:
                 **kwargs,
             )
 
-        if exchange_name == "binance_futures":
+        # binance_futures and binance_futures_mr use the same adapter
+        if exchange_name in ("binance_futures", "binance_futures_mr"):
             if adapter_mode in {"live", "execution"}:
                 if os.getenv("MASP_ENABLE_LIVE_TRADING") != "1":
                     raise RuntimeError(

@@ -37,7 +37,7 @@
       }
     },
     "binance_futures": {
-      "enabled": true,
+      "enabled": false,
       "strategy": "Sept-v3-RSI50-Gate",
       "symbols": "ALL_USDT_PERP",
       "position_size_usdt": 100,
@@ -47,10 +47,11 @@
         "minute": 0,
         "timezone": "UTC",
         "jitter": 30
-      }
+      },
+      "_comment": "Disabled 2026-02-05: MR_ADAPTIVE selected over Sept-v3 (lower MDD)"
     },
     "binance_futures_v6": {
-      "enabled": true,
+      "enabled": false,
       "strategy": "binance_futures_v6",
       "symbols": ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT", "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT"],
       "position_size_usdt": 100,
@@ -63,10 +64,10 @@
         "timezone": "UTC",
         "jitter": 30
       },
-      "_comment": "AI Consensus Strategy v6 - Enabled 2026-02-04"
+      "_comment": "Disabled 2026-02-05: Unvalidated, MR_ADAPTIVE selected"
     },
     "kiwoom_spot": {
-      "enabled": false,
+      "enabled": true,
       "strategy": "sector_rotation_m",
       "symbols": ["000660", "005930", "003670", "042700", "006400"],
       "position_size_krw": 100000,
@@ -102,5 +103,5 @@
     "notify_daily_summary": true,
     "notify_errors": true
   },
-  "_comment": "MASP Phase 9 - Binance Spot/Futures added, v6 AI Consensus Strategy added"
+  "_comment": "MASP Phase 9 - Binance Futures consolidated to MR_ADAPTIVE only (2026-02-05)"
 }

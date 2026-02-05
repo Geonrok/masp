@@ -117,7 +117,9 @@ class KiwoomSpotMarketData(MarketDataAdapter):
     MARKET_CLOSE = dt_time(15, 30)
 
     # API endpoints
-    BASE_URL = "https://openapi.kiwoom.com:8080"
+    # 실전투자: https://api.kiwoom.com
+    # 모의투자: https://mockapi.kiwoom.com
+    BASE_URL = "https://api.kiwoom.com"
 
     def __init__(
         self,
@@ -200,7 +202,8 @@ class KiwoomSpotMarketData(MarketDataAdapter):
                     return False
 
                 result = await resp.json()
-                self._access_token = result.get("access_token")
+                # Kiwoom returns 'token' instead of 'access_token'
+                self._access_token = result.get("token") or result.get("access_token")
                 expires_in = result.get("expires_in", 86400)  # Default 24h
 
                 if self._access_token:
@@ -219,14 +222,17 @@ class KiwoomSpotMarketData(MarketDataAdapter):
             logger.error(f"[Kiwoom] Token acquisition error: {e}")
             return False
 
-    def _get_headers(self) -> dict:
+    def _get_headers(self, api_id: str = "") -> dict:
         """Get API request headers."""
-        return {
-            "Content-Type": "application/json; charset=utf-8",
+        headers = {
+            "Content-Type": "application/json;charset=UTF-8",
             "authorization": f"Bearer {self._access_token}",
-            "appkey": self._app_key,
-            "appsecret": self._app_secret,
+            "cont-yn": "N",
+            "next-key": "",
         }
+        if api_id:
+            headers["api-id"] = api_id
+        return headers
 
     async def _get_quote_async(self, symbol: str) -> Optional[MarketQuote]:
         """Get quote for a symbol (async)."""
@@ -236,17 +242,13 @@ class KiwoomSpotMarketData(MarketDataAdapter):
         try:
             session = await self._get_session()
 
-            # Stock current price API (similar to ka10001)
-            url = f"{self.BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price"
-            headers = self._get_headers()
-            headers["tr_id"] = "FHKST01010100"  # Current price TR
+            # Stock info API (ka10001)
+            url = f"{self.BASE_URL}/api/dostk/stkinfo"
+            headers = self._get_headers(api_id="ka10001")
 
-            params = {
-                "FID_COND_MRKT_DIV_CODE": "J",  # KOSPI/KOSDAQ
-                "FID_INPUT_ISCD": symbol,
-            }
+            data = {"stk_cd": symbol}
 
-            async with session.get(url, headers=headers, params=params) as resp:
+            async with session.post(url, headers=headers, json=data) as resp:
                 if resp.status != 200:
                     logger.warning(
                         f"[Kiwoom] Quote request failed for {symbol}: {resp.status}"
@@ -254,21 +256,27 @@ class KiwoomSpotMarketData(MarketDataAdapter):
                     return None
 
                 result = await resp.json()
-                output = result.get("output", {})
 
-                if not output:
-                    logger.warning(f"[Kiwoom] No data for {symbol}")
+                if result.get("return_code") != 0:
+                    logger.warning(f"[Kiwoom] API error for {symbol}: {result.get('return_msg')}")
                     return None
 
-                price = float(output.get("stck_prpr", 0))  # Current price
-                bid = float(output.get("stck_hgpr", price))  # High (approx bid)
-                ask = float(output.get("stck_lwpr", price))  # Low (approx ask)
-                volume = float(output.get("acml_vol", 0))  # Accumulated volume
+                # Parse price (remove sign prefix)
+                price_str = result.get("cur_prc", "0")
+                price = abs(float(price_str.replace(",", "")))
+
+                high_str = result.get("high_pric", price_str)
+                high = abs(float(high_str.replace(",", "")))
+
+                low_str = result.get("low_pric", price_str)
+                low = abs(float(low_str.replace(",", "")))
+
+                volume = float(result.get("trde_qty", "0").replace(",", ""))
 
                 return MarketQuote(
                     symbol=symbol,
-                    bid=bid,
-                    ask=ask,
+                    bid=low,  # Use low as approximate bid
+                    ask=high,  # Use high as approximate ask
                     last=price,
                     volume_24h=volume,
                     timestamp=datetime.now().isoformat(),
@@ -320,12 +328,9 @@ class KiwoomSpotMarketData(MarketDataAdapter):
         try:
             session = await self._get_session()
 
-            # Daily price API
-            url = (
-                f"{self.BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-daily-price"
-            )
-            headers = self._get_headers()
-            headers["tr_id"] = "FHKST01010400"  # Daily price TR
+            # Daily chart API (ka10081)
+            url = f"{self.BASE_URL}/api/dostk/chart"
+            headers = self._get_headers(api_id="ka10081")
 
             # Period code mapping
             period_map = {"1d": "D", "1w": "W", "1M": "M"}
@@ -334,14 +339,14 @@ class KiwoomSpotMarketData(MarketDataAdapter):
                     f"[Kiwoom] Unsupported interval '{interval}'. Supported: {list(period_map.keys())}"
                 )
 
-            params = {
-                "FID_COND_MRKT_DIV_CODE": "J",
-                "FID_INPUT_ISCD": symbol,
-                "FID_PERIOD_DIV_CODE": period_map[interval],
-                "FID_ORG_ADJ_PRC": "0",  # Adjusted price
+            data = {
+                "stk_cd": symbol,
+                "base_dt": "00000000",  # Current date
+                "upd_stkpc_tp": "1",  # Adjusted price
+                "chart_tp": period_map[interval],
             }
 
-            async with session.get(url, headers=headers, params=params) as resp:
+            async with session.post(url, headers=headers, json=data) as resp:
                 if resp.status != 200:
                     logger.warning(
                         f"[Kiwoom] OHLCV request failed for {symbol}: {resp.status}"
@@ -349,29 +354,42 @@ class KiwoomSpotMarketData(MarketDataAdapter):
                     return []
 
                 result = await resp.json()
-                output_list = result.get("output", [])
 
-                if not output_list:
+                # Check for error (return_code only present on error)
+                if result.get("return_code") is not None and result.get("return_code") != 0:
+                    logger.warning(f"[Kiwoom] OHLCV API error for {symbol}: {result.get('return_msg')}")
+                    return []
+
+                # Response data is in stk_dt_pole_chart_qry field
+                output_list = result.get("stk_dt_pole_chart_qry", []) or result.get("output", [])
+
+                if not output_list or not isinstance(output_list, list):
                     logger.warning(f"[Kiwoom] No OHLCV data for {symbol}")
                     return []
 
                 candles = []
                 for item in output_list[:limit]:
                     try:
-                        date_str = item.get("stck_bsop_date", "")
+                        date_str = item.get("dt", "") or item.get("stck_bsop_date", "")
                         if date_str:
                             ts = datetime.strptime(date_str, "%Y%m%d")
                         else:
                             continue
 
+                        # Parse prices (may have sign prefix)
+                        def parse_price(val):
+                            if isinstance(val, (int, float)):
+                                return abs(float(val))
+                            return abs(float(str(val).replace(",", "")))
+
                         candles.append(
                             OHLCVCandle(
                                 timestamp=ts,
-                                open=float(item.get("stck_oprc", 0)),
-                                high=float(item.get("stck_hgpr", 0)),
-                                low=float(item.get("stck_lwpr", 0)),
-                                close=float(item.get("stck_clpr", 0)),
-                                volume=float(item.get("acml_vol", 0)),
+                                open=parse_price(item.get("open_pric", 0) or item.get("stck_oprc", 0)),
+                                high=parse_price(item.get("high_pric", 0) or item.get("stck_hgpr", 0)),
+                                low=parse_price(item.get("low_pric", 0) or item.get("stck_lwpr", 0)),
+                                close=parse_price(item.get("cur_prc", 0) or item.get("cur_pric", 0) or item.get("stck_clpr", 0)),
+                                volume=parse_price(item.get("trde_qty", 0) or item.get("acml_vol", 0)),
                             )
                         )
                     except (KeyError, ValueError) as e:
@@ -698,6 +716,18 @@ class KiwoomSpotExecution(ExecutionAdapter):
                 mock=False,
             )
 
+    def _ensure_live_trading(self) -> None:
+        """Check if live trading is enabled."""
+        if os.getenv("MASP_ENABLE_LIVE_TRADING") != "1":
+            raise RuntimeError(
+                "[Kiwoom] Live trading disabled. Set MASP_ENABLE_LIVE_TRADING=1"
+            )
+
+    def _is_kill_switch_active(self) -> bool:
+        """Check if kill switch is active."""
+        kill_switch_file = os.getenv("KILL_SWITCH_FILE", "storage/kill_switch.flag")
+        return os.path.exists(kill_switch_file)
+
     def place_order(
         self,
         symbol: str,
@@ -719,6 +749,22 @@ class KiwoomSpotExecution(ExecutionAdapter):
         Returns:
             OrderResult with execution details
         """
+        # P1 Fix: 실거래 보호 체크
+        self._ensure_live_trading()
+
+        # Kill-Switch 체크
+        if self._is_kill_switch_active():
+            logger.warning("[Kiwoom] Kill-Switch active, order rejected")
+            return OrderResult(
+                order_id="",
+                symbol=symbol,
+                side=side,
+                quantity=quantity,
+                price=price or 0,
+                status="REJECTED",
+                message="Kill-Switch active",
+            )
+
         return self._run_async(
             self._place_order_async(symbol, side, quantity, order_type, price)
         )
