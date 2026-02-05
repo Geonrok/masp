@@ -288,6 +288,7 @@ class AdapterFactory:
                 initial_balance=kwargs.pop("initial_balance", 10_000),  # USDT
                 config=config,
                 trade_logger=trade_logger,
+                quote_currency="USDT",
                 **kwargs,
             )
 
@@ -312,6 +313,7 @@ class AdapterFactory:
                 initial_balance=kwargs.pop("initial_balance", 10_000),  # USDT
                 config=config,
                 trade_logger=trade_logger,
+                quote_currency="USDT",
                 **kwargs,
             )
 

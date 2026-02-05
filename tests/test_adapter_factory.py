@@ -73,6 +73,47 @@ class TestAdapterFactory:
         with pytest.raises(ValueError):
             AdapterFactory.create_execution("unknown_exchange")
 
+    def test_create_binance_futures_paper_mode(self):
+        """Binance Futures paper mode returns PaperExecutionAdapter with USDT."""
+        adapter = AdapterFactory.create_execution(
+            "binance_futures",
+            adapter_mode="paper",
+        )
+
+        from libs.adapters.paper_execution import PaperExecutionAdapter
+
+        assert isinstance(adapter, PaperExecutionAdapter)
+        assert adapter._quote_currency == "USDT"
+        assert adapter.get_balance("USDT") == 10_000
+        assert adapter.get_balance("KRW") == 0.0
+
+    def test_create_binance_spot_paper_mode(self):
+        """Binance Spot paper mode returns PaperExecutionAdapter with USDT."""
+        adapter = AdapterFactory.create_execution(
+            "binance_spot",
+            adapter_mode="paper",
+        )
+
+        from libs.adapters.paper_execution import PaperExecutionAdapter
+
+        assert isinstance(adapter, PaperExecutionAdapter)
+        assert adapter._quote_currency == "USDT"
+        assert adapter.get_balance("USDT") == 10_000
+
+    def test_create_upbit_paper_mode_krw(self):
+        """Upbit paper mode defaults to KRW quote currency."""
+        adapter = AdapterFactory.create_execution(
+            "upbit_spot",
+            adapter_mode="paper",
+        )
+
+        from libs.adapters.paper_execution import PaperExecutionAdapter
+
+        assert isinstance(adapter, PaperExecutionAdapter)
+        assert adapter._quote_currency == "KRW"
+        assert adapter.get_balance("KRW") == 1_000_000
+        assert adapter.get_balance("USDT") == 0.0
+
     def test_create_market_data_separate(self):
         """create_market_data and create_execution are separate."""
         market_data = AdapterFactory.create_market_data("upbit_spot")

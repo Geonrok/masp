@@ -73,6 +73,7 @@ class PaperExecutionAdapter(ExecutionAdapter):
         initial_balance: float = 1_000_000,
         config=None,
         trade_logger=None,
+        quote_currency: str = "KRW",
     ):
         """
         Initialize paper execution adapter.
@@ -82,10 +83,12 @@ class PaperExecutionAdapter(ExecutionAdapter):
             initial_balance: Initial virtual balance (default: 1M KRW)
             config: Config instance for Kill-Switch integration
             trade_logger: TradeLogger instance (optional)
+            quote_currency: Quote currency for balance ("KRW" or "USDT")
         """
         self.market_data = market_data_adapter
         self.balance = initial_balance
         self.initial_balance = initial_balance
+        self._quote_currency = quote_currency.upper()
         self.positions: Dict[str, PaperPosition] = {}
         self.orders: Dict[str, PaperOrder] = {}
         self.order_history: List[PaperOrder] = []
@@ -397,11 +400,11 @@ class PaperExecutionAdapter(ExecutionAdapter):
             KRW인 경우: self.balance
             코인인 경우: 해당 심볼의 position.quantity (없으면 0)
         """
-        if asset.upper() == "KRW":
+        if asset.upper() == self._quote_currency:
             return self.balance
 
         # 코인 자산인 경우, 포지션에서 수량 조회
-        # positions은 "BTC/KRW" 형태로 저장됨
+        # positions은 "BTC/KRW" 또는 "BTC/USDT:PERP" 형태로 저장됨
         for symbol, pos in self.positions.items():
             # "BTC/KRW" → "BTC" 추출
             base_asset = symbol.split("/")[0] if "/" in symbol else symbol
