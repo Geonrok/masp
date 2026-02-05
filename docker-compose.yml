@@ -83,12 +83,17 @@ services:
       - MASP_ENABLE_LIVE_TRADING=${MASP_ENABLE_LIVE_TRADING:-0}
       - UPBIT_API_KEY=${UPBIT_API_KEY}
       - UPBIT_API_SECRET=${UPBIT_API_SECRET}
+      - BITHUMB_API_KEY=${BITHUMB_API_KEY}
+      - BITHUMB_API_SECRET=${BITHUMB_API_SECRET}
+      - BINANCE_API_KEY=${BINANCE_API_KEY}
+      - BINANCE_API_SECRET=${BINANCE_API_SECRET}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
       - TRADE_LOG_DIR=/app/logs/trades
     volumes:
       - ./data:/app/data
       - ./logs:/app/logs
+      - ./config:/app/config
     depends_on:
       - config-api
     restart: unless-stopped
