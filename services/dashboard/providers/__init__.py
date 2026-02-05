@@ -44,6 +44,7 @@ from services.dashboard.providers.system_provider import (
     get_service_health,
     get_system_resources,
 )
+from services.dashboard.providers.futures_mr_provider import get_futures_mr_status
 from services.dashboard.providers.trade_history_provider import get_trade_history_client
 
 __all__ = [
@@ -87,4 +88,6 @@ __all__ = [
     "get_best_exchange",
     "perform_health_check",
     "get_registry_summary",
+    # futures MR strategy provider
+    "get_futures_mr_status",
 ]

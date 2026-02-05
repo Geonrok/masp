@@ -20,6 +20,7 @@ from services.dashboard.components.api_key_status import render_api_key_status_p
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
 from services.dashboard.components.exchange_control import render_exchange_controls
 from services.dashboard.components.exchange_status import ExchangeStatusPanel
+from services.dashboard.components.futures_mr_status import render_futures_mr_status
 from services.dashboard.components.log_viewer import render_log_viewer
 
 # Phase 7E: Market Regime & Signal components
@@ -82,6 +83,7 @@ from services.dashboard.providers.system_provider import (
     get_service_health,
     get_system_resources,
 )
+from services.dashboard.providers.futures_mr_provider import get_futures_mr_status
 from services.dashboard.providers.trade_history_provider import get_trade_history_client
 from services.dashboard.utils.api_client import ConfigApiClient
 from services.dashboard.utils.auth_middleware import enforce_auth, logout
@@ -132,6 +134,11 @@ with tabs[0]:
     # Exchange status (existing)
     st.subheader("거래소 상태")
     ExchangeStatusPanel(api).render()
+
+    st.divider()
+
+    # Binance Futures MR Strategy Status
+    render_futures_mr_status(status_provider=get_futures_mr_status)
 
 # =============================================================================
 # Tab 2: Trading - Order panel, positions, trade history, multi-exchange
