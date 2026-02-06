@@ -45,6 +45,12 @@ _DEMO_EXCHANGE_CONFIGS: Dict[str, Dict[str, Any]] = {
         "region": "Global",
         "type": "futures",
     },
+    "kiwoom": {
+        "enabled": False,
+        "name": "Kiwoom",
+        "region": "KR",
+        "type": "stock",
+    },
 }
 
 

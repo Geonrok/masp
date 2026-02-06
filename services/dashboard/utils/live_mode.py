@@ -53,6 +53,18 @@ def check_live_conditions(exchange: str) -> Tuple[bool, str]:
         secret_key = os.getenv("BINANCE_API_SECRET")
         has_keys = bool(api_key and secret_key)
 
+    if not has_keys and exchange.lower() == "binance_futures":
+        # Binance Futures uses same keys as Binance spot
+        api_key = os.getenv("BINANCE_API_KEY")
+        secret_key = os.getenv("BINANCE_API_SECRET")
+        has_keys = bool(api_key and secret_key)
+
+    if not has_keys and exchange.lower() == "kiwoom":
+        # Kiwoom uses APP_KEY naming convention
+        api_key = os.getenv("KIWOOM_APP_KEY")
+        secret_key = os.getenv("KIWOOM_APP_SECRET")
+        has_keys = bool(api_key and secret_key)
+
     if not has_keys:
         return False, f"API keys not configured for {exchange}"
 
