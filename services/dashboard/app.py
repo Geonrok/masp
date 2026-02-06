@@ -135,11 +135,6 @@ with tabs[0]:
     st.subheader("거래소 상태")
     ExchangeStatusPanel(api).render()
 
-    st.divider()
-
-    # Binance Futures MR Strategy Status
-    render_futures_mr_status(status_provider=get_futures_mr_status)
-
 # =============================================================================
 # Tab 2: Trading - Order panel, positions, trade history, multi-exchange
 # =============================================================================
@@ -240,10 +235,10 @@ with tabs[2]:
             render_signal_preview_panel()
 
 # =============================================================================
-# Tab 4: Monitoring - Logs, alerts, scheduler
+# Tab 4: Monitoring - Logs, alerts, scheduler, strategy status
 # =============================================================================
 with tabs[3]:
-    monitoring_subtabs = st.tabs(["로그", "알림", "스케줄러"])
+    monitoring_subtabs = st.tabs(["로그", "알림", "스케줄러", "선물 MR"])
 
     with monitoring_subtabs[0]:
         # Real logs from log files (or demo if unavailable)
@@ -256,6 +251,10 @@ with tabs[3]:
     with monitoring_subtabs[2]:
         # Real scheduler status from APScheduler (or static jobs if unavailable)
         render_scheduler_status(job_provider=get_scheduler_job_provider())
+
+    with monitoring_subtabs[3]:
+        # Binance Futures MR Strategy Status (paper trading monitor)
+        render_futures_mr_status(status_provider=get_futures_mr_status)
 
 # =============================================================================
 # Tab 5: Settings - Config, API keys, Telegram, Alerts, Exchange controls
