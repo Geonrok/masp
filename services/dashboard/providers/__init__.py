@@ -18,6 +18,7 @@ from services.dashboard.providers.backtest_provider import (
     get_backtest_provider,
     get_strategy_names,
 )
+from services.dashboard.providers.futures_mr_provider import get_futures_mr_status
 from services.dashboard.providers.log_provider import get_log_provider
 from services.dashboard.providers.multi_exchange_provider import (
     find_arbitrage_opportunities,
@@ -44,7 +45,6 @@ from services.dashboard.providers.system_provider import (
     get_service_health,
     get_system_resources,
 )
-from services.dashboard.providers.futures_mr_provider import get_futures_mr_status
 from services.dashboard.providers.trade_history_provider import get_trade_history_client
 
 __all__ = [
