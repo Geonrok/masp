@@ -164,9 +164,7 @@ def _load_strategy_config() -> FuturesMRConfig:
         logger.warning("[FuturesMRProvider] Config load failed: %s", e)
 
     # Determine mode
-    config.mode = (
-        "live" if os.getenv("MASP_ENABLE_LIVE_TRADING") == "1" else "paper"
-    )
+    config.mode = "live" if os.getenv("MASP_ENABLE_LIVE_TRADING") == "1" else "paper"
     return config
 
 
@@ -224,9 +222,7 @@ def _compute_account_summary(trades: List[Dict[str, Any]]) -> FuturesMRAccount:
     account.total_volume = total_volume
     account.estimated_balance = _INITIAL_BALANCE + total_pnl - total_fees
     if _INITIAL_BALANCE > 0:
-        account.pnl_percent = (
-            (total_pnl - total_fees) / _INITIAL_BALANCE
-        ) * 100
+        account.pnl_percent = ((total_pnl - total_fees) / _INITIAL_BALANCE) * 100
 
     return account
 

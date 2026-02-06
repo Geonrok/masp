@@ -93,9 +93,21 @@ class TestComputeTradeStats:
 
     def test_buy_sell_counts(self):
         trades = [
-            {"side": "BUY", "symbol": "BTC/USDT:PERP", "timestamp": "2026-01-01T00:00:00"},
-            {"side": "BUY", "symbol": "ETH/USDT:PERP", "timestamp": "2026-01-01T00:00:00"},
-            {"side": "SELL", "symbol": "BTC/USDT:PERP", "timestamp": "2026-01-01T00:00:00"},
+            {
+                "side": "BUY",
+                "symbol": "BTC/USDT:PERP",
+                "timestamp": "2026-01-01T00:00:00",
+            },
+            {
+                "side": "BUY",
+                "symbol": "ETH/USDT:PERP",
+                "timestamp": "2026-01-01T00:00:00",
+            },
+            {
+                "side": "SELL",
+                "symbol": "BTC/USDT:PERP",
+                "timestamp": "2026-01-01T00:00:00",
+            },
         ]
         stats = _compute_trade_stats(trades)
         assert stats.trades_total == 3
@@ -105,8 +117,16 @@ class TestComputeTradeStats:
 
     def test_first_last_trade_date(self):
         trades = [
-            {"side": "BUY", "symbol": "BTC/USDT:PERP", "timestamp": "2026-02-05T10:00:00"},
-            {"side": "SELL", "symbol": "BTC/USDT:PERP", "timestamp": "2026-02-01T10:00:00"},
+            {
+                "side": "BUY",
+                "symbol": "BTC/USDT:PERP",
+                "timestamp": "2026-02-05T10:00:00",
+            },
+            {
+                "side": "SELL",
+                "symbol": "BTC/USDT:PERP",
+                "timestamp": "2026-02-01T10:00:00",
+            },
         ]
         stats = _compute_trade_stats(trades)
         assert stats.last_trade_date == "2026-02-05"
@@ -119,7 +139,12 @@ class TestInferPositions:
 
     def test_single_buy_creates_long(self):
         trades = [
-            {"symbol": "BTC/USDT:PERP", "side": "BUY", "quantity": "0.01", "price": "70000"},
+            {
+                "symbol": "BTC/USDT:PERP",
+                "side": "BUY",
+                "quantity": "0.01",
+                "price": "70000",
+            },
         ]
         positions = _infer_positions(trades)
         assert len(positions) == 1
@@ -129,8 +154,18 @@ class TestInferPositions:
 
     def test_multiple_buys_weighted_avg(self):
         trades = [
-            {"symbol": "BTC/USDT:PERP", "side": "BUY", "quantity": "0.01", "price": "70000"},
-            {"symbol": "BTC/USDT:PERP", "side": "BUY", "quantity": "0.02", "price": "71000"},
+            {
+                "symbol": "BTC/USDT:PERP",
+                "side": "BUY",
+                "quantity": "0.01",
+                "price": "70000",
+            },
+            {
+                "symbol": "BTC/USDT:PERP",
+                "side": "BUY",
+                "quantity": "0.02",
+                "price": "71000",
+            },
         ]
         positions = _infer_positions(trades)
         assert len(positions) == 1
@@ -141,16 +176,36 @@ class TestInferPositions:
 
     def test_buy_sell_equal_is_flat(self):
         trades = [
-            {"symbol": "BTC/USDT:PERP", "side": "BUY", "quantity": "0.01", "price": "70000"},
-            {"symbol": "BTC/USDT:PERP", "side": "SELL", "quantity": "0.01", "price": "71000"},
+            {
+                "symbol": "BTC/USDT:PERP",
+                "side": "BUY",
+                "quantity": "0.01",
+                "price": "70000",
+            },
+            {
+                "symbol": "BTC/USDT:PERP",
+                "side": "SELL",
+                "quantity": "0.01",
+                "price": "71000",
+            },
         ]
         positions = _infer_positions(trades)
         assert len(positions) == 0
 
     def test_partial_close(self):
         trades = [
-            {"symbol": "BTC/USDT:PERP", "side": "BUY", "quantity": "0.03", "price": "70000"},
-            {"symbol": "BTC/USDT:PERP", "side": "SELL", "quantity": "0.01", "price": "71000"},
+            {
+                "symbol": "BTC/USDT:PERP",
+                "side": "BUY",
+                "quantity": "0.03",
+                "price": "70000",
+            },
+            {
+                "symbol": "BTC/USDT:PERP",
+                "side": "SELL",
+                "quantity": "0.01",
+                "price": "71000",
+            },
         ]
         positions = _infer_positions(trades)
         assert len(positions) == 1
@@ -158,8 +213,18 @@ class TestInferPositions:
 
     def test_multiple_symbols(self):
         trades = [
-            {"symbol": "BTC/USDT:PERP", "side": "BUY", "quantity": "0.01", "price": "70000"},
-            {"symbol": "ETH/USDT:PERP", "side": "BUY", "quantity": "1.0", "price": "2500"},
+            {
+                "symbol": "BTC/USDT:PERP",
+                "side": "BUY",
+                "quantity": "0.01",
+                "price": "70000",
+            },
+            {
+                "symbol": "ETH/USDT:PERP",
+                "side": "BUY",
+                "quantity": "1.0",
+                "price": "2500",
+            },
         ]
         positions = _infer_positions(trades)
         assert len(positions) == 2
@@ -168,8 +233,18 @@ class TestInferPositions:
 
     def test_sorted_by_notional_desc(self):
         trades = [
-            {"symbol": "ETH/USDT:PERP", "side": "BUY", "quantity": "1.0", "price": "2500"},
-            {"symbol": "BTC/USDT:PERP", "side": "BUY", "quantity": "0.01", "price": "70000"},
+            {
+                "symbol": "ETH/USDT:PERP",
+                "side": "BUY",
+                "quantity": "1.0",
+                "price": "2500",
+            },
+            {
+                "symbol": "BTC/USDT:PERP",
+                "side": "BUY",
+                "quantity": "0.01",
+                "price": "70000",
+            },
         ]
         positions = _infer_positions(trades)
         # ETH notional = 2500, BTC notional = 700
