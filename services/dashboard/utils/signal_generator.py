@@ -17,6 +17,7 @@ def _map_market_exchange(exchange: str) -> str:
     mapping = {
         "upbit": "upbit_spot",
         "bithumb": "bithumb_spot",
+        "kiwoom": "kiwoom_spot",
     }
     return mapping.get(exchange, exchange)
 
@@ -81,20 +82,31 @@ class _MockStrategy:
 class _MockMarketAdapter:
     """Mock market adapter for demo mode."""
 
+    _KIWOOM_SYMBOLS = [
+        "005930",
+        "000660",
+        "003670",
+        "042700",
+        "006400",
+    ]
+
     def __init__(self, exchange: str):
         self.exchange = exchange
-        self._symbols = [
-            "BTC/KRW",
-            "ETH/KRW",
-            "XRP/KRW",
-            "SOL/KRW",
-            "DOGE/KRW",
-            "ADA/KRW",
-            "AVAX/KRW",
-            "DOT/KRW",
-            "MATIC/KRW",
-            "LINK/KRW",
-        ]
+        if exchange == "kiwoom":
+            self._symbols = self._KIWOOM_SYMBOLS
+        else:
+            self._symbols = [
+                "BTC/KRW",
+                "ETH/KRW",
+                "XRP/KRW",
+                "SOL/KRW",
+                "DOGE/KRW",
+                "ADA/KRW",
+                "AVAX/KRW",
+                "DOT/KRW",
+                "MATIC/KRW",
+                "LINK/KRW",
+            ]
 
     def get_available_symbols(self) -> List[str]:
         return self._symbols
@@ -106,7 +118,17 @@ class _MockMarketAdapter:
         self, symbol: str, interval: str = "1d", limit: int = 100
     ) -> List[Dict[str, Any]]:
         """Generate mock OHLCV data."""
-        base_price = 50_000_000 if "BTC" in symbol else 1_000_000
+        if self.exchange == "kiwoom":
+            stock_prices = {
+                "005930": 71500,
+                "000660": 185000,
+                "003670": 280000,
+                "042700": 95000,
+                "006400": 350000,
+            }
+            base_price = stock_prices.get(symbol, 100000)
+        else:
+            base_price = 50_000_000 if "BTC" in symbol else 1_000_000
         ohlcv = []
 
         for idx in range(limit):

@@ -40,6 +40,7 @@ SIGNAL_PREVIEW_EXCHANGES: List[str] = [
     "bithumb",
     "binance",
     "binance_futures",
+    "kiwoom",
 ]
 
 

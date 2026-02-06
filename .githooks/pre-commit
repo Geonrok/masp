@@ -1,5 +1,29 @@
 #!/usr/bin/env sh
 set -e
 
+# === Quick secret scan (runs in <1s) ===
+STAGED_DIFF=$(git diff --cached --diff-filter=ACM -U0 2>/dev/null || true)
+if [ -n "$STAGED_DIFF" ]; then
+    # Check for common secret patterns in added lines
+    FOUND=""
+    echo "$STAGED_DIFF" | grep "^+" | grep -q "sk-[A-Za-z0-9]\{20,\}" 2>/dev/null && FOUND="OpenAI API key"
+    [ -z "$FOUND" ] && echo "$STAGED_DIFF" | grep "^+" | grep -q "AKIA[A-Z0-9]\{16\}" 2>/dev/null && FOUND="AWS key"
+    [ -z "$FOUND" ] && echo "$STAGED_DIFF" | grep "^+" | grep -q "BEGIN.*PRIVATE KEY" 2>/dev/null && FOUND="Private key"
+    [ -z "$FOUND" ] && echo "$STAGED_DIFF" | grep "^+" | grep -q "ghp_[A-Za-z0-9]\{36\}" 2>/dev/null && FOUND="GitHub token"
+
+    if [ -n "$FOUND" ]; then
+        echo "[pre-commit] BLOCKED: Potential $FOUND in staged changes"
+        echo "[pre-commit] Use environment variables instead."
+        exit 1
+    fi
+
+    # Check for sensitive files
+    SENSITIVE=$(git diff --cached --name-only | grep -iE '\.(env|pem|key)$|id_rsa|credentials|secret' 2>/dev/null || true)
+    if [ -n "$SENSITIVE" ]; then
+        echo "[pre-commit] BLOCKED: Sensitive file(s): $SENSITIVE"
+        exit 1
+    fi
+fi
+
 echo "[pre-commit] Enforcing MASP workflow: running review-code gate..."
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/precommit_guard.ps1
