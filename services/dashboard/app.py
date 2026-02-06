@@ -21,6 +21,7 @@ from services.dashboard.components.backtest_viewer import render_backtest_viewer
 from services.dashboard.components.exchange_control import render_exchange_controls
 from services.dashboard.components.exchange_status import ExchangeStatusPanel
 from services.dashboard.components.futures_mr_status import render_futures_mr_status
+from services.dashboard.components.kiwoom_status import render_kiwoom_status
 from services.dashboard.components.log_viewer import render_log_viewer
 
 # Phase 7E: Market Regime & Signal components
@@ -54,6 +55,7 @@ from services.dashboard.providers.alert_manager_provider import (
 from services.dashboard.providers.alert_provider import get_alert_store
 from services.dashboard.providers.backtest_provider import get_backtest_data
 from services.dashboard.providers.futures_mr_provider import get_futures_mr_status
+from services.dashboard.providers.kiwoom_provider import get_kiwoom_status
 from services.dashboard.providers.log_provider import get_log_provider
 from services.dashboard.providers.market_regime_provider import (
     get_daily_signal_summary,
@@ -238,7 +240,7 @@ with tabs[2]:
 # Tab 4: Monitoring - Logs, alerts, scheduler, strategy status
 # =============================================================================
 with tabs[3]:
-    monitoring_subtabs = st.tabs(["로그", "알림", "스케줄러", "선물 MR"])
+    monitoring_subtabs = st.tabs(["로그", "알림", "스케줄러", "선물 MR", "Kiwoom"])
 
     with monitoring_subtabs[0]:
         # Real logs from log files (or demo if unavailable)
@@ -255,6 +257,10 @@ with tabs[3]:
     with monitoring_subtabs[3]:
         # Binance Futures MR Strategy Status (paper trading monitor)
         render_futures_mr_status(status_provider=get_futures_mr_status)
+
+    with monitoring_subtabs[4]:
+        # Kiwoom Sector Rotation Strategy Status (paper trading monitor)
+        render_kiwoom_status(status_provider=get_kiwoom_status)
 
 # =============================================================================
 # Tab 5: Settings - Config, API keys, Telegram, Alerts, Exchange controls
