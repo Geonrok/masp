@@ -67,7 +67,7 @@
       "_comment": "Disabled 2026-02-05: Unvalidated, MR_ADAPTIVE selected"
     },
     "kiwoom_spot": {
-      "enabled": true,
+      "enabled": false,
       "strategy": "sector_rotation_m",
       "symbols": ["000660", "005930", "003670", "042700", "006400"],
       "position_size_krw": 100000,
@@ -79,7 +79,7 @@
         "timezone": "Asia/Seoul",
         "jitter": 0
       },
-      "_comment": "Monthly Sector Rotation - Rebalance at month end 15:20 KST (closing auction)"
+      "_comment": "Disabled 2026-02-07: Codex verification FAIL (P1=4, look-ahead bias + universe selection bias)"
     },
     "binance_futures_mr": {
       "enabled": true,
