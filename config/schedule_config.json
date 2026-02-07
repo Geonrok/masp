@@ -1,7 +1,7 @@
 {
   "exchanges": {
     "upbit": {
-      "enabled": true,
+      "enabled": false,
       "strategy": "Sept-v3-RSI50-Gate",
       "symbols": "ALL_KRW",
       "position_size_krw": 10000,
@@ -10,10 +10,11 @@
         "minute": 0,
         "timezone": "Asia/Seoul",
         "jitter": 30
-      }
+      },
+      "_comment": "Disabled 2026-02-08: Codex verification FAIL (P0=2, P1=5, CRITICAL=4, indicator mismatch + dead code)"
     },
     "bithumb": {
-      "enabled": true,
+      "enabled": false,
       "strategy": "Sept-v3-RSI50-Gate",
       "symbols": "ALL_KRW",
       "position_size_krw": 10000,
@@ -22,10 +23,11 @@
         "minute": 0,
         "timezone": "Asia/Seoul",
         "jitter": 30
-      }
+      },
+      "_comment": "Disabled 2026-02-08: Codex verification FAIL (P0=2, P1=5, CRITICAL=4, indicator mismatch + dead code)"
     },
     "binance_spot": {
-      "enabled": true,
+      "enabled": false,
       "strategy": "Sept-v3-RSI50-Gate",
       "symbols": "ALL_USDT",
       "position_size_usdt": 100,
@@ -34,7 +36,8 @@
         "minute": 0,
         "timezone": "UTC",
         "jitter": 30
-      }
+      },
+      "_comment": "Disabled 2026-02-08: Codex verification FAIL (P0=2, P1=5, CRITICAL=4, indicator mismatch + dead code)"
     },
     "binance_futures": {
       "enabled": false,
