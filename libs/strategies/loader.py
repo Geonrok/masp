@@ -49,6 +49,7 @@ from libs.strategies.sector_rotation_monthly import (
     SectorRotationTier2Strategy,
 )
 from libs.strategies.sept_v3_rsi50_gate import SeptV3Rsi50GateStrategy
+from libs.strategies.trend_momentum_gate import TrendMomentumGateStrategy
 from libs.strategies.tiger200_etf import (
     TIGER200StableStrategy,
     TIGER200Strategy,
@@ -85,6 +86,8 @@ STRATEGY_REGISTRY: dict[str, type[BaseStrategy]] = {
     "vix_sma10_all": VIXSMA10AllTiersStrategy,
     # Crypto Spot - Sept v3 RSI50 Gate (7-Signal OR Ensemble)
     "sept_v3_rsi50_gate": SeptV3Rsi50GateStrategy,
+    # Crypto Spot - Trend-Momentum-Gate (Cross-sectional Momentum + BTC Gate)
+    "trend_momentum_gate": TrendMomentumGateStrategy,
     # Sector Rotation Monthly (KOSPI Spot - Sharpe 1.5-3.78)
     "sector_rotation_m": SectorRotationMonthlyStrategy,
     "sector_rotation_m_tier1": SectorRotationTier1Strategy,
