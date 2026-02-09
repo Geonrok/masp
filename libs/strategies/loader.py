@@ -48,6 +48,7 @@ from libs.strategies.sector_rotation_monthly import (
     SectorRotationTier1Strategy,
     SectorRotationTier2Strategy,
 )
+from libs.strategies.ankle_buy_v2 import AnkleBuyV2Strategy
 from libs.strategies.sept_v3_rsi50_gate import SeptV3Rsi50GateStrategy
 from libs.strategies.trend_momentum_gate import TrendMomentumGateStrategy
 from libs.strategies.tiger200_etf import (
@@ -84,6 +85,8 @@ STRATEGY_REGISTRY: dict[str, type[BaseStrategy]] = {
     "vix_sma10_tier1": VIXSMA10Tier1Strategy,
     "vix_sma10_tier2": VIXSMA10Tier2Strategy,
     "vix_sma10_all": VIXSMA10AllTiersStrategy,
+    # Crypto Spot - Ankle Buy v2.0 (SMA breakout + BTC gate, Codex PASS)
+    "ankle_buy_v2": AnkleBuyV2Strategy,
     # Crypto Spot - Sept v3 RSI50 Gate (7-Signal OR Ensemble)
     "sept_v3_rsi50_gate": SeptV3Rsi50GateStrategy,
     # Crypto Spot - Trend-Momentum-Gate (Cross-sectional Momentum + BTC Gate)

@@ -173,6 +173,9 @@ class StrategyRunner:
             logger.info(
                 "[StrategyRunner] Injected %s market data into strategy", md_exchange
             )
+        # Exchange name 주입 (state isolation)
+        if hasattr(self.strategy, "set_exchange_name"):
+            self.strategy.set_exchange_name(exchange)
         else:
             logger.warning(
                 "[StrategyRunner] Strategy has no set_market_data(): %s",
@@ -622,19 +625,38 @@ class StrategyRunner:
                     "reason": f"Dust ({estimated_value:.2f} {self._quote_currency})",
                 }
 
+            # Partial sell support: use signal.strength (0..1) to determine sell qty
+            sell_strength = getattr(signal, "strength", 1.0)
+            if sell_strength is None:
+                sell_strength = 1.0
+            sell_strength = max(0.0, min(1.0, float(sell_strength)))
+            sell_units = balance * sell_strength
+            sell_value = sell_units * current_price
+
+            if sell_value < min_order:
+                logger.info(
+                    "[%s] Partial sell too small: %.2f %s < %.2f",
+                    symbol, sell_value, self._quote_currency, min_order,
+                )
+                return {
+                    "action": "SKIP",
+                    "reason": f"Partial sell too small ({sell_value:.2f} {self._quote_currency})",
+                }
+
             order = self.execution.place_order(
                 symbol,
                 "SELL",
                 order_type="MARKET",
-                units=balance,
+                units=sell_units,
             )
-            # Remove from stop loss tracker
-            if self._stop_loss_manager:
+            # Remove from stop loss tracker only on full sell
+            if sell_strength >= 0.999 and self._stop_loss_manager:
                 self._stop_loss_manager.close_position(symbol)
 
             # Telegram 알림 (best-effort)
+            sell_pct = f" ({sell_strength:.0%})" if sell_strength < 0.999 else ""
             self._send_trade_notification(
-                symbol, "SELL", balance, current_price, "FILLED"
+                symbol, f"SELL{sell_pct}", sell_units, current_price, "FILLED"
             )
             return {"action": "SELL", "order_id": order.order_id or order.symbol}
 

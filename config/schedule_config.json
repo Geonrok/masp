@@ -98,6 +98,45 @@
         "jitter": 60
       },
       "_comment": "Disabled 2026-02-09: Codex verification FAIL (P0=6, P1=9, RSI/BB mismatch + cache stale + futures routing + position sync)"
+    },
+    "upbit_ankle": {
+      "enabled": false,
+      "strategy": "ankle_buy_v2",
+      "symbols": "ALL_KRW",
+      "position_size_krw": 10000,
+      "schedule": {
+        "hours": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+        "minute": 5,
+        "timezone": "Asia/Seoul",
+        "jitter": 30
+      },
+      "_comment": "Ankle Buy v2.0 - Upbit KRW spot. Hourly check. Paper trading. Codex PASS 2026-02-09."
+    },
+    "bithumb_ankle": {
+      "enabled": false,
+      "strategy": "ankle_buy_v2",
+      "symbols": "ALL_KRW",
+      "position_size_krw": 10000,
+      "schedule": {
+        "hours": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+        "minute": 5,
+        "timezone": "Asia/Seoul",
+        "jitter": 30
+      },
+      "_comment": "Ankle Buy v2.0 - Bithumb KRW spot. Hourly check. Paper trading. Codex PASS 2026-02-09."
+    },
+    "binance_spot_ankle": {
+      "enabled": false,
+      "strategy": "ankle_buy_v2",
+      "symbols": "ALL_USDT",
+      "position_size_usdt": 10,
+      "schedule": {
+        "hours": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+        "minute": 5,
+        "timezone": "UTC",
+        "jitter": 30
+      },
+      "_comment": "Ankle Buy v2.0 - Binance USDT spot. Hourly check. Paper trading. Codex PASS 2026-02-09."
     }
   },
   "telegram": {
