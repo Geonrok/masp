@@ -485,7 +485,6 @@ def ADX_series(
     atr = ATR_series(h, l, c, period)
 
     # Smoothed +DI and -DI
-    1 / period
     smoothed_plus_dm = np.zeros(n)
     smoothed_minus_dm = np.zeros(n)
 

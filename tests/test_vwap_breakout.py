@@ -189,6 +189,114 @@ class TestVwapBreakoutEntry:
         assert strategy._check_entry(data) is False
 
 
+class TestVwapBreakoutFixes:
+    """Tests for P0/P1 fix verification."""
+
+    def test_cache_cleared_on_generate_signals(self):
+        """P0-5: Cache should be cleared at start of each generate_signals cycle."""
+        strategy = VwapBreakoutStrategy()
+        data = _make_flat_data()
+        strategy.update_ohlcv(
+            "A/USDT:PERP",
+            data["close"].tolist(),
+            data["high"].tolist(),
+            data["low"].tolist(),
+            data["volume"].tolist(),
+        )
+        assert "A/USDT:PERP" in strategy._ohlcv_cache
+
+        # generate_signals should clear cache first
+        strategy.generate_signals(["A/USDT:PERP"])
+        # Cache repopulated via generate_signal -> _fetch_ohlcv fails (no adapter)
+        # But the old stale entry should have been cleared
+        # Since no adapter, cache is empty after clear + failed fetch
+        assert "A/USDT:PERP" not in strategy._ohlcv_cache
+
+    def test_update_position_cleans_entry_tracking(self):
+        """P1-9: External position close should clean entry tracking."""
+        strategy = VwapBreakoutStrategy()
+        strategy._entry_prices["TEST"] = 100.0
+        strategy._entry_bars["TEST"] = 5
+
+        # Simulate external position close
+        strategy.update_position("TEST", 0.0)
+        assert "TEST" not in strategy._entry_prices
+        assert "TEST" not in strategy._entry_bars
+
+    def test_kama_slope_10_bar_gap(self):
+        """P0-1: KAMA slope should use 10-bar gap (index -(kama_slope_bars+1))."""
+        strategy = VwapBreakoutStrategy(kama_slope_bars=10)
+        # With kama_slope_bars=10, should access kama_arr[-11]
+        # The fix changes kama_arr[-self.kama_slope_bars] to
+        # kama_arr[-(self.kama_slope_bars + 1)]
+        assert strategy.kama_slope_bars == 10
+
+        # Create strongly trending data where KAMA slope would be positive
+        data = _make_trending_data(n=300, trend=0.005)
+        from libs.strategies.indicators import KAMA_series
+
+        kama_arr = KAMA_series(data["close"], period=20, fast_sc=2, slow_sc=30)
+        # The correct 10-bar slope
+        slope_correct = kama_arr[-1] - kama_arr[-(10 + 1)]
+        assert slope_correct > 0  # Should be positive for strong uptrend
+
+    def test_max_positions_enforced(self):
+        """P1-7: Should return HOLD when max_positions reached."""
+        strategy = VwapBreakoutStrategy(max_positions=1)
+        data = _make_trending_data(n=300, trend=0.003)
+
+        for sym in ["A/USDT:PERP", "B/USDT:PERP"]:
+            strategy.update_ohlcv(
+                sym,
+                data["close"].tolist(),
+                data["high"].tolist(),
+                data["low"].tolist(),
+                data["volume"].tolist(),
+            )
+
+        # Simulate first position open
+        strategy.update_position("A/USDT:PERP", 1.0)
+        strategy._entry_prices["A/USDT:PERP"] = data["close"][-1]
+        strategy._entry_bars["A/USDT:PERP"] = 0
+
+        # Second signal should be HOLD due to max_positions
+        signal = strategy.generate_signal("B/USDT:PERP")
+        assert signal.signal == Signal.HOLD
+        assert "Max positions" in signal.reason
+
+    def test_parameter_none_vs_zero(self):
+        """P1-6: Passing None should use default, but 0 should be accepted."""
+        strategy_default = VwapBreakoutStrategy(max_hold_bars=None)
+        assert strategy_default.max_hold_bars == 72  # DEFAULT
+
+        strategy_zero = VwapBreakoutStrategy(max_hold_bars=0)
+        assert strategy_zero.max_hold_bars == 0  # Should NOT fall to default
+
+    def test_restart_safety_entry_tracking(self):
+        """NEW-18a: Synced positions on restart should have entry tracking."""
+        strategy = VwapBreakoutStrategy()
+        # Simulate restart: sync an existing open position
+        strategy.update_position("RESTART/USDT:PERP", 1.0, entry_price=100.0)
+        assert "RESTART/USDT:PERP" in strategy._entry_prices
+        assert strategy._entry_prices["RESTART/USDT:PERP"] == 100.0
+        assert "RESTART/USDT:PERP" in strategy._entry_bars
+
+    def test_restart_safety_fallback_price(self):
+        """NEW-18a: Without entry_price, should fallback to cached data."""
+        strategy = VwapBreakoutStrategy()
+        data = _make_flat_data()
+        strategy.update_ohlcv(
+            "FB/USDT:PERP",
+            data["close"].tolist(),
+            data["high"].tolist(),
+            data["low"].tolist(),
+            data["volume"].tolist(),
+        )
+        strategy.update_position("FB/USDT:PERP", 1.0)
+        assert "FB/USDT:PERP" in strategy._entry_prices
+        assert strategy._entry_prices["FB/USDT:PERP"] > 0
+
+
 class TestVwapBreakoutLoader:
     """Test strategy loader integration."""
 

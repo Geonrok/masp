@@ -14,6 +14,10 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from scipy.stats import percentileofscore
 
+from libs.strategies.base import BaseStrategy
+from libs.strategies.base import Signal as BaseSignal
+from libs.strategies.base import TradeSignal
+
 try:
     import ta
 except ImportError:
@@ -142,19 +146,26 @@ class Signal:
         }
 
 
-class ATLASFuturesStrategy:
+class ATLASFuturesStrategy(BaseStrategy):
     """
     ATLAS-Futures P0-4 Squeeze-Surge strategy.
 
     Core idea: detect volatility squeeze and breakout surge.
     """
 
+    strategy_id: str = "atlas_futures_p04"
+    name: str = "P0-4 Squeeze-Surge"
+    version: str = "v2.6.2-r1"
+    description: str = "ATLAS-Futures volatility squeeze + surge strategy"
+
+    # Backward compat aliases
     STRATEGY_ID = "atlas_futures_p04"
     NAME = "P0-4 Squeeze-Surge"
     VERSION = "v2.6.2-r1"
     DESCRIPTION = "ATLAS-Futures volatility squeeze + surge strategy"
 
     def __init__(self, config: Optional[ATLASFuturesConfig] = None):
+        super().__init__(name="ATLAS-Futures")
         self.config = config or ATLASFuturesConfig()
         self.positions: Dict[str, Position] = {}
         self.last_signal: Optional[Signal] = None
@@ -163,7 +174,7 @@ class ATLASFuturesStrategy:
         self.daily_pnl: float = 0.0
         self.weekly_pnl: float = 0.0
         self.monthly_pnl: float = 0.0
-        self.peak_equity: float = 0.0
+        self.peak_equity: float = 100.0
         self.current_drawdown: float = 0.0
 
         self.track_b_pnl: float = 0.0
@@ -171,13 +182,128 @@ class ATLASFuturesStrategy:
         self.link_blocked: bool = False
 
         self._squeeze_counters: Dict[str, int] = {}
+        self._cumulative_pnl: float = 0.0  # never resets daily, for drawdown
+        self._generation: int = 0  # increments per generate_signals() cycle
+        self._last_gen: Dict[str, int] = {}  # per-symbol last processed generation
+
+        # Date tracking for auto-reset
+        self._last_reset_date = datetime.now().date()
+        self._last_reset_week = datetime.now().isocalendar()[1]
+        self._last_reset_month = datetime.now().month
+
+        # Market data adapter
+        self._market_data = None
 
         logger.info("[ATLAS] Initialized %s", self.VERSION)
+
+    def set_market_data(self, adapter) -> None:
+        """Set market data adapter for BaseStrategy generate_signals."""
+        self._market_data = adapter
+
+    def _auto_reset_risk_counters(self) -> None:
+        """Auto-reset daily/weekly/monthly PnL at date boundaries."""
+        now = datetime.now()
+        today = now.date()
+        if today != self._last_reset_date:
+            self.daily_pnl = 0.0
+            self._last_reset_date = today
+            logger.debug("[ATLAS] Daily PnL reset")
+        current_week = now.isocalendar()[1]
+        if current_week != self._last_reset_week:
+            self.weekly_pnl = 0.0
+            self._last_reset_week = current_week
+            logger.debug("[ATLAS] Weekly PnL reset")
+        if now.month != self._last_reset_month:
+            self.monthly_pnl = 0.0
+            self._last_reset_month = now.month
+            logger.debug("[ATLAS] Monthly PnL reset")
+
+    def check_gate(self) -> bool:
+        """BaseStrategy interface: gate check."""
+        risk_ok, _ = self.check_risk_limits()
+        return risk_ok
+
+    def generate_signals(self, symbols: List[str]) -> List[TradeSignal]:
+        """BaseStrategy interface: generate signals for multiple symbols."""
+        self._generation += 1  # new bar cycle
+        results: List[TradeSignal] = []
+        for symbol in symbols:
+            try:
+                # ATLAS requires DataFrame - if no market data, return HOLD
+                if self._market_data:
+                    ohlcv_list = self._market_data.get_ohlcv(
+                        symbol, interval="4h", limit=300
+                    )
+                    if ohlcv_list and len(ohlcv_list) > 0:
+                        df = pd.DataFrame(
+                            [
+                                {
+                                    "open": c.open,
+                                    "high": c.high,
+                                    "low": c.low,
+                                    "close": c.close,
+                                    "volume": c.volume,
+                                }
+                                for c in ohlcv_list
+                            ]
+                        )
+                        sig = self.generate_signal(symbol, df)
+                        results.append(self._convert_signal(sig))
+                        continue
+                results.append(
+                    TradeSignal(
+                        symbol=symbol,
+                        signal=BaseSignal.HOLD,
+                        price=0,
+                        timestamp=datetime.now(),
+                        reason="No data",
+                    )
+                )
+            except Exception as exc:
+                logger.error("[ATLAS] Error for %s: %s", symbol, exc)
+                results.append(
+                    TradeSignal(
+                        symbol=symbol,
+                        signal=BaseSignal.HOLD,
+                        price=0,
+                        timestamp=datetime.now(),
+                        reason=f"Error: {exc}",
+                    )
+                )
+        return results
+
+    def _convert_signal(self, sig: Signal) -> TradeSignal:
+        """Convert internal Signal to BaseStrategy TradeSignal."""
+        if sig.signal_type == SignalType.LONG:
+            base_signal = BaseSignal.BUY
+        elif sig.signal_type in (
+            SignalType.SHORT,
+            SignalType.EXIT_LONG,
+            SignalType.EXIT_SHORT,
+        ):
+            base_signal = BaseSignal.SELL
+        else:
+            base_signal = BaseSignal.HOLD
+        return TradeSignal(
+            symbol=sig.symbol,
+            signal=base_signal,
+            price=sig.price,
+            timestamp=sig.timestamp,
+            reason=sig.reason,
+        )
+
+    def update_position(self, symbol: str, quantity: float) -> None:
+        """Sync internal positions when changed externally."""
+        super().update_position(symbol, quantity)
+        if quantity <= 0 and symbol in self.positions:
+            del self.positions[symbol]
 
     def calculate_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """Compute technical indicators."""
         if ta is None:
-            raise ImportError("ta library required: pip install ta")
+            raise ImportError(
+                "ta library required for ATLAS-Futures: pip install ta"
+            )
 
         df = df.copy()
 
@@ -226,7 +352,12 @@ class ATLASFuturesStrategy:
         return df
 
     def _count_squeeze_bars(self, symbol: str, bbwp: float) -> int:
-        """Count consecutive squeeze bars."""
+        """Count consecutive squeeze bars (idempotent per generation)."""
+        gen_key = f"sq_{symbol}"
+        if self._last_gen.get(gen_key) == self._generation:
+            return self._squeeze_counters.get(symbol, 0)
+        self._last_gen[gen_key] = self._generation
+
         if bbwp < self.config.bbwp_threshold:
             self._squeeze_counters[symbol] = self._squeeze_counters.get(symbol, 0) + 1
         else:
@@ -444,9 +575,20 @@ class ATLASFuturesStrategy:
 
         return None
 
-    def generate_signal(self, symbol: str, data: pd.DataFrame) -> Signal:
+    def generate_signal(self, symbol: str, data: pd.DataFrame, **kwargs) -> Signal:
         """Generate signal for a symbol."""
         now = datetime.now()
+
+        # Increment generation if called directly (not via generate_signals)
+        gen_key = f"direct_{symbol}"
+        if self._last_gen.get(gen_key) != self._generation:
+            if self._generation == 0:
+                self._generation = 1
+            self._last_gen[gen_key] = self._generation
+
+        self._auto_reset_risk_counters()
+        self.check_link_concentration()
+        self.check_track_switch()
 
         data = self.calculate_indicators(data)
 
@@ -474,11 +616,11 @@ class ATLASFuturesStrategy:
             return signal
 
         if symbol in self.positions:
+            self._update_position(symbol, data.iloc[-1])
             exit_signal = self.check_exit_conditions(symbol, data)
             if exit_signal:
                 self.last_signal = exit_signal
                 return exit_signal
-            self._update_position(symbol, data.iloc[-1])
 
         if (
             len(self.positions) < self.config.max_positions
@@ -500,9 +642,22 @@ class ATLASFuturesStrategy:
         return signal
 
     def _update_position(self, symbol: str, latest: pd.Series) -> None:
-        """Update position state."""
+        """Update position state (idempotent per generation cycle)."""
         if symbol not in self.positions:
             return
+
+        # Per-generation dedup: only increment bars_held once per cycle
+        gen_key = f"pos_{symbol}"
+        if self._last_gen.get(gen_key) == self._generation:
+            # Already processed this generation — only update price tracking
+            pos = self.positions[symbol]
+            if pos.side == "LONG":
+                pos.highest_price = max(pos.highest_price, latest["high"])
+            else:
+                pos.lowest_price = min(pos.lowest_price, latest["low"])
+            pos.pnl_pct = self._calculate_pnl_pct(pos, latest["close"])
+            return
+        self._last_gen[gen_key] = self._generation
 
         pos = self.positions[symbol]
         pos.bars_held += 1
@@ -554,6 +709,20 @@ class ATLASFuturesStrategy:
         self.daily_pnl += pnl_pct
         self.weekly_pnl += pnl_pct
         self.monthly_pnl += pnl_pct
+        self._cumulative_pnl += pnl_pct
+
+        # Update track PnL for SSOT switch
+        if symbol in self.config.major_symbols:
+            self.track_b_pnl += pnl_pct
+        else:
+            self.track_c_pnl += pnl_pct
+
+        # Update drawdown guard (uses cumulative, not daily)
+        equity = 100.0 + self._cumulative_pnl
+        if equity > self.peak_equity:
+            self.peak_equity = equity
+        if self.peak_equity > 0:
+            self.current_drawdown = ((equity - self.peak_equity) / self.peak_equity) * 100
 
         if pnl_pct < 0:
             self.consecutive_losses += 1
@@ -602,5 +771,14 @@ class ATLASFuturesStrategy:
         self.positions.clear()
         self.consecutive_losses = 0
         self.daily_pnl = 0.0
+        self.weekly_pnl = 0.0
+        self.monthly_pnl = 0.0
+        self._cumulative_pnl = 0.0
+        self.peak_equity = 100.0
+        self.current_drawdown = 0.0
+        self.track_b_pnl = 0.0
+        self.track_c_pnl = 0.0
+        self.link_blocked = False
+        self.last_signal = None
         self._squeeze_counters.clear()
         logger.info("[ATLAS] Strategy reset")

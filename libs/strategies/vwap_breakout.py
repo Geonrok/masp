@@ -105,17 +105,17 @@ class VwapBreakoutStrategy(BaseStrategy):
     ):
         super().__init__(name="VWAP-Breakout")
 
-        self.donchian_period = donchian_period or self.DEFAULT_DONCHIAN_PERIOD
-        self.vwap_period = vwap_period or self.DEFAULT_VWAP_PERIOD
-        self.vwap_mult = vwap_mult or self.DEFAULT_VWAP_MULT
-        self.ema_fast = ema_fast or self.DEFAULT_EMA_FAST
-        self.ema_slow = ema_slow or self.DEFAULT_EMA_SLOW
-        self.kama_period = kama_period or self.DEFAULT_KAMA_PERIOD
-        self.kama_slope_bars = kama_slope_bars or self.DEFAULT_KAMA_SLOPE_BARS
-        self.atr_stop = atr_stop or self.DEFAULT_ATR_STOP
-        self.atr_target = atr_target or self.DEFAULT_ATR_TARGET
-        self.max_hold_bars = max_hold_bars or self.DEFAULT_MAX_HOLD_BARS
-        self.max_positions = max_positions or self.DEFAULT_MAX_POSITIONS
+        self.donchian_period = donchian_period if donchian_period is not None else self.DEFAULT_DONCHIAN_PERIOD
+        self.vwap_period = vwap_period if vwap_period is not None else self.DEFAULT_VWAP_PERIOD
+        self.vwap_mult = vwap_mult if vwap_mult is not None else self.DEFAULT_VWAP_MULT
+        self.ema_fast = ema_fast if ema_fast is not None else self.DEFAULT_EMA_FAST
+        self.ema_slow = ema_slow if ema_slow is not None else self.DEFAULT_EMA_SLOW
+        self.kama_period = kama_period if kama_period is not None else self.DEFAULT_KAMA_PERIOD
+        self.kama_slope_bars = kama_slope_bars if kama_slope_bars is not None else self.DEFAULT_KAMA_SLOPE_BARS
+        self.atr_stop = atr_stop if atr_stop is not None else self.DEFAULT_ATR_STOP
+        self.atr_target = atr_target if atr_target is not None else self.DEFAULT_ATR_TARGET
+        self.max_hold_bars = max_hold_bars if max_hold_bars is not None else self.DEFAULT_MAX_HOLD_BARS
+        self.max_positions = max_positions if max_positions is not None else self.DEFAULT_MAX_POSITIONS
 
         self._market_data = market_data_adapter
         self._ohlcv_cache: Dict[str, dict] = {}  # symbol -> {close, high, low, volume}
@@ -124,6 +124,7 @@ class VwapBreakoutStrategy(BaseStrategy):
         self._entry_prices: Dict[str, float] = {}
         self._entry_bars: Dict[str, int] = {}
         self._bar_counter: int = 0
+        self._last_cycle_ts: Optional[float] = None  # dedup guard for per-signal calls
 
         # Minimum bars needed for indicators
         self._min_bars = max(self.ema_slow, self.donchian_period, self.kama_period) + 50
@@ -174,6 +175,35 @@ class VwapBreakoutStrategy(BaseStrategy):
         except Exception as exc:
             logger.error("[VwapBreakout] OHLCV fetch failed for %s: %s", symbol, exc)
             return None
+
+    def clear_cache(self) -> None:
+        """Clear OHLCV cache. Call at start of each run cycle."""
+        self._ohlcv_cache.clear()
+
+    def update_position(
+        self, symbol: str, quantity: float, entry_price: float = 0.0
+    ) -> None:
+        """Sync internal tracking when position is changed externally.
+
+        On restart, call with quantity>0 and entry_price to restore exit tracking.
+        If entry_price is 0, uses cached close price as fallback.
+        """
+        super().update_position(symbol, quantity)
+        if quantity <= 0:
+            self._entry_prices.pop(symbol, None)
+            self._entry_bars.pop(symbol, None)
+        elif symbol not in self._entry_prices:
+            # Restart safety: populate entry tracking for synced positions
+            if entry_price > 0:
+                self._entry_prices[symbol] = entry_price
+            else:
+                # Fallback: use cached data if available
+                data = self._ohlcv_cache.get(symbol)
+                if data is not None and len(data["close"]) > 0:
+                    self._entry_prices[symbol] = float(data["close"][-1])
+                else:
+                    self._entry_prices[symbol] = 0.0  # will be updated on next data
+            self._entry_bars[symbol] = self._bar_counter
 
     def update_ohlcv(
         self, symbol: str, close: list, high: list, low: list, volume: list
@@ -231,7 +261,7 @@ class VwapBreakoutStrategy(BaseStrategy):
         kama_arr = KAMA_series(close, period=self.kama_period, fast_sc=2, slow_sc=30)
         if len(kama_arr) < self.kama_slope_bars + 1:
             return False
-        kama_slope = kama_arr[-1] - kama_arr[-self.kama_slope_bars]
+        kama_slope = kama_arr[-1] - kama_arr[-(self.kama_slope_bars + 1)]
         if kama_slope <= 0:
             return False
 
@@ -310,6 +340,18 @@ class VwapBreakoutStrategy(BaseStrategy):
             symbol: Trading pair (e.g., "BTC/USDT:PERP").
             gate_pass: Not used (no gate in this strategy).
         """
+        # Per-signal cycle dedup: if called directly (not via generate_signals),
+        # advance bar counter and clear cache once per wall-clock second
+        import time
+
+        now_ts = time.time()
+        if self._last_cycle_ts is None or (now_ts - self._last_cycle_ts) > 1.0:
+            if self._last_cycle_ts is not None:
+                # Not the first call ever, so this is a new cycle via generate_signal()
+                self.clear_cache()
+                self._bar_counter += 1
+            self._last_cycle_ts = now_ts
+
         # Get data
         data = self._ohlcv_cache.get(symbol)
         if data is None:
@@ -351,6 +393,16 @@ class VwapBreakoutStrategy(BaseStrategy):
             )
 
         # Check entry (if no position)
+        num_open = sum(1 for s in self._entry_prices if self.has_position(s))
+        if num_open >= self.max_positions:
+            return TradeSignal(
+                symbol=symbol,
+                signal=Signal.HOLD,
+                price=current_price,
+                timestamp=datetime.now(),
+                reason=f"Max positions ({self.max_positions}) reached",
+            )
+
         if self._check_entry(data):
             # Track entry
             self._entry_prices[symbol] = current_price
@@ -373,8 +425,12 @@ class VwapBreakoutStrategy(BaseStrategy):
         )
 
     def generate_signals(self, symbols: List[str]) -> List[TradeSignal]:
-        """Generate signals for multiple symbols."""
+        """Generate signals for multiple symbols. Call once per bar cycle."""
+        import time
+
+        self.clear_cache()
         self._bar_counter += 1
+        self._last_cycle_ts = time.time()  # prevent dedup in generate_signal
         signals: List[TradeSignal] = []
 
         for symbol in symbols:

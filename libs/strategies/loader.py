@@ -161,7 +161,7 @@ AVAILABLE_STRATEGIES.append(
         "config_class": "BinanceFuturesV6Config",
         "markets": ["futures"],
         "exchanges": ["binance_futures"],
-        "status": "backtest_pending",
+        "status": "phase_4_ready",
         "features": [
             "market_regime_detection",
             "multi_timeframe_analysis",

@@ -30,6 +30,9 @@ from typing import Any, Dict, List, Literal, Optional
 import numpy as np
 import pandas as pd
 
+from libs.strategies.base import BaseStrategy
+from libs.strategies.base import Signal as BaseSignal
+from libs.strategies.base import TradeSignal
 from libs.strategies.indicators import (
     ADX,
     ATR,
@@ -513,7 +516,7 @@ class QualityFilter:
         return results
 
 
-class BinanceFuturesV6Strategy:
+class BinanceFuturesV6Strategy(BaseStrategy):
     """
     Binance Futures Strategy v6.0 - AI Consensus Edition.
 
@@ -527,12 +530,20 @@ class BinanceFuturesV6Strategy:
     5. RiskManager - Regime-adaptive position sizing
     """
 
+    # BaseStrategy interface attributes
+    strategy_id: str = "binance_futures_v6"
+    name: str = "Binance Futures v6 - AI Consensus"
+    version: str = "6.0.0"
+    description: str = "Multi-AI consensus strategy for Binance USDT-M Futures"
+
+    # Backward-compatible uppercase aliases
     STRATEGY_ID = "binance_futures_v6"
     NAME = "Binance Futures v6 - AI Consensus"
     VERSION = "6.0.0"
     DESCRIPTION = "Multi-AI consensus strategy for Binance USDT-M Futures"
 
     def __init__(self, config: Optional[BinanceFuturesV6Config] = None):
+        super().__init__(name="BFv6-Consensus")
         self.config = config or BinanceFuturesV6Config()
 
         # Components
@@ -549,9 +560,14 @@ class BinanceFuturesV6Strategy:
         # Risk tracking
         self.daily_pnl: float = 0.0
         self.weekly_pnl: float = 0.0
-        self.peak_equity: float = 0.0
+        self._cumulative_pnl: float = 0.0  # never resets daily, for drawdown
+        self.peak_equity: float = 100.0
         self.current_drawdown: float = 0.0
         self.consecutive_losses: int = 0
+
+        # Auto-reset date tracking
+        self._last_reset_date = datetime.now().date()
+        self._last_reset_week = datetime.now().isocalendar()[1]
 
         # BTC data cache
         self._btc_price: float = 0.0
@@ -559,7 +575,105 @@ class BinanceFuturesV6Strategy:
         self._btc_52w_high: float = 0.0
         self._btc_change_24h: float = 0.0
 
+        # Market data adapter (for BaseStrategy generate_signals)
+        self._market_data = None
+
         logger.info("[BFv6] Initialized %s", self.VERSION)
+
+    # --- BaseStrategy interface ---
+
+    def set_market_data(self, adapter) -> None:
+        """Set market data adapter for BaseStrategy generate_signals."""
+        self._market_data = adapter
+
+    def check_gate(self) -> bool:
+        """Gate check (always True — BTC gate is checked per-signal)."""
+        return True
+
+    def _auto_reset_risk_counters(self) -> None:
+        """Auto-reset daily/weekly PnL on date change."""
+        now = datetime.now()
+        today = now.date()
+        current_week = now.isocalendar()[1]
+
+        if today != self._last_reset_date:
+            self.daily_pnl = 0.0
+            self._last_reset_date = today
+            logger.debug("[BFv6] Daily PnL auto-reset")
+
+        if current_week != self._last_reset_week:
+            self.weekly_pnl = 0.0
+            self._last_reset_week = current_week
+            logger.debug("[BFv6] Weekly PnL auto-reset")
+
+    def generate_signals(self, symbols: List[str]) -> List[TradeSignal]:
+        """BaseStrategy interface: generate signals for multiple symbols."""
+        self._auto_reset_risk_counters()
+        results: List[TradeSignal] = []
+
+        for symbol in symbols:
+            try:
+                # Try to get data from market_data adapter
+                df_4h = None
+                df_1d = None
+                if self._market_data:
+                    try:
+                        ohlcv_4h = self._market_data.get_ohlcv(symbol, interval="4h", limit=300)
+                        ohlcv_1d = self._market_data.get_ohlcv(symbol, interval="1d", limit=365)
+                        if ohlcv_4h:
+                            df_4h = pd.DataFrame([vars(c) for c in ohlcv_4h])
+                        if ohlcv_1d:
+                            df_1d = pd.DataFrame([vars(c) for c in ohlcv_1d])
+                    except Exception as exc:
+                        logger.debug("[BFv6] Data fetch failed for %s: %s", symbol, exc)
+
+                if df_4h is None or df_1d is None or len(df_4h) < 50 or len(df_1d) < 200:
+                    results.append(TradeSignal(
+                        symbol=symbol,
+                        signal=BaseSignal.HOLD,
+                        price=0,
+                        timestamp=datetime.now(),
+                        reason="Data unavailable",
+                    ))
+                    continue
+
+                sig = self.generate_signal(symbol, df_4h, df_1d)
+                results.append(self._convert_signal(sig))
+
+            except Exception as exc:
+                logger.error("[BFv6] Error for %s: %s", symbol, exc)
+                results.append(TradeSignal(
+                    symbol=symbol,
+                    signal=BaseSignal.HOLD,
+                    price=0,
+                    timestamp=datetime.now(),
+                    reason=f"Error: {exc}",
+                ))
+
+        return results
+
+    def _convert_signal(self, sig: "Signal") -> TradeSignal:
+        """Convert internal Signal to BaseStrategy TradeSignal."""
+        mapping = {
+            SignalType.LONG: BaseSignal.BUY,
+            SignalType.SHORT: BaseSignal.SELL,
+            SignalType.EXIT_LONG: BaseSignal.SELL,
+            SignalType.EXIT_SHORT: BaseSignal.BUY,
+            SignalType.HOLD: BaseSignal.HOLD,
+        }
+        return TradeSignal(
+            symbol=sig.symbol,
+            signal=mapping.get(sig.signal_type, BaseSignal.HOLD),
+            price=sig.price,
+            timestamp=sig.timestamp,
+            reason=sig.reason,
+        )
+
+    def update_position(self, symbol: str, quantity: float) -> None:
+        """Sync position from external source (BaseStrategy interface)."""
+        super().update_position(symbol, quantity)
+        if quantity <= 0 and symbol in self.positions:
+            del self.positions[symbol]
 
     def update_btc_data(
         self, price: float, ema_200: float, high_52w: float, change_24h: float
@@ -680,7 +794,19 @@ class BinanceFuturesV6Strategy:
         7. Position sizing
         """
         now = datetime.now()
+        self._auto_reset_risk_counters()
         filters_passed = {}
+
+        # DataFrame validation
+        if df_4h is None or df_1d is None or len(df_4h) == 0 or len(df_1d) == 0:
+            return Signal(
+                signal_type=SignalType.HOLD,
+                symbol=symbol,
+                price=0,
+                reason="Data unavailable",
+                timestamp=now,
+                regime=self.current_regime,
+            )
 
         # === 1. Check Existing Position (BEFORE risk limits - always allow exits) ===
         if symbol in self.positions:
@@ -957,9 +1083,27 @@ class BinanceFuturesV6Strategy:
                 * pos.leverage
             )
 
-    def open_position(self, symbol: str, signal: Signal) -> None:
-        """Open a new position."""
+    def open_position(
+        self, symbol: str, signal: Signal, account_value: float = 0.0
+    ) -> None:
+        """Open a new position.
+
+        Args:
+            account_value: Actual account value in USDT. Required for correct
+                leverage calculation. Falls back to leverage_default if 0.
+        """
         side = "LONG" if signal.signal_type == SignalType.LONG else "SHORT"
+
+        # Use calculated leverage from position sizing
+        calc_leverage = self.config.leverage_default
+        if signal.position_size and account_value > 0:
+            implied = signal.position_size / account_value
+            if implied < 1:
+                calc_leverage = 1  # Sub-1x means no leverage needed
+            elif implied <= self.config.leverage_max:
+                calc_leverage = int(round(implied))
+            else:
+                calc_leverage = self.config.leverage_max
 
         self.positions[symbol] = Position(
             symbol=symbol,
@@ -967,7 +1111,7 @@ class BinanceFuturesV6Strategy:
             entry_price=signal.price,
             entry_time=signal.timestamp,
             size=signal.position_size or (self.config.position_size_pct / 100.0),
-            leverage=self.config.leverage_default,
+            leverage=calc_leverage,
             stop_loss=signal.stop_loss or signal.price,
             regime_at_entry=self.current_regime,
             highest_price=signal.price,
@@ -1005,11 +1149,19 @@ class BinanceFuturesV6Strategy:
         # Update risk tracking
         self.daily_pnl += pnl_pct
         self.weekly_pnl += pnl_pct
+        self._cumulative_pnl += pnl_pct
 
         if pnl_pct < 0:
             self.consecutive_losses += 1
         else:
             self.consecutive_losses = 0
+
+        # Update drawdown guard (uses cumulative, not daily)
+        equity = 100.0 + self._cumulative_pnl
+        if equity > self.peak_equity:
+            self.peak_equity = equity
+        if self.peak_equity > 0:
+            self.current_drawdown = ((equity - self.peak_equity) / self.peak_equity) * 100
 
         del self.positions[symbol]
 

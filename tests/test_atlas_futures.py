@@ -5,6 +5,7 @@ ATLAS-Futures Strategy Tests.
 from __future__ import annotations
 
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -194,3 +195,124 @@ def test_link_concentration_blocking(strategy):
     strategy.check_link_concentration()
 
     assert strategy.link_blocked is True
+
+
+# --- P0/P1 Fix Verification Tests ---
+
+
+def test_inherits_base_strategy(strategy):
+    """P0-6: Should inherit from BaseStrategy."""
+    from libs.strategies.base import BaseStrategy
+
+    assert isinstance(strategy, BaseStrategy)
+    assert strategy.strategy_id == "atlas_futures_p04"
+
+
+def test_generate_signals_interface(strategy):
+    """P0-6: BaseStrategy generate_signals() should work."""
+    # Without market data adapter, should return HOLD for all
+    results = strategy.generate_signals(["BTCUSDT", "ETHUSDT"])
+    assert len(results) == 2
+    from libs.strategies.base import Signal as BaseSignal
+
+    assert all(r.signal == BaseSignal.HOLD for r in results)
+
+
+def test_risk_auto_reset_daily(strategy):
+    """P0-8: daily_pnl should auto-reset on new day."""
+    from datetime import date, timedelta
+
+    strategy.daily_pnl = -3.0
+    strategy._last_reset_date = date.today() - timedelta(days=1)
+    strategy._auto_reset_risk_counters()
+    assert strategy.daily_pnl == 0.0
+
+
+def test_chandelier_uses_current_bar(strategy, sample_ohlcv):
+    """P1-3: _update_position should run before exit check."""
+    from libs.strategies.atlas_futures import Position
+
+    pos = Position(
+        symbol="BTCUSDT",
+        side="LONG",
+        entry_price=50000.0,
+        entry_time=datetime.now(),
+        size=0.1,
+        leverage=3,
+        highest_price=50000.0,
+    )
+    strategy.positions["BTCUSDT"] = pos
+
+    # After generate_signal, highest_price should include current bar's high
+    signal = strategy.generate_signal("BTCUSDT", sample_ohlcv)
+    if "BTCUSDT" in strategy.positions:
+        p = strategy.positions["BTCUSDT"]
+        assert p.highest_price >= sample_ohlcv.iloc[-1]["high"] or p.bars_held >= 1
+
+
+def test_track_pnl_updated_on_close(strategy):
+    """P1-10: track_b/c_pnl should update on close_position."""
+    from libs.strategies.atlas_futures import Position, Signal, SignalType
+
+    strategy.positions["BTCUSDT"] = Position(
+        symbol="BTCUSDT",
+        side="LONG",
+        entry_price=50000.0,
+        entry_time=datetime.now(),
+        size=0.1,
+        leverage=3,
+    )
+
+    exit_signal = Signal(
+        signal_type=SignalType.EXIT_LONG,
+        symbol="BTCUSDT",
+        price=51000.0,
+        reason="Test exit",
+        timestamp=datetime.now(),
+    )
+
+    strategy.close_position("BTCUSDT", exit_signal)
+    # BTCUSDT is in major_symbols -> track_b_pnl should be updated
+    assert strategy.track_b_pnl != 0.0
+
+
+def test_drawdown_guard_updated(strategy):
+    """NEW-3: peak_equity and current_drawdown should update on close."""
+    from libs.strategies.atlas_futures import Position, Signal, SignalType
+
+    strategy.positions["ETHUSDT"] = Position(
+        symbol="ETHUSDT",
+        side="LONG",
+        entry_price=3000.0,
+        entry_time=datetime.now(),
+        size=1.0,
+        leverage=3,
+    )
+
+    # Close at a loss
+    exit_signal = Signal(
+        signal_type=SignalType.EXIT_LONG,
+        symbol="ETHUSDT",
+        price=2900.0,
+        reason="Stop",
+        timestamp=datetime.now(),
+    )
+
+    strategy.close_position("ETHUSDT", exit_signal)
+    assert strategy.current_drawdown < 0  # Should be negative after loss
+
+
+def test_update_position_cleans_internal(strategy):
+    """BaseStrategy update_position should sync internal positions."""
+    from libs.strategies.atlas_futures import Position
+
+    strategy.positions["BTCUSDT"] = Position(
+        symbol="BTCUSDT",
+        side="LONG",
+        entry_price=50000.0,
+        entry_time=datetime.now(),
+        size=0.1,
+        leverage=3,
+    )
+    strategy.update_position("BTCUSDT", 0.0)
+    assert "BTCUSDT" not in strategy.positions
