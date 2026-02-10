@@ -460,7 +460,7 @@ class AnkleBuyV2Strategy(BaseStrategy):
                     signal=Signal.SELL,
                     price=current_price,
                     timestamp=now,
-                    reason=f"SMA exit: price < open AND <= upper SMA",
+                    reason="SMA exit: price < open AND <= upper SMA",
                     strength=1.0,
                 )
 
