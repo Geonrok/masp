@@ -661,9 +661,7 @@ class MultiExchangeScheduler:
                 close_tz = cfg.get("daily_close_timezone", "Asia/Seoul")
                 self._scheduler.add_job(
                     monitor._on_daily_close,
-                    CronTrigger(
-                        hour=close_hour, minute=0, second=2, timezone=close_tz
-                    ),
+                    CronTrigger(hour=close_hour, minute=0, second=2, timezone=close_tz),
                     id=f"{name}_daily_entry",
                     max_instances=1,
                     coalesce=True,

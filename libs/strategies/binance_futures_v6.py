@@ -618,8 +618,12 @@ class BinanceFuturesV6Strategy(BaseStrategy):
                 df_1d = None
                 if self._market_data:
                     try:
-                        ohlcv_4h = self._market_data.get_ohlcv(symbol, interval="4h", limit=300)
-                        ohlcv_1d = self._market_data.get_ohlcv(symbol, interval="1d", limit=365)
+                        ohlcv_4h = self._market_data.get_ohlcv(
+                            symbol, interval="4h", limit=300
+                        )
+                        ohlcv_1d = self._market_data.get_ohlcv(
+                            symbol, interval="1d", limit=365
+                        )
                         if ohlcv_4h:
                             df_4h = pd.DataFrame([vars(c) for c in ohlcv_4h])
                         if ohlcv_1d:
@@ -627,14 +631,21 @@ class BinanceFuturesV6Strategy(BaseStrategy):
                     except Exception as exc:
                         logger.debug("[BFv6] Data fetch failed for %s: %s", symbol, exc)
 
-                if df_4h is None or df_1d is None or len(df_4h) < 50 or len(df_1d) < 200:
-                    results.append(TradeSignal(
-                        symbol=symbol,
-                        signal=BaseSignal.HOLD,
-                        price=0,
-                        timestamp=datetime.now(),
-                        reason="Data unavailable",
-                    ))
+                if (
+                    df_4h is None
+                    or df_1d is None
+                    or len(df_4h) < 50
+                    or len(df_1d) < 200
+                ):
+                    results.append(
+                        TradeSignal(
+                            symbol=symbol,
+                            signal=BaseSignal.HOLD,
+                            price=0,
+                            timestamp=datetime.now(),
+                            reason="Data unavailable",
+                        )
+                    )
                     continue
 
                 sig = self.generate_signal(symbol, df_4h, df_1d)
@@ -642,13 +653,15 @@ class BinanceFuturesV6Strategy(BaseStrategy):
 
             except Exception as exc:
                 logger.error("[BFv6] Error for %s: %s", symbol, exc)
-                results.append(TradeSignal(
-                    symbol=symbol,
-                    signal=BaseSignal.HOLD,
-                    price=0,
-                    timestamp=datetime.now(),
-                    reason=f"Error: {exc}",
-                ))
+                results.append(
+                    TradeSignal(
+                        symbol=symbol,
+                        signal=BaseSignal.HOLD,
+                        price=0,
+                        timestamp=datetime.now(),
+                        reason=f"Error: {exc}",
+                    )
+                )
 
         return results
 
@@ -1161,7 +1174,9 @@ class BinanceFuturesV6Strategy(BaseStrategy):
         if equity > self.peak_equity:
             self.peak_equity = equity
         if self.peak_equity > 0:
-            self.current_drawdown = ((equity - self.peak_equity) / self.peak_equity) * 100
+            self.current_drawdown = (
+                (equity - self.peak_equity) / self.peak_equity
+            ) * 100
 
         del self.positions[symbol]
 

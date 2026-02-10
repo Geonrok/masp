@@ -295,7 +295,9 @@ class TrendMomentumGateStrategy(BaseStrategy):
                 for symbol in symbols:
                     result[symbol] = TradeSignal(
                         symbol=symbol,
-                        signal=Signal.SELL if self.has_position(symbol) else Signal.HOLD,
+                        signal=(
+                            Signal.SELL if self.has_position(symbol) else Signal.HOLD
+                        ),
                         price=0,
                         timestamp=now,
                         reason="Drawdown cooldown",
@@ -406,9 +408,7 @@ class TrendMomentumGateStrategy(BaseStrategy):
     # Public interface (StrategyRunner compatible)
     # ----------------------------------------------------------------
 
-    def generate_signal(
-        self, symbol: str, gate_pass: bool = True
-    ) -> TradeSignal:
+    def generate_signal(self, symbol: str, gate_pass: bool = True) -> TradeSignal:
         """
         Generate signal for a single symbol (StrategyRunner interface).
 
@@ -425,9 +425,7 @@ class TrendMomentumGateStrategy(BaseStrategy):
 
         # Cache miss or expired → recompute all signals
         symbols = self._all_symbols if self._all_symbols else [symbol]
-        self._signals_cache = self._compute_cross_sectional_signals(
-            symbols, gate_pass
-        )
+        self._signals_cache = self._compute_cross_sectional_signals(symbols, gate_pass)
         self._cache_time = now
 
         return self._signals_cache.get(

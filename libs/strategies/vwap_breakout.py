@@ -105,17 +105,35 @@ class VwapBreakoutStrategy(BaseStrategy):
     ):
         super().__init__(name="VWAP-Breakout")
 
-        self.donchian_period = donchian_period if donchian_period is not None else self.DEFAULT_DONCHIAN_PERIOD
-        self.vwap_period = vwap_period if vwap_period is not None else self.DEFAULT_VWAP_PERIOD
+        self.donchian_period = (
+            donchian_period
+            if donchian_period is not None
+            else self.DEFAULT_DONCHIAN_PERIOD
+        )
+        self.vwap_period = (
+            vwap_period if vwap_period is not None else self.DEFAULT_VWAP_PERIOD
+        )
         self.vwap_mult = vwap_mult if vwap_mult is not None else self.DEFAULT_VWAP_MULT
         self.ema_fast = ema_fast if ema_fast is not None else self.DEFAULT_EMA_FAST
         self.ema_slow = ema_slow if ema_slow is not None else self.DEFAULT_EMA_SLOW
-        self.kama_period = kama_period if kama_period is not None else self.DEFAULT_KAMA_PERIOD
-        self.kama_slope_bars = kama_slope_bars if kama_slope_bars is not None else self.DEFAULT_KAMA_SLOPE_BARS
+        self.kama_period = (
+            kama_period if kama_period is not None else self.DEFAULT_KAMA_PERIOD
+        )
+        self.kama_slope_bars = (
+            kama_slope_bars
+            if kama_slope_bars is not None
+            else self.DEFAULT_KAMA_SLOPE_BARS
+        )
         self.atr_stop = atr_stop if atr_stop is not None else self.DEFAULT_ATR_STOP
-        self.atr_target = atr_target if atr_target is not None else self.DEFAULT_ATR_TARGET
-        self.max_hold_bars = max_hold_bars if max_hold_bars is not None else self.DEFAULT_MAX_HOLD_BARS
-        self.max_positions = max_positions if max_positions is not None else self.DEFAULT_MAX_POSITIONS
+        self.atr_target = (
+            atr_target if atr_target is not None else self.DEFAULT_ATR_TARGET
+        )
+        self.max_hold_bars = (
+            max_hold_bars if max_hold_bars is not None else self.DEFAULT_MAX_HOLD_BARS
+        )
+        self.max_positions = (
+            max_positions if max_positions is not None else self.DEFAULT_MAX_POSITIONS
+        )
 
         self._market_data = market_data_adapter
         self._ohlcv_cache: Dict[str, dict] = {}  # symbol -> {close, high, low, volume}

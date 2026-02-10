@@ -657,7 +657,10 @@ class StrategyRunner:
             if sell_value < min_order:
                 logger.info(
                     "[%s] Partial sell too small: %.2f %s < %.2f",
-                    symbol, sell_value, self._quote_currency, min_order,
+                    symbol,
+                    sell_value,
+                    self._quote_currency,
+                    min_order,
                 )
                 return {
                     "action": "SKIP",

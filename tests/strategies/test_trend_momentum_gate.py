@@ -12,8 +12,8 @@ Tests cover:
     - generate_signal / generate_signals interface
 """
 
-from datetime import datetime, timedelta
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import List, Optional
 from unittest.mock import MagicMock
 
@@ -22,7 +22,6 @@ import pytest
 
 from libs.strategies.base import Signal, TradeSignal
 from libs.strategies.trend_momentum_gate import TrendMomentumGateStrategy
-
 
 # ── Helpers ──────────────────────────────────────────────────────────
 
@@ -310,9 +309,7 @@ class TestDrawdownStop:
         data["COIN_A"] = make_ohlcv([100 + i * 5 for i in range(40)], [100000] * 40)
         adapter = make_adapter(data)
 
-        strategy = TrendMomentumGateStrategy(
-            top_n=5, market_data_adapter=adapter
-        )
+        strategy = TrendMomentumGateStrategy(top_n=5, market_data_adapter=adapter)
         strategy.update_portfolio_value(10000)
         strategy.update_portfolio_value(7000)  # -30% → cooldown
 
@@ -354,9 +351,7 @@ class TestSignalCache:
             )
         adapter = make_adapter(data)
 
-        strategy = TrendMomentumGateStrategy(
-            top_n=2, market_data_adapter=adapter
-        )
+        strategy = TrendMomentumGateStrategy(top_n=2, market_data_adapter=adapter)
         strategy.set_all_symbols(["COIN_0", "COIN_1", "COIN_2"])
 
         # First call triggers full computation
@@ -372,9 +367,7 @@ class TestSignalCache:
         data["COIN_A"] = make_ohlcv([100 + i * 3 for i in range(40)], [100000] * 40)
         adapter = make_adapter(data)
 
-        strategy = TrendMomentumGateStrategy(
-            top_n=5, market_data_adapter=adapter
-        )
+        strategy = TrendMomentumGateStrategy(top_n=5, market_data_adapter=adapter)
         strategy.set_all_symbols(["COIN_A"])
 
         s1 = strategy.generate_signal("COIN_A", gate_pass=True)
@@ -435,9 +428,7 @@ class TestIntegration:
             )
         adapter = make_adapter(data)
 
-        strategy = TrendMomentumGateStrategy(
-            top_n=2, market_data_adapter=adapter
-        )
+        strategy = TrendMomentumGateStrategy(top_n=2, market_data_adapter=adapter)
         symbols = ["C0", "C1", "C2"]
 
         # generate_signals (direct)
@@ -445,9 +436,7 @@ class TestIntegration:
         batch_results = {s.symbol: s.signal for s in batch_signals}
 
         # generate_signal (per-symbol with cache)
-        strategy2 = TrendMomentumGateStrategy(
-            top_n=2, market_data_adapter=adapter
-        )
+        strategy2 = TrendMomentumGateStrategy(top_n=2, market_data_adapter=adapter)
         strategy2.set_all_symbols(symbols)
         single_results = {}
         for sym in symbols:
@@ -462,9 +451,7 @@ class TestIntegration:
         data["C0"] = make_ohlcv([100 + i * 2 for i in range(40)], [100000] * 40)
         adapter = make_adapter(data)
 
-        strategy = TrendMomentumGateStrategy(
-            top_n=5, market_data_adapter=adapter
-        )
+        strategy = TrendMomentumGateStrategy(top_n=5, market_data_adapter=adapter)
         strategy.update_position("C0", 100)  # Has position
 
         signals = strategy.generate_signals(["C0"])

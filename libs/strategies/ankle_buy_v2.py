@@ -79,7 +79,10 @@ class AnkleBuyV2Strategy(BaseStrategy):
 
         logger.info(
             "[AnkleBuyV2] Initialized v%s | SMA(%d,%d) BTC Gate SMA(%d)",
-            self.version, SMA_SHORT, SMA_LONG, BTC_GATE_SMA,
+            self.version,
+            SMA_SHORT,
+            SMA_LONG,
+            BTC_GATE_SMA,
         )
 
     def set_market_data(self, adapter) -> None:
@@ -108,7 +111,9 @@ class AnkleBuyV2Strategy(BaseStrategy):
                 for sym, info in data.items():
                     info["tp_sold"] = set(info.get("tp_sold", []))
                     self._pos_info[sym] = info
-                logger.info("[AnkleBuyV2] Loaded state: %d positions", len(self._pos_info))
+                logger.info(
+                    "[AnkleBuyV2] Loaded state: %d positions", len(self._pos_info)
+                )
             except Exception as exc:
                 logger.warning("[AnkleBuyV2] State load failed: %s", exc)
 
@@ -144,7 +149,9 @@ class AnkleBuyV2Strategy(BaseStrategy):
         if not self._market_data:
             return None
         try:
-            ohlcv_list = self._market_data.get_ohlcv(symbol, interval="1d", limit=MIN_BARS + 20)
+            ohlcv_list = self._market_data.get_ohlcv(
+                symbol, interval="1d", limit=MIN_BARS + 20
+            )
             if not ohlcv_list or len(ohlcv_list) < MIN_BARS:
                 return None
             return {
@@ -192,12 +199,14 @@ class AnkleBuyV2Strategy(BaseStrategy):
         close = btc["close"]
         # t-1 values (yesterday)
         prev_close = float(close[-2])
-        prev_sma50 = float(np.mean(close[-(BTC_GATE_SMA + 1):-1]))
+        prev_sma50 = float(np.mean(close[-(BTC_GATE_SMA + 1) : -1]))
         self._gate_status = prev_close > prev_sma50
 
         logger.info(
             "[AnkleBuyV2] BTC Gate: close[t-1]=%.2f, SMA50[t-1]=%.2f → %s",
-            prev_close, prev_sma50, "ON" if self._gate_status else "OFF",
+            prev_close,
+            prev_sma50,
+            "ON" if self._gate_status else "OFF",
         )
         return self._gate_status
 
@@ -221,7 +230,9 @@ class AnkleBuyV2Strategy(BaseStrategy):
 
         logger.debug(
             "[AnkleBuyV2] BTC Gate(RT): price=%.2f, SMA50=%.2f → %s",
-            btc_price, sma50_today, "ON" if result else "OFF",
+            btc_price,
+            sma50_today,
+            "ON" if result else "OFF",
         )
         return result
 
@@ -262,8 +273,8 @@ class AnkleBuyV2Strategy(BaseStrategy):
             return False
 
         # SMA on open prices (t-1)
-        sma_short = float(np.mean(opens[-(SMA_SHORT + 1):-1]))
-        sma_long = float(np.mean(opens[-(SMA_LONG + 1):-1]))
+        sma_short = float(np.mean(opens[-(SMA_SHORT + 1) : -1]))
+        sma_long = float(np.mean(opens[-(SMA_LONG + 1) : -1]))
 
         # Breakout: open < SMA < close
         short_break = prev_open < sma_short < prev_close
@@ -372,15 +383,21 @@ class AnkleBuyV2Strategy(BaseStrategy):
         # Skip BTC itself (we don't trade the gate asset)
         if symbol == self._btc_symbol:
             return TradeSignal(
-                symbol=symbol, signal=Signal.HOLD, price=0,
-                timestamp=now, reason="Gate asset (BTC)",
+                symbol=symbol,
+                signal=Signal.HOLD,
+                price=0,
+                timestamp=now,
+                reason="Gate asset (BTC)",
             )
 
         data = self._get_ohlcv(symbol)
         if data is None:
             return TradeSignal(
-                symbol=symbol, signal=Signal.HOLD, price=0,
-                timestamp=now, reason="Data unavailable",
+                symbol=symbol,
+                signal=Signal.HOLD,
+                price=0,
+                timestamp=now,
+                reason="Data unavailable",
             )
 
         current_price = float(data["close"][-1])
@@ -392,12 +409,17 @@ class AnkleBuyV2Strategy(BaseStrategy):
 
             # Priority 1: BTC Gate OFF → full liquidation
             # Use realtime gate for exit (more responsive), fallback to t-1 gate
-            effective_gate = gate_pass_realtime if gate_pass_realtime is not None else gate_pass
+            effective_gate = (
+                gate_pass_realtime if gate_pass_realtime is not None else gate_pass
+            )
             if effective_gate is False:
                 self._cleanup_position(symbol)
                 return TradeSignal(
-                    symbol=symbol, signal=Signal.SELL, price=current_price,
-                    timestamp=now, reason="BTC Gate OFF → liquidate",
+                    symbol=symbol,
+                    signal=Signal.SELL,
+                    price=current_price,
+                    timestamp=now,
+                    reason="BTC Gate OFF → liquidate",
                     strength=1.0,
                 )
 
@@ -406,7 +428,9 @@ class AnkleBuyV2Strategy(BaseStrategy):
             if stop > 0 and current_price <= stop:
                 self._cleanup_position(symbol)
                 return TradeSignal(
-                    symbol=symbol, signal=Signal.SELL, price=current_price,
+                    symbol=symbol,
+                    signal=Signal.SELL,
+                    price=current_price,
                     timestamp=now,
                     reason=f"Stop loss hit: {current_price:.4f} <= {stop:.4f}",
                     strength=1.0,
@@ -420,8 +444,11 @@ class AnkleBuyV2Strategy(BaseStrategy):
                 if remaining_after < 1e-10:
                     self._cleanup_position(symbol)
                 return TradeSignal(
-                    symbol=symbol, signal=Signal.SELL, price=current_price,
-                    timestamp=now, reason=tp_reason,
+                    symbol=symbol,
+                    signal=Signal.SELL,
+                    price=current_price,
+                    timestamp=now,
+                    reason=tp_reason,
                     strength=tp_fraction,
                 )
 
@@ -429,7 +456,9 @@ class AnkleBuyV2Strategy(BaseStrategy):
             if self._check_sma_exit(data):
                 self._cleanup_position(symbol)
                 return TradeSignal(
-                    symbol=symbol, signal=Signal.SELL, price=current_price,
+                    symbol=symbol,
+                    signal=Signal.SELL,
+                    price=current_price,
                     timestamp=now,
                     reason=f"SMA exit: price < open AND <= upper SMA",
                     strength=1.0,
@@ -437,16 +466,22 @@ class AnkleBuyV2Strategy(BaseStrategy):
 
             # Hold position
             return TradeSignal(
-                symbol=symbol, signal=Signal.HOLD, price=current_price,
-                timestamp=now, reason="Position held",
+                symbol=symbol,
+                signal=Signal.HOLD,
+                price=current_price,
+                timestamp=now,
+                reason="Position held",
             )
 
         # --- ENTRY LOGIC (no position) ---
         # Gate OFF → don't signal BUY (runner also blocks, but be explicit)
         if gate_pass is False:
             return TradeSignal(
-                symbol=symbol, signal=Signal.HOLD, price=current_price,
-                timestamp=now, reason="BTC Gate OFF",
+                symbol=symbol,
+                signal=Signal.HOLD,
+                price=current_price,
+                timestamp=now,
+                reason="BTC Gate OFF",
             )
 
         # Check entry signal
@@ -468,15 +503,20 @@ class AnkleBuyV2Strategy(BaseStrategy):
             self._save_state()
 
             return TradeSignal(
-                symbol=symbol, signal=Signal.BUY, price=current_price,
+                symbol=symbol,
+                signal=Signal.BUY,
+                price=current_price,
                 timestamp=now,
                 reason=f"SMA breakout: stop={stop:.4f}, upperSMA={upper_sma:.4f}",
                 strength=1.0,
             )
 
         return TradeSignal(
-            symbol=symbol, signal=Signal.HOLD, price=current_price,
-            timestamp=now, reason="No signal",
+            symbol=symbol,
+            signal=Signal.HOLD,
+            price=current_price,
+            timestamp=now,
+            reason="No signal",
         )
 
     def _cleanup_position(self, symbol: str) -> None:
@@ -505,7 +545,10 @@ class AnkleBuyV2Strategy(BaseStrategy):
                 self._save_state()
                 logger.info(
                     "[AnkleBuyV2] %s position synced: qty=%.6f, entry=%.4f, stop=%.4f",
-                    symbol, quantity, info["entry_price"], info["stop_loss"],
+                    symbol,
+                    quantity,
+                    info["entry_price"],
+                    info["stop_loss"],
                 )
         elif quantity <= 0 and symbol in self._pos_info:
             # Position closed externally
@@ -531,7 +574,9 @@ class AnkleBuyV2Strategy(BaseStrategy):
         gate = self.check_gate()
         return [
             self.generate_signal(
-                sym, gate_pass=gate, gate_pass_realtime=gate_pass_realtime,
+                sym,
+                gate_pass=gate,
+                gate_pass_realtime=gate_pass_realtime,
             )
             for sym in symbols
         ]

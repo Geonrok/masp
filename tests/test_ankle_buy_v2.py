@@ -41,7 +41,7 @@ def _make_breakout_data(n=80, base_price=100.0):
     closes = data["close"].copy()
 
     # Compute SMA(25) on opens at t-1
-    sma25_prev = float(np.mean(opens[-(SMA_SHORT + 1):-1]))
+    sma25_prev = float(np.mean(opens[-(SMA_SHORT + 1) : -1]))
 
     # Force t-1 candle: open below SMA, close above SMA, green candle
     opens[-2] = sma25_prev * 0.98
@@ -388,12 +388,28 @@ class TestExchangeIsolation:
     def test_different_exchanges_different_state(self, tmp_path):
         s1 = AnkleBuyV2Strategy(btc_symbol="BTC/KRW")
         s1._state_path = tmp_path / "ankle_buy_v2_upbit.json"
-        s1._pos_info = {"ETH/KRW": {"entry_price": 1000, "original_qty": 1, "stop_loss": 900, "tp_sold": set(), "upper_sma": 950}}
+        s1._pos_info = {
+            "ETH/KRW": {
+                "entry_price": 1000,
+                "original_qty": 1,
+                "stop_loss": 900,
+                "tp_sold": set(),
+                "upper_sma": 950,
+            }
+        }
         s1._save_state()
 
         s2 = AnkleBuyV2Strategy(btc_symbol="BTC/KRW")
         s2._state_path = tmp_path / "ankle_buy_v2_bithumb.json"
-        s2._pos_info = {"ETH/KRW": {"entry_price": 2000, "original_qty": 2, "stop_loss": 1800, "tp_sold": set(), "upper_sma": 1900}}
+        s2._pos_info = {
+            "ETH/KRW": {
+                "entry_price": 2000,
+                "original_qty": 2,
+                "stop_loss": 1800,
+                "tp_sold": set(),
+                "upper_sma": 1900,
+            }
+        }
         s2._save_state()
 
         # Reload s1 - should have its own data
@@ -481,9 +497,7 @@ class TestRealtimeGateInSignal:
         s._ohlcv_cache["ETH/USDT"] = _make_ohlcv(80, base_price=3000)
 
         # gate_pass=True (t-1 OK) but gate_pass_realtime=False (realtime OFF)
-        signal = s.generate_signal(
-            "ETH/USDT", gate_pass=True, gate_pass_realtime=False
-        )
+        signal = s.generate_signal("ETH/USDT", gate_pass=True, gate_pass_realtime=False)
         assert signal.signal == Signal.SELL
         assert "Gate OFF" in signal.reason
 
@@ -496,9 +510,7 @@ class TestRealtimeGateInSignal:
         s.set_market_data(md)
 
         # gate_pass=False → no BUY even if realtime is True
-        signal = s.generate_signal(
-            "ETH/USDT", gate_pass=False, gate_pass_realtime=True
-        )
+        signal = s.generate_signal("ETH/USDT", gate_pass=False, gate_pass_realtime=True)
         assert signal.signal != Signal.BUY
 
 

@@ -145,9 +145,7 @@ def render_kiwoom_status(status_provider: Optional[Callable] = None) -> None:
             st.info("최근 거래 내역이 없습니다.")
 
     # Footer with last update time
-    st.caption(
-        f"마지막 업데이트: {status.last_updated.strftime('%Y-%m-%d %H:%M:%S')}"
-    )
+    st.caption(f"마지막 업데이트: {status.last_updated.strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 def _get_stock_name(symbol: str) -> str:

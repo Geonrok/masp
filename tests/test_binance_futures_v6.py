@@ -122,9 +122,7 @@ def test_auto_reset_daily(strategy):
 def test_auto_reset_weekly(strategy):
     """P1-13: weekly_pnl should auto-reset on new week."""
     strategy.weekly_pnl = -5.0
-    strategy._last_reset_week = (
-        datetime.now() - timedelta(weeks=1)
-    ).isocalendar()[1]
+    strategy._last_reset_week = (datetime.now() - timedelta(weeks=1)).isocalendar()[1]
     strategy._auto_reset_risk_counters()
     assert strategy.weekly_pnl == 0.0
 

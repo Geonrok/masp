@@ -37,6 +37,7 @@ except ImportError:
     KOSPI200StablePortfolioStrategy = None
     KOSPI200AggressivePortfolioStrategy = None
 
+from libs.strategies.ankle_buy_v2 import AnkleBuyV2Strategy
 from libs.strategies.foreign_trend_etf import (
     ForeignTrend1xStrategy,
     ForeignTrend2xStrategy,
@@ -48,14 +49,13 @@ from libs.strategies.sector_rotation_monthly import (
     SectorRotationTier1Strategy,
     SectorRotationTier2Strategy,
 )
-from libs.strategies.ankle_buy_v2 import AnkleBuyV2Strategy
 from libs.strategies.sept_v3_rsi50_gate import SeptV3Rsi50GateStrategy
-from libs.strategies.trend_momentum_gate import TrendMomentumGateStrategy
 from libs.strategies.tiger200_etf import (
     TIGER200StableStrategy,
     TIGER200Strategy,
     TIGER200VIXOnlyStrategy,
 )
+from libs.strategies.trend_momentum_gate import TrendMomentumGateStrategy
 from libs.strategies.vix_sma10_stocks import (
     VIXSMA10AllTiersStrategy,
     VIXSMA10StocksStrategy,

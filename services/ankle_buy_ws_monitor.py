@@ -210,11 +210,7 @@ class AnkleBuyWSMonitor:
             await self.ws.subscribe_ticker([btc_ws])
 
     async def _subscribe_positions(self):
-        held = [
-            s
-            for s in self.strategy._pos_info.keys()
-            if s != self._btc_strategy
-        ]
+        held = [s for s in self.strategy._pos_info.keys() if s != self._btc_strategy]
         if not held:
             return
 
@@ -307,9 +303,7 @@ class AnkleBuyWSMonitor:
         # 1. Stop loss
         stop = info.get("stop_loss", 0)
         if stop > 0 and price <= stop:
-            self._schedule_sell(
-                symbol, 1.0, f"Stop loss: {price:.4f} <= {stop:.4f}"
-            )
+            self._schedule_sell(symbol, 1.0, f"Stop loss: {price:.4f} <= {stop:.4f}")
             return
 
         # 2. TP-A (calls strategy method - mutates tp_sold state)

@@ -301,9 +301,7 @@ class ATLASFuturesStrategy(BaseStrategy):
     def calculate_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """Compute technical indicators."""
         if ta is None:
-            raise ImportError(
-                "ta library required for ATLAS-Futures: pip install ta"
-            )
+            raise ImportError("ta library required for ATLAS-Futures: pip install ta")
 
         df = df.copy()
 
@@ -722,7 +720,9 @@ class ATLASFuturesStrategy(BaseStrategy):
         if equity > self.peak_equity:
             self.peak_equity = equity
         if self.peak_equity > 0:
-            self.current_drawdown = ((equity - self.peak_equity) / self.peak_equity) * 100
+            self.current_drawdown = (
+                (equity - self.peak_equity) / self.peak_equity
+            ) * 100
 
         if pnl_pct < 0:
             self.consecutive_losses += 1

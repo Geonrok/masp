@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import numpy as np
 import pytest
 
-from services.ankle_buy_ws_monitor import AnkleBuyWSMonitor, GATE_HYSTERESIS_PCT
+from services.ankle_buy_ws_monitor import GATE_HYSTERESIS_PCT, AnkleBuyWSMonitor
 
 
 def _make_strategy_mock():
@@ -104,7 +104,10 @@ class TestTickParsing:
     def test_bithumb_ticker(self):
         m = _make_monitor("bithumb")
         ws_sym, price = m._parse_tick(
-            {"type": "ticker", "content": {"symbol": "BTC_KRW", "closePrice": "50000000"}}
+            {
+                "type": "ticker",
+                "content": {"symbol": "BTC_KRW", "closePrice": "50000000"},
+            }
         )
         assert ws_sym == "BTC_KRW"
         assert price == 50000000.0
