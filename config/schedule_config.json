@@ -125,7 +125,7 @@
       "position_size_mode": "equal_weight",
       "min_position_krw": 50000,
       "websocket_monitor": true,
-      "daily_close_hour": 9,
+      "daily_close_hour": 0,
       "daily_close_timezone": "Asia/Seoul",
       "schedule": {
         "hours": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
