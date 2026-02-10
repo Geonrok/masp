@@ -95,6 +95,12 @@ class StrategyRunner:
         self._position_size = (
             position_size_usdt if self._is_usdt_based else position_size_krw
         )
+        self._effective_size = self._position_size
+
+        # Dynamic sizing mode (set externally by scheduler)
+        self._position_size_mode = "fixed"  # "fixed" | "equal_weight"
+        self._min_position_krw = 50000
+        self._min_position_usdt = 50
 
         # Config 로드
         self.config = config or Config(
@@ -395,6 +401,21 @@ class StrategyRunner:
             )
             available_balance = float("inf")
 
+        # Dynamic position sizing
+        if self._position_size_mode == "equal_weight" and self.symbols:
+            min_pos = (
+                self._min_position_usdt
+                if self._is_usdt_based
+                else self._min_position_krw
+            )
+            if available_balance != float("inf") and len(self.symbols) > 0:
+                dynamic = available_balance / len(self.symbols)
+                self._effective_size = max(dynamic, min_pos)
+            else:
+                self._effective_size = min_pos
+        else:
+            self._effective_size = self._position_size
+
         balance_label = (
             "unlimited"
             if available_balance == float("inf")
@@ -404,8 +425,8 @@ class StrategyRunner:
             "unlimited"
             if available_balance == float("inf")
             else (
-                int(available_balance // self._position_size)
-                if self._position_size > 0
+                int(available_balance // self._effective_size)
+                if self._effective_size > 0
                 else 0
             )
         )
@@ -476,7 +497,7 @@ class StrategyRunner:
                 if (
                     action == "BUY"
                     and available_balance != float("inf")
-                    and available_balance < self._position_size
+                    and available_balance < self._effective_size
                 ):
                     logger.warning("[%s] BUY skipped: insufficient balance", symbol)
                     results[symbol] = {
@@ -498,7 +519,7 @@ class StrategyRunner:
                     and result.get("action") == "BUY"
                     and available_balance != float("inf")
                 ):
-                    available_balance -= self._position_size
+                    available_balance -= self._effective_size
                     logger.info(
                         "[StrategyRunner] %s BUY executed, remaining: %.2f %s",
                         symbol,
@@ -589,11 +610,11 @@ class StrategyRunner:
                 symbol,
                 "BUY",
                 order_type="MARKET",
-                amount_krw=self._position_size,
+                amount_krw=self._effective_size,
             )
             # Register position for stop loss tracking
             if self._enable_stop_loss and current_price > 0:
-                quantity = self._position_size / current_price
+                quantity = self._effective_size / current_price
                 self._register_position_for_stop_loss(
                     symbol, "long", current_price, quantity
                 )

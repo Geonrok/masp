@@ -30,6 +30,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from libs.adapters.bithumb_public import BithumbPublic
+from services.ankle_buy_ws_monitor import AnkleBuyWSMonitor
 from services.strategy_runner import StrategyRunner
 
 logger = logging.getLogger(__name__)
@@ -78,6 +79,7 @@ class MultiExchangeScheduler:
         self._runners: Dict[str, StrategyRunner] = {}
         self._jobs: Dict[str, Any] = {}
         self._triggers: Dict[str, CronTrigger] = {}
+        self._ws_monitors: Dict[str, AnkleBuyWSMonitor] = {}
 
         # Single scheduler for all jobs
         self._scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
@@ -197,9 +199,12 @@ class MultiExchangeScheduler:
                 )
                 continue
 
+            # Base exchange: config key may differ (e.g. "upbit_ankle" -> "upbit")
+            base_exchange = cfg.get("exchange", exchange_name)
+
             # Normalize symbols (string -> list, ALL_KRW/ALL_USDT -> dynamic fetch).
             symbols_cfg = cfg.get("symbols", ["BTC/KRW"])
-            symbols = self._resolve_symbols(exchange_name, symbols_cfg)
+            symbols = self._resolve_symbols(base_exchange, symbols_cfg)
 
             if not symbols:
                 logger.warning(
@@ -219,32 +224,47 @@ class MultiExchangeScheduler:
             position_size_usdt = cfg.get("position_size_usdt", 0)
             leverage = cfg.get("leverage", 1)  # For futures
 
-            # Create StrategyRunner with appropriate config
+            # Create StrategyRunner with base exchange name
             runner = StrategyRunner(
                 strategy_name=cfg.get("strategy", "KAMA-TSMOM-Gate"),
-                exchange=exchange_name,
+                exchange=base_exchange,
                 symbols=symbols,
                 position_size_krw=position_size_krw or position_size_usdt,
                 position_size_usdt=position_size_usdt,
                 leverage=leverage,
             )
+
+            # Apply dynamic sizing if configured
+            size_mode = cfg.get("position_size_mode", "fixed")
+            if size_mode == "equal_weight":
+                runner._position_size_mode = "equal_weight"
+                if cfg.get("min_position_krw"):
+                    runner._min_position_krw = cfg["min_position_krw"]
+                if cfg.get("min_position_usdt"):
+                    runner._min_position_usdt = cfg["min_position_usdt"]
+
             self._runners[exchange_name] = runner
 
-            # Create CronTrigger
+            # Create CronTrigger - support hours (list) or hour (single)
             sched = cfg.get("schedule", {})
             timezone = sched.get("timezone", "Asia/Seoul")
+
+            hours_cfg = sched.get("hours")
+            if hours_cfg and isinstance(hours_cfg, list):
+                hour_val = ",".join(str(h) for h in hours_cfg)
+            else:
+                hour_val = str(sched.get("hour", 9))
+
             trigger = CronTrigger(
-                hour=int(sched.get("hour", 9)),
+                hour=hour_val,
                 minute=int(sched.get("minute", 0)),
                 timezone=timezone,
             )
             self._triggers[exchange_name] = trigger
-            init_hour = int(sched.get("hour", 9))
-            init_minute = int(sched.get("minute", 0))
             tz_label = "UTC" if timezone == "UTC" else "KST"
             logger.info(
                 f"[MultiExchangeScheduler] {exchange_name.upper()} initialized: "
-                f"{init_hour:02d}:{init_minute:02d} {tz_label}"
+                f"hours={hour_val} minute={sched.get('minute', 0)} {tz_label}"
             )
 
     def _resolve_symbols(self, exchange_name: str, symbols_cfg) -> list:
@@ -566,6 +586,9 @@ class MultiExchangeScheduler:
         self._scheduler.start()
         self._initialized = True
 
+        # Start WebSocket monitors for real-time strategies
+        await self._start_ws_monitors()
+
         start_time = time.time()
         try:
             last_heartbeat = time.time()
@@ -601,9 +624,89 @@ class MultiExchangeScheduler:
                 await self._health_server.stop()
             self._shutdown()
 
+    async def _start_ws_monitors(self) -> None:
+        """Start WebSocket monitors for exchanges with websocket_monitor=true."""
+        exchanges = self._config.get("exchanges", {})
+
+        for name, runner in self._runners.items():
+            cfg = exchanges.get(name, {})
+            if not cfg.get("websocket_monitor"):
+                continue
+
+            base_exchange = cfg.get("exchange", name)
+            is_usdt = base_exchange in ("binance_spot", "binance_futures")
+            min_pos = (
+                cfg.get("min_position_usdt", 50)
+                if is_usdt
+                else cfg.get("min_position_krw", 50000)
+            )
+
+            monitor = AnkleBuyWSMonitor(
+                exchange_name=base_exchange,
+                strategy=runner.strategy,
+                execution=runner.execution,
+                market_data=runner.market_data,
+                symbols=runner.symbols,
+                trade_logger=runner.trade_logger,
+                notifier=runner._notifier,
+                min_position=min_pos,
+                quote_currency=runner._quote_currency,
+            )
+            self._ws_monitors[name] = monitor
+            asyncio.create_task(monitor.start())
+
+            # Add daily close CronTrigger
+            if base_exchange in ("upbit", "upbit_spot", "bithumb", "bithumb_spot"):
+                close_hour = cfg.get("daily_close_hour", 9)
+                close_tz = cfg.get("daily_close_timezone", "Asia/Seoul")
+                self._scheduler.add_job(
+                    monitor._on_daily_close,
+                    CronTrigger(
+                        hour=close_hour, minute=0, second=2, timezone=close_tz
+                    ),
+                    id=f"{name}_daily_entry",
+                    max_instances=1,
+                    coalesce=True,
+                    misfire_grace_time=60,
+                )
+                logger.info(
+                    "[MultiExchangeScheduler] WS daily entry: %s at %02d:00:02 %s",
+                    name,
+                    close_hour,
+                    close_tz,
+                )
+            elif base_exchange == "binance_spot":
+                # Backup CronTrigger (primary: kline is_final event)
+                self._scheduler.add_job(
+                    monitor._on_daily_close,
+                    CronTrigger(hour=0, minute=0, second=5, timezone="UTC"),
+                    id=f"{name}_daily_entry_backup",
+                    max_instances=1,
+                    coalesce=True,
+                    misfire_grace_time=60,
+                )
+                logger.info(
+                    "[MultiExchangeScheduler] WS daily entry (backup): %s at 00:00:05 UTC",
+                    name,
+                )
+
+            logger.info(
+                "[MultiExchangeScheduler] WS monitor started: %s (exchange=%s)",
+                name,
+                base_exchange,
+            )
+
     def _shutdown(self) -> None:
         """Clean shutdown."""
         logger.info("[MultiExchangeScheduler] Shutting down...")
+
+        # Stop WS monitors
+        for name, monitor in self._ws_monitors.items():
+            try:
+                asyncio.get_event_loop().run_until_complete(monitor.stop())
+            except Exception:
+                pass
+
         try:
             self._scheduler.shutdown(wait=True)
         except Exception as exc:

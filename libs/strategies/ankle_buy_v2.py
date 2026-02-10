@@ -201,6 +201,41 @@ class AnkleBuyV2Strategy(BaseStrategy):
         )
         return self._gate_status
 
+    def check_gate_realtime(self, btc_price: Optional[float] = None) -> bool:
+        """
+        Real-time BTC Gate: current BTC price > SMA50(today).
+
+        Used by WebSocket monitor for immediate exit decisions.
+        Falls back to check_gate() if btc_price is not provided.
+        """
+        if btc_price is None:
+            return self.check_gate()
+
+        btc = self._get_btc_data()
+        if btc is None or len(btc["close"]) < BTC_GATE_SMA + 1:
+            return True
+
+        close = btc["close"]
+        sma50_today = float(np.mean(close[-BTC_GATE_SMA:]))
+        result = btc_price > sma50_today
+
+        logger.debug(
+            "[AnkleBuyV2] BTC Gate(RT): price=%.2f, SMA50=%.2f → %s",
+            btc_price, sma50_today, "ON" if result else "OFF",
+        )
+        return result
+
+    def get_btc_sma50_today(self) -> Optional[float]:
+        """Return today's BTC SMA50 value for WS monitor hysteresis."""
+        btc = self._get_btc_data()
+        if btc is None or len(btc["close"]) < BTC_GATE_SMA + 1:
+            return None
+        return float(np.mean(btc["close"][-BTC_GATE_SMA:]))
+
+    def get_position_info(self, symbol: str) -> Optional[dict]:
+        """Expose position info for WS monitor (stop/TP/SMA checks)."""
+        return self._pos_info.get(symbol)
+
     # ------------------------------------------------------------------
     # Entry / Exit logic
     # ------------------------------------------------------------------
@@ -320,12 +355,14 @@ class AnkleBuyV2Strategy(BaseStrategy):
         self,
         symbol: str,
         gate_pass: Optional[bool] = None,
+        gate_pass_realtime: Optional[bool] = None,
     ) -> TradeSignal:
         """
         Generate signal for a single symbol.
 
         Called per symbol by StrategyRunner.run_once().
-        gate_pass is computed from check_gate() by the runner.
+        gate_pass is computed from check_gate() by the runner (t-1, for entry).
+        gate_pass_realtime is from WS monitor (current price, for exit).
         """
         now = datetime.now()
 
@@ -354,7 +391,9 @@ class AnkleBuyV2Strategy(BaseStrategy):
             info = self._pos_info.get(symbol, {})
 
             # Priority 1: BTC Gate OFF → full liquidation
-            if gate_pass is False:
+            # Use realtime gate for exit (more responsive), fallback to t-1 gate
+            effective_gate = gate_pass_realtime if gate_pass_realtime is not None else gate_pass
+            if effective_gate is False:
                 self._cleanup_position(symbol)
                 return TradeSignal(
                     symbol=symbol, signal=Signal.SELL, price=current_price,
@@ -482,8 +521,17 @@ class AnkleBuyV2Strategy(BaseStrategy):
         self._btc_cache = None
         self._gate_status = None
 
-    def generate_signals(self, symbols: list[str]) -> list[TradeSignal]:
+    def generate_signals(
+        self,
+        symbols: list[str],
+        gate_pass_realtime: Optional[bool] = None,
+    ) -> list[TradeSignal]:
         """Generate signals for multiple symbols (batch mode)."""
         self.clear_cache()
         gate = self.check_gate()
-        return [self.generate_signal(sym, gate_pass=gate) for sym in symbols]
+        return [
+            self.generate_signal(
+                sym, gate_pass=gate, gate_pass_realtime=gate_pass_realtime,
+            )
+            for sym in symbols
+        ]

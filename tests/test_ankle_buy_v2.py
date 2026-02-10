@@ -405,6 +405,103 @@ class TestExchangeIsolation:
         assert s2._pos_info["ETH/KRW"]["entry_price"] == 2000
 
 
+class TestRealtimeGate:
+    """Test real-time gate methods."""
+
+    def test_check_gate_realtime_on(self):
+        s = AnkleBuyV2Strategy(btc_symbol="BTC/USDT")
+        btc_data = _make_ohlcv(80, base_price=50000)
+        s._btc_cache = btc_data
+        sma50 = float(np.mean(btc_data["close"][-BTC_GATE_SMA:]))
+
+        result = s.check_gate_realtime(sma50 + 1000)
+        assert result is True
+
+    def test_check_gate_realtime_off(self):
+        s = AnkleBuyV2Strategy(btc_symbol="BTC/USDT")
+        btc_data = _make_ohlcv(80, base_price=50000)
+        s._btc_cache = btc_data
+        sma50 = float(np.mean(btc_data["close"][-BTC_GATE_SMA:]))
+
+        result = s.check_gate_realtime(sma50 - 1000)
+        assert result is False
+
+    def test_check_gate_realtime_fallback(self):
+        """Without btc_price, falls back to check_gate()."""
+        s = AnkleBuyV2Strategy(btc_symbol="BTC/USDT")
+        btc_data = _make_ohlcv(80, base_price=50000)
+        s._btc_cache = btc_data
+
+        result = s.check_gate_realtime()
+        assert isinstance(result, bool)
+
+    def test_get_btc_sma50_today(self):
+        s = AnkleBuyV2Strategy(btc_symbol="BTC/USDT")
+        btc_data = _make_ohlcv(80, base_price=50000)
+        s._btc_cache = btc_data
+
+        sma50 = s.get_btc_sma50_today()
+        assert sma50 is not None
+        assert sma50 > 0
+
+        expected = float(np.mean(btc_data["close"][-BTC_GATE_SMA:]))
+        assert abs(sma50 - expected) < 0.01
+
+    def test_get_position_info_exists(self):
+        s = AnkleBuyV2Strategy()
+        s._pos_info["ETH/KRW"] = {"entry_price": 3000, "stop_loss": 2800}
+
+        info = s.get_position_info("ETH/KRW")
+        assert info is not None
+        assert info["entry_price"] == 3000
+
+    def test_get_position_info_missing(self):
+        s = AnkleBuyV2Strategy()
+        info = s.get_position_info("XRP/KRW")
+        assert info is None
+
+
+class TestRealtimeGateInSignal:
+    """Test gate_pass_realtime parameter in generate_signal."""
+
+    def test_exit_uses_realtime_gate(self):
+        """Exit should use gate_pass_realtime if provided."""
+        s = AnkleBuyV2Strategy(btc_symbol="BTC/USDT")
+        s._pos_info["ETH/USDT"] = {
+            "entry_price": 3000,
+            "original_qty": 1.0,
+            "stop_loss": 2800,
+            "tp_sold": set(),
+            "upper_sma": 2900,
+            "entry_date": "2026-01-01",
+        }
+        s._positions["ETH/USDT"] = 1.0
+
+        # Set OHLCV cache directly (avoid market data fetch)
+        s._ohlcv_cache["ETH/USDT"] = _make_ohlcv(80, base_price=3000)
+
+        # gate_pass=True (t-1 OK) but gate_pass_realtime=False (realtime OFF)
+        signal = s.generate_signal(
+            "ETH/USDT", gate_pass=True, gate_pass_realtime=False
+        )
+        assert signal.signal == Signal.SELL
+        assert "Gate OFF" in signal.reason
+
+    def test_entry_uses_t1_gate(self):
+        """Entry should still use gate_pass (t-1), not realtime."""
+        s = AnkleBuyV2Strategy(btc_symbol="BTC/USDT")
+
+        md = MagicMock()
+        md.get_ohlcv.return_value = _make_breakout_data(80, base_price=100)
+        s.set_market_data(md)
+
+        # gate_pass=False → no BUY even if realtime is True
+        signal = s.generate_signal(
+            "ETH/USDT", gate_pass=False, gate_pass_realtime=True
+        )
+        assert signal.signal != Signal.BUY
+
+
 class TestCacheClear:
     """Test cache clearing."""
 
