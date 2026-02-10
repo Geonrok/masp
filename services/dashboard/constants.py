@@ -32,15 +32,11 @@ SUPPORTED_EXCHANGES: List[str] = [
     "upbit",
     "bithumb",
     "binance",
-    "binance_futures",
-    "kiwoom",
 ]
 SIGNAL_PREVIEW_EXCHANGES: List[str] = [
     "upbit",
     "bithumb",
     "binance",
-    "binance_futures",
-    "kiwoom",
 ]
 
 

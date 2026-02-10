@@ -96,7 +96,7 @@ def _get_demo_backtest_data() -> Dict[str, Any]:
         "dates": dates,
         "daily_returns": daily_returns,
         "initial_capital": 10_000_000,  # 1000만원
-        "strategy_name": "Sept-v3-RSI50-Gate",
+        "strategy_name": "Ankle Buy v2.0",
     }
 
 

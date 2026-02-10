@@ -39,18 +39,6 @@ _DEMO_EXCHANGE_CONFIGS: Dict[str, Dict[str, Any]] = {
         "region": "Global",
         "type": "spot",
     },
-    "binance_futures": {
-        "enabled": False,
-        "name": "Binance Futures",
-        "region": "Global",
-        "type": "futures",
-    },
-    "kiwoom": {
-        "enabled": False,
-        "name": "Kiwoom",
-        "region": "KR",
-        "type": "stock",
-    },
 }
 
 

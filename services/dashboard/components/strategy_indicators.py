@@ -34,7 +34,7 @@ def render_strategy_indicators() -> None:
 
     st.subheader(f"{selected.upper()} Strategy Configuration")
 
-    current_strategy = config.get("strategy", "Sept-v3-RSI50-Gate")
+    current_strategy = config.get("strategy", "ankle_buy_v2")
     st.info(f"Active Strategy: {current_strategy}")
 
     st.divider()

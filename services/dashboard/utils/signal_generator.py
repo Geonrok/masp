@@ -17,7 +17,6 @@ def _map_market_exchange(exchange: str) -> str:
     mapping = {
         "upbit": "upbit_spot",
         "bithumb": "bithumb_spot",
-        "kiwoom": "kiwoom_spot",
     }
     return mapping.get(exchange, exchange)
 
@@ -27,10 +26,10 @@ def _load_strategy(force_demo: bool):
     if force_demo:
         return _MockStrategy(), True
     try:
-        from libs.strategies.kama_tsmom_gate import KamaTsmomGateStrategy
+        from libs.strategies.ankle_buy_v2 import AnkleBuyV2Strategy
 
-        logger.info("Loaded KamaTsmomGateStrategy")
-        return KamaTsmomGateStrategy(), False
+        logger.info("Loaded AnkleBuyV2Strategy")
+        return AnkleBuyV2Strategy(), False
     except Exception as exc:
         logger.warning("Strategy load failed, using mock: %s", type(exc).__name__)
         return _MockStrategy(), True
@@ -82,31 +81,38 @@ class _MockStrategy:
 class _MockMarketAdapter:
     """Mock market adapter for demo mode."""
 
-    _KIWOOM_SYMBOLS = [
-        "005930",
-        "000660",
-        "003670",
-        "042700",
-        "006400",
+    _KRW_SYMBOLS = [
+        "BTC/KRW",
+        "ETH/KRW",
+        "XRP/KRW",
+        "SOL/KRW",
+        "DOGE/KRW",
+        "ADA/KRW",
+        "AVAX/KRW",
+        "DOT/KRW",
+        "MATIC/KRW",
+        "LINK/KRW",
+    ]
+
+    _USDT_SYMBOLS = [
+        "BTC/USDT",
+        "ETH/USDT",
+        "XRP/USDT",
+        "SOL/USDT",
+        "DOGE/USDT",
+        "ADA/USDT",
+        "AVAX/USDT",
+        "DOT/USDT",
+        "MATIC/USDT",
+        "LINK/USDT",
     ]
 
     def __init__(self, exchange: str):
         self.exchange = exchange
-        if exchange == "kiwoom":
-            self._symbols = self._KIWOOM_SYMBOLS
+        if exchange == "binance":
+            self._symbols = self._USDT_SYMBOLS
         else:
-            self._symbols = [
-                "BTC/KRW",
-                "ETH/KRW",
-                "XRP/KRW",
-                "SOL/KRW",
-                "DOGE/KRW",
-                "ADA/KRW",
-                "AVAX/KRW",
-                "DOT/KRW",
-                "MATIC/KRW",
-                "LINK/KRW",
-            ]
+            self._symbols = self._KRW_SYMBOLS
 
     def get_available_symbols(self) -> List[str]:
         return self._symbols
@@ -118,15 +124,8 @@ class _MockMarketAdapter:
         self, symbol: str, interval: str = "1d", limit: int = 100
     ) -> List[Dict[str, Any]]:
         """Generate mock OHLCV data."""
-        if self.exchange == "kiwoom":
-            stock_prices = {
-                "005930": 71500,
-                "000660": 185000,
-                "003670": 280000,
-                "042700": 95000,
-                "006400": 350000,
-            }
-            base_price = stock_prices.get(symbol, 100000)
+        if "USDT" in symbol:
+            base_price = 70_000 if "BTC" in symbol else 3_000
         else:
             base_price = 50_000_000 if "BTC" in symbol else 1_000_000
         ohlcv = []
