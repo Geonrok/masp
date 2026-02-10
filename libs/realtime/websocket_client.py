@@ -237,7 +237,7 @@ class ReconnectingWebSocket:
             return False
 
         try:
-            if isinstance(message, dict):
+            if isinstance(message, (dict, list)):
                 data = json.dumps(message)
             else:
                 data = message
