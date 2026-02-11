@@ -66,7 +66,7 @@ def test_config_defaults():
     assert config.squeeze_min_bars == 6
     assert config.adx_threshold == 12.0
     assert config.chandelier_multiplier == 3.0
-    assert "BTCUSDT" in config.symbols
+    assert "ALL_USDT_PERP" in config.symbols
 
 
 def test_calculate_indicators(strategy, sample_ohlcv):

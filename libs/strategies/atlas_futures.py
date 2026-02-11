@@ -44,11 +44,16 @@ class ATLASFuturesConfig:
 
     timeframe: str = "4h"
     symbols: List[str] = field(
-        default_factory=lambda: ["BTCUSDT", "ETHUSDT", "LINKUSDT"]
+        default_factory=lambda: ["ALL_USDT_PERP"]
     )
     leverage: int = 3
     max_positions: int = 3
-    position_size_pct: float = 1.6
+    position_size_pct: float = 20.0
+
+    # BTC Gate
+    btc_gate_enabled: bool = True
+    btc_gate_ma_period: int = 50
+    btc_gate_symbol: str = "BTCUSDT"
 
     bbwp_lookback: int = 252
     bbwp_threshold: float = 10.0
@@ -186,6 +191,10 @@ class ATLASFuturesStrategy(BaseStrategy):
         self._generation: int = 0  # increments per generate_signals() cycle
         self._last_gen: Dict[str, int] = {}  # per-symbol last processed generation
 
+        # BTC Gate state: updated via update_btc_gate() before signal generation
+        self._btc_gate_long: bool = False  # True = BTC > SMA(50) → longs allowed
+        self._btc_gate_short: bool = False  # True = BTC < SMA(50) → shorts allowed
+
         # Date tracking for auto-reset
         self._last_reset_date = datetime.now().date()
         self._last_reset_week = datetime.now().isocalendar()[1]
@@ -199,6 +208,55 @@ class ATLASFuturesStrategy(BaseStrategy):
     def set_market_data(self, adapter) -> None:
         """Set market data adapter for BaseStrategy generate_signals."""
         self._market_data = adapter
+
+    def update_btc_gate(self, btc_daily_df: Optional[pd.DataFrame] = None) -> None:
+        """Update BTC gate using daily close vs SMA(50).
+
+        Uses the PREVIOUS day's close (shift-1) to avoid look-ahead bias.
+        Call this once per 4h bar cycle, before generate_signal()/generate_signals().
+
+        Args:
+            btc_daily_df: BTC daily OHLCV DataFrame with 'close' column.
+                          If None, attempts to fetch via market_data adapter.
+        """
+        if not self.config.btc_gate_enabled:
+            self._btc_gate_long = True
+            self._btc_gate_short = True
+            return
+
+        df = btc_daily_df
+        if df is None and self._market_data:
+            try:
+                ohlcv_list = self._market_data.get_ohlcv(
+                    self.config.btc_gate_symbol, interval="1d", limit=100
+                )
+                if ohlcv_list and len(ohlcv_list) > 0:
+                    df = pd.DataFrame(
+                        [{"close": c.close} for c in ohlcv_list]
+                    )
+            except Exception as exc:
+                logger.warning("[ATLAS] BTC gate data fetch failed: %s", exc)
+
+        if df is None or len(df) < self.config.btc_gate_ma_period + 1:
+            logger.warning("[ATLAS] BTC gate: insufficient data, blocking both directions")
+            self._btc_gate_long = False
+            self._btc_gate_short = False
+            return
+
+        close = df["close"].astype(float)
+        sma = close.rolling(self.config.btc_gate_ma_period).mean()
+
+        # Use previous day's values (shift-1 equivalent: second-to-last row)
+        prev_close = float(close.iloc[-2])
+        prev_sma = float(sma.iloc[-2])
+
+        self._btc_gate_long = prev_close > prev_sma
+        self._btc_gate_short = prev_close < prev_sma
+
+        logger.debug(
+            "[ATLAS] BTC Gate: close=%.2f sma50=%.2f → long=%s short=%s",
+            prev_close, prev_sma, self._btc_gate_long, self._btc_gate_short,
+        )
 
     def _auto_reset_risk_counters(self) -> None:
         """Auto-reset daily/weekly/monthly PnL at date boundaries."""
@@ -219,13 +277,21 @@ class ATLASFuturesStrategy(BaseStrategy):
             logger.debug("[ATLAS] Monthly PnL reset")
 
     def check_gate(self) -> bool:
-        """BaseStrategy interface: gate check."""
+        """BaseStrategy interface: gate check (risk limits only).
+
+        Note: BTC directional gate is checked per-signal in check_entry_conditions(),
+        not here, because this gate applies to all symbols uniformly while BTC gate
+        is direction-specific (long vs short).
+        """
         risk_ok, _ = self.check_risk_limits()
         return risk_ok
 
     def generate_signals(self, symbols: List[str]) -> List[TradeSignal]:
         """BaseStrategy interface: generate signals for multiple symbols."""
         self._generation += 1  # new bar cycle
+        # Update BTC gate once per cycle (fetches BTC daily data)
+        self.update_btc_gate()
+        self._last_gen["_btc_gate_gen"] = self._generation  # mark as done for this gen
         results: List[TradeSignal] = []
         for symbol in symbols:
             try:
@@ -451,7 +517,7 @@ class ATLASFuturesStrategy(BaseStrategy):
     def check_entry_conditions(
         self, symbol: str, data: pd.DataFrame
     ) -> Optional[Signal]:
-        """Entry conditions."""
+        """Entry conditions (includes BTC directional gate)."""
         if len(data) < self.config.ema_trend_period:
             return None
 
@@ -470,7 +536,12 @@ class ATLASFuturesStrategy(BaseStrategy):
         if not (squeeze_ok and adx_ok and rvol_ok):
             return None
 
-        if latest["close"] > latest["ema_200"] and latest["close"] > latest["bb_upper"]:
+        # LONG entry: BTC gate must allow longs (BTC > SMA50)
+        if (
+            self._btc_gate_long
+            and latest["close"] > latest["ema_200"]
+            and latest["close"] > latest["bb_upper"]
+        ):
             stop_loss = latest["close"] - (
                 latest["atr"] * self.config.chandelier_multiplier
             )
@@ -482,7 +553,8 @@ class ATLASFuturesStrategy(BaseStrategy):
                 position_size=self.config.position_size_pct / 100.0,
                 reason=(
                     "LONG: Squeeze breakout "
-                    f"(BBWP={latest['bbwp']:.1f}%, ADX={latest['adx']:.1f}, RVOL={latest['rvol']:.2f})"
+                    f"(BBWP={latest['bbwp']:.1f}%, ADX={latest['adx']:.1f}, "
+                    f"RVOL={latest['rvol']:.2f}, BTC_gate=LONG)"
                 ),
                 timestamp=now,
                 metadata={
@@ -490,10 +562,16 @@ class ATLASFuturesStrategy(BaseStrategy):
                     "adx": latest["adx"],
                     "rvol": latest["rvol"],
                     "squeeze_bars": squeeze_bars,
+                    "btc_gate": "LONG",
                 },
             )
 
-        if latest["close"] < latest["ema_200"] and latest["close"] < latest["bb_lower"]:
+        # SHORT entry: BTC gate must allow shorts (BTC < SMA50)
+        if (
+            self._btc_gate_short
+            and latest["close"] < latest["ema_200"]
+            and latest["close"] < latest["bb_lower"]
+        ):
             stop_loss = latest["close"] + (
                 latest["atr"] * self.config.chandelier_multiplier
             )
@@ -505,7 +583,8 @@ class ATLASFuturesStrategy(BaseStrategy):
                 position_size=self.config.position_size_pct / 100.0,
                 reason=(
                     "SHORT: Squeeze breakdown "
-                    f"(BBWP={latest['bbwp']:.1f}%, ADX={latest['adx']:.1f}, RVOL={latest['rvol']:.2f})"
+                    f"(BBWP={latest['bbwp']:.1f}%, ADX={latest['adx']:.1f}, "
+                    f"RVOL={latest['rvol']:.2f}, BTC_gate=SHORT)"
                 ),
                 timestamp=now,
                 metadata={
@@ -513,6 +592,7 @@ class ATLASFuturesStrategy(BaseStrategy):
                     "adx": latest["adx"],
                     "rvol": latest["rvol"],
                     "squeeze_bars": squeeze_bars,
+                    "btc_gate": "SHORT",
                 },
             )
 
@@ -533,24 +613,31 @@ class ATLASFuturesStrategy(BaseStrategy):
             chandelier_stop = position.highest_price - (
                 latest["atr"] * self.config.chandelier_multiplier
             )
-            if latest["close"] < chandelier_stop:
+            if latest["low"] <= chandelier_stop:
+                # Use stop price if gap-down didn't breach open, else use open
+                exit_price = max(chandelier_stop, latest["open"])
+                if latest["open"] <= chandelier_stop:
+                    exit_price = latest["open"]
                 return Signal(
                     signal_type=SignalType.EXIT_LONG,
                     symbol=symbol,
-                    price=latest["close"],
-                    reason=f"Chandelier Exit: {latest['close']:.2f} < {chandelier_stop:.2f}",
+                    price=exit_price,
+                    reason=f"Chandelier Exit: low={latest['low']:.2f} <= stop={chandelier_stop:.2f}",
                     timestamp=now,
                 )
         else:
             chandelier_stop = position.lowest_price + (
                 latest["atr"] * self.config.chandelier_multiplier
             )
-            if latest["close"] > chandelier_stop:
+            if latest["high"] >= chandelier_stop:
+                exit_price = min(chandelier_stop, latest["open"])
+                if latest["open"] >= chandelier_stop:
+                    exit_price = latest["open"]
                 return Signal(
                     signal_type=SignalType.EXIT_SHORT,
                     symbol=symbol,
-                    price=latest["close"],
-                    reason=f"Chandelier Exit: {latest['close']:.2f} > {chandelier_stop:.2f}",
+                    price=exit_price,
+                    reason=f"Chandelier Exit: high={latest['high']:.2f} >= stop={chandelier_stop:.2f}",
                     timestamp=now,
                 )
 
@@ -585,6 +672,11 @@ class ATLASFuturesStrategy(BaseStrategy):
             self._last_gen[gen_key] = self._generation
 
         self._auto_reset_risk_counters()
+        # Update BTC gate once per generation (generate_signals already calls this)
+        btc_gate_key = "_btc_gate_gen"
+        if self._last_gen.get(btc_gate_key) != self._generation:
+            self.update_btc_gate()
+            self._last_gen[btc_gate_key] = self._generation
         self.check_link_concentration()
         self.check_track_switch()
 
@@ -615,6 +707,29 @@ class ATLASFuturesStrategy(BaseStrategy):
 
         if symbol in self.positions:
             self._update_position(symbol, data.iloc[-1])
+
+            # BTC Gate flip exit: close position if gate no longer allows direction
+            pos = self.positions[symbol]
+            gate_flipped = (
+                (pos.side == "LONG" and not self._btc_gate_long)
+                or (pos.side == "SHORT" and not self._btc_gate_short)
+            )
+            if gate_flipped:
+                exit_type = (
+                    SignalType.EXIT_LONG
+                    if pos.side == "LONG"
+                    else SignalType.EXIT_SHORT
+                )
+                gate_signal = Signal(
+                    signal_type=exit_type,
+                    symbol=symbol,
+                    price=data.iloc[-1]["close"],
+                    reason=f"BTC Gate flip: {pos.side} gate closed",
+                    timestamp=now,
+                )
+                self.last_signal = gate_signal
+                return gate_signal
+
             exit_signal = self.check_exit_conditions(symbol, data)
             if exit_signal:
                 self.last_signal = exit_signal
@@ -753,6 +868,10 @@ class ATLASFuturesStrategy(BaseStrategy):
                 "weekly_pnl": self.weekly_pnl,
                 "monthly_pnl": self.monthly_pnl,
                 "current_drawdown": self.current_drawdown,
+            },
+            "btc_gate": {
+                "long_allowed": self._btc_gate_long,
+                "short_allowed": self._btc_gate_short,
             },
             "track": {
                 "b_pnl": self.track_b_pnl,
