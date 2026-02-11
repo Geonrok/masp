@@ -92,7 +92,8 @@ class AnkleBuyV2Strategy(BaseStrategy):
     def set_exchange_name(self, exchange_name: str) -> None:
         """Set exchange name for state file isolation. Called by StrategyRunner."""
         self._exchange_name = exchange_name
-        new_path = STATE_DIR / f"ankle_buy_v2_{exchange_name}.json"
+        suffix = "" if self.config.get("btc_gate_enabled", True) else "_nogate"
+        new_path = STATE_DIR / f"ankle_buy_v2_{exchange_name}{suffix}.json"
         if new_path != self._state_path:
             self._state_path = new_path
             self._pos_info.clear()
@@ -189,7 +190,13 @@ class AnkleBuyV2Strategy(BaseStrategy):
         BTC Gate: BTC close[t-1] > BTC SMA(50)[t-1].
 
         Called once per run_once cycle by the runner.
+        Can be disabled via config: {"btc_gate_enabled": false}
         """
+        if not self.config.get("btc_gate_enabled", True):
+            logger.info("[AnkleBuyV2] BTC Gate disabled by config")
+            self._gate_status = True
+            return True
+
         btc = self._get_btc_data()
         if btc is None or len(btc["close"]) < BTC_GATE_SMA + 2:
             logger.warning("[AnkleBuyV2] BTC data insufficient, gate defaults to True")
@@ -217,6 +224,9 @@ class AnkleBuyV2Strategy(BaseStrategy):
         Used by WebSocket monitor for immediate exit decisions.
         Falls back to check_gate() if btc_price is not provided.
         """
+        if not self.config.get("btc_gate_enabled", True):
+            return True
+
         if btc_price is None:
             return self.check_gate()
 

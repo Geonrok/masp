@@ -225,6 +225,9 @@ class MultiExchangeScheduler:
             leverage = cfg.get("leverage", 1)  # For futures
 
             # Create StrategyRunner with base exchange name
+            strategy_config = cfg.get("strategy_config")
+            force_paper = cfg.get("force_paper", False)
+
             runner = StrategyRunner(
                 strategy_name=cfg.get("strategy", "KAMA-TSMOM-Gate"),
                 exchange=base_exchange,
@@ -232,6 +235,9 @@ class MultiExchangeScheduler:
                 position_size_krw=position_size_krw or position_size_usdt,
                 position_size_usdt=position_size_usdt,
                 leverage=leverage,
+                strategy_config=strategy_config,
+                force_paper=force_paper,
+                exchange_label=exchange_name,
             )
 
             # Apply dynamic sizing if configured

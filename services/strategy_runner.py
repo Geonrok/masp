@@ -75,6 +75,9 @@ class StrategyRunner:
         take_profit_pct: float = 0.10,
         trailing_stop_pct: float = 0.03,
         max_holding_hours: float = 120.0,
+        strategy_config: Optional[dict] = None,
+        force_paper: bool = False,
+        exchange_label: Optional[str] = None,
     ):
         self.strategy_name = strategy_name
         self.exchange = exchange
@@ -118,8 +121,13 @@ class StrategyRunner:
             type(self.strategy).__name__,
         )
 
-        # 로그 디렉토리
-        log_base = Path(f"logs/{exchange}_trades")
+        # Inject strategy-specific config (before set_exchange_name, state path may depend on it)
+        if strategy_config and hasattr(self.strategy, "config"):
+            self.strategy.config.update(strategy_config)
+
+        # 로그 디렉토리 (exchange_label for isolation, e.g. "upbit_ankle_nogate")
+        log_label = exchange_label or exchange
+        log_base = Path(f"logs/{log_label}_trades")
 
         # 컴포넌트 초기화
         self.trade_logger = TradeLogger(log_dir=str(log_base / "trades"))
@@ -133,7 +141,9 @@ class StrategyRunner:
         adapter_mode = "paper"
         live_trading_enabled = os.getenv("MASP_ENABLE_LIVE_TRADING") == "1"
 
-        if exchange in {"upbit", "upbit_spot"}:
+        if force_paper:
+            adapter_mode = "paper"
+        elif exchange in {"upbit", "upbit_spot"}:
             execution_exchange = "upbit_spot"
             adapter_mode = "live" if live_trading_enabled else "paper"
         elif exchange in {"bithumb", "bithumb_spot"}:
