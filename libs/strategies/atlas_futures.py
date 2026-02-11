@@ -43,9 +43,7 @@ class ATLASFuturesConfig:
     version: str = "v2.6.2-r1"
 
     timeframe: str = "4h"
-    symbols: List[str] = field(
-        default_factory=lambda: ["ALL_USDT_PERP"]
-    )
+    symbols: List[str] = field(default_factory=lambda: ["ALL_USDT_PERP"])
     leverage: int = 3
     max_positions: int = 3
     position_size_pct: float = 20.0
@@ -231,14 +229,14 @@ class ATLASFuturesStrategy(BaseStrategy):
                     self.config.btc_gate_symbol, interval="1d", limit=100
                 )
                 if ohlcv_list and len(ohlcv_list) > 0:
-                    df = pd.DataFrame(
-                        [{"close": c.close} for c in ohlcv_list]
-                    )
+                    df = pd.DataFrame([{"close": c.close} for c in ohlcv_list])
             except Exception as exc:
                 logger.warning("[ATLAS] BTC gate data fetch failed: %s", exc)
 
         if df is None or len(df) < self.config.btc_gate_ma_period + 1:
-            logger.warning("[ATLAS] BTC gate: insufficient data, blocking both directions")
+            logger.warning(
+                "[ATLAS] BTC gate: insufficient data, blocking both directions"
+            )
             self._btc_gate_long = False
             self._btc_gate_short = False
             return
@@ -255,7 +253,10 @@ class ATLASFuturesStrategy(BaseStrategy):
 
         logger.debug(
             "[ATLAS] BTC Gate: close=%.2f sma50=%.2f → long=%s short=%s",
-            prev_close, prev_sma, self._btc_gate_long, self._btc_gate_short,
+            prev_close,
+            prev_sma,
+            self._btc_gate_long,
+            self._btc_gate_short,
         )
 
     def _auto_reset_risk_counters(self) -> None:
@@ -710,9 +711,8 @@ class ATLASFuturesStrategy(BaseStrategy):
 
             # BTC Gate flip exit: close position if gate no longer allows direction
             pos = self.positions[symbol]
-            gate_flipped = (
-                (pos.side == "LONG" and not self._btc_gate_long)
-                or (pos.side == "SHORT" and not self._btc_gate_short)
+            gate_flipped = (pos.side == "LONG" and not self._btc_gate_long) or (
+                pos.side == "SHORT" and not self._btc_gate_short
             )
             if gate_flipped:
                 exit_type = (
