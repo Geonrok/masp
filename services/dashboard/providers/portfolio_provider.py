@@ -12,6 +12,7 @@ from services.dashboard.components.portfolio_summary import (
     PortfolioSummary,
 )
 from services.dashboard.utils.holdings import (
+    get_holdings_binance,
     get_holdings_bithumb,
     get_holdings_upbit,
     is_private_api_enabled,
@@ -88,6 +89,38 @@ def _get_current_prices_bithumb(symbols: List[str]) -> Dict[str, float]:
     return prices
 
 
+def _get_current_prices_binance(symbols: List[str]) -> Dict[str, float]:
+    """Get current prices from Binance Spot for symbols.
+
+    Args:
+        symbols: List of symbols in dashboard format (e.g., "BTC/USDT")
+
+    Returns:
+        Dict mapping symbol to current price
+    """
+    if not symbols:
+        return {}
+
+    prices: Dict[str, float] = {}
+
+    try:
+        from libs.adapters.real_binance_spot import BinanceSpotMarketData
+
+        market_data = BinanceSpotMarketData()
+        quotes = market_data.get_quotes(symbols)
+
+        for symbol, quote in quotes.items():
+            if quote and quote.last is not None:
+                prices[symbol] = float(quote.last)
+
+    except ImportError:
+        logger.warning("BinanceSpotMarketData not available")
+    except Exception as e:
+        logger.warning("Failed to fetch Binance prices: %s", type(e).__name__)
+
+    return prices
+
+
 def _get_current_prices(
     symbols: List[str], exchange: str = "upbit"
 ) -> Dict[str, float]:
@@ -95,19 +128,17 @@ def _get_current_prices(
 
     Args:
         symbols: List of symbols in dashboard format (e.g., "BTC/KRW")
-        exchange: Exchange name ("upbit" or "bithumb")
+        exchange: Exchange name ("upbit", "bithumb", or "binance")
 
     Returns:
         Dict mapping symbol to current price
     """
-    # Always fetch fresh prices for real-time updates
-    # Cache is handled at holdings level with 5s TTL
-    if exchange.lower() == "bithumb":
-        prices = _get_current_prices_bithumb(symbols)
-    else:
-        prices = _get_current_prices_upbit(symbols)
-
-    return prices
+    exchange_lower = exchange.lower()
+    if exchange_lower == "bithumb":
+        return _get_current_prices_bithumb(symbols)
+    elif exchange_lower in ("binance", "binance_spot"):
+        return _get_current_prices_binance(symbols)
+    return _get_current_prices_upbit(symbols)
 
 
 def _parse_holdings_to_positions(
@@ -254,6 +285,32 @@ def _fetch_portfolio_summary_cached() -> Optional[dict]:
             bithumb_holdings, bithumb_prices, "bithumb"
         )
         for p in bithumb_positions:
+            all_positions_data.append(
+                {
+                    "symbol": p.symbol,
+                    "exchange": p.exchange,
+                    "quantity": p.quantity,
+                    "avg_price": p.avg_price,
+                    "current_price": p.current_price,
+                }
+            )
+
+    # ===== Binance Spot Holdings =====
+    binance_holdings = get_holdings_binance()
+    if binance_holdings:
+        total_cash_balance += _get_cash_balance(binance_holdings)
+        binance_symbols = [
+            f"{entry.get('currency')}/USDT"
+            for entry in binance_holdings
+            if entry.get("currency") and entry.get("currency") != "USDT"
+        ]
+        binance_prices = (
+            _get_current_prices(binance_symbols, "binance") if binance_symbols else {}
+        )
+        binance_positions = _parse_holdings_to_positions(
+            binance_holdings, binance_prices, "binance"
+        )
+        for p in binance_positions:
             all_positions_data.append(
                 {
                     "symbol": p.symbol,

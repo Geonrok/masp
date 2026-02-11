@@ -40,13 +40,13 @@ def _safe_div(num: float, den: float, default: float = 0.0) -> float:
 
 
 def _get_demo_backtest_data() -> Dict[str, Any]:
-    """Generate backtest data based on Sept_v3_RSI50_Gate OOS performance.
+    """Generate backtest data based on Ankle Buy v2.0 Bithumb OOS performance.
 
-    OOS Performance (v3):
-        - Sharpe: 2.27
-        - MDD: -37.0%
-        - Return: 11,763% (over ~5 years, 2019-2024)
-        - Avg Positions: 4.1
+    OOS Performance:
+        - Sharpe: 0.98
+        - MDD: -22%
+        - CAGR: 25.4%
+        - Activation: 60%
 
     Uses fixed seed (42) for reproducibility.
     """
@@ -56,18 +56,13 @@ def _get_demo_backtest_data() -> Dict[str, Any]:
     start_date = date(2019, 1, 1)
     num_days = 252 * 5  # 5 years of trading days
 
-    # Target metrics:
-    # - Total Return: 11,763% = (1 + r)^(5*252) => daily_return ~= 0.38%
-    # - Sharpe: 2.27 => mean/std * sqrt(252) = 2.27 => std ~= mean * sqrt(252) / 2.27
-    # - MDD: -37%
+    # Target metrics (Ankle Buy v2.0 Bithumb OOS):
+    # - CAGR: 25.4% => daily_r = (1.254)^(1/252) - 1 ≈ 0.0009
+    # - Sharpe: 0.98 => std = mean * sqrt(252) / 0.98
+    # - MDD: -22%
 
-    # Calculate parameters to match target metrics
-    # For 11,763% over 5 years: (1 + daily_r)^1260 = 118.63
-    # daily_r = 118.63^(1/1260) - 1 ≈ 0.00379 (0.379%)
-    target_daily_mean = 0.00379  # ~0.38% daily
-
-    # For Sharpe 2.27: std = mean * sqrt(252) / sharpe
-    target_daily_std = target_daily_mean * math.sqrt(252) / 2.27  # ~0.0265
+    target_daily_mean = 0.0009  # ~25.4% CAGR
+    target_daily_std = target_daily_mean * math.sqrt(252) / 0.98  # ~0.0146
 
     # Generate daily returns with occasional larger drawdowns
     daily_returns = []

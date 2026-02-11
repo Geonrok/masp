@@ -17,6 +17,7 @@ def _map_market_exchange(exchange: str) -> str:
     mapping = {
         "upbit": "upbit_spot",
         "bithumb": "bithumb_spot",
+        "binance": "binance_spot",
     }
     return mapping.get(exchange, exchange)
 

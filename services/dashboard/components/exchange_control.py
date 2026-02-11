@@ -51,18 +51,25 @@ def render_position_size_editor(exchange_name: str, current_size: int) -> None:
     if not api:
         return
 
+    is_usdt = exchange_name in ("binance", "binance_spot")
+    unit = "USDT" if is_usdt else "KRW"
+    size_key = "position_size_usdt" if is_usdt else "position_size_krw"
+    min_val = 10 if is_usdt else 10000
+    max_val = 100000 if is_usdt else 10000000
+    step_val = 10 if is_usdt else 10000
+
     with st.form(f"size_form_{exchange_name}"):
         col1, col2 = st.columns([3, 1])
 
         with col1:
             new_size = st.number_input(
-                "Per-trade Size (KRW)",
-                min_value=10000,
-                max_value=10000000,
+                f"Per-trade Size ({unit})",
+                min_value=min_val,
+                max_value=max_val,
                 value=current_size,
-                step=10000,
+                step=step_val,
                 key=f"size_{exchange_name}",
-                help="Minimum 10,000 KRW.",
+                help=f"Minimum {min_val:,} {unit}.",
             )
 
         with col2:
@@ -77,12 +84,10 @@ def render_position_size_editor(exchange_name: str, current_size: int) -> None:
         return
 
     with st.spinner("Saving..."):
-        success = api.update_exchange_config(
-            exchange_name, {"position_size_krw": new_size_int}
-        )
+        success = api.update_exchange_config(exchange_name, {size_key: new_size_int})
 
     if success:
-        st.success(f"Saved position size: {new_size_int:,} KRW.")
+        st.success(f"Saved position size: {new_size_int:,} {unit}.")
     else:
         st.error("Save failed. Check the API server logs.")
     st.rerun()

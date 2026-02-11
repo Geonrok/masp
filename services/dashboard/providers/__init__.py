@@ -64,12 +64,12 @@ __all__ = [
     # 추가 providers
     "get_positions_data",
     "get_risk_metrics_data",
-    # backtest providers (Phase 7D-1)
+    # backtest providers
     "get_backtest_data",
     "get_backtest_list",
     "get_strategy_names",
     "get_backtest_provider",
-    # alert manager providers (Phase 7D-2)
+    # alert manager providers
     "get_alert_rules",
     "get_anomaly_thresholds",
     "toggle_rule",
@@ -79,7 +79,7 @@ __all__ = [
     "get_recent_alerts",
     "check_system_anomalies",
     "get_alert_settings_callbacks",
-    # multi-exchange providers (Phase 7D-3)
+    # multi-exchange providers
     "get_exchange_list",
     "get_exchange_status",
     "get_price_comparison",

@@ -8,8 +8,6 @@ from typing import Any, Dict, List
 
 import streamlit as st
 
-from services.dashboard.utils.symbols import upbit_to_dashboard
-
 logger = logging.getLogger(__name__)
 
 
@@ -36,24 +34,6 @@ def get_holdings_upbit() -> List[Dict[str, Any]]:
     except Exception as exc:
         logger.warning("Failed to get holdings: %s", type(exc).__name__)
         return []
-
-
-def get_holding_symbols() -> List[str]:
-    """Get list of held symbols in Dashboard format (BTC/KRW)."""
-    holdings = get_holdings_upbit()
-    symbols: List[str] = []
-
-    for entry in holdings:
-        currency = entry.get("currency", "")
-        try:
-            balance = float(entry.get("balance", 0))
-        except (ValueError, TypeError):
-            balance = 0.0
-
-        if currency and currency != "KRW" and balance > 0:
-            symbols.append(upbit_to_dashboard(currency))
-
-    return symbols
 
 
 @st.cache_data(ttl=5, show_spinner=False)
@@ -92,7 +72,65 @@ def get_holdings_bithumb() -> List[Dict[str, Any]]:
         return []
 
 
+@st.cache_data(ttl=5, show_spinner=False)
+def get_holdings_binance() -> List[Dict[str, Any]]:
+    """Get Binance Spot holdings (cached 5s for real-time updates).
+
+    Requires: MASP_ENABLE_LIVE_TRADING=1
+
+    Returns:
+        List of dicts with currency, balance (avg_buy_price not available from API)
+    """
+    if not is_private_api_enabled():
+        logger.debug("Private API not enabled")
+        return []
+
+    try:
+        from libs.adapters.real_binance_spot import BinanceSpotExecution
+
+        adapter = BinanceSpotExecution()
+        balances = adapter.get_all_balances()  # Dict[str, float]
+
+        holdings = []
+        for currency, balance in balances.items():
+            if balance > 0:
+                holdings.append(
+                    {
+                        "currency": currency,
+                        "balance": balance,
+                        "avg_buy_price": None,
+                    }
+                )
+        return holdings
+    except Exception as exc:
+        logger.warning("Failed to get Binance holdings: %s", type(exc).__name__)
+        return []
+
+
+def get_holding_symbols() -> List[str]:
+    """Get list of held symbols in Dashboard format (e.g. BTC/KRW, ETH/USDT)."""
+    symbols: List[str] = []
+
+    for getter, quote in [
+        (get_holdings_upbit, "KRW"),
+        (get_holdings_bithumb, "KRW"),
+        (get_holdings_binance, "USDT"),
+    ]:
+        for entry in getter():
+            currency = entry.get("currency", "")
+            try:
+                balance = float(entry.get("balance", 0) or 0)
+            except (ValueError, TypeError):
+                balance = 0.0
+
+            if currency and currency != quote and balance > 0:
+                symbols.append(f"{currency}/{quote}")
+
+    return symbols
+
+
 def clear_holdings_cache() -> None:
     """Clear holdings cache for refresh."""
     get_holdings_upbit.clear()
     get_holdings_bithumb.clear()
+    get_holdings_binance.clear()

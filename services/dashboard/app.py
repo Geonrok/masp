@@ -14,15 +14,14 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from services.dashboard.components.alert_history import render_alert_history_panel
 from services.dashboard.components.alert_settings import render_alert_settings
-
-# Existing components
+from services.dashboard.components.ankle_strategy_status import (
+    render_ankle_strategy_status,
+)
 from services.dashboard.components.api_key_status import render_api_key_status_panel
 from services.dashboard.components.backtest_viewer import render_backtest_viewer
 from services.dashboard.components.exchange_control import render_exchange_controls
 from services.dashboard.components.exchange_status import ExchangeStatusPanel
 from services.dashboard.components.log_viewer import render_log_viewer
-
-# Phase 7E: Market Regime & Signal components
 from services.dashboard.components.market_regime_panel import (
     render_market_regime_panel,
     render_signal_status_panel,
@@ -39,8 +38,6 @@ from services.dashboard.components.strategy_indicators import render_strategy_in
 from services.dashboard.components.strategy_performance import (
     render_strategy_performance,
 )
-
-# Phase 7C-4 components
 from services.dashboard.components.system_status import render_system_status
 from services.dashboard.components.telegram_settings import render_telegram_settings
 from services.dashboard.components.trade_history import render_trade_history_panel
@@ -70,7 +67,7 @@ from services.dashboard.providers.order_provider import (
     get_price_provider,
 )
 
-# Phase 7C-6: Data providers
+# Data providers
 from services.dashboard.providers.portfolio_provider import get_portfolio_summary
 from services.dashboard.providers.positions_provider import get_positions_data
 from services.dashboard.providers.risk_metrics_provider import get_risk_metrics_data
@@ -156,7 +153,7 @@ with tabs[1]:
         render_trade_history_panel(api_client=get_trade_history_client())
 
     with trading_subtabs[3]:
-        # Multi-exchange price comparison and arbitrage (Phase 7D-3)
+        # Multi-exchange price comparison and arbitrage
         render_multi_exchange_view(
             exchanges=get_exchange_list(),
             comparison_provider=get_price_comparison,
@@ -173,7 +170,7 @@ with tabs[2]:
     )
 
     with analytics_subtabs[0]:
-        # Market Regime Analysis (Phase 7E)
+        # Market Regime Analysis
         col1, col2 = st.columns([1, 1])
         with col1:
             render_market_regime_panel(analysis_provider=get_market_regime_analysis)
@@ -236,18 +233,18 @@ with tabs[2]:
 # Tab 4: Monitoring - Logs, alerts, scheduler, strategy status
 # =============================================================================
 with tabs[3]:
-    monitoring_subtabs = st.tabs(["로그", "알림", "스케줄러"])
+    monitoring_subtabs = st.tabs(["전략 상태", "로그", "알림", "스케줄러"])
 
     with monitoring_subtabs[0]:
-        # Real logs from log files (or demo if unavailable)
-        render_log_viewer(log_provider=get_log_provider())
+        render_ankle_strategy_status()
 
     with monitoring_subtabs[1]:
-        # Real alert history from logs (or demo if unavailable)
-        render_alert_history_panel(alert_store=get_alert_store())
+        render_log_viewer(log_provider=get_log_provider())
 
     with monitoring_subtabs[2]:
-        # Real scheduler status from APScheduler (or static jobs if unavailable)
+        render_alert_history_panel(alert_store=get_alert_store())
+
+    with monitoring_subtabs[3]:
         render_scheduler_status(job_provider=get_scheduler_job_provider())
 
 # =============================================================================
@@ -268,7 +265,7 @@ with tabs[4]:
         render_telegram_settings()
 
     with settings_subtabs[3]:
-        # Alert rules and anomaly threshold settings (Phase 7D-2)
+        # Alert rules and anomaly threshold settings
         callbacks = get_alert_settings_callbacks()
         render_alert_settings(
             rules=get_alert_rules(),
@@ -280,7 +277,7 @@ with tabs[4]:
         )
 
     with settings_subtabs[4]:
-        render_exchange_controls(SIGNAL_PREVIEW_EXCHANGES[:2])
+        render_exchange_controls(SIGNAL_PREVIEW_EXCHANGES)
 
 # =============================================================================
 # Sidebar

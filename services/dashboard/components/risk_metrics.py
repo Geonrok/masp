@@ -330,12 +330,12 @@ def calculate_risk_metrics(
 
 
 def _get_demo_returns() -> List[float]:
-    """Generate demo daily returns based on Sept_v3_RSI50_Gate OOS performance.
+    """Generate demo daily returns based on Ankle Buy v2.0 Bithumb OOS performance.
 
-    OOS Performance (v3, 2019-2024):
-        - Sharpe: 2.27
-        - MDD: -37.0%
-        - Return: 11,763% (over ~5 years)
+    OOS Performance (2019-2024):
+        - Sharpe: 0.98
+        - MDD: -22%
+        - CAGR: 25.4%
 
     Uses deterministic pattern for reproducibility.
     """
@@ -346,10 +346,9 @@ def _get_demo_returns() -> List[float]:
     # 5 years of trading days
     num_days = 252 * 5  # 1260 days
 
-    # Target: 11,763% over 5 years
-    # Daily return ~= 0.379% with std ~2.65% for Sharpe 2.27
-    target_daily_mean = 0.00379
-    target_daily_std = 0.0265
+    # Target: CAGR 25.4%, Sharpe 0.98
+    target_daily_mean = 0.0009
+    target_daily_std = 0.0146
 
     returns = []
     for i in range(num_days):
@@ -367,7 +366,7 @@ def _get_demo_returns() -> List[float]:
 
 
 def _get_demo_equity_curve(initial_equity: float = 10_000_000) -> List[float]:
-    """Generate demo equity curve from Sept_v3 OOS returns."""
+    """Generate demo equity curve from Ankle Buy v2.0 OOS returns."""
     returns = _get_demo_returns()
     equity_curve: List[float] = [float(initial_equity)]
 

@@ -12,17 +12,15 @@ import streamlit as st
 logger = logging.getLogger(__name__)
 
 
-def _get_trade_logger():
-    """Get TradeLogger instance."""
+def _get_aggregated_trades(start_date, end_date):
+    """Get trades from all known log directories."""
     try:
-        from libs.adapters.trade_logger import TradeLogger
+        from services.dashboard.utils.trade_log_reader import get_aggregated_trades
 
-        return TradeLogger()
-    except ImportError:
-        return None
+        return get_aggregated_trades(start_date, end_date)
     except Exception as e:
-        logger.debug("TradeLogger initialization failed: %s", e)
-        return None
+        logger.debug("Trade log reader failed: %s", e)
+        return []
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -135,24 +133,10 @@ def get_risk_metrics_data(
     Returns:
         Tuple of (returns, equity_curve, dates) or None for demo mode
     """
-    trade_logger = _get_trade_logger()
-
-    if trade_logger is None:
-        return None
-
-    # Collect trades for the period
-    all_trades: List[Dict] = []
     end_date = date.today()
     start_date = end_date - timedelta(days=days)
 
-    current_date = start_date
-    while current_date <= end_date:
-        try:
-            day_trades = trade_logger.get_trades(current_date)
-            all_trades.extend(day_trades)
-        except Exception as e:
-            logger.debug("Failed to get trades for %s: %s", current_date, e)
-        current_date += timedelta(days=1)
+    all_trades = _get_aggregated_trades(start_date, end_date)
 
     if not all_trades:
         return None

@@ -1,4 +1,4 @@
-"""Trade history provider - connects TradeLogger to trade_history component."""
+"""Trade history provider - connects trade logs to trade_history component."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_trade_logger():
-    """Get TradeLogger instance.
+    """Get TradeLogger instance for daily summary.
 
     Returns:
         TradeLogger instance or None if unavailable
@@ -30,14 +30,14 @@ def _get_trade_logger():
 class TradeHistoryApiClient:
     """API client wrapper for trade history component.
 
-    This class provides the interface expected by trade_history_panel.
+    Reads trades from all known log directories (default + per-exchange).
     """
 
     def __init__(self, trade_logger=None):
         """Initialize with optional TradeLogger.
 
         Args:
-            trade_logger: TradeLogger instance (auto-creates if None)
+            trade_logger: TradeLogger instance for daily summary (optional)
         """
         self._logger = trade_logger or _get_trade_logger()
 
@@ -47,7 +47,7 @@ class TradeHistoryApiClient:
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
     ) -> List[Dict[str, Any]]:
-        """Get trade history from TradeLogger.
+        """Get trade history from all trade log directories.
 
         Args:
             days: Number of days to look back (default 7)
@@ -57,10 +57,7 @@ class TradeHistoryApiClient:
         Returns:
             List of trade dicts in trade_history component format
         """
-        if self._logger is None:
-            return []
-
-        trades: List[Dict[str, Any]] = []
+        from services.dashboard.utils.trade_log_reader import get_aggregated_trades
 
         # Determine date range
         if end_date is None:
@@ -68,18 +65,13 @@ class TradeHistoryApiClient:
         if start_date is None:
             start_date = end_date - timedelta(days=days)
 
-        # Collect trades from each day
-        current_date = start_date
-        while current_date <= end_date:
-            try:
-                day_trades = self._logger.get_trades(current_date)
-                for trade in day_trades:
-                    converted = self._convert_trade(trade)
-                    if converted:
-                        trades.append(converted)
-            except Exception as e:
-                logger.debug("Failed to get trades for %s: %s", current_date, e)
-            current_date += timedelta(days=1)
+        raw_trades = get_aggregated_trades(start_date, end_date)
+
+        trades: List[Dict[str, Any]] = []
+        for trade in raw_trades:
+            converted = self._convert_trade(trade)
+            if converted:
+                trades.append(converted)
 
         # Sort by timestamp descending (newest first)
         trades.sort(key=lambda t: t.get("timestamp", datetime.min), reverse=True)
@@ -168,10 +160,13 @@ class TradeHistoryApiClient:
 def get_trade_history_client() -> Optional[TradeHistoryApiClient]:
     """Get trade history API client.
 
+    Always returns a client since it uses aggregated trade log reading.
+    Returns None only if trade_log_reader is completely unavailable.
+
     Returns:
-        TradeHistoryApiClient if TradeLogger available, None otherwise
+        TradeHistoryApiClient instance, or None if import fails
     """
-    trade_logger = _get_trade_logger()
-    if trade_logger is None:
+    try:
+        return TradeHistoryApiClient()
+    except Exception:
         return None
-    return TradeHistoryApiClient(trade_logger)

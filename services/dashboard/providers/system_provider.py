@@ -145,6 +145,56 @@ def _check_database() -> Tuple[ServiceStatus, Optional[float], str]:
         return ServiceStatus.UNHEALTHY, latency_ms, str(e)[:50]
 
 
+def _check_bithumb_api() -> Tuple[ServiceStatus, Optional[float], str]:
+    """Check Bithumb API connectivity.
+
+    Returns:
+        Tuple of (status, latency_ms, message)
+    """
+    start_time = time.time()
+    try:
+        from libs.adapters.real_bithumb_execution import BithumbExecution
+
+        adapter = BithumbExecution()
+        price = adapter.get_current_price("BTC/KRW")
+        latency_ms = (time.time() - start_time) * 1000
+
+        if price is not None:
+            return ServiceStatus.HEALTHY, latency_ms, ""
+        return ServiceStatus.DEGRADED, latency_ms, "No price data"
+
+    except ImportError:
+        return ServiceStatus.UNKNOWN, None, "Adapter not available"
+    except Exception as e:
+        latency_ms = (time.time() - start_time) * 1000
+        return ServiceStatus.UNHEALTHY, latency_ms, str(e)[:50]
+
+
+def _check_binance_api() -> Tuple[ServiceStatus, Optional[float], str]:
+    """Check Binance API connectivity.
+
+    Returns:
+        Tuple of (status, latency_ms, message)
+    """
+    start_time = time.time()
+    try:
+        from libs.adapters.real_binance_spot import BinanceSpotMarketData
+
+        market_data = BinanceSpotMarketData()
+        quote = market_data.get_quote("BTC/USDT")
+        latency_ms = (time.time() - start_time) * 1000
+
+        if quote and quote.last is not None:
+            return ServiceStatus.HEALTHY, latency_ms, ""
+        return ServiceStatus.DEGRADED, latency_ms, "No price data"
+
+    except ImportError:
+        return ServiceStatus.UNKNOWN, None, "Adapter not available"
+    except Exception as e:
+        latency_ms = (time.time() - start_time) * 1000
+        return ServiceStatus.UNHEALTHY, latency_ms, str(e)[:50]
+
+
 def _check_telegram() -> Tuple[ServiceStatus, Optional[float], str]:
     """Check Telegram bot status.
 
@@ -178,6 +228,30 @@ def get_service_health() -> List[ServiceHealth]:
             status=upbit_status,
             latency_ms=upbit_latency,
             message=upbit_message,
+            last_check=now,
+        )
+    )
+
+    # Bithumb API
+    bithumb_status, bithumb_latency, bithumb_message = _check_bithumb_api()
+    services.append(
+        ServiceHealth(
+            name="Bithumb API",
+            status=bithumb_status,
+            latency_ms=bithumb_latency,
+            message=bithumb_message,
+            last_check=now,
+        )
+    )
+
+    # Binance API
+    binance_status, binance_latency, binance_message = _check_binance_api()
+    services.append(
+        ServiceHealth(
+            name="Binance API",
+            status=binance_status,
+            latency_ms=binance_latency,
+            message=binance_message,
             last_check=now,
         )
     )

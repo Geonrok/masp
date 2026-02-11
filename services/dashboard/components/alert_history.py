@@ -42,7 +42,7 @@ def _get_demo_alerts() -> List[Dict[str, Any]]:
             "timestamp": base_time - timedelta(hours=4, minutes=30),
             "alert_type": ALERT_TYPE_SIGNAL,
             "exchange": "upbit",
-            "message": "KAMA crossover detected for ETH",
+            "message": "Ankle Buy entry signal for ETH",
             "status": STATUS_SENT,
         },
         {

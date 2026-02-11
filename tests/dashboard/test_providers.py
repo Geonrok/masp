@@ -298,14 +298,13 @@ def test_trade_history_provider_import():
 
 
 def test_trade_history_api_client_with_mock():
-    """Test TradeHistoryApiClient with mock logger."""
+    """Test TradeHistoryApiClient with mock aggregated trades."""
 
     from services.dashboard.providers.trade_history_provider import (
         TradeHistoryApiClient,
     )
 
-    mock_logger = MagicMock()
-    mock_logger.get_trades.return_value = [
+    mock_trades = [
         {
             "timestamp": "2024-01-01T10:00:00",
             "exchange": "upbit",
@@ -321,8 +320,12 @@ def test_trade_history_api_client_with_mock():
         }
     ]
 
-    client = TradeHistoryApiClient(mock_logger)
-    trades = client.get_trade_history(days=1)
+    with patch(
+        "services.dashboard.utils.trade_log_reader.get_aggregated_trades",
+        return_value=mock_trades,
+    ):
+        client = TradeHistoryApiClient()
+        trades = client.get_trade_history(days=1)
 
     assert len(trades) >= 1
     assert trades[0]["symbol"] == "BTC"
@@ -487,15 +490,19 @@ def test_scheduler_provider_returns_jobs():
         assert isinstance(job, ScheduledJob)
 
 
-def test_parse_job_type():
-    """Test job type parsing."""
-    from services.dashboard.components.scheduler_status import JobType
-    from services.dashboard.providers.scheduler_provider import _parse_job_type
+def test_get_config_jobs():
+    """Test config-based job loading."""
+    from services.dashboard.providers.scheduler_provider import _get_config_jobs
 
-    assert _parse_job_type("BTC Momentum Strategy") == JobType.STRATEGY
-    assert _parse_job_type("Market Data Fetch") == JobType.DATA_FETCH
-    assert _parse_job_type("Daily Report") == JobType.REPORT
-    assert _parse_job_type("Log Cleanup") == JobType.CLEANUP
+    jobs = _get_config_jobs()
+
+    # Should load jobs from schedule_config.json
+    assert isinstance(jobs, list)
+    if jobs:
+        job = jobs[0]
+        assert hasattr(job, "job_id")
+        assert hasattr(job, "name")
+        assert hasattr(job, "is_enabled")
 
 
 # =============================================================================

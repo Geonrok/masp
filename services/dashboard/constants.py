@@ -57,7 +57,6 @@ FEE_RATES = {
     "upbit": 0.0005,  # 0.05%
     "bithumb": 0.0004,  # 0.04%
     "binance": 0.001,  # 0.1% (maker)
-    "binance_futures": 0.0004,  # 0.04% (maker)
 }
 
 

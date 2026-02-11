@@ -18,22 +18,19 @@ from services.dashboard.components.strategy_performance import (
 logger = logging.getLogger(__name__)
 
 
-def _get_trade_logger():
-    """Get TradeLogger instance.
+def _get_aggregated_trades(start_date, end_date):
+    """Get trades from all known log directories.
 
     Returns:
-        TradeLogger instance or None if unavailable
+        List of trade dicts
     """
     try:
-        from libs.adapters.trade_logger import TradeLogger
+        from services.dashboard.utils.trade_log_reader import get_aggregated_trades
 
-        return TradeLogger()
-    except ImportError as e:
-        logger.debug("TradeLogger import failed: %s", e)
-        return None
+        return get_aggregated_trades(start_date, end_date)
     except Exception as e:
-        logger.debug("TradeLogger initialization failed: %s", e)
-        return None
+        logger.debug("Trade log reader failed: %s", e)
+        return []
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
@@ -123,7 +120,6 @@ def _calculate_sharpe_ratio(
         return 0.0
 
     # Annualize (assuming daily returns)
-    mean_return * 252
     annual_std = std_dev * math.sqrt(252)
     daily_rf = risk_free_rate / 252
 
@@ -161,7 +157,6 @@ def _calculate_sortino_ratio(
         return 0.0
 
     # Annualize
-    mean_return * 252
     annual_downside_std = downside_std * math.sqrt(252)
     daily_rf = risk_free_rate / 252
 
@@ -335,24 +330,10 @@ def get_strategy_performances(days: int = 30) -> List[StrategyPerformance]:
     Returns:
         List of StrategyPerformance instances
     """
-    trade_logger = _get_trade_logger()
-
-    if trade_logger is None:
-        return []
-
-    # Collect trades for the period
-    all_trades: List[Dict] = []
     end_date = date.today()
     start_date = end_date - timedelta(days=days)
 
-    current_date = start_date
-    while current_date <= end_date:
-        try:
-            day_trades = trade_logger.get_trades(current_date)
-            all_trades.extend(day_trades)
-        except Exception as e:
-            logger.debug("Failed to get trades for %s: %s", current_date, e)
-        current_date += timedelta(days=1)
+    all_trades = _get_aggregated_trades(start_date, end_date)
 
     if not all_trades:
         return []
@@ -386,14 +367,13 @@ def get_strategy_performance_provider() -> (
 ):
     """Get performance provider function for strategy_performance component.
 
-    Returns:
-        Function that returns List[StrategyPerformance], or None for demo mode
-    """
-    # Check if trade logger is available
-    trade_logger = _get_trade_logger()
+    Always returns a provider that reads from all trade log directories.
+    The provider returns an empty list if no trades are found, which triggers
+    the component's demo mode fallback.
 
-    if trade_logger is None:
-        return None
+    Returns:
+        Function that returns List[StrategyPerformance]
+    """
 
     def performance_provider() -> List[StrategyPerformance]:
         return get_strategy_performances()

@@ -72,12 +72,12 @@ def get_exchange_list() -> List[Dict[str, Any]]:
                 "latency_ms": 60,
             },
             {
-                "name": "binance_futures",
-                "display_name": "Binance Futures",
-                "exchange_type": "futures",
+                "name": "binance_spot",
+                "display_name": "Binance Spot",
+                "exchange_type": "spot",
                 "region": "global",
-                "status": "unknown",
-                "latency_ms": 0,
+                "status": "online",
+                "latency_ms": 80,
             },
         ]
 
@@ -219,9 +219,9 @@ def get_registry_summary() -> Dict[str, Any]:
     if registry is None:
         return {
             "total": 3,
-            "online": 2,
+            "online": 3,
             "offline": 0,
-            "by_type": {"spot": 2, "futures": 1},
+            "by_type": {"spot": 3},
             "by_region": {"korea": 2, "global": 1},
         }
 

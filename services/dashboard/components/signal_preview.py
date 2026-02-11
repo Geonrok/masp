@@ -22,10 +22,34 @@ from services.dashboard.utils.signal_generator import (
     get_signal_generator_status,
 )
 from services.dashboard.utils.symbols import upbit_to_dashboard
-from services.dashboard.utils.upbit_symbols import (
-    get_all_upbit_symbols,
-    get_symbol_count,
-)
+from services.dashboard.utils.upbit_symbols import get_all_upbit_symbols
+
+
+def _get_all_symbols_for_exchange(exchange: str) -> list[str]:
+    """Get all symbols for the given exchange."""
+    if exchange == "upbit":
+        return get_all_upbit_symbols()
+    if exchange == "bithumb":
+        try:
+            from libs.adapters.bithumb_public import get_all_krw_symbols
+
+            return [f"{s}/KRW" for s in get_all_krw_symbols()]
+        except Exception:
+            return []
+    if exchange == "binance":
+        try:
+            from libs.adapters.binance_api import BinanceAPI
+
+            api = BinanceAPI()
+            info = api.get_exchange_info()
+            return [
+                f"{s['baseAsset']}/USDT"
+                for s in info.get("symbols", [])
+                if s.get("quoteAsset") == "USDT" and s.get("status") == "TRADING"
+            ]
+        except Exception:
+            return []
+    return []
 
 
 def render_signal_preview_panel() -> None:
@@ -74,12 +98,11 @@ def render_signal_preview_panel() -> None:
             st.caption("Holdings filter requires MASP_ENABLE_LIVE_TRADING=1")
 
     if show_all_list:
-        if not can_live or exchange != "upbit":
-            st.info("Full symbol list is available for LIVE Upbit mode only.")
+        if not can_live:
+            st.info("Full symbol list is available in LIVE mode only.")
         else:
-            all_symbols = get_all_upbit_symbols()
-            total_count = get_symbol_count()
-            st.caption(f"Total available: {total_count} symbols")
+            all_symbols = _get_all_symbols_for_exchange(exchange)
+            st.caption(f"Total available: {len(all_symbols)} symbols")
 
             query = st.text_input(
                 "Search symbols", value="", key="signal_symbol_search"

@@ -31,6 +31,26 @@ def dashboard_to_upbit(symbol: str) -> str:
     return symbol
 
 
+def binance_to_dashboard(symbol: str) -> str:
+    """Convert Binance format to Dashboard format.
+
+    BTCUSDT -> BTC/USDT
+    """
+    if "/" in symbol:
+        return symbol
+    if symbol.endswith("USDT"):
+        return symbol[:-4] + "/USDT"
+    return symbol
+
+
+def dashboard_to_binance(symbol: str) -> str:
+    """Convert Dashboard format to Binance format.
+
+    BTC/USDT -> BTCUSDT
+    """
+    return symbol.replace("/", "")
+
+
 def convert_symbols_to_dashboard(symbols: List[str]) -> List[str]:
     """Convert list of Upbit symbols to Dashboard format."""
     return [upbit_to_dashboard(symbol) for symbol in symbols]

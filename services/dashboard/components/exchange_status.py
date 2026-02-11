@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
+import json
 import math
 import os
 import time
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 import streamlit as st
 
-from services.dashboard.constants import (
-    DEFAULT_AUTO_REFRESH_INTERVAL,
-    SUPPORTED_EXCHANGES,
-)
+from services.dashboard.constants import DEFAULT_AUTO_REFRESH_INTERVAL
 
 
 def _get_refresh_interval() -> float:
@@ -29,34 +28,56 @@ def _get_refresh_interval() -> float:
 
 _AUTO_REFRESH_INTERVAL = _get_refresh_interval()
 
-# Demo exchange configurations (used when API is unavailable)
+_SCHEDULE_CONFIG_PATH = (
+    Path(__file__).resolve().parent.parent.parent.parent
+    / "config"
+    / "schedule_config.json"
+)
+
+# Fallback demo data when schedule_config.json is unavailable
 _DEMO_EXCHANGE_CONFIGS: Dict[str, Dict[str, Any]] = {
-    "upbit": {"enabled": True, "name": "Upbit", "region": "KR", "type": "spot"},
-    "bithumb": {"enabled": True, "name": "Bithumb", "region": "KR", "type": "spot"},
-    "binance": {
-        "enabled": False,
-        "name": "Binance",
-        "region": "Global",
-        "type": "spot",
+    "upbit_ankle": {
+        "enabled": True,
+        "exchange": "upbit",
+        "strategy": "ankle_buy_v2",
+        "websocket_monitor": True,
+    },
+    "bithumb_ankle": {
+        "enabled": True,
+        "exchange": "bithumb",
+        "strategy": "ankle_buy_v2",
+        "websocket_monitor": True,
+    },
+    "binance_spot_ankle": {
+        "enabled": True,
+        "exchange": "binance_spot",
+        "strategy": "ankle_buy_v2",
+        "websocket_monitor": True,
     },
 }
 
 
+def _load_schedule_config() -> Dict[str, Dict[str, Any]]:
+    """Load exchange configs from schedule_config.json."""
+    try:
+        with open(_SCHEDULE_CONFIG_PATH, encoding="utf-8") as f:
+            return json.load(f).get("exchanges", {})
+    except Exception:
+        return {}
+
+
 class ExchangeStatusPanel:
-    EXCHANGES = SUPPORTED_EXCHANGES
     _LAST_RERUN_TS_KEY = "masp_last_auto_refresh_rerun_ts"
-    _DEMO_MODE_KEY = "exchange_status_demo_mode"
 
     def __init__(self, api_client) -> None:
         self.api = api_client
         self._is_demo_mode = False
 
-    def _get_config(self, exchange: str) -> Optional[Dict[str, Any]]:
-        """Get exchange config from API, fallback to demo data."""
+    def _get_api_config(self, exchange: str) -> Optional[Dict[str, Any]]:
+        """Get exchange config from API."""
         config = self.api.get_exchange_config(exchange)
         if config is None:
             self._is_demo_mode = True
-            return _DEMO_EXCHANGE_CONFIGS.get(exchange)
         return config
 
     def render(self) -> None:
@@ -77,47 +98,46 @@ class ExchangeStatusPanel:
                 st.session_state[self._LAST_RERUN_TS_KEY] = now
                 st.rerun()
 
-        for exchange in self.EXCHANGES:
-            col1, col2, col3 = st.columns([2, 1, 1])
+        configs = _load_schedule_config()
+        if not configs:
+            configs = _DEMO_EXCHANGE_CONFIGS
+            self._is_demo_mode = True
+
+        for name, cfg in configs.items():
+            enabled = cfg.get("enabled", False)
+            strategy = cfg.get("strategy", "unknown")
+            exchange = cfg.get("exchange", name)
+            has_ws = cfg.get("websocket_monitor", False)
+
+            col1, col2, col3, col4, col5 = st.columns([2, 1.5, 0.8, 0.5, 1])
 
             with col1:
-                st.text(exchange.upper())
+                st.text(name)
 
             with col2:
-                config = self._get_config(exchange)
-                if config is None:
-                    status = "오프라인"
-                    enabled = False
-                else:
-                    enabled = config.get("enabled", False)
-                    status = "활성" if enabled else "비활성"
-
-                # Color-coded status
-                if enabled:
-                    st.markdown(f":green[{status}]")
-                else:
-                    st.markdown(f":gray[{status}]")
+                st.caption(strategy)
 
             with col3:
-                if config is not None:
-                    btn_label = "비활성화" if enabled else "활성화"
-                    if st.button(btn_label, key=f"status_toggle_{exchange}"):
-                        if self._is_demo_mode:
-                            # Toggle in demo mode (session state only)
-                            demo_key = f"demo_exchange_{exchange}_enabled"
-                            current = st.session_state.get(demo_key, enabled)
-                            st.session_state[demo_key] = not current
-                            _DEMO_EXCHANGE_CONFIGS[exchange]["enabled"] = not current
+                if enabled:
+                    st.markdown(":green[활성]")
+                else:
+                    st.markdown(":gray[비활성]")
+
+            with col4:
+                if has_ws:
+                    st.caption("WS")
+
+            with col5:
+                # Try API toggle for active exchanges
+                api_config = self._get_api_config(exchange)
+                if api_config is not None and enabled:
+                    btn_label = "비활성화"
+                    if st.button(btn_label, key=f"status_toggle_{name}"):
+                        success = self.api.toggle_exchange(exchange, False)
+                        if success:
                             st.rerun()
                         else:
-                            success = self.api.toggle_exchange(exchange, not enabled)
-                            if success:
-                                st.rerun()
-                            else:
-                                st.error(
-                                    f"{exchange} 전환 실패. API 서버를 확인하세요."
-                                )
+                            st.error(f"{name} 전환 실패.")
 
-        # Show demo mode indicator
         if self._is_demo_mode:
             st.caption("데모 모드 - API 서버 연결 시 실제 상태 표시")
