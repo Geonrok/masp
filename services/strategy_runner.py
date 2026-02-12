@@ -81,6 +81,8 @@ class StrategyRunner:
     ):
         self.strategy_name = strategy_name
         self.exchange = exchange
+        self._exchange_label = exchange_label or exchange
+        self._force_paper = force_paper
         self.symbols = symbols or ["BTC/KRW"]
         self.position_size_krw = position_size_krw
         self.position_size_usdt = position_size_usdt
@@ -631,7 +633,7 @@ class StrategyRunner:
 
             # Telegram 알림 (best-effort)
             self._send_trade_notification(
-                symbol, "BUY", self._position_size, current_price, "FILLED"
+                symbol, "BUY", self._effective_size, current_price, "FILLED"
             )
             return {"action": "BUY", "order_id": order.order_id or order.symbol}
 
@@ -852,8 +854,9 @@ class StrategyRunner:
         if not self._notifier.enabled:
             return
         try:
+            mode = "PAPER" if self._force_paper else ""
             msg = format_trade_message(
-                self.exchange, symbol, side, quantity, price, status
+                self._exchange_label, symbol, side, quantity, price, status, mode=mode
             )
             self._notifier.send_message_sync(msg)
         except Exception as exc:
@@ -870,7 +873,9 @@ class StrategyRunner:
                     if hasattr(self.trade_logger, "get_daily_pnl")
                     else 0
                 )
-                msg = format_daily_summary(self.exchange, trades_today, pnl)
+                msg = format_daily_summary(
+                    self._exchange_label, trades_today, pnl, self._quote_currency
+                )
                 self._notifier.send_message_sync(msg)
             except Exception as exc:
                 logger.debug("[Telegram] Daily summary failed (swallowed): %s", exc)

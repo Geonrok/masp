@@ -57,26 +57,46 @@ class TelegramNotifier:
 
 
 def format_trade_message(
-    exchange: str, symbol: str, side: str, quantity: float, price: float, status: str
+    exchange: str,
+    symbol: str,
+    side: str,
+    quantity: float,
+    price: float,
+    status: str,
+    mode: str = "",
 ) -> str:
     """Format trade notification with HTML escape."""
     side_upper = side.upper()
     emoji = "🟢" if side_upper == "BUY" else "🔴"
+    # Determine currency from symbol or exchange
+    if "/USDT" in symbol or exchange.lower() in ("binance_spot", "binance_futures"):
+        currency = "USDT"
+        price_str = f"{price:,.4f} USDT"
+    else:
+        currency = "KRW"
+        price_str = f"{price:,.0f} KRW"
+    mode_tag = f" [{html.escape(mode.upper())}]" if mode else ""
     return (
-        f"{emoji} <b>{html.escape(exchange.upper())}</b>\n"
+        f"{emoji} <b>{html.escape(exchange.upper())}{mode_tag}</b>\n"
         f"Symbol: {html.escape(symbol)}\n"
         f"Side: {html.escape(side)}\n"
         f"Qty: {quantity:.8f}\n"
-        f"Price: {price:,.0f} KRW\n"
+        f"Price: {price_str}\n"
         f"Status: {html.escape(status)}"
     )
 
 
-def format_daily_summary(exchange: str, trades: int, pnl: float) -> str:
+def format_daily_summary(
+    exchange: str, trades: int, pnl: float, currency: str = "KRW"
+) -> str:
     """Format daily summary."""
     emoji = "📈" if pnl >= 0 else "📉"
+    if currency == "USDT":
+        pnl_str = f"{pnl:+,.2f} USDT"
+    else:
+        pnl_str = f"{pnl:+,.0f} KRW"
     return (
         f"{emoji} <b>Daily - {html.escape(exchange.upper())}</b>\n"
         f"Trades: {trades}\n"
-        f"PnL: {pnl:+,.0f} KRW"
+        f"PnL: {pnl_str}"
     )
