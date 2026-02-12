@@ -160,6 +160,9 @@
       "symbols": "ALL_KRW",
       "position_size_mode": "equal_weight",
       "min_position_krw": 50000,
+      "websocket_monitor": true,
+      "daily_close_hour": 9,
+      "daily_close_timezone": "Asia/Seoul",
       "force_paper": true,
       "strategy_config": {"btc_gate_enabled": false},
       "schedule": {
@@ -177,6 +180,9 @@
       "symbols": "ALL_KRW",
       "position_size_mode": "equal_weight",
       "min_position_krw": 50000,
+      "websocket_monitor": true,
+      "daily_close_hour": 0,
+      "daily_close_timezone": "Asia/Seoul",
       "force_paper": true,
       "strategy_config": {"btc_gate_enabled": false},
       "schedule": {
@@ -194,6 +200,9 @@
       "symbols": "ALL_USDT",
       "position_size_mode": "equal_weight",
       "min_position_usdt": 50,
+      "websocket_monitor": true,
+      "daily_close_hour": 0,
+      "daily_close_timezone": "UTC",
       "force_paper": true,
       "strategy_config": {"btc_gate_enabled": false},
       "schedule": {

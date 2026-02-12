@@ -225,8 +225,16 @@ class MultiExchangeScheduler:
             leverage = cfg.get("leverage", 1)  # For futures
 
             # Create StrategyRunner with base exchange name
-            strategy_config = cfg.get("strategy_config")
+            strategy_config = dict(cfg.get("strategy_config") or {})
             force_paper = cfg.get("force_paper", False)
+
+            # Auto-inject daily_close_hour into strategy config for time-aware entry
+            if "daily_close_hour" in cfg:
+                strategy_config.setdefault("daily_close_hour", cfg["daily_close_hour"])
+            if "daily_close_timezone" in cfg:
+                strategy_config.setdefault(
+                    "daily_close_timezone", cfg["daily_close_timezone"]
+                )
 
             runner = StrategyRunner(
                 strategy_name=cfg.get("strategy", "KAMA-TSMOM-Gate"),

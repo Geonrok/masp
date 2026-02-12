@@ -24,6 +24,7 @@ import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
+from zoneinfo import ZoneInfo
 
 import numpy as np
 
@@ -258,6 +259,28 @@ class AnkleBuyV2Strategy(BaseStrategy):
         return self._pos_info.get(symbol)
 
     # ------------------------------------------------------------------
+    # Entry time window
+    # ------------------------------------------------------------------
+
+    def _is_entry_window(self) -> bool:
+        """Check if current time is within the daily entry window.
+
+        Entry is allowed during daily_close_hour and the following hour,
+        giving a 2-hour window for retries if the first run fails.
+        Returns True if daily_close_hour is not configured (backward compat).
+        """
+        close_hour = self.config.get("daily_close_hour")
+        if close_hour is None:
+            return True
+        tz_name = self.config.get("daily_close_timezone", "UTC")
+        try:
+            current_hour = datetime.now(ZoneInfo(tz_name)).hour
+        except (KeyError, Exception):
+            logger.warning("[AnkleBuyV2] Invalid timezone '%s', allowing entry", tz_name)
+            return True
+        return current_hour in (close_hour, (close_hour + 1) % 24)
+
+    # ------------------------------------------------------------------
     # Entry / Exit logic
     # ------------------------------------------------------------------
 
@@ -484,6 +507,16 @@ class AnkleBuyV2Strategy(BaseStrategy):
             )
 
         # --- ENTRY LOGIC (no position) ---
+        # Time window check: only BUY near daily close hour
+        if not self._is_entry_window():
+            return TradeSignal(
+                symbol=symbol,
+                signal=Signal.HOLD,
+                price=current_price,
+                timestamp=now,
+                reason=f"Outside entry window (close_hour={self.config.get('daily_close_hour')})",
+            )
+
         # Gate OFF → don't signal BUY (runner also blocks, but be explicit)
         if gate_pass is False:
             return TradeSignal(
