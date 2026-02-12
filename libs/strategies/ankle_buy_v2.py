@@ -276,7 +276,9 @@ class AnkleBuyV2Strategy(BaseStrategy):
         try:
             current_hour = datetime.now(ZoneInfo(tz_name)).hour
         except (KeyError, Exception):
-            logger.warning("[AnkleBuyV2] Invalid timezone '%s', allowing entry", tz_name)
+            logger.warning(
+                "[AnkleBuyV2] Invalid timezone '%s', allowing entry", tz_name
+            )
             return True
         return current_hour in (close_hour, (close_hour + 1) % 24)
 
