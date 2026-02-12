@@ -8,6 +8,18 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
+def disable_telegram_in_tests(monkeypatch):
+    """Prevent tests from sending real Telegram notifications.
+
+    strategy_runner.py has module-level load_dotenv() that loads production
+    TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID from .env at import time.
+    Without this fixture, tests creating StrategyRunner send real messages.
+    """
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def reset_prometheus_registry():
     """Reset Prometheus state before/after each test."""
     from services import metrics
